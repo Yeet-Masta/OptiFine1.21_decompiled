@@ -60,8 +60,8 @@ public class SmartLeaves {
       if (state1 == state2) {
          return true;
       } else {
-         C_1706_ block1 = state1.b();
-         C_1706_ block2 = state2.b();
+         C_1706_ block1 = state1.m_60734_();
+         C_1706_ block2 = state2.m_60734_();
          return block1 == block2;
       }
    }

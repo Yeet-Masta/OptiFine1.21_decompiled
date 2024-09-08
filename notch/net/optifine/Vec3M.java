@@ -3,8 +3,8 @@ package net.optifine;
 import java.util.EnumSet;
 import net.minecraft.src.C_188_;
 import net.minecraft.src.C_3046_;
+import net.minecraft.src.C_4687_;
 import net.minecraft.src.C_4703_;
-import net.minecraft.src.C_4687_.C_4689_;
 import org.joml.Vector3f;
 
 public class Vec3M extends C_3046_ implements C_4703_ {
@@ -40,6 +40,7 @@ public class Vec3M extends C_3046_ implements C_4703_ {
       return d0 < 1.0E-4 ? this.set(0.0, 0.0, 0.0) : this.set(this.f_82479_ / d0, this.f_82480_ / d0, this.f_82481_ / d0);
    }
 
+   @Override
    public double m_82526_(C_3046_ vec) {
       return this.f_82479_ * vec.f_82479_ + this.f_82480_ * vec.f_82480_ + this.f_82481_ * vec.f_82481_;
    }
@@ -119,21 +120,22 @@ public class Vec3M extends C_3046_ implements C_4703_ {
       return this.set(d0, d1, d2);
    }
 
-   public Vec3M align(EnumSet<C_4689_> axes) {
-      double d0 = axes.contains(C_4689_.X) ? (double)C_188_.m_14107_(this.f_82479_) : this.f_82479_;
-      double d1 = axes.contains(C_4689_.Y) ? (double)C_188_.m_14107_(this.f_82480_) : this.f_82480_;
-      double d2 = axes.contains(C_4689_.Z) ? (double)C_188_.m_14107_(this.f_82481_) : this.f_82481_;
+   public Vec3M align(EnumSet<C_4687_.C_4689_> axes) {
+      double d0 = axes.contains(C_4687_.C_4689_.X) ? (double)C_188_.m_14107_(this.f_82479_) : this.f_82479_;
+      double d1 = axes.contains(C_4687_.C_4689_.Y) ? (double)C_188_.m_14107_(this.f_82480_) : this.f_82480_;
+      double d2 = axes.contains(C_4687_.C_4689_.Z) ? (double)C_188_.m_14107_(this.f_82481_) : this.f_82481_;
       return this.set(d0, d1, d2);
    }
 
-   public double m_82507_(C_4689_ axis) {
+   @Override
+   public double m_82507_(C_4687_.C_4689_ axis) {
       return axis.m_6150_(this.f_82479_, this.f_82480_, this.f_82481_);
    }
 
-   public Vec3M with(C_4689_ axis, double distance) {
-      double d0 = axis == C_4689_.X ? distance : this.f_82479_;
-      double d1 = axis == C_4689_.Y ? distance : this.f_82480_;
-      double d2 = axis == C_4689_.Z ? distance : this.f_82481_;
+   public Vec3M with(C_4687_.C_4689_ axis, double distance) {
+      double d0 = axis == C_4687_.C_4689_.X ? distance : this.f_82479_;
+      double d1 = axis == C_4687_.C_4689_.Y ? distance : this.f_82480_;
+      double d2 = axis == C_4687_.C_4689_.Z ? distance : this.f_82481_;
       return this.set(d0, d1, d2);
    }
 

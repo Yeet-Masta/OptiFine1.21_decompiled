@@ -279,16 +279,20 @@ public class TextureUtils {
             TextureAnimations.updateAnimations();
          }
 
+         @Override
          public void m_6704_(ResourceManager var1) throws IOException {
          }
 
+         @Override
          public int m_117963_() {
             return 0;
          }
 
+         @Override
          public void restoreLastBlurMipmap() {
          }
 
+         @Override
          public MultiTexID getMultiTexID() {
             return null;
          }

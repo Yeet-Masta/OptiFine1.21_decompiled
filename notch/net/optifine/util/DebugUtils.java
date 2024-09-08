@@ -12,7 +12,6 @@ import net.minecraft.src.C_4168_;
 import net.minecraft.src.C_4468_;
 import net.minecraft.src.C_4490_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_290152_.C_290138_;
 import net.optifine.Config;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
@@ -75,7 +74,7 @@ public class DebugUtils {
       return sb.toString();
    }
 
-   public static void debugVboMemory(C_290138_[] renderChunks) {
+   public static void debugVboMemory(C_290152_.C_290138_[] renderChunks) {
       if (TimedEvent.isActive("DbgVbos", 3000L)) {
          int sum = 0;
          int countChunks = 0;
@@ -83,7 +82,7 @@ public class DebugUtils {
          int countLayers = 0;
 
          for (int i = 0; i < renderChunks.length; i++) {
-            C_290138_ renderChunk = renderChunks[i];
+            C_290152_.C_290138_ renderChunk = renderChunks[i];
             int sumPre = sum;
 
             for (C_4168_ rt : C_290152_.BLOCK_RENDER_LAYERS) {

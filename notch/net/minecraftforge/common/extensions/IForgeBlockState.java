@@ -10,6 +10,6 @@ public interface IForgeBlockState {
    }
 
    default int getLightEmission(C_1559_ level, C_4675_ pos) {
-      return this.self().h();
+      return this.self().m_60791_();
    }
 }

@@ -2,10 +2,10 @@ package net.optifine.util;
 
 import net.minecraft.src.C_188_;
 import net.minecraft.src.C_2139_;
-import net.minecraft.src.C_290152_.C_290138_;
+import net.minecraft.src.C_290152_;
 
 public class RenderChunkUtils {
-   public static int getCountBlocks(C_290138_ renderChunk) {
+   public static int getCountBlocks(C_290152_.C_290138_ renderChunk) {
       C_2139_[] ebss = renderChunk.getChunk().d();
       if (ebss == null) {
          return 0;
@@ -16,7 +16,7 @@ public class RenderChunkUtils {
       }
    }
 
-   public static double getRelativeBufferSize(C_290138_ renderChunk) {
+   public static double getRelativeBufferSize(C_290152_.C_290138_ renderChunk) {
       int blockCount = getCountBlocks(renderChunk);
       return getRelativeBufferSize(blockCount);
    }

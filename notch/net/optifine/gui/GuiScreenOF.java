@@ -25,7 +25,7 @@ public class GuiScreenOF extends C_3583_ {
    public List<C_3449_> getButtonList() {
       List<C_3449_> buttons = new ArrayList();
 
-      for (C_3495_ gel : this.aK_()) {
+      for (C_3495_ gel : this.m_6702_()) {
          if (gel instanceof C_3449_) {
             buttons.add((C_3449_)gel);
          }

@@ -11,10 +11,10 @@ import net.minecraft.src.C_290184_;
 import net.minecraft.src.C_3173_;
 import net.minecraft.src.C_336511_;
 import net.minecraft.src.C_4168_;
+import net.minecraft.src.C_4186_;
 import net.minecraft.src.C_4196_;
 import net.minecraft.src.C_4675_;
 import net.minecraft.src.C_4687_;
-import net.minecraft.src.C_4186_.C_4189_;
 import net.minecraft.src.C_4675_.C_4681_;
 import net.optifine.BlockPosM;
 import net.optifine.Config;
@@ -30,7 +30,7 @@ public class RenderEnv {
    private int smartLeaves = -1;
    private float[] quadBounds = new float[C_4687_.f_122346_.length * 2];
    private BitSet boundsFlags = new BitSet(3);
-   private C_4189_ aoFace = new C_4189_();
+   private C_4186_.C_4189_ aoFace = new C_4186_.C_4189_();
    private BlockPosM colorizerBlockPosM = null;
    private C_4681_ renderMutableBlockPos = null;
    private boolean[] borderFlags = null;
@@ -94,7 +94,7 @@ public class RenderEnv {
       return this.boundsFlags;
    }
 
-   public C_4189_ getAoFace() {
+   public C_4186_.C_4189_ getAoFace() {
       return this.aoFace;
    }
 
@@ -189,7 +189,7 @@ public class RenderEnv {
 
    public boolean isSmartLeaves() {
       if (this.smartLeaves == -1) {
-         if (Config.isTreesSmart() && this.blockState.b() instanceof C_1826_) {
+         if (Config.isTreesSmart() && this.blockState.m_60734_() instanceof C_1826_) {
             this.smartLeaves = 1;
          } else {
             this.smartLeaves = 0;

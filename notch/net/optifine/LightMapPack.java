@@ -47,8 +47,8 @@ public class LightMapPack {
       if (this.lightMapRain == null && this.lightMapThunder == null) {
          return this.lightMap.updateLightmap(world, torchFlickerX, lmColors, nightvision, darkLight);
       } else if (!WorldUtils.isEnd(world) && !WorldUtils.isNether(world)) {
-         float rainStrength = world.d(partialTicks);
-         float thunderStrength = world.b(partialTicks);
+         float rainStrength = world.m_46722_(partialTicks);
+         float thunderStrength = world.m_46661_(partialTicks);
          float delta = 1.0E-4F;
          boolean isRaining = rainStrength > delta;
          boolean isThundering = thunderStrength > delta;

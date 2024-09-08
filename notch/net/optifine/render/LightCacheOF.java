@@ -15,10 +15,10 @@ public class LightCacheOF {
    }
 
    private static float getAoLightRaw(C_2064_ blockStateIn, C_1557_ worldIn, C_4675_ blockPosIn) {
-      if (blockStateIn.b() == C_1710_.f_50110_) {
+      if (blockStateIn.m_60734_() == C_1710_.f_50110_) {
          return 1.0F;
       } else {
-         return blockStateIn.b() == C_1710_.f_50616_ ? 1.0F : blockStateIn.f(worldIn, blockPosIn);
+         return blockStateIn.m_60734_() == C_1710_.f_50616_ ? 1.0F : blockStateIn.m_60792_(worldIn, blockPosIn);
       }
    }
 

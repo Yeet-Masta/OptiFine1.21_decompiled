@@ -45,7 +45,7 @@ public class GuiShaderOptions extends GuiScreenOF {
       }
    }
 
-   public void aT_() {
+   public void m_7856_() {
       int baseId = 100;
       int baseX = 0;
       int baseY = 30;
@@ -65,8 +65,8 @@ public class GuiShaderOptions extends GuiScreenOF {
             if (so != null && so.isVisible()) {
                int col = i % columns;
                int row = i / columns;
-               int colWidth = Math.min(this.m / columns, 200);
-               baseX = (this.m - colWidth * columns) / 2;
+               int colWidth = Math.min(this.f_96543_ / columns, 200);
+               baseX = (this.f_96543_ - colWidth * columns) / 2;
                int x = col * colWidth + 5 + baseX;
                int y = baseY + row * stepY;
                int w = colWidth - 10;
@@ -79,13 +79,19 @@ public class GuiShaderOptions extends GuiScreenOF {
                }
 
                btn.j = so.isEnabled();
-               this.c(btn);
+               this.m_142416_(btn);
             }
          }
       }
 
-      this.c(new GuiButtonOF(201, this.m / 2 - btnWidth - 20, this.n / 6 + 168 + 11, btnWidth, btnHeight, C_4513_.m_118938_("controls.reset", new Object[0])));
-      this.c(new GuiButtonOF(200, this.m / 2 + 20, this.n / 6 + 168 + 11, btnWidth, btnHeight, C_4513_.m_118938_("gui.done", new Object[0])));
+      this.m_142416_(
+         new GuiButtonOF(
+            201, this.f_96543_ / 2 - btnWidth - 20, this.f_96544_ / 6 + 168 + 11, btnWidth, btnHeight, C_4513_.m_118938_("controls.reset", new Object[0])
+         )
+      );
+      this.m_142416_(
+         new GuiButtonOF(200, this.f_96543_ / 2 + 20, this.f_96544_ / 6 + 168 + 11, btnWidth, btnHeight, C_4513_.m_118938_("gui.done", new Object[0]))
+      );
    }
 
    public static String getButtonText(ShaderOption so, int btnWidth) {
@@ -114,11 +120,11 @@ public class GuiShaderOptions extends GuiScreenOF {
                if (so instanceof ShaderOptionScreen) {
                   String screenName = so.getName();
                   GuiShaderOptions scr = new GuiShaderOptions(this, this.settings, screenName);
-                  this.l.m_91152_(scr);
+                  this.f_96541_.m_91152_(scr);
                   return;
                }
 
-               if (s()) {
+               if (m_96638_()) {
                   so.resetValue();
                } else if (btnSo.isSwitchable()) {
                   so.nextValue();
@@ -147,26 +153,26 @@ public class GuiShaderOptions extends GuiScreenOF {
                   Shaders.uninit();
                }
 
-               this.l.m_91152_(this.prevScreen);
+               this.f_96541_.m_91152_(this.prevScreen);
             }
          }
       }
    }
 
-   public void j() {
+   public void m_7861_() {
       if (this.changed) {
          Shaders.saveShaderPackOptions();
          this.changed = false;
          Shaders.uninit();
       }
 
-      super.j();
+      super.m_7861_();
    }
 
    protected void actionPerformedRightClick(C_3449_ guiElement) {
       if (guiElement instanceof GuiButtonShaderOption btnSo) {
          ShaderOption so = btnSo.getShaderOption();
-         if (s()) {
+         if (m_96638_()) {
             so.resetValue();
          } else if (btnSo.isSwitchable()) {
             so.prevValue();
@@ -192,12 +198,12 @@ public class GuiShaderOptions extends GuiScreenOF {
       }
    }
 
-   public void a(C_279497_ graphicsIn, int x, int y, float partialTicks) {
-      super.a(graphicsIn, x, y, partialTicks);
+   public void m_88315_(C_279497_ graphicsIn, int x, int y, float partialTicks) {
+      super.m_88315_(graphicsIn, x, y, partialTicks);
       if (this.screenText != null) {
-         drawCenteredString(graphicsIn, this.fontRenderer, this.screenText, this.m / 2, 15, 16777215);
+         drawCenteredString(graphicsIn, this.fontRenderer, this.screenText, this.f_96543_ / 2, 15, 16777215);
       } else {
-         drawCenteredString(graphicsIn, this.fontRenderer, this.k, this.m / 2, 15, 16777215);
+         drawCenteredString(graphicsIn, this.fontRenderer, this.f_96539_, this.f_96543_ / 2, 15, 16777215);
       }
 
       this.tooltipManager.drawTooltips(graphicsIn, x, y, this.getButtonList());

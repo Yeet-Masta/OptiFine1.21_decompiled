@@ -117,7 +117,7 @@ public class ReflectorForge {
       return !Reflector.ModListScreen_Constructor.exists() ? null : C_3451_.m_253074_(C_4996_.m_237115_("fml.menu.mods"), button -> {
          C_3583_ modListScreen = (C_3583_)Reflector.ModListScreen_Constructor.newInstance(guiMainMenu);
          C_3391_.m_91087_().m_91152_(modListScreen);
-      }).m_252794_(guiMainMenu.m / 2 - 100, yIn + rowHeightIn * 2).m_253046_(98, 20).m_253136_();
+      }).m_252794_(guiMainMenu.f_96543_ / 2 - 100, yIn + rowHeightIn * 2).m_253046_(98, 20).m_253136_();
    }
 
    public static void setForgeLightPipelineEnabled(boolean value) {

@@ -48,38 +48,38 @@ public class GuiShaders extends GuiScreenOF {
       this.parentGui = par1GuiScreen;
    }
 
-   public void aT_() {
+   public void m_7856_() {
       if (Shaders.shadersConfig == null) {
          Shaders.loadConfig();
       }
 
       int btnWidth = 120;
       int btnHeight = 20;
-      int btnX = this.m - btnWidth - 10;
+      int btnX = this.f_96543_ - btnWidth - 10;
       int baseY = 30;
       int stepY = 20;
-      int shaderListWidth = this.m - btnWidth - 20;
-      this.shaderList = new GuiSlotShaders(this, shaderListWidth, this.n, baseY, this.n - 50, 16);
-      this.d(this.shaderList);
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.ANTIALIASING, btnX, 0 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.NORMAL_MAP, btnX, 1 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.SPECULAR_MAP, btnX, 2 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.RENDER_RES_MUL, btnX, 3 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.SHADOW_RES_MUL, btnX, 4 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.HAND_DEPTH_MUL, btnX, 5 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.OLD_HAND_LIGHT, btnX, 6 * stepY + baseY, btnWidth, btnHeight));
-      this.c(new GuiButtonEnumShaderOption(EnumShaderOption.OLD_LIGHTING, btnX, 7 * stepY + baseY, btnWidth, btnHeight));
+      int shaderListWidth = this.f_96543_ - btnWidth - 20;
+      this.shaderList = new GuiSlotShaders(this, shaderListWidth, this.f_96544_, baseY, this.f_96544_ - 50, 16);
+      this.m_7787_(this.shaderList);
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.ANTIALIASING, btnX, 0 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.NORMAL_MAP, btnX, 1 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.SPECULAR_MAP, btnX, 2 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.RENDER_RES_MUL, btnX, 3 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.SHADOW_RES_MUL, btnX, 4 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.HAND_DEPTH_MUL, btnX, 5 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.OLD_HAND_LIGHT, btnX, 6 * stepY + baseY, btnWidth, btnHeight));
+      this.m_142416_(new GuiButtonEnumShaderOption(EnumShaderOption.OLD_LIGHTING, btnX, 7 * stepY + baseY, btnWidth, btnHeight));
       int btnFolderWidth = Math.min(150, shaderListWidth / 2 - 10);
       int xFolder = shaderListWidth / 4 - btnFolderWidth / 2;
-      int yFolder = this.n - 25;
-      this.c(new GuiButtonOF(201, xFolder, yFolder, btnFolderWidth - 22 + 1, btnHeight, Lang.get("of.options.shaders.shadersFolder")));
-      this.c(new GuiButtonDownloadShaders(210, xFolder + btnFolderWidth - 22 - 1, yFolder));
-      this.c(
+      int yFolder = this.f_96544_ - 25;
+      this.m_142416_(new GuiButtonOF(201, xFolder, yFolder, btnFolderWidth - 22 + 1, btnHeight, Lang.get("of.options.shaders.shadersFolder")));
+      this.m_142416_(new GuiButtonDownloadShaders(210, xFolder + btnFolderWidth - 22 - 1, yFolder));
+      this.m_142416_(
          new GuiButtonOF(
-            202, shaderListWidth / 4 * 3 - btnFolderWidth / 2, this.n - 25, btnFolderWidth, btnHeight, C_4513_.m_118938_("gui.done", new Object[0])
+            202, shaderListWidth / 4 * 3 - btnFolderWidth / 2, this.f_96544_ - 25, btnFolderWidth, btnHeight, C_4513_.m_118938_("gui.done", new Object[0])
          )
       );
-      this.c(new GuiButtonOF(203, btnX, this.n - 25, btnWidth, btnHeight, Lang.get("of.options.shaders.shaderOptions")));
+      this.m_142416_(new GuiButtonOF(203, btnX, this.f_96544_ - 25, btnWidth, btnHeight, Lang.get("of.options.shaders.shaderOptions")));
       this.a(this.shaderList);
       this.updateButtons();
    }
@@ -111,7 +111,7 @@ public class GuiShaders extends GuiScreenOF {
             switch (gbeso.getEnumShaderOption()) {
                case ANTIALIASING:
                   Shaders.nextAntialiasingLevel(!rightClick);
-                  if (s()) {
+                  if (m_96638_()) {
                      Shaders.configAntialiasingLevel = 0;
                   }
 
@@ -119,39 +119,43 @@ public class GuiShaders extends GuiScreenOF {
                   break;
                case NORMAL_MAP:
                   Shaders.configNormalMap = !Shaders.configNormalMap;
-                  if (s()) {
+                  if (m_96638_()) {
                      Shaders.configNormalMap = true;
                   }
 
                   Shaders.uninit();
-                  this.l.m_91088_();
+                  this.f_96541_.m_91088_();
                   break;
                case SPECULAR_MAP:
                   Shaders.configSpecularMap = !Shaders.configSpecularMap;
-                  if (s()) {
+                  if (m_96638_()) {
                      Shaders.configSpecularMap = true;
                   }
 
                   Shaders.uninit();
-                  this.l.m_91088_();
+                  this.f_96541_.m_91088_();
                   break;
                case RENDER_RES_MUL:
-                  Shaders.configRenderResMul = this.getNextValue(Shaders.configRenderResMul, QUALITY_MULTIPLIERS, QUALITY_MULTIPLIER_DEFAULT, !rightClick, s());
+                  Shaders.configRenderResMul = this.getNextValue(
+                     Shaders.configRenderResMul, QUALITY_MULTIPLIERS, QUALITY_MULTIPLIER_DEFAULT, !rightClick, m_96638_()
+                  );
                   Shaders.uninit();
                   Shaders.scheduleResize();
                   break;
                case SHADOW_RES_MUL:
-                  Shaders.configShadowResMul = this.getNextValue(Shaders.configShadowResMul, QUALITY_MULTIPLIERS, QUALITY_MULTIPLIER_DEFAULT, !rightClick, s());
+                  Shaders.configShadowResMul = this.getNextValue(
+                     Shaders.configShadowResMul, QUALITY_MULTIPLIERS, QUALITY_MULTIPLIER_DEFAULT, !rightClick, m_96638_()
+                  );
                   Shaders.uninit();
                   Shaders.scheduleResizeShadow();
                   break;
                case HAND_DEPTH_MUL:
-                  Shaders.configHandDepthMul = this.getNextValue(Shaders.configHandDepthMul, HAND_DEPTH_VALUES, HAND_DEPTH_DEFAULT, !rightClick, s());
+                  Shaders.configHandDepthMul = this.getNextValue(Shaders.configHandDepthMul, HAND_DEPTH_VALUES, HAND_DEPTH_DEFAULT, !rightClick, m_96638_());
                   Shaders.uninit();
                   break;
                case OLD_HAND_LIGHT:
                   Shaders.configOldHandLight.nextValue(!rightClick);
-                  if (s()) {
+                  if (m_96638_()) {
                      Shaders.configOldHandLight.resetValue();
                   }
 
@@ -159,13 +163,13 @@ public class GuiShaders extends GuiScreenOF {
                   break;
                case OLD_LIGHTING:
                   Shaders.configOldLighting.nextValue(!rightClick);
-                  if (s()) {
+                  if (m_96638_()) {
                      Shaders.configOldLighting.resetValue();
                   }
 
                   Shaders.updateBlockLightLevel();
                   Shaders.uninit();
-                  this.l.m_91088_();
+                  this.f_96541_.m_91088_();
                   break;
                case TWEAK_BLOCK_DAMAGE:
                   Shaders.configTweakBlockDamage = !Shaders.configTweakBlockDamage;
@@ -223,7 +227,7 @@ public class GuiShaders extends GuiScreenOF {
                      boolean var8 = false;
 
                      try {
-                        URI uri = new File(this.l.f_91069_, "shaderpacks").toURI();
+                        URI uri = new File(this.f_96541_.f_91069_, "shaderpacks").toURI();
                         C_5322_.m_137581_().m_137648_(uri);
                      } catch (Throwable var8x) {
                         var8x.printStackTrace();
@@ -238,7 +242,7 @@ public class GuiShaders extends GuiScreenOF {
                   case 202:
                      Shaders.storeConfig();
                      this.saved = true;
-                     this.l.m_91152_(this.parentGui);
+                     this.f_96541_.m_91152_(this.parentGui);
                      break;
                   case 203:
                      GuiShaderOptions gui = new GuiShaderOptions(this, Config.getGameSettings());
@@ -264,46 +268,46 @@ public class GuiShaders extends GuiScreenOF {
       }
    }
 
-   public void j() {
+   public void m_7861_() {
       if (!this.saved) {
          Shaders.storeConfig();
          this.saved = true;
       }
 
-      super.j();
+      super.m_7861_();
    }
 
-   public void a(C_279497_ graphicsIn, int mouseX, int mouseY, float partialTicks) {
-      super.b(graphicsIn, mouseX, mouseY, partialTicks);
+   public void m_88315_(C_279497_ graphicsIn, int mouseX, int mouseY, float partialTicks) {
+      super.m_280273_(graphicsIn, mouseX, mouseY, partialTicks);
       this.shaderList.render(graphicsIn, mouseX, mouseY, partialTicks);
       if (this.updateTimer <= 0) {
          this.shaderList.updateList();
          this.updateTimer += 20;
       }
 
-      drawCenteredString(graphicsIn, this.fontRenderer, this.k, this.m / 2, 15, 16777215);
+      drawCenteredString(graphicsIn, this.fontRenderer, this.f_96539_, this.f_96543_ / 2, 15, 16777215);
       String info = "OpenGL: " + Shaders.glVersionString + ", " + Shaders.glVendorString + ", " + Shaders.glRendererString;
       int infoWidth = this.fontRenderer.m_92895_(info);
-      if (infoWidth < this.m - 5) {
-         drawCenteredString(graphicsIn, this.fontRenderer, info, this.m / 2, this.n - 40, 10526880);
+      if (infoWidth < this.f_96543_ - 5) {
+         drawCenteredString(graphicsIn, this.fontRenderer, info, this.f_96543_ / 2, this.f_96544_ - 40, 10526880);
       } else {
-         drawString(graphicsIn, this.fontRenderer, info, 5, this.n - 40, 10526880);
+         drawString(graphicsIn, this.fontRenderer, info, 5, this.f_96544_ - 40, 10526880);
       }
 
-      super.a(graphicsIn, mouseX, mouseY, partialTicks);
+      super.m_88315_(graphicsIn, mouseX, mouseY, partialTicks);
       this.tooltipManager.drawTooltips(graphicsIn, mouseX, mouseY, this.getButtonList());
    }
 
-   public void b(C_279497_ graphicsIn, int mouseX, int mouseY, float partialTicks) {
+   public void m_280273_(C_279497_ graphicsIn, int mouseX, int mouseY, float partialTicks) {
    }
 
-   public void e() {
-      super.e();
+   public void m_86600_() {
+      super.m_86600_();
       this.updateTimer--;
    }
 
    public C_3391_ getMc() {
-      return this.l;
+      return this.f_96541_;
    }
 
    public void drawCenteredString(C_279497_ graphicsIn, String text, int x, int y, int color) {

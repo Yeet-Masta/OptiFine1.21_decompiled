@@ -81,13 +81,13 @@ public class RandomEntities {
          UUID entityUuid = entity.cz();
          if (attach) {
             player.lastAttachedEntity = entity;
-            C_4917_ nbtLeft = player.gp();
+            C_4917_ nbtLeft = player.m_36331_();
             if (nbtLeft != null && nbtLeft.m_128441_("UUID") && Config.equals(nbtLeft.m_128342_("UUID"), entityUuid)) {
                player.entityShoulderLeft = entity;
                player.lastAttachedEntity = null;
             }
 
-            C_4917_ nbtRight = player.gq();
+            C_4917_ nbtRight = player.m_36332_();
             if (nbtRight != null && nbtRight.m_128441_("UUID") && Config.equals(nbtRight.m_128342_("UUID"), entityUuid)) {
                player.entityShoulderRight = entity;
                player.lastAttachedEntity = null;

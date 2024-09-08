@@ -1,7 +1,6 @@
 package net.optifine.gui;
 
-import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
-import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Collections;
 import java.util.List;
@@ -12,6 +11,7 @@ import net.minecraft.src.C_279497_;
 import net.minecraft.src.C_3173_;
 import net.minecraft.src.C_3179_;
 import net.minecraft.src.C_3185_;
+import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_3391_;
 import net.minecraft.src.C_3493_;
 import net.minecraft.src.C_3495_;
@@ -19,7 +19,6 @@ import net.minecraft.src.C_3583_;
 import net.minecraft.src.C_4124_;
 import net.minecraft.src.C_5265_;
 import net.minecraft.src.C_141605_.C_141606_;
-import net.minecraft.src.C_3188_.C_141549_;
 import net.optifine.util.TextureUtils;
 
 public abstract class SlotGui extends C_3493_ implements C_141605_ {
@@ -170,7 +169,7 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
          RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
          RenderSystem.enableBlend();
          float f = 32.0F;
-         C_3173_ bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85819_);
+         C_3173_ bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85819_);
          bufferbuilder.m_167146_((float)this.x0, (float)this.y1, 0.0F)
             .m_167083_((float)this.x0 / 32.0F, (float)(this.y1 + (int)this.yo) / 32.0F)
             .m_167129_(32, 32, 32, 255);
@@ -194,7 +193,12 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
          this.renderList(graphicsIn, k, l, p_render_1_, p_render_2_, p_render_3_);
          RenderSystem.disableDepthTest();
          RenderSystem.enableBlend();
-         RenderSystem.blendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ZERO, DestFactor.ONE);
+         RenderSystem.blendFuncSeparate(
+            GlStateManager.SourceFactor.SRC_ALPHA,
+            GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+            GlStateManager.SourceFactor.ZERO,
+            GlStateManager.DestFactor.ONE
+         );
          RenderSystem.setShader(C_4124_::m_172820_);
          RenderSystem.setShaderTexture(0, WHITE_TEXTURE_LOCATION);
          RenderSystem.disableTexture();
@@ -208,19 +212,19 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
                l1 = this.y0;
             }
 
-            bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85819_);
+            bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85819_);
             bufferbuilder.m_167146_((float)i, (float)this.y1, 0.0F).m_167083_(0.0F, 1.0F).m_167129_(0, 0, 0, 255);
             bufferbuilder.m_167146_((float)j, (float)this.y1, 0.0F).m_167083_(1.0F, 1.0F).m_167129_(0, 0, 0, 255);
             bufferbuilder.m_167146_((float)j, (float)this.y0, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(0, 0, 0, 255);
             bufferbuilder.m_167146_((float)i, (float)this.y0, 0.0F).m_167083_(0.0F, 0.0F).m_167129_(0, 0, 0, 255);
             tessellator.draw(bufferbuilder);
-            bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85819_);
+            bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85819_);
             bufferbuilder.m_167146_((float)i, (float)(l1 + k1), 0.0F).m_167083_(0.0F, 1.0F).m_167129_(128, 128, 128, 255);
             bufferbuilder.m_167146_((float)j, (float)(l1 + k1), 0.0F).m_167083_(1.0F, 1.0F).m_167129_(128, 128, 128, 255);
             bufferbuilder.m_167146_((float)j, (float)l1, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(128, 128, 128, 255);
             bufferbuilder.m_167146_((float)i, (float)l1, 0.0F).m_167083_(0.0F, 0.0F).m_167129_(128, 128, 128, 255);
             tessellator.draw(bufferbuilder);
-            bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85819_);
+            bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85819_);
             bufferbuilder.m_167146_((float)i, (float)(l1 + k1 - 1), 0.0F).m_167083_(0.0F, 1.0F).m_167129_(192, 192, 192, 255);
             bufferbuilder.m_167146_((float)(j - 1), (float)(l1 + k1 - 1), 0.0F).m_167083_(1.0F, 1.0F).m_167129_(192, 192, 192, 255);
             bufferbuilder.m_167146_((float)(j - 1), (float)l1, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(192, 192, 192, 255);
@@ -252,10 +256,10 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
             return true;
          } else if (i != -1 && this.selectItem(i, p_mouseClicked_5_, p_mouseClicked_1_, p_mouseClicked_3_)) {
             if (this.aK_().size() > i) {
-               this.a((C_3495_)this.aK_().get(i));
+               this.m_7522_((C_3495_)this.aK_().get(i));
             }
 
-            this.b_(true);
+            this.m_7897_(true);
             return true;
          } else {
             return this.scrolling;
@@ -266,8 +270,8 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
    }
 
    public boolean b(double p_mouseReleased_1_, double p_mouseReleased_3_, int p_mouseReleased_5_) {
-      if (this.aN_() != null) {
-         this.aN_().m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_);
+      if (this.m_7222_() != null) {
+         this.m_7222_().m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_);
       }
 
       return false;
@@ -363,14 +367,14 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
             RenderSystem.setShader(C_4124_::m_172808_);
             float f = this.isFocusedNow() ? 1.0F : 0.5F;
             RenderSystem.setShaderColor(f, f, f, 1.0F);
-            C_3173_ bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85814_);
+            C_3173_ bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85814_);
             bufferbuilder.m_167146_((float)i1, (float)(k + l + 2), 0.0F);
             bufferbuilder.m_167146_((float)j1, (float)(k + l + 2), 0.0F);
             bufferbuilder.m_167146_((float)j1, (float)(k - 2), 0.0F);
             bufferbuilder.m_167146_((float)i1, (float)(k - 2), 0.0F);
             tessellator.draw(bufferbuilder);
             RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
-            bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85814_);
+            bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85814_);
             bufferbuilder.m_167146_((float)(i1 + 1), (float)(k + l + 1), 0.0F);
             bufferbuilder.m_167146_((float)(j1 - 1), (float)(k + l + 1), 0.0F);
             bufferbuilder.m_167146_((float)(j1 - 1), (float)(k - 1), 0.0F);
@@ -404,7 +408,7 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
       RenderSystem.setShaderTexture(0, C_3583_.f_315252_);
       RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
       float f = 32.0F;
-      C_3173_ bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85819_);
+      C_3173_ bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85819_);
       bufferbuilder.m_167146_((float)this.x0, (float)p_renderHoleBackground_2_, 0.0F)
          .m_167083_(0.0F, (float)p_renderHoleBackground_2_ / 32.0F)
          .m_167129_(64, 64, 64, p_renderHoleBackground_4_);
@@ -429,7 +433,7 @@ public abstract class SlotGui extends C_3493_ implements C_141605_ {
       return this.itemHeight;
    }
 
-   public C_141606_ u() {
+   public C_141606_ m_142684_() {
       return C_141606_.HOVERED;
    }
 

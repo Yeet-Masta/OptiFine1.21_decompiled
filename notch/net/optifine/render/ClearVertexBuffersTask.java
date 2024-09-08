@@ -8,7 +8,6 @@ import java.util.concurrent.Executor;
 import net.minecraft.src.C_290152_;
 import net.minecraft.src.C_3186_;
 import net.minecraft.src.C_4168_;
-import net.minecraft.src.C_290152_.C_290138_;
 
 public class ClearVertexBuffersTask implements Runnable {
    List<C_3186_> listBuffers;
@@ -28,7 +27,7 @@ public class ClearVertexBuffersTask implements Runnable {
       return this.listBuffers + "";
    }
 
-   public static ClearVertexBuffersTask make(Set<C_4168_> renderedLayers, C_290138_ renderChunk) {
+   public static ClearVertexBuffersTask make(Set<C_4168_> renderedLayers, C_290152_.C_290138_ renderChunk) {
       List<C_3186_> listBuffers = null;
 
       for (C_4168_ rt : C_290152_.BLOCK_RENDER_LAYERS) {
@@ -45,7 +44,7 @@ public class ClearVertexBuffersTask implements Runnable {
       return listBuffers == null ? null : new ClearVertexBuffersTask(listBuffers);
    }
 
-   public static CompletableFuture<Void> makeFuture(Set<C_4168_> renderedLayers, C_290138_ renderChunk, Executor executor) {
+   public static CompletableFuture<Void> makeFuture(Set<C_4168_> renderedLayers, C_290152_.C_290138_ renderChunk, Executor executor) {
       ClearVertexBuffersTask task = make(renderedLayers, renderChunk);
       return task == null ? null : CompletableFuture.runAsync(() -> task.run(), executor);
    }

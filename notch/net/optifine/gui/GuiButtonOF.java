@@ -17,12 +17,12 @@ public class GuiButtonOF extends C_3451_ {
 
    public GuiButtonOF(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText) {
       this(buttonId, x, y, widthIn, heightIn, buttonText, btn -> {
-      }, q);
+      }, f_252438_);
    }
 
    public GuiButtonOF(int buttonId, int x, int y, String buttonText) {
       this(buttonId, x, y, 200, 20, buttonText, btn -> {
-      }, q);
+      }, f_252438_);
    }
 
    public void setMessage(String messageIn) {

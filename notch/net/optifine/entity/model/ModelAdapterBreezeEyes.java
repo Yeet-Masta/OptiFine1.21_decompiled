@@ -1,6 +1,7 @@
 package net.optifine.entity.model;
 
 import net.minecraft.src.C_141656_;
+import net.minecraft.src.C_301969_;
 import net.minecraft.src.C_302024_;
 import net.minecraft.src.C_302054_;
 import net.minecraft.src.C_302185_;
@@ -33,7 +34,7 @@ public class ModelAdapterBreezeEyes extends ModelAdapterBreeze {
       } else {
          C_5265_ locTex = modelBase.locationTextureCustom != null ? modelBase.locationTextureCustom : new C_5265_("textures/entity/breeze/breeze.png");
          C_302024_ layer = new C_302024_(renderBreeze);
-         layer.setModel((C_302185_)modelBase);
+         layer.setModel((C_302185_<C_301969_>)modelBase);
          layer.setTextureLocation(locTex);
          renderBreeze.removeLayers(C_302024_.class);
          renderBreeze.a(layer);

@@ -76,7 +76,6 @@ import net.minecraft.src.C_500_;
 import net.minecraft.src.C_507_;
 import net.minecraft.src.C_524_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_3188_.C_141549_;
 import net.optifine.Config;
 import net.optifine.CustomBlockLayers;
 import net.optifine.CustomColors;
@@ -2110,7 +2109,7 @@ public class Shaders {
          ShaderProfile activeProfile = ShaderUtils.detectProfile(shaderPackProfiles, shaderPackOptions, false);
          String worldPrefix = "";
          if (currentWorld != null) {
-            int dimId = WorldUtils.getDimensionId(currentWorld.af());
+            int dimId = WorldUtils.getDimensionId(currentWorld.m_46472_());
             if (shaderPackDimensions.contains(dimId)) {
                worldPrefix = "world" + dimId + "/";
             }
@@ -3356,7 +3355,7 @@ public class Shaders {
          itemID = ItemAliases.getItemAliasId(itemID);
       }
 
-      int blockLight = block != null ? block.m_49966_().h() : 0;
+      int blockLight = block != null ? block.m_49966_().m_60791_() : 0;
       C_1391_ stack2 = mc.f_91074_ != null ? mc.f_91074_.eU() : null;
       C_1381_ item2 = stack2 != null ? stack2.m_41720_() : null;
       int itemID2 = -1;
@@ -3370,7 +3369,7 @@ public class Shaders {
          itemID2 = ItemAliases.getItemAliasId(itemID2);
       }
 
-      int blockLight2 = block2 != null ? block2.m_49966_().h() : 0;
+      int blockLight2 = block2 != null ? block2.m_49966_().m_60791_() : 0;
       if (isOldHandLight() && blockLight2 > blockLight) {
          itemID = itemID2;
          blockLight = blockLight2;
@@ -3401,7 +3400,7 @@ public class Shaders {
       setProgramUniform1f(uniform_viewWidth, (float)renderWidth);
       setProgramUniform1f(uniform_viewHeight, (float)renderHeight);
       setProgramUniform1f(uniform_near, 0.05F);
-      setProgramUniform1f(uniform_far, (float)((Integer)mc.f_91066_.m_231984_().m_231551_() * 16));
+      setProgramUniform1f(uniform_far, (float)(mc.f_91066_.m_231984_().m_231551_() * 16));
       setProgramUniform3f(uniform_sunPosition, sunPosition[0], sunPosition[1], sunPosition[2]);
       setProgramUniform3f(uniform_moonPosition, moonPosition[0], moonPosition[1], moonPosition[2]);
       setProgramUniform3f(uniform_shadowLightPosition, shadowLightPosition[0], shadowLightPosition[1], shadowLightPosition[2]);
@@ -3430,7 +3429,7 @@ public class Shaders {
       setProgramUniform1i(uniform_isEyeInWater, isEyeInWater);
       setProgramUniform1f(uniform_nightVision, nightVision);
       setProgramUniform1f(uniform_blindness, blindness);
-      setProgramUniform1f(uniform_screenBrightness, (float)((Double)mc.f_91066_.m_231927_().m_231551_()).doubleValue());
+      setProgramUniform1f(uniform_screenBrightness, (float)mc.f_91066_.m_231927_().m_231551_().doubleValue());
       setProgramUniform1i(uniform_hideGUI, mc.f_91066_.f_92062_ ? 1 : 0);
       setProgramUniform1f(uniform_centerDepthSmooth, centerDepthSmooth);
       setProgramUniform2i(uniform_atlasSize, atlasSizeX, atlasSizeY);
@@ -3887,7 +3886,7 @@ public class Shaders {
       ShadersRender.updateActiveRenderInfo(activeRenderInfo, minecraft, partialTicks);
       C_3899_ world = mc.f_91073_;
       if (world != null) {
-         worldTime = world.aa();
+         worldTime = world.m_46468_();
          diffWorldTime = (worldTime - lastWorldTime) % 24000L;
          if (diffWorldTime < 0L) {
             diffWorldTime += 24000L;
@@ -3895,7 +3894,7 @@ public class Shaders {
 
          lastWorldTime = worldTime;
          moonPhase = world.ar();
-         rainStrength = world.d(partialTicks);
+         rainStrength = world.m_46722_(partialTicks);
          float fadeScalarRain = (float)diffSystemTime * 0.01F;
          float tempRain = (float)Math.exp(Math.log(0.5) * (double)fadeScalarRain / (double)(wetness < rainStrength ? drynessHalfLife : wetnessHalfLife));
          wetness = wetness * tempRain + rainStrength * (1.0F - tempRain);
@@ -4303,7 +4302,7 @@ public class Shaders {
 
    private static void drawCompositeQuad() {
       C_3185_ tesselator = RenderSystem.renderThreadTesselator();
-      C_3173_ bufferbuilder = tesselator.m_339075_(C_141549_.QUADS, C_3179_.f_85817_);
+      C_3173_ bufferbuilder = tesselator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85817_);
       bufferbuilder.m_167146_(0.0F, 0.0F, 0.0F).m_167083_(0.0F, 0.0F);
       bufferbuilder.m_167146_(1.0F, 0.0F, 0.0F).m_167083_(1.0F, 0.0F);
       bufferbuilder.m_167146_(1.0F, 1.0F, 0.0F).m_167083_(1.0F, 1.0F);
@@ -4574,7 +4573,7 @@ public class Shaders {
       }
 
       Matrix4f matrix = matrixStackIn.m_85850_().m_252922_();
-      C_3173_ tess = C_3185_.m_85913_().m_339075_(C_141549_.QUADS, C_3179_.f_85814_);
+      C_3173_ tess = C_3185_.m_85913_().m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85814_);
       int dist = 512;
 
       for (int i = 0; i < 8; i++) {
@@ -5084,7 +5083,7 @@ public class Shaders {
 
    public static void pushEntity(C_1706_ block) {
       entityDataIndex++;
-      int blockRenderType = block.m_49966_().l().ordinal();
+      int blockRenderType = block.m_49966_().m_60799_().ordinal();
       entityData[entityDataIndex * 2] = C_256712_.f_256975_.a(block) & 65535 | blockRenderType << 16;
       entityData[entityDataIndex * 2 + 1] = 0;
    }

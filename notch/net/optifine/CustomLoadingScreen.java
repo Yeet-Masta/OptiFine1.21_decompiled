@@ -6,9 +6,9 @@ import net.minecraft.src.C_3173_;
 import net.minecraft.src.C_3177_;
 import net.minecraft.src.C_3179_;
 import net.minecraft.src.C_3185_;
+import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_4124_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_3188_.C_141549_;
 
 public class CustomLoadingScreen {
    private C_5265_ locationTexture;
@@ -110,7 +110,7 @@ public class CustomLoadingScreen {
             dv = 0.0F;
       }
 
-      C_3173_ bufferbuilder = tessellator.m_339075_(C_141549_.QUADS, C_3179_.f_85819_);
+      C_3173_ bufferbuilder = tessellator.m_339075_(C_3188_.C_141549_.QUADS, C_3179_.f_85819_);
       bufferbuilder.m_167146_(0.0F, (float)height, 0.0F).m_167083_(du, dv + vMax).m_167129_(255, 255, 255, 255);
       bufferbuilder.m_167146_((float)width, (float)height, 0.0F).m_167083_(du + uMax, dv + vMax).m_167129_(255, 255, 255, 255);
       bufferbuilder.m_167146_((float)width, 0.0F, 0.0F).m_167083_(du + uMax, dv).m_167129_(255, 255, 255, 255);

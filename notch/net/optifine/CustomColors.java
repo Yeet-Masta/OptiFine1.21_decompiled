@@ -652,7 +652,7 @@ public class CustomColors {
    }
 
    public static int getColorMultiplier(boolean quadHasTintIndex, C_2064_ blockState, C_1557_ blockAccess, C_4675_ blockPos, RenderEnv renderEnv) {
-      C_1706_ block = blockState.b();
+      C_1706_ block = blockState.m_60734_();
       C_2064_ blockStateColormap = blockState;
       if (blockColormaps != null) {
          if (!quadHasTintIndex) {
@@ -797,9 +797,9 @@ public class CustomColors {
    }
 
    public static int getFluidColor(C_1557_ blockAccess, C_2064_ blockState, C_4675_ blockPos, RenderEnv renderEnv) {
-      C_1706_ block = blockState.b();
+      C_1706_ block = blockState.m_60734_();
       CustomColors.IColorizer colorizer = getBlockColormap(blockState);
-      if (colorizer == null && blockState.b() == C_1710_.f_49990_) {
+      if (colorizer == null && blockState.m_60734_() == C_1710_.f_49990_) {
          colorizer = COLORIZER_WATER;
       }
 
@@ -881,7 +881,7 @@ public class CustomColors {
    }
 
    private static int getRedstoneLevel(C_2064_ state, int def) {
-      C_1706_ block = state.b();
+      C_1706_ block = state.m_60734_();
       if (!(block instanceof C_1873_)) {
          return def;
       } else {
@@ -1028,7 +1028,7 @@ public class CustomColors {
 
    private static int getStemColorMultiplier(C_2064_ blockState, C_1559_ blockAccess, C_4675_ blockPos, RenderEnv renderEnv) {
       CustomColormap colors = stemColors;
-      C_1706_ blockStem = blockState.b();
+      C_1706_ blockStem = blockState.m_60734_();
       if (blockStem == C_1710_.f_50189_ && stemPumpkinColors != null) {
          colors = stemPumpkinColors;
       }

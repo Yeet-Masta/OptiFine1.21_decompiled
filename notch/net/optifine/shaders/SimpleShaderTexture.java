@@ -22,6 +22,7 @@ public class SimpleShaderTexture extends C_4468_ {
       this.texturePath = texturePath;
    }
 
+   @Override
    public void m_6704_(C_77_ resourceManager) throws IOException {
       this.m_117964_();
       InputStream inputStream = Shaders.getShaderPackResourceStream(this.texturePath);

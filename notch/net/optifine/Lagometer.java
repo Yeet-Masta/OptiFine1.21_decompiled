@@ -9,11 +9,11 @@ import net.minecraft.src.C_3173_;
 import net.minecraft.src.C_3179_;
 import net.minecraft.src.C_3181_;
 import net.minecraft.src.C_3185_;
+import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_3391_;
 import net.minecraft.src.C_3401_;
 import net.minecraft.src.C_4124_;
 import net.minecraft.src.C_442_;
-import net.minecraft.src.C_3188_.C_141549_;
 import net.optifine.reflect.Reflector;
 import net.optifine.util.MathUtils;
 import net.optifine.util.MemoryMonitor;
@@ -102,7 +102,7 @@ public class Lagometer {
       RenderSystem.setShader(C_4124_::m_172757_);
       RenderSystem.lineWidth(1.0F);
       C_3185_ tess = C_3185_.m_85913_();
-      C_3173_ tessellator = tess.m_339075_(C_141549_.LINES, C_3179_.f_166851_);
+      C_3173_ tessellator = tess.m_339075_(C_3188_.C_141549_.LINES, C_3179_.f_166851_);
 
       for (int frameNum = 0; frameNum < timesFrame.length; frameNum++) {
          int lum = (frameNum - numRecordedFrameTimes & timesFrame.length - 1) * 100 / timesFrame.length;

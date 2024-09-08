@@ -483,7 +483,7 @@ public class QuickInfo {
       C_3043_ rayTrace = entity.m_19907_(reachDist, 0.0F, false);
       if (rayTrace.m_6662_() == C_3044_.BLOCK) {
          C_4675_ pos = ((C_3041_)rayTrace).m_82425_();
-         C_2064_ state = minecraft.f_91073_.a_(pos);
+         C_2064_ state = minecraft.f_91073_.m_8055_(pos);
          sb.append(fullLabel ? "Target Block: " : "TB: ");
          sb.append(getName(state.getBlockLocation()));
          if (showPos) {
@@ -504,8 +504,8 @@ public class QuickInfo {
       C_3043_ rayTrace = entity.m_19907_(reachDist, 0.0F, true);
       if (rayTrace.m_6662_() == C_3044_.BLOCK) {
          C_4675_ pos = ((C_3041_)rayTrace).m_82425_();
-         C_2064_ state = minecraft.f_91073_.a_(pos);
-         C_2690_ fluid = state.u().m_76152_();
+         C_2064_ state = minecraft.f_91073_.m_8055_(pos);
+         C_2690_ fluid = state.m_60819_().m_76152_();
          if (fluid == C_2692_.f_76191_) {
             return;
          }

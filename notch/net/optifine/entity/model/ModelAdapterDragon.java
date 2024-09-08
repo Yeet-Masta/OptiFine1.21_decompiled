@@ -7,7 +7,6 @@ import net.minecraft.src.C_3889_;
 import net.minecraft.src.C_4326_;
 import net.minecraft.src.C_4330_;
 import net.minecraft.src.C_513_;
-import net.minecraft.src.C_4326_.C_4327_;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
@@ -17,11 +16,11 @@ public class ModelAdapterDragon extends ModelAdapter {
    }
 
    public C_3840_ makeModel() {
-      return new C_4327_(bakeModelLayer(C_141656_.f_171144_));
+      return new C_4326_.C_4327_(bakeModelLayer(C_141656_.f_171144_));
    }
 
    public C_3889_ getModelRenderer(C_3840_ model, String modelPart) {
-      if (!(model instanceof C_4327_ modelDragon)) {
+      if (!(model instanceof C_4326_.C_4327_ modelDragon)) {
          return null;
       } else if (modelPart.equals("head")) {
          return (C_3889_)Reflector.getFieldValue(modelDragon, Reflector.ModelDragon_ModelRenderers, 0);
@@ -100,7 +99,7 @@ public class ModelAdapterDragon extends ModelAdapter {
          return null;
       } else {
          Reflector.setFieldValue(render, Reflector.EnderDragonRenderer_model, modelBase);
-         render.e = shadowSize;
+         render.f_114477_ = shadowSize;
          return render;
       }
    }

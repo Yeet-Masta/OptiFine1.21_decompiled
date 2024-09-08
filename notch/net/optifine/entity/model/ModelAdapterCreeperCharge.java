@@ -10,6 +10,7 @@ import net.minecraft.src.C_4331_;
 import net.minecraft.src.C_4423_;
 import net.minecraft.src.C_513_;
 import net.minecraft.src.C_5265_;
+import net.minecraft.src.C_988_;
 import net.optifine.Config;
 
 public class ModelAdapterCreeperCharge extends ModelAdapterCreeper {
@@ -32,7 +33,7 @@ public class ModelAdapterCreeperCharge extends ModelAdapterCreeper {
          return null;
       } else {
          C_4423_ layer = new C_4423_(renderCreeper, renderManager.getContext().m_174027_());
-         layer.f_116677_ = (C_3812_)modelBase;
+         layer.f_116677_ = (C_3812_<C_988_>)modelBase;
          renderCreeper.removeLayers(C_4423_.class);
          renderCreeper.a(layer);
          return renderCreeper;

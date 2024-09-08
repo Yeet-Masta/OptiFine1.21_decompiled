@@ -10,6 +10,7 @@ import net.minecraft.src.C_4414_;
 import net.minecraft.src.C_4461_;
 import net.minecraft.src.C_513_;
 import net.minecraft.src.C_5265_;
+import net.minecraft.src.C_922_;
 import net.optifine.Config;
 
 public class ModelAdapterWolfCollar extends ModelAdapterWolf {
@@ -32,7 +33,7 @@ public class ModelAdapterWolfCollar extends ModelAdapterWolf {
          return null;
       } else {
          C_4461_ layer = new C_4461_(renderWolf);
-         layer.model = (C_3885_)modelBase;
+         layer.model = (C_3885_<C_922_>)modelBase;
          renderWolf.removeLayers(C_4461_.class);
          renderWolf.a(layer);
          return renderWolf;

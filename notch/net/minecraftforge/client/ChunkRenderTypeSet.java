@@ -106,7 +106,7 @@ public class ChunkRenderTypeSet implements Iterable<C_4168_> {
 
    private static final class All extends ChunkRenderTypeSet {
       private All() {
-         super((BitSet)C_5322_.m_137469_(new BitSet(), bits -> bits.set(0, ChunkRenderTypeSet.CHUNK_RENDER_TYPES.length)));
+         super(C_5322_.m_137469_(new BitSet(), bits -> bits.set(0, ChunkRenderTypeSet.CHUNK_RENDER_TYPES.length)));
       }
 
       @Override

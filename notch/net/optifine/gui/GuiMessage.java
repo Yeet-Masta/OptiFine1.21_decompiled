@@ -27,23 +27,23 @@ public class GuiMessage extends GuiScreenOF {
       this.confirmButtonText = C_4513_.m_118938_("gui.done", new Object[0]);
    }
 
-   public void aT_() {
-      this.c(new GuiButtonOF(0, this.m / 2 - 100, this.n / 6 + 96, this.confirmButtonText));
+   public void m_7856_() {
+      this.m_142416_(new GuiButtonOF(0, this.f_96543_ / 2 - 100, this.f_96544_ / 6 + 96, this.confirmButtonText));
       this.listLines2.clear();
-      this.listLines2.addAll(this.l.f_91062_.m_92923_(this.messageLine2, this.m - 50));
+      this.listLines2.addAll(this.f_96541_.f_91062_.m_92923_(this.messageLine2, this.f_96543_ - 50));
    }
 
    protected void actionPerformed(C_3449_ button) {
       Config.getMinecraft().m_91152_(this.parentScreen);
    }
 
-   public void a(C_279497_ graphicsIn, int mouseX, int mouseY, float partialTicks) {
-      super.a(graphicsIn, mouseX, mouseY, partialTicks);
-      drawCenteredString(graphicsIn, this.fontRenderer, this.messageLine1, this.m / 2, 70, 16777215);
+   public void m_88315_(C_279497_ graphicsIn, int mouseX, int mouseY, float partialTicks) {
+      super.m_88315_(graphicsIn, mouseX, mouseY, partialTicks);
+      drawCenteredString(graphicsIn, this.fontRenderer, this.messageLine1, this.f_96543_ / 2, 70, 16777215);
       int var4x = 90;
 
       for (C_178_ line : this.listLines2) {
-         drawCenteredString(graphicsIn, this.fontRenderer, line, this.m / 2, var4x, 16777215);
+         drawCenteredString(graphicsIn, this.fontRenderer, line, this.f_96543_ / 2, var4x, 16777215);
          var4x += 9;
       }
    }
@@ -56,8 +56,8 @@ public class GuiMessage extends GuiScreenOF {
       }
    }
 
-   public void e() {
-      super.e();
+   public void m_86600_() {
+      super.m_86600_();
       if (--this.ticksUntilEnable == 0) {
          for (C_3451_ var2 : this.getButtonList()) {
             var2.j = true;

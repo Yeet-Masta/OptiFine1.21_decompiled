@@ -2,13 +2,11 @@ package net.optifine.render;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.RenderSystem.C_141293_;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import net.minecraft.src.C_3179_;
+import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_4168_;
-import net.minecraft.src.C_3188_.C_141548_;
-import net.minecraft.src.C_3188_.C_141549_;
 import net.optifine.Config;
 import net.optifine.shaders.ShadersRender;
 import net.optifine.util.LinkedList;
@@ -26,7 +24,7 @@ public class VboRegion {
    private PointerBuffer bufferIndexVertex = Config.createDirectPointerBuffer(this.capacity);
    private IntBuffer bufferCountVertex = Config.createDirectIntBuffer(this.capacity);
    private final int vertexBytes = C_3179_.f_85811_.m_86020_();
-   private C_141549_ drawMode = C_141549_.QUADS;
+   private C_3188_.C_141549_ drawMode = C_3188_.C_141549_.QUADS;
    private boolean isShaders = Config.isShaders();
 
    public VboRegion(C_4168_ layer) {
@@ -209,7 +207,7 @@ public class VboRegion {
       GlStateManager._glBindBuffer(GlStateManager.GL_ARRAY_BUFFER, this.glBufferId);
    }
 
-   public void drawArrays(C_141549_ drawMode, VboRange range) {
+   public void drawArrays(C_3188_.C_141549_ drawMode, VboRange range) {
       if (this.drawMode != drawMode) {
          if (this.bufferIndexVertex.position() > 0) {
             throw new IllegalArgumentException("Mixed region draw modes: " + this.drawMode + " != " + drawMode);
@@ -234,8 +232,8 @@ public class VboRegion {
       }
 
       int indexCount = this.drawMode.m_166958_(this.positionTop);
-      C_141293_ rendersystem$autostorageindexbuffer = RenderSystem.getSequentialBuffer(this.drawMode);
-      C_141548_ indexType = rendersystem$autostorageindexbuffer.m_157483_();
+      RenderSystem.C_141293_ rendersystem$autostorageindexbuffer = RenderSystem.getSequentialBuffer(this.drawMode);
+      C_3188_.C_141548_ indexType = rendersystem$autostorageindexbuffer.m_157483_();
       rendersystem$autostorageindexbuffer.m_221946_(indexCount);
       this.bufferIndexVertex.flip();
       this.bufferCountVertex.flip();

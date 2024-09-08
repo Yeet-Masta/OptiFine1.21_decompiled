@@ -4,7 +4,6 @@ import net.minecraft.src.C_188_;
 import net.minecraft.src.C_3181_;
 import net.minecraft.src.C_3187_;
 import net.minecraft.src.C_3889_;
-import net.minecraft.src.C_3181_.C_3183_;
 import net.optifine.util.MathUtils;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -190,7 +189,7 @@ public class ModelSprite {
       float normalY,
       float normalZ
    ) {
-      C_3183_ matrixEntry = matrixStackIn.m_85850_();
+      C_3181_.C_3183_ matrixEntry = matrixStackIn.m_85850_();
       Matrix4f matrix4f = matrixEntry.m_252922_();
       Matrix3f matrixNormal = matrixEntry.m_252943_();
       float xn = MathUtils.getTransformX(matrixNormal, normalX, normalY, normalZ);

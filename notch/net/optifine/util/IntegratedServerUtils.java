@@ -31,7 +31,7 @@ public class IntegratedServerUtils {
                return null;
             } else {
                try {
-                  return is.a(wd);
+                  return is.m_129880_(wd);
                } catch (NullPointerException var5) {
                   return null;
                }

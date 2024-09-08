@@ -42,7 +42,7 @@ public class LightMap {
                sun = Config.limitTo1(sun);
                float sunX = sun * (float)(width - 1);
                float torchX = Config.limitTo1(torchFlickerX + 0.5F) * (float)(width - 1);
-               float gamma = Config.limitTo1((float)((Double)Config.getGameSettings().m_231927_().m_231551_()).doubleValue());
+               float gamma = Config.limitTo1((float)Config.getGameSettings().m_231927_().m_231551_().doubleValue());
                boolean hasGamma = gamma > 1.0E-4F;
                float[][] colorsRgb = this.lightMapRgb.getColorsRgb();
                this.getLightMapColumn(colorsRgb, sunX, startIndex, width, this.sunRgbs);

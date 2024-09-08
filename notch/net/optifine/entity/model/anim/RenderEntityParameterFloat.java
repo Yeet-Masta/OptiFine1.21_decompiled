@@ -218,9 +218,9 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
                         case LIMB_SWING:
                            float posX = C_188_.m_14179_(C_4124_.getRenderPartialTicks(), (float)minecart.ad, (float)minecart.dt());
                            float posZ = C_188_.m_14179_(C_4124_.getRenderPartialTicks(), (float)minecart.af, (float)minecart.dz());
-                           C_2064_ bs = C_3391_.m_91087_().f_91073_.a_(minecart.do());
-                           if (bs.a(C_137_.f_13034_)) {
-                              C_2100_ rs = (C_2100_)bs.c(((C_1695_)bs.b()).m_7978_());
+                           C_2064_ bs = C_3391_.m_91087_().f_91073_.m_8055_(minecart.do());
+                           if (bs.m_204336_(C_137_.f_13034_)) {
+                              C_2100_ rs = (C_2100_)bs.c(((C_1695_)bs.m_60734_()).m_7978_());
                               switch (rs) {
                                  case SOUTH_WEST:
                                     return posX + posZ;
@@ -275,7 +275,7 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
             return 0.0F;
          }
 
-         C_302051_ trm = is.aQ();
+         C_302051_ trm = is.m_306290_();
          if (trm.m_306363_()) {
             return 0.0F;
          }

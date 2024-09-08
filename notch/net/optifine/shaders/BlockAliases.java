@@ -337,7 +337,7 @@ public class BlockAliases {
                   listAliases.set(blockId, las);
                }
 
-               MatchBlock mb = getMatchBlock(blockState.b(), blockState.getBlockId(), mapProperties);
+               MatchBlock mb = getMatchBlock(blockState.m_60734_(), blockState.getBlockId(), mapProperties);
                addBlockAlias(las, blockIdOld, metadataOld, mb);
             } catch (Exception var24) {
                Config.warn("Error parsing: " + line);
@@ -435,15 +435,15 @@ public class BlockAliases {
 
    public static int getRenderType(C_2064_ blockState) {
       if (hasAliasMetadata) {
-         C_1706_ block = blockState.b();
+         C_1706_ block = blockState.m_60734_();
          if (block instanceof C_1833_) {
             return 1;
          } else {
-            C_1879_ brt = blockState.l();
+            C_1879_ brt = blockState.m_60799_();
             return brt != C_1879_.ENTITYBLOCK_ANIMATED && brt != C_1879_.MODEL ? brt.ordinal() : brt.ordinal() + 1;
          }
       } else {
-         return blockState.l().ordinal();
+         return blockState.m_60799_().ordinal();
       }
    }
 }

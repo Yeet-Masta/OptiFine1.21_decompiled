@@ -133,7 +133,6 @@ import net.minecraft.src.C_5422_;
 import net.minecraft.src.C_970_;
 import net.minecraft.src.C_976_;
 import net.minecraft.src.C_141742_.C_141743_;
-import net.minecraft.src.C_4326_.C_4327_;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.model.ForgeFaceData;
 import net.minecraftforge.eventbus.api.Event;
@@ -502,7 +501,7 @@ public class Reflector {
    public static ReflectorClass EntityItem = new ReflectorClass(C_976_.class);
    public static ReflectorField EntityItem_ITEM = new ReflectorField(EntityItem, C_5225_.class);
    public static ReflectorClass EnderDragonRenderer = new ReflectorClass(C_4326_.class);
-   public static ReflectorField EnderDragonRenderer_model = new ReflectorField(EnderDragonRenderer, C_4327_.class);
+   public static ReflectorField EnderDragonRenderer_model = new ReflectorField(EnderDragonRenderer, C_4326_.C_4327_.class);
    public static ReflectorClass GuiEnchantment = new ReflectorClass(C_3659_.class);
    public static ReflectorField GuiEnchantment_bookModel = new ReflectorField(GuiEnchantment, C_3804_.class);
    public static ReflectorClass ItemOverride = new ReflectorClass(C_4217_.class);
@@ -529,7 +528,7 @@ public class Reflector {
    public static ReflectorField ModelBook_root = new ReflectorField(ModelBook, C_3889_.class);
    public static ReflectorClass ModelChicken = new ReflectorClass(C_3807_.class);
    public static ReflectorFields ModelChicken_ModelRenderers = new ReflectorFields(ModelChicken, C_3889_.class, 8);
-   public static ReflectorClass ModelDragon = new ReflectorClass(C_4327_.class);
+   public static ReflectorClass ModelDragon = new ReflectorClass(C_4326_.C_4327_.class);
    public static ReflectorFields ModelDragon_ModelRenderers = new ReflectorFields(ModelDragon, C_3889_.class, 20);
    public static ReflectorClass RenderEnderCrystal = new ReflectorClass(C_4325_.class);
    public static ReflectorFields RenderEnderCrystal_modelRenderers = new ReflectorFields(RenderEnderCrystal, C_3889_.class, 3);

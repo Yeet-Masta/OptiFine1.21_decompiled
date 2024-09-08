@@ -9,7 +9,6 @@ import net.minecraft.src.C_3179_;
 import net.minecraft.src.C_3187_;
 import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_4354_;
-import net.minecraft.src.C_3188_.C_141549_;
 import net.optifine.Config;
 import net.optifine.render.VertexPosition;
 import org.joml.Vector3f;
@@ -85,7 +84,7 @@ public class SVertexBuilder {
       if (!Config.isMinecraftThread() || !C_4354_.isRenderItemGui()) {
          SVertexBuilder svb = wrr.sVertexBuilder;
          if (svb.vertexSize == 18) {
-            if (wrr.getDrawMode() == C_141549_.QUADS && wrr.getVertexCount() % 4 == 0) {
+            if (wrr.getDrawMode() == C_3188_.C_141549_.QUADS && wrr.getVertexCount() % 4 == 0) {
                svb.calcNormal(wrr, wrr.getBufferIntSize() - 4 * svb.vertexSize);
             }
 
@@ -135,7 +134,7 @@ public class SVertexBuilder {
 
    public static void endAddVertexData(C_3173_ wrr) {
       SVertexBuilder svb = wrr.sVertexBuilder;
-      if (svb.vertexSize == 18 && wrr.getDrawMode() == C_141549_.QUADS && wrr.getVertexCount() % 4 == 0) {
+      if (svb.vertexSize == 18 && wrr.getDrawMode() == C_3188_.C_141549_.QUADS && wrr.getVertexCount() % 4 == 0) {
          svb.calcNormal(wrr, wrr.getBufferIntSize() - 4 * svb.vertexSize);
       }
    }
@@ -289,7 +288,7 @@ public class SVertexBuilder {
    }
 
    public static void calcNormalChunkLayer(C_3173_ wrr) {
-      if (wrr.getVertexFormat().hasNormal() && wrr.getDrawMode() == C_141549_.QUADS && wrr.getVertexCount() % 4 == 0) {
+      if (wrr.getVertexFormat().hasNormal() && wrr.getDrawMode() == C_3188_.C_141549_.QUADS && wrr.getVertexCount() % 4 == 0) {
          SVertexBuilder svb = wrr.sVertexBuilder;
          endSetVertexFormat(wrr);
          int indexEnd = wrr.getVertexCount() * svb.vertexSize;

@@ -16,6 +16,7 @@ public class ClippingHelperShadow extends C_4273_ {
       super(null, null);
    }
 
+   @Override
    public boolean m_113006_(double x1, double y1, double z1, double x2, double y2, double z2) {
       for (int index = 0; index < this.shadowClipPlaneCount; index++) {
          float[] plane = this.shadowClipPlanes[index];

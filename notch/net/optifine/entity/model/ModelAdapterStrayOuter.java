@@ -33,7 +33,7 @@ public class ModelAdapterStrayOuter extends ModelAdapterStray {
       } else {
          C_5265_ STRAY_CLOTHES_LOCATION = new C_5265_("textures/entity/skeleton/stray_overlay.png");
          C_313407_ layer = new C_313407_(renderStray, renderManager.getContext().m_174027_(), C_141656_.f_171250_, STRAY_CLOTHES_LOCATION);
-         layer.f_314940_ = (C_3868_)modelBase;
+         layer.f_314940_ = (C_3868_<T>)modelBase;
          renderStray.removeLayers(C_313407_.class);
          renderStray.a(layer);
          return renderStray;

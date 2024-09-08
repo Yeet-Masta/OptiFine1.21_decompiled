@@ -2,7 +2,7 @@ package net.minecraftforge.entity;
 
 import net.minecraft.src.C_4917_;
 import net.minecraft.src.C_507_;
-import net.minecraft.src.C_5247_.C_313487_;
+import net.minecraft.src.C_5247_;
 
 public class PartEntity<T extends C_507_> extends C_507_ {
    private final T parent;
@@ -16,7 +16,7 @@ public class PartEntity<T extends C_507_> extends C_507_ {
       return this.parent;
    }
 
-   protected void m_8097_(C_313487_ builderIn) {
+   protected void m_8097_(C_5247_.C_313487_ builderIn) {
       throw new UnsupportedOperationException();
    }
 

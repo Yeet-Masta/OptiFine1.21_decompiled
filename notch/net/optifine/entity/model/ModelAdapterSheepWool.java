@@ -11,6 +11,7 @@ import net.minecraft.src.C_4384_;
 import net.minecraft.src.C_4449_;
 import net.minecraft.src.C_513_;
 import net.minecraft.src.C_5265_;
+import net.minecraft.src.C_896_;
 import net.optifine.Config;
 
 public class ModelAdapterSheepWool extends ModelAdapterQuadruped {
@@ -33,7 +34,7 @@ public class ModelAdapterSheepWool extends ModelAdapterQuadruped {
          return null;
       } else {
          C_4449_ layer = new C_4449_(renderSheep, renderManager.getContext().m_174027_());
-         layer.f_117405_ = (C_3862_)modelBase;
+         layer.f_117405_ = (C_3862_<C_896_>)modelBase;
          renderSheep.removeLayers(C_4449_.class);
          renderSheep.a(layer);
          return renderSheep;

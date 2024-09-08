@@ -79,7 +79,7 @@ public class ChunkVisibility {
 
       for (int cx = cxStart; cx < cxEnd; cx++) {
          for (int cz = czStart; cz < czEnd; cz++) {
-            C_2137_ chunk = world.d(cx, cz);
+            C_2137_ chunk = world.m_6325_(cx, cz);
             if (chunk.m_6430_()) {
                if (multiplayer) {
                   int i = viewFrustum.getHighestUsedChunkIndex(cx, iMax, cz);

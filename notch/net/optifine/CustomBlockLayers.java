@@ -21,7 +21,7 @@ public class CustomBlockLayers {
    public static C_4168_ getRenderLayer(C_1559_ worldReader, C_2064_ blockState, C_4675_ blockPos) {
       if (renderLayers == null) {
          return null;
-      } else if (blockState.i(worldReader, blockPos)) {
+      } else if (blockState.m_60804_(worldReader, blockPos)) {
          return null;
       } else {
          int id = blockState.getBlockId();

@@ -58,7 +58,7 @@ public class BlockPosM extends C_4675_ {
       return this;
    }
 
-   public C_4675_ a(C_4687_ facing) {
+   public C_4675_ m_121945_(C_4687_ facing) {
       if (this.level <= 0) {
          return super.m_5484_(facing, 1).m_7949_();
       } else {
@@ -84,8 +84,8 @@ public class BlockPosM extends C_4675_ {
       }
    }
 
-   public C_4675_ a(C_4687_ facing, int n) {
-      return n == 1 ? this.a(facing) : super.m_5484_(facing, n).m_7949_();
+   public C_4675_ m_5484_(C_4687_ facing, int n) {
+      return n == 1 ? this.m_121945_(facing) : super.m_5484_(facing, n).m_7949_();
    }
 
    public void setPosOffset(C_4675_ pos, C_4687_ facing) {
@@ -116,7 +116,7 @@ public class BlockPosM extends C_4675_ {
       this.needsUpdate = false;
    }
 
-   public C_4675_ j() {
+   public C_4675_ m_7949_() {
       return new C_4675_(this.mx, this.my, this.mz);
    }
 

@@ -7,19 +7,18 @@ import net.minecraft.src.C_3139_;
 import net.minecraft.src.C_3173_;
 import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_3189_;
-import net.minecraft.src.C_3188_.C_141549_;
 
 public class BufferUtil {
    public static String getBufferHex(C_3173_ bb) {
-      C_141549_ drawMode = bb.getDrawMode();
+      C_3188_.C_141549_ drawMode = bb.getDrawMode();
       String primitiveName = "";
       int vertexPerPrimitive = -1;
       byte var9;
-      if (drawMode == C_141549_.QUADS) {
+      if (drawMode == C_3188_.C_141549_.QUADS) {
          primitiveName = "quad";
          var9 = 4;
       } else {
-         if (drawMode != C_141549_.TRIANGLES) {
+         if (drawMode != C_3188_.C_141549_.TRIANGLES) {
             return "Invalid draw mode: " + drawMode;
          }
 

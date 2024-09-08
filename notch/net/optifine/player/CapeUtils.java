@@ -66,7 +66,7 @@ public class CapeUtils {
       C_5265_ rl = new C_5265_("capeof/" + nameClear);
       C_4490_ textureManager = Config.getTextureManager();
       if (textureManager.m_118506_(rl) instanceof C_4476_ simpleTex) {
-         simpleTex.b();
+         simpleTex.m_117964_();
          textureManager.m_118513_(rl);
       }
 

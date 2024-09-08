@@ -32,7 +32,7 @@ public class ModelAdapterDrownedOuter extends ModelAdapterDrowned {
          return null;
       } else {
          C_4429_ layer = new C_4429_(renderDrowned, renderManager.getContext().m_174027_());
-         layer.f_116908_ = (C_3814_)modelBase;
+         layer.f_116908_ = (C_3814_<T>)modelBase;
          renderDrowned.removeLayers(C_4429_.class);
          renderDrowned.a(layer);
          return renderDrowned;

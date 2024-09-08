@@ -30,7 +30,7 @@ public class ShadowFrustum extends C_4273_ {
          MathUtils.transform(viewRight, matrixFull);
          viewRight.normalize();
          float partialTicks = 0.0F;
-         float car = world.a(partialTicks);
+         float car = world.m_46490_(partialTicks);
          float sunTiltRad = Shaders.sunPathRotation * C_188_.deg2Rad;
          float sar = car > C_188_.PId2 && car < 3.0F * C_188_.PId2 ? car + (float) Math.PI : car;
          float sx = -C_188_.m_14031_(sar);

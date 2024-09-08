@@ -93,7 +93,7 @@ public class NaturalTextures {
    }
 
    public static C_4196_ getNaturalTexture(C_2064_ stateIn, C_4675_ blockPosIn, C_4196_ quad) {
-      if (stateIn.b() instanceof C_1956_) {
+      if (stateIn.m_60734_() instanceof C_1956_) {
          return quad;
       } else {
          C_4486_ sprite = quad.m_173410_();

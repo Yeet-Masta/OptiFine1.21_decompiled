@@ -40,6 +40,7 @@ public class ConduitModel extends C_3840_ {
       }
    }
 
-   public void a(C_3181_ matrixStackIn, C_3187_ bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
+   @Override
+   public void m_7695_(C_3181_ matrixStackIn, C_3187_ bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 }

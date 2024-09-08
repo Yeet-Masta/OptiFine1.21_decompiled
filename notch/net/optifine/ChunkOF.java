@@ -13,7 +13,7 @@ public class ChunkOF extends C_2137_ {
       super(worldIn, chunkPosIn);
    }
 
-   public void a(C_507_ entityIn) {
+   public void m_6286_(C_507_ entityIn) {
       this.hasEntitiesOF = true;
       super.m_6286_(entityIn);
    }
@@ -22,7 +22,7 @@ public class ChunkOF extends C_2137_ {
       return this.hasEntitiesOF;
    }
 
-   public void c(boolean loaded) {
+   public void m_62913_(boolean loaded) {
       this.loadedOF = loaded;
       super.m_62913_(loaded);
    }

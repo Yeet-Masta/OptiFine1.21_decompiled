@@ -5,8 +5,6 @@ import net.minecraft.src.C_213334_;
 import net.minecraft.src.C_3391_;
 import net.minecraft.src.C_3401_;
 import net.minecraft.src.C_4996_;
-import net.minecraft.src.C_213334_.C_213341_;
-import net.minecraft.src.C_213334_.C_213350_;
 
 public class SliderPercentageOptionOF extends C_213334_ {
    public SliderPercentageOptionOF(String name, double defVal) {
@@ -14,7 +12,7 @@ public class SliderPercentageOptionOF extends C_213334_ {
          name,
          C_213334_.m_231498_(),
          (labelIn, valuein) -> C_3401_.m_231921_(labelIn, C_4996_.m_237110_(name, new Object[]{valuein})),
-         C_213350_.INSTANCE,
+         C_213334_.C_213350_.INSTANCE,
          defVal,
          val -> {
          }
@@ -26,7 +24,7 @@ public class SliderPercentageOptionOF extends C_213334_ {
          name,
          C_213334_.m_231498_(),
          (labelIn, valuein) -> C_3401_.m_231921_(labelIn, C_4996_.m_237110_(name, new Object[]{valuein})),
-         new C_213341_(valueMin / step, valueMax / step).a(val -> val * step, val -> val / step),
+         new C_213334_.C_213341_(valueMin / step, valueMax / step).m_231657_(val -> val * step, val -> val / step),
          Codec.intRange(valueMin, valueMax),
          valueDef,
          val -> {
@@ -39,7 +37,7 @@ public class SliderPercentageOptionOF extends C_213334_ {
          name,
          C_213334_.m_231498_(),
          (labelIn, valuein) -> C_3401_.m_231921_(labelIn, C_4996_.m_237110_(name, new Object[]{valuein})),
-         new C_213341_(0, stepValues.length - 1).a(val -> stepValues[val], val -> C_3401_.indexOf(val, stepValues)),
+         new C_213334_.C_213341_(0, stepValues.length - 1).m_231657_(val -> stepValues[val], val -> C_3401_.indexOf(val, stepValues)),
          Codec.intRange(valueMin, valueMax),
          valueDef,
          val -> {

@@ -41,12 +41,12 @@ public class BlockUtils {
    public static boolean shouldSideBeRendered(C_2064_ blockStateIn, C_1559_ blockReaderIn, C_4675_ blockPosIn, C_4687_ facingIn, RenderEnv renderEnv) {
       C_4675_ posNeighbour = blockPosIn.m_121945_(facingIn);
       C_2064_ stateNeighbour = blockReaderIn.m_8055_(posNeighbour);
-      if (stateNeighbour.isCacheOpaqueCube() && !(blockStateIn.b() instanceof C_141221_)) {
+      if (stateNeighbour.isCacheOpaqueCube() && !(blockStateIn.m_60734_() instanceof C_141221_)) {
          return false;
-      } else if (blockStateIn.a(stateNeighbour, facingIn)) {
+      } else if (blockStateIn.m_60719_(stateNeighbour, facingIn)) {
          return false;
       } else {
-         return stateNeighbour.p()
+         return stateNeighbour.m_60815_()
             ? shouldSideBeRenderedCached(blockStateIn, blockReaderIn, blockPosIn, facingIn, renderEnv, stateNeighbour, posNeighbour)
             : true;
       }
@@ -61,11 +61,11 @@ public class BlockUtils {
       if (b0 != 0) {
          return b0 > 0;
       } else {
-         C_3072_ voxelshape = blockStateIn.a(blockReaderIn, blockPosIn, facingIn);
+         C_3072_ voxelshape = blockStateIn.m_60655_(blockReaderIn, blockPosIn, facingIn);
          if (voxelshape.m_83281_()) {
             return true;
          } else {
-            C_3072_ voxelshape1 = stateNeighbourIn.a(blockReaderIn, posNeighbourIn, facingIn.m_122424_());
+            C_3072_ voxelshape1 = stateNeighbourIn.m_60655_(blockReaderIn, posNeighbourIn, facingIn.m_122424_());
             boolean flag = C_3068_.m_83157_(voxelshape, voxelshape1, C_3050_.f_82685_);
             if (map.size() > 400) {
                map.removeLastByte();
@@ -86,7 +86,7 @@ public class BlockUtils {
    }
 
    public static int getMetadata(C_2064_ blockState) {
-      C_1706_ block = blockState.b();
+      C_1706_ block = blockState.m_60734_();
       C_2065_<C_1706_, C_2064_> stateContainer = block.m_49965_();
       List<C_2064_> validStates = stateContainer.m_61056_();
       return validStates.indexOf(blockState);

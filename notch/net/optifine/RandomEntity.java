@@ -87,7 +87,7 @@ public class RandomEntity implements IRandomEntity {
       if (bs == null || edm.blockStateOnUpdateMs < timeMs - 50L) {
          C_4675_ pos = this.entity.m_20183_();
          bs = this.entity.m_20193_().m_8055_(pos);
-         if (bs.i()) {
+         if (bs.m_60795_()) {
             bs = this.entity.m_20193_().m_8055_(pos.m_7495_());
          }
 

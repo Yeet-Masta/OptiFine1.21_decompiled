@@ -16,7 +16,6 @@ import net.minecraft.src.C_3840_;
 import net.minecraft.src.C_3889_;
 import net.minecraft.src.C_4168_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_3889_.C_3890_;
 import net.optifine.Config;
 import net.optifine.entity.model.CustomEntityModelParser;
 import net.optifine.model.Attachment;
@@ -174,7 +173,7 @@ public class PlayerItemParser {
    }
 
    public static C_3889_ parseModelRenderer(JsonObject elem, C_3840_ modelBase, int[] parentTextureSize, String basePath) {
-      List<C_3890_> cubeList = new ArrayList();
+      List<C_3889_.C_3890_> cubeList = new ArrayList();
       Map<String, C_3889_> childModels = new HashMap();
       C_3889_ mr = new C_3889_(cubeList, childModels);
       mr.setCustom(true);

@@ -70,8 +70,8 @@ public class ChunkCacheOF implements C_1557_ {
       }
    }
 
-   public int a(C_1607_ type, C_4675_ pos) {
-      return this.chunkCache.a(type, pos);
+   public int m_45517_(C_1607_ type, C_4675_ pos) {
+      return this.chunkCache.m_45517_(type, pos);
    }
 
    public C_2064_ a_(C_4675_ pos) {
@@ -174,19 +174,19 @@ public class ChunkCacheOF implements C_1557_ {
       return this.chunkCache.m_7702_(pos);
    }
 
-   public boolean h(C_4675_ pos) {
-      return this.chunkCache.h(pos);
+   public boolean m_45527_(C_4675_ pos) {
+      return this.chunkCache.m_45527_(pos);
    }
 
    public C_2691_ b_(C_4675_ pos) {
-      return this.a_(pos).u();
+      return this.a_(pos).m_60819_();
    }
 
-   public int a(C_4675_ blockPosIn, C_4982_ colorResolverIn) {
+   public int m_6171_(C_4675_ blockPosIn, C_4982_ colorResolverIn) {
       return this.chunkCache.m_6171_(blockPosIn, colorResolverIn);
    }
 
-   public C_2681_ y_() {
+   public C_2681_ m_5518_() {
       return this.chunkCache.m_5518_();
    }
 
@@ -198,7 +198,7 @@ public class ChunkCacheOF implements C_1557_ {
       this.renderEnv = renderEnv;
    }
 
-   public float a(C_4687_ directionIn, boolean shadeIn) {
+   public float m_7717_(C_4687_ directionIn, boolean shadeIn) {
       return this.chunkCache.m_7717_(directionIn, shadeIn);
    }
 

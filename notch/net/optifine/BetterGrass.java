@@ -199,7 +199,7 @@ public class BetterGrass {
       } else if (!modelsLoaded) {
          return quads;
       } else {
-         C_1706_ block = blockState.b();
+         C_1706_ block = blockState.m_60734_();
          if (block instanceof C_1841_) {
             return getFaceQuadsMycelium(blockAccess, blockState, blockPos, facing, quads);
          } else if (block instanceof C_141203_) {
@@ -219,7 +219,7 @@ public class BetterGrass {
    }
 
    private static List getFaceQuadsMycelium(C_1559_ blockAccess, C_2064_ blockState, C_4675_ blockPos, C_4687_ facing, List quads) {
-      C_1706_ blockUp = blockAccess.m_8055_(blockPos.m_7494_()).b();
+      C_1706_ blockUp = blockAccess.m_8055_(blockPos.m_7494_()).m_60734_();
       boolean snowy = blockUp == C_1710_.f_50127_ || blockUp == C_1710_.f_50125_;
       if (Config.isBetterGrassFancy()) {
          if (snowy) {
@@ -261,7 +261,7 @@ public class BetterGrass {
          } else if (betterPodzol) {
             C_4675_ posSide = blockPos.m_7495_().m_121945_(facing);
             C_2064_ stateSide = blockAccess.m_8055_(posSide);
-            if (stateSide.b() == C_1710_.f_50599_) {
+            if (stateSide.m_60734_() == C_1710_.f_50599_) {
                return modelCubePodzol.m_213637_(blockState, facing, RANDOM);
             }
          }
@@ -304,7 +304,7 @@ public class BetterGrass {
    }
 
    private static List getFaceQuadsGrass(C_1559_ blockAccess, C_2064_ blockState, C_4675_ blockPos, C_4687_ facing, List quads) {
-      C_1706_ blockUp = blockAccess.m_8055_(blockPos.m_7494_()).b();
+      C_1706_ blockUp = blockAccess.m_8055_(blockPos.m_7494_()).m_60734_();
       boolean snowy = blockUp == C_1710_.f_50127_ || blockUp == C_1710_.f_50125_;
       if (Config.isBetterGrassFancy()) {
          if (snowy) {
@@ -327,7 +327,7 @@ public class BetterGrass {
 
    private static C_1706_ getBlockAt(C_4675_ blockPos, C_4687_ facing, C_1559_ blockAccess) {
       C_4675_ pos = blockPos.m_121945_(facing);
-      return blockAccess.m_8055_(pos).b();
+      return blockAccess.m_8055_(pos).m_60734_();
    }
 
    private static boolean getBoolean(Properties props, String key, boolean def) {

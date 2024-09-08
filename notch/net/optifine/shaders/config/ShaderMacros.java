@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import net.minecraft.src.C_4484_;
 import net.minecraft.src.C_5322_;
-import net.minecraft.src.C_5322_.C_5330_;
 import net.optifine.Config;
 import net.optifine.shaders.ITextureFormat;
 import net.optifine.shaders.RenderStage;
@@ -48,7 +47,7 @@ public class ShaderMacros {
    private static ShaderMacro[] constantMacros;
 
    public static String getOs() {
-      C_5330_ os = C_5322_.m_137581_();
+      C_5322_.C_5330_ os = C_5322_.m_137581_();
       switch (os) {
          case WINDOWS:
             return "MC_OS_WINDOWS";

@@ -39,7 +39,6 @@ import net.minecraft.src.C_516_;
 import net.minecraft.src.C_51_;
 import net.minecraft.src.C_524_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_1315_.C_313715_;
 import net.optifine.config.NbtTagValue;
 import net.optifine.shaders.Shaders;
 import net.optifine.util.EnchantmentUtils;
@@ -514,11 +513,11 @@ public class CustomItems {
       } else if (!(itemStack.m_41720_() instanceof C_1313_ itemArmor)) {
          return null;
       } else {
-         List<C_313715_> layers = ((C_1315_)itemArmor.m_40401_().m_203334_()).f_315892_();
+         List<C_1315_.C_313715_> layers = ((C_1315_)itemArmor.m_40401_().m_203334_()).f_315892_();
          if (layers.isEmpty()) {
             return null;
          } else {
-            String material = ((C_313715_)layers.get(0)).getAssetName().m_135815_();
+            String material = ((C_1315_.C_313715_)layers.get(0)).getAssetName().m_135815_();
             int layer = slot == C_516_.LEGS ? 2 : 1;
             StringBuffer sb = new StringBuffer();
             sb.append("texture.");

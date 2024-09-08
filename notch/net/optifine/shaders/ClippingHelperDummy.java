@@ -9,10 +9,12 @@ public class ClippingHelperDummy extends C_4273_ {
       super(new Matrix4f(), new Matrix4f());
    }
 
+   @Override
    public boolean m_113029_(C_3040_ aabbIn) {
       return true;
    }
 
+   @Override
    public boolean isBoxInFrustumFully(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
       return true;
    }

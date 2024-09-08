@@ -13,7 +13,7 @@ public class GuiChatOF extends C_3538_ {
       super(C_3565_.getGuiChatText(guiChat));
    }
 
-   public void b(String msg, boolean add) {
+   public void m_241797_(String msg, boolean add) {
       if (this.checkCustomCommand(msg)) {
          this.l.f_91065_.m_93076_().m_93783_(msg);
       } else {

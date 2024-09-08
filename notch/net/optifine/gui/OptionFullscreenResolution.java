@@ -8,7 +8,6 @@ import net.minecraft.src.C_3161_;
 import net.minecraft.src.C_3391_;
 import net.minecraft.src.C_3401_;
 import net.minecraft.src.C_4996_;
-import net.minecraft.src.C_213334_.C_213341_;
 
 public class OptionFullscreenResolution {
    public static C_213334_ make() {
@@ -22,7 +21,7 @@ public class OptionFullscreenResolution {
          j = (Integer)optional.map(monitor::m_84946_).orElse(-1);
       }
 
-      C_213334_<Integer> optioninstance = new C_213334_(
+      C_213334_<Integer> optioninstance = new C_213334_<>(
          "options.fullscreen.resolution",
          C_213334_.m_231498_(),
          (p_232804_1_, p_232804_2_) -> {
@@ -34,7 +33,7 @@ public class OptionFullscreenResolution {
                   : C_3401_.m_231921_(p_232804_1_, C_4996_.m_237113_(monitor.m_84944_(p_232804_2_).toString()));
             }
          },
-         new C_213341_(-1, monitor != null ? monitor.m_84953_() - 1 : -1),
+         new C_213334_.C_213341_(-1, monitor != null ? monitor.m_84953_() - 1 : -1),
          j,
          p_232800_2_ -> {
             if (monitor != null) {

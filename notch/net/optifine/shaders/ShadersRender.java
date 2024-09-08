@@ -11,6 +11,7 @@ import net.minecraft.src.C_1991_;
 import net.minecraft.src.C_2033_;
 import net.minecraft.src.C_252363_;
 import net.minecraft.src.C_276405_;
+import net.minecraft.src.C_290152_;
 import net.minecraft.src.C_302051_;
 import net.minecraft.src.C_3040_;
 import net.minecraft.src.C_3046_;
@@ -35,9 +36,6 @@ import net.minecraft.src.C_4713_;
 import net.minecraft.src.C_507_;
 import net.minecraft.src.C_524_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_290152_.C_290138_;
-import net.minecraft.src.C_3181_.C_3183_;
-import net.minecraft.src.C_4139_.C_4140_;
 import net.optifine.Config;
 import net.optifine.Lagometer;
 import net.optifine.reflect.Reflector;
@@ -150,7 +148,13 @@ public class ShadersRender {
    }
 
    public static void renderItemFP(
-      C_4131_ itemRenderer, float partialTicks, C_3181_ matrixStackIn, C_4140_ bufferIn, C_4105_ playerEntityIn, int combinedLightIn, boolean renderTranslucent
+      C_4131_ itemRenderer,
+      float partialTicks,
+      C_3181_ matrixStackIn,
+      C_4139_.C_4140_ bufferIn,
+      C_4105_ playerEntityIn,
+      int combinedLightIn,
+      boolean renderTranslucent
    ) {
       Config.getEntityRenderDispatcher().setRenderedEntity(playerEntityIn);
       GlStateManager._depthMask(true);
@@ -320,7 +324,7 @@ public class ShadersRender {
          float frozenPartialTicks = tickRateManager.m_305915_() ? partialTicks : 1.0F;
          C_4134_ wr = mc.f_91060_;
          C_4330_ renderManager = mc.m_91290_();
-         C_4140_ irendertypebuffer = wr.getRenderTypeTextures().m_110104_();
+         C_4139_.C_4140_ irendertypebuffer = wr.getRenderTypeTextures().m_110104_();
          boolean playerShadowPass = Shaders.isShadowPass && !mc.f_91074_.R_();
          int minWorldY = mc.f_91073_.I_();
          int maxWorldY = mc.f_91073_.am();
@@ -370,7 +374,7 @@ public class ShadersRender {
          C_4273_ camera = frustum;
          float blockEntityPartialTicks = tickRateManager.m_306363_() ? frozenPartialTicks : partialTicks;
 
-         for (C_290138_ worldrenderer$localrenderinformationcontainer : Shaders.isRenderShadowBlockEntities()
+         for (C_290152_.C_290138_ worldrenderer$localrenderinformationcontainer : Shaders.isRenderShadowBlockEntities()
             ? wr.getRenderInfosTileEntities()
             : Collections.EMPTY_LIST) {
             List<C_1991_> list = worldrenderer$localrenderinformationcontainer.m_293175_().m_293674_();
@@ -505,7 +509,7 @@ public class ShadersRender {
          matrixStackIn.m_252781_(C_252363_.f_252529_.m_252977_(camera.m_90589_()));
          matrixStackIn.m_252781_(C_252363_.f_252436_.m_252977_(camera.m_90590_() + 180.0F));
          double fov = gameRenderer.m_109141_(camera, partialTicks, true);
-         double fovProjection = Math.max(fov, (double)((Integer)mc.f_91066_.m_231837_().m_231551_()).intValue());
+         double fovProjection = Math.max(fov, (double)mc.f_91066_.m_231837_().m_231551_().intValue());
          Matrix4f matrixProjection = gameRenderer.m_253088_(fovProjection);
          Matrix4f matrix4f = matrixStackIn.m_85850_().m_252922_();
          C_3046_ pos = camera.m_90583_();
@@ -655,7 +659,7 @@ public class ShadersRender {
       if (!Shaders.isShadowPass && Shaders.activeProgram.getId() == 0) {
          return false;
       } else {
-         C_3183_ matrixEntry = matrixStackIn.m_85850_();
+         C_3181_.C_3183_ matrixEntry = matrixStackIn.m_85850_();
          Matrix4f matrix = matrixEntry.m_252922_();
          Matrix3f matrixNormal = matrixEntry.m_252943_();
          C_3187_ bufferbuilder = bufferIn.m_6299_(C_4168_.m_110446_(END_PORTAL_TEXTURE));

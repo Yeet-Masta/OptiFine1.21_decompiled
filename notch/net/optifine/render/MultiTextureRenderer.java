@@ -3,9 +3,9 @@ package net.optifine.render;
 import com.mojang.blaze3d.platform.GlStateManager;
 import java.nio.IntBuffer;
 import net.minecraft.src.C_188_;
+import net.minecraft.src.C_3188_;
 import net.minecraft.src.C_4484_;
 import net.minecraft.src.C_4486_;
-import net.minecraft.src.C_3188_.C_141549_;
 import net.optifine.Config;
 import net.optifine.shaders.Shaders;
 import net.optifine.shaders.ShadersTex;
@@ -16,7 +16,7 @@ public class MultiTextureRenderer {
    private static IntBuffer bufferCounts = Config.createDirectIntBuffer(1024);
    private static boolean shaders;
 
-   public static void draw(C_141549_ drawMode, int indexTypeIn, MultiTextureData multiTextureData) {
+   public static void draw(C_3188_.C_141549_ drawMode, int indexTypeIn, MultiTextureData multiTextureData) {
       shaders = Config.isShaders();
       SpriteRenderData[] srds = multiTextureData.getSpriteRenderDatas();
 
@@ -26,7 +26,7 @@ public class MultiTextureRenderer {
       }
    }
 
-   private static void draw(C_141549_ drawMode, int indexTypeIn, SpriteRenderData srd) {
+   private static void draw(C_3188_.C_141549_ drawMode, int indexTypeIn, SpriteRenderData srd) {
       C_4486_ sprite = srd.getSprite();
       int[] positions = srd.getPositions();
       int[] counts = srd.getCounts();

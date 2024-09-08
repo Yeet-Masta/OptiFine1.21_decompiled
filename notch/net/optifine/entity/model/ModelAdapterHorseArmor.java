@@ -10,6 +10,7 @@ import net.minecraft.src.C_4345_;
 import net.minecraft.src.C_4435_;
 import net.minecraft.src.C_513_;
 import net.minecraft.src.C_5265_;
+import net.minecraft.src.C_928_;
 import net.optifine.Config;
 
 public class ModelAdapterHorseArmor extends ModelAdapterHorse {
@@ -32,7 +33,7 @@ public class ModelAdapterHorseArmor extends ModelAdapterHorse {
          return null;
       } else {
          C_4435_ layer = new C_4435_(renderHorse, renderManager.getContext().m_174027_());
-         layer.f_117017_ = (C_3827_)modelBase;
+         layer.f_117017_ = (C_3827_<C_928_>)modelBase;
          renderHorse.removeLayers(C_4435_.class);
          renderHorse.a(layer);
          return renderHorse;

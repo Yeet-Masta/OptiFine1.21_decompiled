@@ -57,16 +57,16 @@ public class BetterSnow {
 
    private static boolean hasSnowNeighbours(C_1559_ blockAccess, C_4675_ pos) {
       C_1706_ blockSnow = C_1710_.f_50125_;
-      if (blockAccess.m_8055_(pos.m_122012_()).b() == blockSnow
-         || blockAccess.m_8055_(pos.m_122019_()).b() == blockSnow
-         || blockAccess.m_8055_(pos.m_122024_()).b() == blockSnow
-         || blockAccess.m_8055_(pos.m_122029_()).b() == blockSnow) {
+      if (blockAccess.m_8055_(pos.m_122012_()).m_60734_() == blockSnow
+         || blockAccess.m_8055_(pos.m_122019_()).m_60734_() == blockSnow
+         || blockAccess.m_8055_(pos.m_122024_()).m_60734_() == blockSnow
+         || blockAccess.m_8055_(pos.m_122029_()).m_60734_() == blockSnow) {
          C_2064_ bsDown = blockAccess.m_8055_(pos.m_7495_());
-         if (bsDown.i(blockAccess, pos)) {
+         if (bsDown.m_60804_(blockAccess, pos)) {
             return true;
          }
 
-         C_1706_ blockDown = bsDown.b();
+         C_1706_ blockDown = bsDown.m_60734_();
          if (blockDown instanceof C_1920_) {
             return bsDown.c(C_1920_.f_56842_) == C_2093_.TOP;
          }
@@ -80,10 +80,10 @@ public class BetterSnow {
    }
 
    private static boolean checkBlock(C_1559_ blockAccess, C_2064_ blockState, C_4675_ blockPos) {
-      if (blockState.i(blockAccess, blockPos)) {
+      if (blockState.m_60804_(blockAccess, blockPos)) {
          return false;
       } else {
-         C_1706_ block = blockState.b();
+         C_1706_ block = blockState.m_60734_();
          if (block == C_1710_.f_50127_) {
             return false;
          } else if (!(block instanceof C_1715_)

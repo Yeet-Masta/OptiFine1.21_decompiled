@@ -10,6 +10,7 @@ import net.minecraft.src.C_4331_;
 import net.minecraft.src.C_4422_;
 import net.minecraft.src.C_513_;
 import net.minecraft.src.C_5265_;
+import net.minecraft.src.C_819_;
 import net.optifine.Config;
 
 public class ModelAdapterCatCollar extends ModelAdapterOcelot {
@@ -32,7 +33,7 @@ public class ModelAdapterCatCollar extends ModelAdapterOcelot {
          return null;
       } else {
          C_4422_ layer = new C_4422_(renderCat, renderManager.getContext().m_174027_());
-         layer.f_116650_ = (C_3805_)modelBase;
+         layer.f_116650_ = (C_3805_<C_819_>)modelBase;
          renderCat.removeLayers(C_4422_.class);
          renderCat.a(layer);
          return renderCat;

@@ -35,7 +35,6 @@ import net.minecraft.src.C_4687_;
 import net.minecraft.src.C_50_;
 import net.minecraft.src.C_51_;
 import net.minecraft.src.C_5265_;
-import net.minecraft.src.C_4687_.C_4689_;
 import net.optifine.config.Matches;
 import net.optifine.model.BlockModelUtils;
 import net.optifine.model.ListQuadsOverlay;
@@ -98,7 +97,7 @@ public class ConnectedTextures {
    }
 
    private static boolean skipConnectedTexture(C_1559_ blockAccess, C_2064_ blockState, C_4675_ blockPos, C_4196_ quad, RenderEnv renderEnv) {
-      C_1706_ block = blockState.b();
+      C_1706_ block = blockState.m_60734_();
       if (block instanceof C_1818_) {
          C_4687_ face = quad.m_111306_();
          if (face != C_4687_.UP && face != C_4687_.DOWN) {
@@ -111,11 +110,11 @@ public class ConnectedTextures {
 
          C_4675_ posNeighbour = blockPos.m_121945_(quad.m_111306_());
          C_2064_ stateNeighbour = blockAccess.m_8055_(posNeighbour);
-         if (stateNeighbour.b() != block) {
+         if (stateNeighbour.m_60734_() != block) {
             return false;
          }
 
-         C_1706_ blockNeighbour = stateNeighbour.b();
+         C_1706_ blockNeighbour = stateNeighbour.m_60734_();
          if (block instanceof C_1919_ && blockNeighbour instanceof C_1919_) {
             C_1353_ color = ((C_1919_)block).m_7988_();
             C_1353_ colorNeighbour = ((C_1919_)blockNeighbour).m_7988_();
@@ -278,7 +277,7 @@ public class ConnectedTextures {
    public static C_4196_[] getConnectedTextureSingle(
       C_1557_ blockAccess, C_2064_ blockState, C_4675_ blockPos, C_4687_ facing, C_4196_ quad, boolean checkBlocks, int pass, RenderEnv renderEnv
    ) {
-      C_1706_ block = blockState.b();
+      C_1706_ block = blockState.m_60734_();
       C_4486_ icon = quad.m_173410_();
       if (tileProperties != null) {
          int iconId = icon.getIndexInMap();
@@ -370,7 +369,7 @@ public class ConnectedTextures {
    ) {
       int vertAxis = 0;
       int metadata = blockState.getMetadata();
-      C_1706_ block = blockState.b();
+      C_1706_ block = blockState.m_60734_();
       if (block instanceof C_1884_) {
          vertAxis = getPillarAxis(blockState);
       }
@@ -486,7 +485,7 @@ public class ConnectedTextures {
    }
 
    private static int getPillarAxis(C_2064_ blockState) {
-      C_4689_ axis = (C_4689_)blockState.c(C_1884_.f_55923_);
+      C_4687_.C_4689_ axis = (C_4687_.C_4689_)blockState.c(C_1884_.f_55923_);
       switch (axis) {
          case X:
             return 2;
@@ -505,7 +504,7 @@ public class ConnectedTextures {
          if (cp.linked) {
             C_4675_ posDown = blockPos.m_7495_();
 
-            for (C_2064_ bsDown = blockAccess.m_8055_(posDown); bsDown.b() == blockState.b(); bsDown = blockAccess.m_8055_(posDown)) {
+            for (C_2064_ bsDown = blockAccess.m_8055_(posDown); bsDown.m_60734_() == blockState.m_60734_(); bsDown = blockAccess.m_8055_(posDown)) {
                blockPos = posDown;
                posDown = posDown.m_7495_();
                if (posDown.v() < 0) {
@@ -1219,10 +1218,10 @@ public class ConnectedTextures {
 
          C_4675_ posNeighbourStateAbove = blockPos.m_121945_(getFacing(side));
          C_2064_ neighbourStateAbove = worldReader.m_8055_(posNeighbourStateAbove);
-         if (neighbourStateAbove.i(worldReader, posNeighbourStateAbove)) {
+         if (neighbourStateAbove.m_60804_(worldReader, posNeighbourStateAbove)) {
             return false;
          } else {
-            return side == 1 && neighbourStateAbove.b() == C_1710_.f_50125_
+            return side == 1 && neighbourStateAbove.m_60734_() == C_1710_.f_50125_
                ? false
                : !isNeighbour(cp, worldReader, blockState, blockPos, neighbourState, side, icon, metadata);
          }
@@ -1233,7 +1232,7 @@ public class ConnectedTextures {
       if (BlockUtils.isFullCube(state, blockReader, pos)) {
          return true;
       } else {
-         C_1706_ block = state.b();
+         C_1706_ block = state.m_60734_();
          return block == C_1710_.f_50058_ ? true : block instanceof C_1918_;
       }
    }
@@ -1256,7 +1255,7 @@ public class ConnectedTextures {
 
          C_4675_ posNeighbourAbove = blockPos.m_121945_(getFacing(side));
          C_2064_ neighbourStateAbove = worldReader.m_8055_(posNeighbourAbove);
-         return neighbourStateAbove.i(worldReader, posNeighbourAbove) ? false : side != 1 || neighbourStateAbove.b() != C_1710_.f_50125_;
+         return neighbourStateAbove.m_60804_(worldReader, posNeighbourAbove) ? false : side != 1 || neighbourStateAbove.m_60734_() != C_1710_.f_50125_;
       }
    }
 
@@ -1280,8 +1279,8 @@ public class ConnectedTextures {
             return neighbourIcon == icon;
          }
       } else if (cp.connect == 1) {
-         C_1706_ block = blockState.b();
-         C_1706_ neighbourBlock = neighbourState.b();
+         C_1706_ block = blockState.m_60734_();
+         C_1706_ neighbourBlock = neighbourState.m_60734_();
          return neighbourBlock == block;
       } else {
          return false;

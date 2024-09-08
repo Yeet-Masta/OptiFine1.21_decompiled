@@ -10,6 +10,7 @@ import net.minecraft.src.C_4411_;
 import net.minecraft.src.C_4460_;
 import net.minecraft.src.C_513_;
 import net.minecraft.src.C_5265_;
+import net.minecraft.src.C_964_;
 import net.optifine.Config;
 
 public class ModelAdapterWitherArmor extends ModelAdapterWither {
@@ -32,7 +33,7 @@ public class ModelAdapterWitherArmor extends ModelAdapterWither {
          return null;
       } else {
          C_4460_ layer = new C_4460_(renderWither, renderManager.getContext().m_174027_());
-         layer.f_117696_ = (C_3884_)modelBase;
+         layer.f_117696_ = (C_3884_<C_964_>)modelBase;
          renderWither.removeLayers(C_4460_.class);
          renderWither.a(layer);
          return renderWither;

@@ -18,7 +18,8 @@ public class PlayerItemsLayer extends C_4447_ {
       this.renderPlayer = renderPlayer;
    }
 
-   public void a(
+   @Override
+   public void m_6494_(
       C_3181_ matrixStackIn,
       C_4139_ bufferIn,
       int packedLightIn,

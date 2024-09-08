@@ -269,12 +269,12 @@ public class DynamicLights {
                   return 12;
                }
 
-               return block.m_49966_().h();
+               return block.m_49966_().m_60791_();
             }
          }
 
          if (item == C_1394_.f_42448_) {
-            return C_1710_.f_49991_.m_49966_().h();
+            return C_1710_.f_49991_.m_49966_().m_60791_();
          } else if (item == C_1394_.f_42585_ || item == C_1394_.f_42593_) {
             return 10;
          } else if (item == C_1394_.f_42525_) {
@@ -284,7 +284,7 @@ public class DynamicLights {
          } else if (item == C_1394_.f_42542_) {
             return 8;
          } else if (item == C_1394_.f_42686_) {
-            return C_1710_.f_50273_.m_49966_().h() / 2;
+            return C_1710_.f_50273_.m_49966_().m_60791_() / 2;
          } else if (item == C_1394_.f_151056_) {
             return 8;
          } else if (item == C_1394_.f_151063_) {
@@ -384,6 +384,6 @@ public class DynamicLights {
    }
 
    public static C_1391_ getItemStack(C_976_ entityItem) {
-      return (C_1391_)entityItem.ar().m_135370_(PARAMETER_ITEM_STACK);
+      return entityItem.ar().m_135370_(PARAMETER_ITEM_STACK);
    }
 }

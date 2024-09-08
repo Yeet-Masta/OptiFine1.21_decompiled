@@ -12,7 +12,6 @@ import net.minecraft.src.C_3889_;
 import net.minecraft.src.C_4243_;
 import net.minecraft.src.C_4244_;
 import net.minecraft.src.C_4253_;
-import net.minecraft.src.C_4253_.C_4254_;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
@@ -22,11 +21,11 @@ public class ModelAdapterSign extends ModelAdapter {
    }
 
    public C_3840_ makeModel() {
-      return new C_4254_(bakeModelLayer(C_141656_.m_171291_(C_2106_.f_61830_)));
+      return new C_4253_.C_4254_(bakeModelLayer(C_141656_.m_171291_(C_2106_.f_61830_)));
    }
 
    public C_3889_ getModelRenderer(C_3840_ model, String modelPart) {
-      if (!(model instanceof C_4254_ modelSign)) {
+      if (!(model instanceof C_4253_.C_4254_ modelSign)) {
          return null;
       } else if (modelPart.equals("board")) {
          return modelSign.f_173655_.getChildModelDeep("sign");
@@ -49,7 +48,9 @@ public class ModelAdapterSign extends ModelAdapter {
          Config.warn("Field not found: TileEntitySignRenderer.signModels");
          return null;
       } else {
-         Map<C_2106_, C_4254_> signModels = (Map<C_2106_, C_4254_>)Reflector.getFieldValue(renderer, Reflector.TileEntitySignRenderer_signModels);
+         Map<C_2106_, C_4253_.C_4254_> signModels = (Map<C_2106_, C_4253_.C_4254_>)Reflector.getFieldValue(
+            renderer, Reflector.TileEntitySignRenderer_signModels
+         );
          if (signModels == null) {
             Config.warn("Field not found: TileEntitySignRenderer.signModels");
             return null;
@@ -60,7 +61,7 @@ public class ModelAdapterSign extends ModelAdapter {
             }
 
             for (C_2106_ type : new HashSet(signModels.keySet())) {
-               signModels.put(type, (C_4254_)modelBase);
+               signModels.put(type, (C_4253_.C_4254_)modelBase);
             }
 
             return renderer;

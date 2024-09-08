@@ -3,12 +3,11 @@ package net.optifine;
 import java.util.HashSet;
 import java.util.Set;
 import net.minecraft.src.C_188_;
+import net.minecraft.src.C_290152_;
 import net.minecraft.src.C_4134_;
 import net.minecraft.src.C_4675_;
 import net.minecraft.src.C_4687_;
 import net.minecraft.src.C_507_;
-import net.minecraft.src.C_290152_.C_290138_;
-import net.minecraft.src.C_290152_.C_290185_;
 import net.minecraft.src.C_4675_.C_4681_;
 
 public class DynamicLight {
@@ -56,21 +55,21 @@ public class DynamicLight {
             C_4687_ dirY = (C_188_.m_14107_(posY) & 15) >= 8 ? C_4687_.UP : C_4687_.DOWN;
             C_4687_ dirZ = (C_188_.m_14107_(posZ) & 15) >= 8 ? C_4687_.SOUTH : C_4687_.NORTH;
             C_4675_ chunkPos = C_4675_.m_274561_(posX, posY, posZ);
-            C_290138_ chunk = renderGlobal.getRenderChunk(chunkPos);
+            C_290152_.C_290138_ chunk = renderGlobal.getRenderChunk(chunkPos);
             C_4675_ chunkPosX = this.getChunkPos(chunk, chunkPos, dirX);
-            C_290138_ chunkX = renderGlobal.getRenderChunk(chunkPosX);
+            C_290152_.C_290138_ chunkX = renderGlobal.getRenderChunk(chunkPosX);
             C_4675_ chunkPosZ = this.getChunkPos(chunk, chunkPos, dirZ);
-            C_290138_ chunkZ = renderGlobal.getRenderChunk(chunkPosZ);
+            C_290152_.C_290138_ chunkZ = renderGlobal.getRenderChunk(chunkPosZ);
             C_4675_ chunkPosXZ = this.getChunkPos(chunkX, chunkPosX, dirZ);
-            C_290138_ chunkXZ = renderGlobal.getRenderChunk(chunkPosXZ);
+            C_290152_.C_290138_ chunkXZ = renderGlobal.getRenderChunk(chunkPosXZ);
             C_4675_ chunkPosY = this.getChunkPos(chunk, chunkPos, dirY);
-            C_290138_ chunkY = renderGlobal.getRenderChunk(chunkPosY);
+            C_290152_.C_290138_ chunkY = renderGlobal.getRenderChunk(chunkPosY);
             C_4675_ chunkPosYX = this.getChunkPos(chunkY, chunkPosY, dirX);
-            C_290138_ chunkYX = renderGlobal.getRenderChunk(chunkPosYX);
+            C_290152_.C_290138_ chunkYX = renderGlobal.getRenderChunk(chunkPosYX);
             C_4675_ chunkPosYZ = this.getChunkPos(chunkY, chunkPosY, dirZ);
-            C_290138_ chunkYZ = renderGlobal.getRenderChunk(chunkPosYZ);
+            C_290152_.C_290138_ chunkYZ = renderGlobal.getRenderChunk(chunkPosYZ);
             C_4675_ chunkPosYXZ = this.getChunkPos(chunkYX, chunkPosYX, dirZ);
-            C_290138_ chunkYXZ = renderGlobal.getRenderChunk(chunkPosYXZ);
+            C_290152_.C_290138_ chunkYXZ = renderGlobal.getRenderChunk(chunkPosYXZ);
             this.updateChunkLight(chunk, this.setLitChunkPos, setNewPos);
             this.updateChunkLight(chunkX, this.setLitChunkPos, setNewPos);
             this.updateChunkLight(chunkZ, this.setLitChunkPos, setNewPos);
@@ -86,13 +85,13 @@ public class DynamicLight {
       }
    }
 
-   private C_4675_ getChunkPos(C_290138_ renderChunk, C_4675_ pos, C_4687_ facing) {
+   private C_4675_ getChunkPos(C_290152_.C_290138_ renderChunk, C_4675_ pos, C_4687_ facing) {
       return renderChunk != null ? renderChunk.m_292593_(facing) : pos.m_5484_(facing, 16);
    }
 
-   private void updateChunkLight(C_290138_ renderChunk, Set<C_4675_> setPrevPos, Set<C_4675_> setNewPos) {
+   private void updateChunkLight(C_290152_.C_290138_ renderChunk, Set<C_4675_> setPrevPos, Set<C_4675_> setNewPos) {
       if (renderChunk != null) {
-         C_290185_ compiledChunk = renderChunk.m_293175_();
+         C_290152_.C_290185_ compiledChunk = renderChunk.m_293175_();
          if (compiledChunk != null && !compiledChunk.m_295467_()) {
             renderChunk.m_292780_(false);
             renderChunk.setNeedsBackgroundPriorityUpdate(true);
@@ -111,7 +110,7 @@ public class DynamicLight {
 
    public void updateLitChunks(C_4134_ renderGlobal) {
       for (C_4675_ posOld : this.setLitChunkPos) {
-         C_290138_ chunkOld = renderGlobal.getRenderChunk(posOld);
+         C_290152_.C_290138_ chunkOld = renderGlobal.getRenderChunk(posOld);
          this.updateChunkLight(chunkOld, null, null);
       }
    }

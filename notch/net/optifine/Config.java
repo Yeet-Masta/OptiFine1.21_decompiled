@@ -413,11 +413,11 @@ public class Config {
    }
 
    public static boolean isMipmaps() {
-      return (Integer)gameSettings.m_232119_().m_231551_() > 0;
+      return gameSettings.m_232119_().m_231551_() > 0;
    }
 
    public static int getMipmapLevels() {
-      return (Integer)gameSettings.m_232119_().m_231551_();
+      return gameSettings.m_232119_().m_231551_();
    }
 
    public static int getMipmapType() {
@@ -863,7 +863,7 @@ public class Config {
       } else {
          C_50_[] rps = getResourcePacks();
          if (rps.length <= 0) {
-            return getDefaultResourcePack().b();
+            return getDefaultResourcePack().m_5542_();
          } else {
             String[] names = new String[rps.length];
 
@@ -1140,11 +1140,11 @@ public class Config {
    }
 
    public static boolean isSmoothBiomes() {
-      return (Integer)gameSettings.m_232121_().m_231551_() > 0;
+      return gameSettings.m_232121_().m_231551_() > 0;
    }
 
    public static int getBiomeBlendRadius() {
-      return (Integer)gameSettings.m_232121_().m_231551_();
+      return gameSettings.m_232121_().m_231551_();
    }
 
    public static boolean isCustomColors() {
@@ -1355,7 +1355,7 @@ public class Config {
    }
 
    public static int getChunkViewDistance() {
-      return gameSettings == null ? 10 : (Integer)gameSettings.m_231984_().m_231551_();
+      return gameSettings == null ? 10 : gameSettings.m_231984_().m_231551_();
    }
 
    public static boolean equals(Object o1, Object o2) {
