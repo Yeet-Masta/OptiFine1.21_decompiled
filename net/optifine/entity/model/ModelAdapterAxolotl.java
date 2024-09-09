@@ -4,44 +4,44 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.AxolotlModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.entity.AxolotlRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterAxolotl extends ModelAdapter {
-   private static Map<String, Integer> mapPartFields = null;
+   private static Map mapPartFields = null;
 
    public ModelAdapterAxolotl() {
       super(EntityType.f_147039_, "axolotl", 0.5F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new AxolotlModel(bakeModelLayer(ModelLayers.f_171263_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof AxolotlModel modelAxolotl)) {
          return null;
       } else {
-         Map<String, Integer> mapParts = getMapPartFields();
+         Map mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             int index = (Integer)mapParts.get(modelPart);
-            return (net.minecraft.client.model.geom.ModelPart)Reflector.getFieldValue(modelAxolotl, Reflector.ModelAxolotl_ModelRenderers, index);
+            return (ModelPart)Reflector.getFieldValue(modelAxolotl, Reflector.ModelAxolotl_ModelRenderers, index);
          } else {
             return null;
          }
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return (String[])getMapPartFields().keySet().toArray(new String[0]);
    }
 
-   private static Map<String, Integer> getMapPartFields() {
+   private static Map getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -60,9 +60,8 @@ public class ModelAdapterAxolotl extends ModelAdapter {
       }
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       AxolotlRenderer render = new AxolotlRenderer(renderManager.getContext());
       render.f_115290_ = (AxolotlModel)modelBase;
       render.f_114477_ = shadowSize;

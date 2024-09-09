@@ -12,10 +12,18 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.biome.Biome;
@@ -26,6 +34,7 @@ import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.StainedGlassBlock;
 import net.minecraft.world.level.block.StainedGlassPaneBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.config.Matches;
 import net.optifine.model.BlockModelUtils;
 import net.optifine.model.ListQuadsOverlay;
@@ -56,56 +65,43 @@ public class ConnectedTextures {
    private static final int Y_AXIS = 0;
    private static final int Z_AXIS = 1;
    private static final int X_AXIS = 2;
-   public static final net.minecraft.world.level.block.state.BlockState AIR_DEFAULT_STATE = Blocks.f_50016_.m_49966_();
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite emptySprite = null;
-   public static net.minecraft.resources.ResourceLocation LOCATION_SPRITE_EMPTY = TextureUtils.LOCATION_SPRITE_EMPTY;
-   private static final BlockDir[] SIDES_Y_NEG_DOWN = new BlockDir[]{BlockDir.WEST, BlockDir.EAST, BlockDir.NORTH, BlockDir.SOUTH};
-   private static final BlockDir[] SIDES_Y_POS_UP = new BlockDir[]{BlockDir.WEST, BlockDir.EAST, BlockDir.SOUTH, BlockDir.NORTH};
-   private static final BlockDir[] SIDES_Z_NEG_NORTH = new BlockDir[]{BlockDir.EAST, BlockDir.WEST, BlockDir.DOWN, BlockDir.UP};
-   private static final BlockDir[] SIDES_Z_POS_SOUTH = new BlockDir[]{BlockDir.WEST, BlockDir.EAST, BlockDir.DOWN, BlockDir.UP};
-   private static final BlockDir[] SIDES_X_NEG_WEST = new BlockDir[]{BlockDir.NORTH, BlockDir.SOUTH, BlockDir.DOWN, BlockDir.UP};
-   private static final BlockDir[] SIDES_X_POS_EAST = new BlockDir[]{BlockDir.SOUTH, BlockDir.NORTH, BlockDir.DOWN, BlockDir.UP};
-   private static final BlockDir[] EDGES_Y_NEG_DOWN = new BlockDir[]{BlockDir.NORTH_EAST, BlockDir.NORTH_WEST, BlockDir.SOUTH_EAST, BlockDir.SOUTH_WEST};
-   private static final BlockDir[] EDGES_Y_POS_UP = new BlockDir[]{BlockDir.SOUTH_EAST, BlockDir.SOUTH_WEST, BlockDir.NORTH_EAST, BlockDir.NORTH_WEST};
-   private static final BlockDir[] EDGES_Z_NEG_NORTH = new BlockDir[]{BlockDir.DOWN_WEST, BlockDir.DOWN_EAST, BlockDir.UP_WEST, BlockDir.UP_EAST};
-   private static final BlockDir[] EDGES_Z_POS_SOUTH = new BlockDir[]{BlockDir.DOWN_EAST, BlockDir.DOWN_WEST, BlockDir.UP_EAST, BlockDir.UP_WEST};
-   private static final BlockDir[] EDGES_X_NEG_WEST = new BlockDir[]{BlockDir.DOWN_SOUTH, BlockDir.DOWN_NORTH, BlockDir.UP_SOUTH, BlockDir.UP_NORTH};
-   private static final BlockDir[] EDGES_X_POS_EAST = new BlockDir[]{BlockDir.DOWN_NORTH, BlockDir.DOWN_SOUTH, BlockDir.UP_NORTH, BlockDir.UP_SOUTH};
-   public static final net.minecraft.client.renderer.texture.TextureAtlasSprite SPRITE_DEFAULT = new net.minecraft.client.renderer.texture.TextureAtlasSprite(
-      net.minecraft.client.renderer.texture.TextureAtlas.f_118259_, new net.minecraft.resources.ResourceLocation("default")
-   );
-   private static final RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
+   public static final BlockState AIR_DEFAULT_STATE;
+   private static TextureAtlasSprite emptySprite;
+   public static ResourceLocation LOCATION_SPRITE_EMPTY;
+   private static final BlockDir[] SIDES_Y_NEG_DOWN;
+   private static final BlockDir[] SIDES_Y_POS_UP;
+   private static final BlockDir[] SIDES_Z_NEG_NORTH;
+   private static final BlockDir[] SIDES_Z_POS_SOUTH;
+   private static final BlockDir[] SIDES_X_NEG_WEST;
+   private static final BlockDir[] SIDES_X_POS_EAST;
+   private static final BlockDir[] EDGES_Y_NEG_DOWN;
+   private static final BlockDir[] EDGES_Y_POS_UP;
+   private static final BlockDir[] EDGES_Z_NEG_NORTH;
+   private static final BlockDir[] EDGES_Z_POS_SOUTH;
+   private static final BlockDir[] EDGES_X_NEG_WEST;
+   private static final BlockDir[] EDGES_X_POS_EAST;
+   public static final TextureAtlasSprite SPRITE_DEFAULT;
+   private static final RandomSource RANDOM;
 
-   public static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTexture(
-      BlockAndTintGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      RenderEnv renderEnv
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteIn = quad.m_173410_();
+   public static BakedQuad[] getConnectedTexture(BlockAndTintGetter blockAccess, BlockState blockState, BlockPos blockPos, BakedQuad quad, RenderEnv renderEnv) {
+      TextureAtlasSprite spriteIn = quad.m_173410_();
       if (spriteIn == null) {
          return renderEnv.getArrayQuadsCtm(quad);
       } else if (skipConnectedTexture(blockAccess, blockState, blockPos, quad, renderEnv)) {
          quad = getQuad(emptySprite, quad);
          return renderEnv.getArrayQuadsCtm(quad);
       } else {
-         net.minecraft.core.Direction side = quad.m_111306_();
-         return getConnectedTextureMultiPass(blockAccess, blockState, blockPos, side, quad, renderEnv);
+         Direction side = quad.m_111306_();
+         BakedQuad[] quads = getConnectedTextureMultiPass(blockAccess, blockState, blockPos, side, quad, renderEnv);
+         return quads;
       }
    }
 
-   private static boolean skipConnectedTexture(
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      RenderEnv renderEnv
-   ) {
+   private static boolean skipConnectedTexture(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, BakedQuad quad, RenderEnv renderEnv) {
       Block block = blockState.m_60734_();
       if (block instanceof IronBarsBlock) {
-         net.minecraft.core.Direction face = quad.m_111306_();
-         if (face != net.minecraft.core.Direction.UP && face != net.minecraft.core.Direction.DOWN) {
+         Direction face = quad.m_111306_();
+         if (face != Direction.field_61 && face != Direction.DOWN) {
             return false;
          }
 
@@ -114,15 +110,15 @@ public class ConnectedTextures {
          }
 
          BlockPos posNeighbour = blockPos.m_121945_(quad.m_111306_());
-         net.minecraft.world.level.block.state.BlockState stateNeighbour = blockAccess.m_8055_(posNeighbour);
+         BlockState stateNeighbour = blockAccess.m_8055_(posNeighbour);
          if (stateNeighbour.m_60734_() != block) {
             return false;
          }
 
          Block blockNeighbour = stateNeighbour.m_60734_();
          if (block instanceof StainedGlassPaneBlock && blockNeighbour instanceof StainedGlassPaneBlock) {
-            net.minecraft.world.item.DyeColor color = ((StainedGlassPaneBlock)block).m_7988_();
-            net.minecraft.world.item.DyeColor colorNeighbour = ((StainedGlassPaneBlock)blockNeighbour).m_7988_();
+            DyeColor color = ((StainedGlassPaneBlock)block).m_7988_();
+            DyeColor colorNeighbour = ((StainedGlassPaneBlock)blockNeighbour).m_7988_();
             if (color != colorNeighbour) {
                return false;
             }
@@ -158,22 +154,19 @@ public class ConnectedTextures {
       return false;
    }
 
-   protected static net.minecraft.client.renderer.block.model.BakedQuad[] getQuads(
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite, net.minecraft.client.renderer.block.model.BakedQuad quadIn, RenderEnv renderEnv
-   ) {
+   protected static BakedQuad[] getQuads(TextureAtlasSprite sprite, BakedQuad quadIn, RenderEnv renderEnv) {
       if (sprite == null) {
          return null;
       } else if (sprite == SPRITE_DEFAULT) {
          return renderEnv.getArrayQuadsCtm(quadIn);
       } else {
-         net.minecraft.client.renderer.block.model.BakedQuad quad = getQuad(sprite, quadIn);
-         return renderEnv.getArrayQuadsCtm(quad);
+         BakedQuad quad = getQuad(sprite, quadIn);
+         BakedQuad[] quads = renderEnv.getArrayQuadsCtm(quad);
+         return quads;
       }
    }
 
-   private static synchronized net.minecraft.client.renderer.block.model.BakedQuad getQuad(
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite, net.minecraft.client.renderer.block.model.BakedQuad quadIn
-   ) {
+   private static synchronized BakedQuad getQuad(TextureAtlasSprite sprite, BakedQuad quadIn) {
       if (spriteQuadMaps == null) {
          return quadIn;
       } else {
@@ -182,13 +175,13 @@ public class ConnectedTextures {
             Map quadMap = spriteQuadMaps[spriteIndex];
             if (quadMap == null) {
                quadMap = new IdentityHashMap(1);
-               spriteQuadMaps[spriteIndex] = quadMap;
+               spriteQuadMaps[spriteIndex] = (Map)quadMap;
             }
 
-            net.minecraft.client.renderer.block.model.BakedQuad quad = (net.minecraft.client.renderer.block.model.BakedQuad)quadMap.get(quadIn);
+            BakedQuad quad = (BakedQuad)((Map)quadMap).get(quadIn);
             if (quad == null) {
                quad = makeSpriteQuad(quadIn, sprite);
-               quadMap.put(quadIn, quad);
+               ((Map)quadMap).put(quadIn, quad);
             }
 
             return quad;
@@ -198,9 +191,7 @@ public class ConnectedTextures {
       }
    }
 
-   private static synchronized net.minecraft.client.renderer.block.model.BakedQuad getQuadFull(
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite, net.minecraft.client.renderer.block.model.BakedQuad quadIn, int tintIndex
-   ) {
+   private static synchronized BakedQuad getQuadFull(TextureAtlasSprite sprite, BakedQuad quadIn, int tintIndex) {
       if (spriteQuadFullMaps == null) {
          return null;
       } else if (sprite == null) {
@@ -210,15 +201,15 @@ public class ConnectedTextures {
          if (spriteIndex >= 0 && spriteIndex < spriteQuadFullMaps.length) {
             Map quadMap = spriteQuadFullMaps[spriteIndex];
             if (quadMap == null) {
-               quadMap = new EnumMap(net.minecraft.core.Direction.class);
-               spriteQuadFullMaps[spriteIndex] = quadMap;
+               quadMap = new EnumMap(Direction.class);
+               spriteQuadFullMaps[spriteIndex] = (Map)quadMap;
             }
 
-            net.minecraft.core.Direction face = quadIn.m_111306_();
-            net.minecraft.client.renderer.block.model.BakedQuad quad = (net.minecraft.client.renderer.block.model.BakedQuad)quadMap.get(face);
+            Direction face = quadIn.m_111306_();
+            BakedQuad quad = (BakedQuad)((Map)quadMap).get(face);
             if (quad == null) {
                quad = BlockModelUtils.makeBakedQuad(face, sprite, tintIndex);
-               quadMap.put(face, quad);
+               ((Map)quadMap).put(face, quad);
             }
 
             return quad;
@@ -228,25 +219,19 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad makeSpriteQuad(
-      net.minecraft.client.renderer.block.model.BakedQuad quad, net.minecraft.client.renderer.texture.TextureAtlasSprite sprite
-   ) {
+   private static BakedQuad makeSpriteQuad(BakedQuad quad, TextureAtlasSprite sprite) {
       int[] data = (int[])quad.m_111303_().clone();
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteFrom = quad.m_173410_();
+      TextureAtlasSprite spriteFrom = quad.m_173410_();
 
-      for (int i = 0; i < 4; i++) {
+      for(int i = 0; i < 4; ++i) {
          fixVertex(data, i, spriteFrom, sprite);
       }
 
-      return new net.minecraft.client.renderer.block.model.BakedQuad(data, quad.m_111305_(), quad.m_111306_(), sprite, quad.m_111307_());
+      BakedQuad bq = new BakedQuad(data, quad.m_111305_(), quad.m_111306_(), sprite, quad.m_111307_());
+      return bq;
    }
 
-   private static void fixVertex(
-      int[] data,
-      int vertex,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteFrom,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteTo
-   ) {
+   private static void fixVertex(int[] data, int vertex, TextureAtlasSprite spriteFrom, TextureAtlasSprite spriteTo) {
       int mul = data.length / 4;
       int pos = mul * vertex;
       float u = Float.intBitsToFloat(data[pos + 4]);
@@ -257,30 +242,22 @@ public class ConnectedTextures {
       data[pos + 4 + 1] = Float.floatToRawIntBits(spriteTo.getInterpolatedV16(sv16));
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureMultiPass(
-      BlockAndTintGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      net.minecraft.core.Direction side,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      RenderEnv renderEnv
-   ) {
-      net.minecraft.client.renderer.block.model.BakedQuad[] quads = getConnectedTextureSingle(blockAccess, blockState, blockPos, side, quad, true, 0, renderEnv);
+   private static BakedQuad[] getConnectedTextureMultiPass(BlockAndTintGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction side, BakedQuad quad, RenderEnv renderEnv) {
+      BakedQuad[] quads = getConnectedTextureSingle(blockAccess, blockState, blockPos, side, quad, true, 0, renderEnv);
       if (!multipass) {
          return quads;
       } else if (quads.length == 1 && quads[0] == quad) {
          return quads;
       } else {
-         List<net.minecraft.client.renderer.block.model.BakedQuad> listQuads = renderEnv.getListQuadsCtmMultipass(quads);
+         List listQuads = renderEnv.getListQuadsCtmMultipass(quads);
 
-         for (int q = 0; q < listQuads.size(); q++) {
-            net.minecraft.client.renderer.block.model.BakedQuad newQuad = (net.minecraft.client.renderer.block.model.BakedQuad)listQuads.get(q);
-            net.minecraft.client.renderer.block.model.BakedQuad mpQuad = newQuad;
+         int q;
+         for(q = 0; q < listQuads.size(); ++q) {
+            BakedQuad newQuad = (BakedQuad)listQuads.get(q);
+            BakedQuad mpQuad = newQuad;
 
-            for (int i = 0; i < 3; i++) {
-               net.minecraft.client.renderer.block.model.BakedQuad[] newMpQuads = getConnectedTextureSingle(
-                  blockAccess, blockState, blockPos, side, mpQuad, false, i + 1, renderEnv
-               );
+            for(int i = 0; i < 3; ++i) {
+               BakedQuad[] newMpQuads = getConnectedTextureSingle(blockAccess, blockState, blockPos, side, mpQuad, false, i + 1, renderEnv);
                if (newMpQuads.length != 1 || newMpQuads[0] == mpQuad) {
                   break;
                }
@@ -291,39 +268,34 @@ public class ConnectedTextures {
             listQuads.set(q, mpQuad);
          }
 
-         for (int i = 0; i < quads.length; i++) {
-            quads[i] = (net.minecraft.client.renderer.block.model.BakedQuad)listQuads.get(i);
+         for(q = 0; q < quads.length; ++q) {
+            quads[q] = (BakedQuad)listQuads.get(q);
          }
 
          return quads;
       }
    }
 
-   public static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureSingle(
-      BlockAndTintGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      net.minecraft.core.Direction facing,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      boolean checkBlocks,
-      int pass,
-      RenderEnv renderEnv
-   ) {
+   public static BakedQuad[] getConnectedTextureSingle(BlockAndTintGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, BakedQuad quad, boolean checkBlocks, int pass, RenderEnv renderEnv) {
       Block block = blockState.m_60734_();
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon = quad.m_173410_();
+      TextureAtlasSprite icon = quad.m_173410_();
+      int blockId;
+      ConnectedProperties[] cps;
+      int side;
+      int i;
+      ConnectedProperties cp;
+      BakedQuad[] newQuads;
       if (tileProperties != null) {
-         int iconId = icon.getIndexInMap();
-         if (iconId >= 0 && iconId < tileProperties.length) {
-            ConnectedProperties[] cps = tileProperties[iconId];
+         blockId = icon.getIndexInMap();
+         if (blockId >= 0 && blockId < tileProperties.length) {
+            cps = tileProperties[blockId];
             if (cps != null) {
-               int side = getSide(facing);
+               side = getSide(facing);
 
-               for (int i = 0; i < cps.length; i++) {
-                  ConnectedProperties cp = cps[i];
+               for(i = 0; i < cps.length; ++i) {
+                  cp = cps[i];
                   if (cp != null && cp.matchesBlockId(blockState.getBlockId())) {
-                     net.minecraft.client.renderer.block.model.BakedQuad[] newQuads = getConnectedTexture(
-                        cp, blockAccess, blockState, blockPos, side, quad, pass, renderEnv
-                     );
+                     newQuads = getConnectedTexture(cp, blockAccess, blockState, blockPos, side, quad, pass, renderEnv);
                      if (newQuads != null) {
                         return newQuads;
                      }
@@ -334,18 +306,16 @@ public class ConnectedTextures {
       }
 
       if (blockProperties != null && checkBlocks) {
-         int blockId = renderEnv.getBlockId();
+         blockId = renderEnv.getBlockId();
          if (blockId >= 0 && blockId < blockProperties.length) {
-            ConnectedProperties[] cps = blockProperties[blockId];
+            cps = blockProperties[blockId];
             if (cps != null) {
-               int side = getSide(facing);
+               side = getSide(facing);
 
-               for (int ix = 0; ix < cps.length; ix++) {
-                  ConnectedProperties cp = cps[ix];
+               for(i = 0; i < cps.length; ++i) {
+                  cp = cps[i];
                   if (cp != null && cp.matchesIcon(icon)) {
-                     net.minecraft.client.renderer.block.model.BakedQuad[] newQuads = getConnectedTexture(
-                        cp, blockAccess, blockState, blockPos, side, quad, pass, renderEnv
-                     );
+                     newQuads = getConnectedTexture(cp, blockAccess, blockState, blockPos, side, quad, pass, renderEnv);
                      if (newQuads != null) {
                         return newQuads;
                      }
@@ -358,14 +328,14 @@ public class ConnectedTextures {
       return renderEnv.getArrayQuadsCtm(quad);
    }
 
-   public static int getSide(net.minecraft.core.Direction facing) {
+   public static int getSide(Direction facing) {
       if (facing == null) {
          return -1;
       } else {
          switch (facing) {
             case DOWN:
                return 0;
-            case UP:
+            case field_61:
                return 1;
             case EAST:
                return 5;
@@ -381,35 +351,26 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.core.Direction getFacing(int side) {
+   private static Direction getFacing(int side) {
       switch (side) {
          case 0:
-            return net.minecraft.core.Direction.DOWN;
+            return Direction.DOWN;
          case 1:
-            return net.minecraft.core.Direction.UP;
+            return Direction.field_61;
          case 2:
-            return net.minecraft.core.Direction.NORTH;
+            return Direction.NORTH;
          case 3:
-            return net.minecraft.core.Direction.SOUTH;
+            return Direction.SOUTH;
          case 4:
-            return net.minecraft.core.Direction.WEST;
+            return Direction.WEST;
          case 5:
-            return net.minecraft.core.Direction.EAST;
+            return Direction.EAST;
          default:
-            return net.minecraft.core.Direction.UP;
+            return Direction.field_61;
       }
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTexture(
-      ConnectedProperties cp,
-      BlockAndTintGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int side,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      int pass,
-      RenderEnv renderEnv
-   ) {
+   private static BakedQuad[] getConnectedTexture(ConnectedProperties cp, BlockAndTintGetter blockAccess, BlockState blockState, BlockPos blockPos, int side, BakedQuad quad, int pass, RenderEnv renderEnv) {
       int vertAxis = 0;
       int metadata = blockState.getMetadata();
       Block block = blockState.m_60734_();
@@ -420,8 +381,9 @@ public class ConnectedTextures {
       if (!cp.matchesBlock(blockState.getBlockId(), metadata)) {
          return null;
       } else {
+         int sideCheck;
          if (side >= 0 && cp.faces != 63) {
-            int sideCheck = side;
+            sideCheck = side;
             if (vertAxis != 0) {
                sideCheck = fixSideByAxis(side, vertAxis);
             }
@@ -431,8 +393,8 @@ public class ConnectedTextures {
             }
          }
 
-         int y = blockPos.m_123342_();
-         if (cp.heights != null && !cp.heights.isInRange(y)) {
+         sideCheck = blockPos.m_123342_();
+         if (cp.heights != null && !cp.heights.isInRange(sideCheck)) {
             return null;
          } else {
             if (cp.biomes != null) {
@@ -449,7 +411,7 @@ public class ConnectedTextures {
                }
             }
 
-            net.minecraft.client.renderer.texture.TextureAtlasSprite icon = quad.m_173410_();
+            TextureAtlasSprite icon = quad.m_173410_();
             switch (cp.method) {
                case 1:
                   return getQuads(getConnectedTextureCtm(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata, renderEnv), quad, renderEnv);
@@ -527,21 +489,19 @@ public class ConnectedTextures {
       }
    }
 
-   private static int getPillarAxis(net.minecraft.world.level.block.state.BlockState blockState) {
-      net.minecraft.core.Direction.Axis axis = (net.minecraft.core.Direction.Axis)blockState.m_61143_(RotatedPillarBlock.f_55923_);
+   private static int getPillarAxis(BlockState blockState) {
+      Direction.Axis axis = (Direction.Axis)blockState.m_61143_(RotatedPillarBlock.f_55923_);
       switch (axis) {
-         case X:
+         case field_29:
             return 2;
-         case Z:
+         case field_31:
             return 1;
          default:
             return 0;
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureRandom(
-      ConnectedProperties cp, BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, int side
-   ) {
+   private static TextureAtlasSprite getConnectedTextureRandom(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int side) {
       if (cp.tileIcons.length == 1) {
          return cp.tileIcons[0];
       } else {
@@ -549,10 +509,7 @@ public class ConnectedTextures {
          if (cp.linked) {
             BlockPos posDown = blockPos.m_7495_();
 
-            for (net.minecraft.world.level.block.state.BlockState bsDown = blockAccess.m_8055_(posDown);
-               bsDown.m_60734_() == blockState.m_60734_();
-               bsDown = blockAccess.m_8055_(posDown)
-            ) {
+            for(BlockState bsDown = blockAccess.m_8055_(posDown); bsDown.m_60734_() == blockState.m_60734_(); bsDown = blockAccess.m_8055_(posDown)) {
                blockPos = posDown;
                posDown = posDown.m_7495_();
                if (posDown.m_123342_() < 0) {
@@ -561,20 +518,21 @@ public class ConnectedTextures {
             }
          }
 
-         int rand = Config.getRandom(blockPos, face) & 2147483647;
+         int rand = Config.getRandom(blockPos, face) & Integer.MAX_VALUE;
 
-         for (int i = 0; i < cp.randomLoops; i++) {
+         int index;
+         for(index = 0; index < cp.randomLoops; ++index) {
             rand = Config.intHash(rand);
          }
 
-         int index = 0;
+         index = 0;
          if (cp.weights == null) {
             index = rand % cp.tileIcons.length;
          } else {
             int randWeight = rand % cp.sumAllWeights;
             int[] sumWeights = cp.sumWeights;
 
-            for (int i = 0; i < sumWeights.length; i++) {
+            for(int i = 0; i < sumWeights.length; ++i) {
                if (randWeight < sumWeights[i]) {
                   index = i;
                   break;
@@ -586,11 +544,11 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureFixed(ConnectedProperties cp) {
+   private static TextureAtlasSprite getConnectedTextureFixed(ConnectedProperties cp) {
       return cp.tileIcons[0];
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureRepeat(ConnectedProperties cp, BlockPos blockPos, int side) {
+   private static TextureAtlasSprite getConnectedTextureRepeat(ConnectedProperties cp, BlockPos blockPos, int side) {
       if (cp.tileIcons.length == 1) {
          return cp.tileIcons[0];
       } else {
@@ -640,107 +598,80 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureCtm(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata,
-      RenderEnv renderEnv
-   ) {
+   private static TextureAtlasSprite getConnectedTextureCtm(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata, RenderEnv renderEnv) {
       int index = getConnectedTextureCtmIndex(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata, renderEnv);
       return cp.tileIcons[index];
    }
 
-   private static synchronized net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureCtmCompact(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      int metadata,
-      RenderEnv renderEnv
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon = quad.m_173410_();
+   private static synchronized BakedQuad[] getConnectedTextureCtmCompact(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, BakedQuad quad, int metadata, RenderEnv renderEnv) {
+      TextureAtlasSprite icon = quad.m_173410_();
       int index = getConnectedTextureCtmIndex(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata, renderEnv);
       return ConnectedTexturesCompact.getConnectedTextureCtmCompact(index, cp, side, quad, renderEnv);
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureOverlay(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      int metadata,
-      RenderEnv renderEnv
-   ) {
+   private static BakedQuad[] getConnectedTextureOverlay(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, BakedQuad quad, int metadata, RenderEnv renderEnv) {
       if (!quad.isFullQuad()) {
          return null;
       } else {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite icon = quad.m_173410_();
+         TextureAtlasSprite icon = quad.m_173410_();
          BlockDir[] dirSides = getSideDirections(side, vertAxis);
          boolean[] sides = renderEnv.getBorderFlags();
 
-         for (int i = 0; i < 4; i++) {
+         for(int i = 0; i < 4; ++i) {
             sides[i] = isNeighbourOverlay(cp, blockAccess, blockState, dirSides[i].offset(blockPos), side, icon, metadata);
          }
 
          ListQuadsOverlay listQuadsOverlay = renderEnv.getListQuadsOverlay(cp.layer);
 
-         Object dirEdges;
+         Object var21;
          try {
-            if (!sides[0] || !sides[1] || !sides[2] || !sides[3]) {
-               if (sides[0] && sides[1] && sides[2]) {
-                  listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[5], quad, cp.tintIndex), cp.tintBlockState);
-                  return null;
-               }
+            BlockDir[] dirEdges;
+            if (sides[0] && sides[1] && sides[2] && sides[3]) {
+               listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[8], quad, cp.tintIndex), cp.tintBlockState);
+               dirEdges = null;
+               return dirEdges;
+            }
 
-               if (sides[0] && sides[2] && sides[3]) {
-                  listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[6], quad, cp.tintIndex), cp.tintBlockState);
-                  return null;
-               }
+            if (sides[0] && sides[1] && sides[2]) {
+               listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[5], quad, cp.tintIndex), cp.tintBlockState);
+               dirEdges = null;
+               return dirEdges;
+            }
 
-               if (sides[1] && sides[2] && sides[3]) {
-                  listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[12], quad, cp.tintIndex), cp.tintBlockState);
-                  return null;
-               }
+            if (sides[0] && sides[2] && sides[3]) {
+               listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[6], quad, cp.tintIndex), cp.tintBlockState);
+               dirEdges = null;
+               return dirEdges;
+            }
 
-               if (sides[0] && sides[1] && sides[3]) {
-                  listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[13], quad, cp.tintIndex), cp.tintBlockState);
-                  return null;
-               }
+            if (sides[1] && sides[2] && sides[3]) {
+               listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[12], quad, cp.tintIndex), cp.tintBlockState);
+               dirEdges = null;
+               return dirEdges;
+            }
 
-               BlockDir[] dirEdgesx = getEdgeDirections(side, vertAxis);
-               boolean[] edges = renderEnv.getBorderFlags2();
+            if (sides[0] && sides[1] && sides[3]) {
+               listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[13], quad, cp.tintIndex), cp.tintBlockState);
+               dirEdges = null;
+               return dirEdges;
+            }
 
-               for (int i = 0; i < 4; i++) {
-                  edges[i] = isNeighbourOverlay(cp, blockAccess, blockState, dirEdgesx[i].offset(blockPos), side, icon, metadata);
-               }
+            dirEdges = getEdgeDirections(side, vertAxis);
+            boolean[] edges = renderEnv.getBorderFlags2();
 
-               if (sides[1] && sides[2]) {
-                  listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[3], quad, cp.tintIndex), cp.tintBlockState);
-                  if (edges[3]) {
-                     listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[16], quad, cp.tintIndex), cp.tintBlockState);
-                  }
+            for(int i = 0; i < 4; ++i) {
+               edges[i] = isNeighbourOverlay(cp, blockAccess, blockState, dirEdges[i].offset(blockPos), side, icon, metadata);
+            }
 
-                  return null;
-               }
-
+            if (!sides[1] || !sides[2]) {
                if (sides[0] && sides[2]) {
                   listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[4], quad, cp.tintIndex), cp.tintBlockState);
                   if (edges[2]) {
                      listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[14], quad, cp.tintIndex), cp.tintBlockState);
                   }
 
-                  return null;
+                  var21 = null;
+                  return (BakedQuad[])var21;
                }
 
                if (sides[1] && sides[3]) {
@@ -749,7 +680,8 @@ public class ConnectedTextures {
                      listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[2], quad, cp.tintIndex), cp.tintBlockState);
                   }
 
-                  return null;
+                  var21 = null;
+                  return (BakedQuad[])var21;
                }
 
                if (sides[0] && sides[3]) {
@@ -758,12 +690,13 @@ public class ConnectedTextures {
                      listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[0], quad, cp.tintIndex), cp.tintBlockState);
                   }
 
-                  return null;
+                  var21 = null;
+                  return (BakedQuad[])var21;
                }
 
                boolean[] sidesMatch = renderEnv.getBorderFlags3();
 
-               for (int i = 0; i < 4; i++) {
+               for(int i = 0; i < 4; ++i) {
                   sidesMatch[i] = isNeighbourMatching(cp, blockAccess, blockState, dirSides[i].offset(blockPos), side, icon, metadata);
                }
 
@@ -799,24 +732,28 @@ public class ConnectedTextures {
                   listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[16], quad, cp.tintIndex), cp.tintBlockState);
                }
 
-               return null;
+               Object var23 = null;
+               return (BakedQuad[])var23;
             }
 
-            listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[8], quad, cp.tintIndex), cp.tintBlockState);
-            dirEdges = null;
+            listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[3], quad, cp.tintIndex), cp.tintBlockState);
+            if (edges[3]) {
+               listQuadsOverlay.addQuad(getQuadFull(cp.tileIcons[16], quad, cp.tintIndex), cp.tintBlockState);
+            }
+
+            var21 = null;
          } finally {
             if (listQuadsOverlay.size() > 0) {
                renderEnv.setOverlaysRendered(true);
             }
+
          }
 
-         return (net.minecraft.client.renderer.block.model.BakedQuad[])dirEdges;
+         return (BakedQuad[])var21;
       }
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureOverlayFixed(
-      ConnectedProperties cp, net.minecraft.client.renderer.block.model.BakedQuad quad, RenderEnv renderEnv
-   ) {
+   private static BakedQuad[] getConnectedTextureOverlayFixed(ConnectedProperties cp, BakedQuad quad, RenderEnv renderEnv) {
       if (!quad.isFullQuad()) {
          return null;
       } else {
@@ -824,7 +761,7 @@ public class ConnectedTextures {
 
          Object var5;
          try {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = getConnectedTextureFixed(cp);
+            TextureAtlasSprite sprite = getConnectedTextureFixed(cp);
             if (sprite != null) {
                listQuadsOverlay.addQuad(getQuadFull(sprite, quad, cp.tintIndex), cp.tintBlockState);
             }
@@ -834,21 +771,14 @@ public class ConnectedTextures {
             if (listQuadsOverlay.size() > 0) {
                renderEnv.setOverlaysRendered(true);
             }
+
          }
 
-         return (net.minecraft.client.renderer.block.model.BakedQuad[])var5;
+         return (BakedQuad[])var5;
       }
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureOverlayRandom(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int side,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      RenderEnv renderEnv
-   ) {
+   private static BakedQuad[] getConnectedTextureOverlayRandom(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int side, BakedQuad quad, RenderEnv renderEnv) {
       if (!quad.isFullQuad()) {
          return null;
       } else {
@@ -856,7 +786,7 @@ public class ConnectedTextures {
 
          Object var9;
          try {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = getConnectedTextureRandom(cp, blockAccess, blockState, blockPos, side);
+            TextureAtlasSprite sprite = getConnectedTextureRandom(cp, blockAccess, blockState, blockPos, side);
             if (sprite != null) {
                listQuadsOverlay.addQuad(getQuadFull(sprite, quad, cp.tintIndex), cp.tintBlockState);
             }
@@ -866,15 +796,14 @@ public class ConnectedTextures {
             if (listQuadsOverlay.size() > 0) {
                renderEnv.setOverlaysRendered(true);
             }
+
          }
 
-         return (net.minecraft.client.renderer.block.model.BakedQuad[])var9;
+         return (BakedQuad[])var9;
       }
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureOverlayRepeat(
-      ConnectedProperties cp, BlockPos blockPos, int side, net.minecraft.client.renderer.block.model.BakedQuad quad, RenderEnv renderEnv
-   ) {
+   private static BakedQuad[] getConnectedTextureOverlayRepeat(ConnectedProperties cp, BlockPos blockPos, int side, BakedQuad quad, RenderEnv renderEnv) {
       if (!quad.isFullQuad()) {
          return null;
       } else {
@@ -882,7 +811,7 @@ public class ConnectedTextures {
 
          Object var7;
          try {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = getConnectedTextureRepeat(cp, blockPos, side);
+            TextureAtlasSprite sprite = getConnectedTextureRepeat(cp, blockPos, side);
             if (sprite != null) {
                listQuadsOverlay.addQuad(getQuadFull(sprite, quad, cp.tintIndex), cp.tintBlockState);
             }
@@ -892,23 +821,14 @@ public class ConnectedTextures {
             if (listQuadsOverlay.size() > 0) {
                renderEnv.setOverlaysRendered(true);
             }
+
          }
 
-         return (net.minecraft.client.renderer.block.model.BakedQuad[])var7;
+         return (BakedQuad[])var7;
       }
    }
 
-   private static net.minecraft.client.renderer.block.model.BakedQuad[] getConnectedTextureOverlayCtm(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      int metadata,
-      RenderEnv renderEnv
-   ) {
+   private static BakedQuad[] getConnectedTextureOverlayCtm(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, BakedQuad quad, int metadata, RenderEnv renderEnv) {
       if (!quad.isFullQuad()) {
          return null;
       } else {
@@ -916,9 +836,7 @@ public class ConnectedTextures {
 
          Object var11;
          try {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = getConnectedTextureCtm(
-               cp, blockAccess, blockState, blockPos, vertAxis, side, quad.m_173410_(), metadata, renderEnv
-            );
+            TextureAtlasSprite sprite = getConnectedTextureCtm(cp, blockAccess, blockState, blockPos, vertAxis, side, quad.m_173410_(), metadata, renderEnv);
             if (sprite != null) {
                listQuadsOverlay.addQuad(getQuadFull(sprite, quad, cp.tintIndex), cp.tintBlockState);
             }
@@ -928,9 +846,10 @@ public class ConnectedTextures {
             if (listQuadsOverlay.size() > 0) {
                renderEnv.setOverlaysRendered(true);
             }
+
          }
 
-         return (net.minecraft.client.renderer.block.model.BakedQuad[])var11;
+         return (BakedQuad[])var11;
       }
    }
 
@@ -976,18 +895,9 @@ public class ConnectedTextures {
       return spriteQuadCompactMaps;
    }
 
-   private static int getConnectedTextureCtmIndex(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata,
-      RenderEnv renderEnv
-   ) {
+   private static int getConnectedTextureCtmIndex(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata, RenderEnv renderEnv) {
       boolean[] borders = renderEnv.getBorderFlags();
+      BlockPos posFront;
       switch (side) {
          case 0:
             borders[0] = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
@@ -995,7 +905,7 @@ public class ConnectedTextures {
             borders[2] = isNeighbour(cp, blockAccess, blockState, blockPos.m_122012_(), side, icon, metadata);
             borders[3] = isNeighbour(cp, blockAccess, blockState, blockPos.m_122019_(), side, icon, metadata);
             if (cp.innerSeams) {
-               BlockPos posFront = blockPos.m_7495_();
+               posFront = blockPos.m_7495_();
                borders[0] = borders[0] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122024_(), side, icon, metadata);
                borders[1] = borders[1] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122029_(), side, icon, metadata);
                borders[2] = borders[2] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122012_(), side, icon, metadata);
@@ -1008,7 +918,7 @@ public class ConnectedTextures {
             borders[2] = isNeighbour(cp, blockAccess, blockState, blockPos.m_122019_(), side, icon, metadata);
             borders[3] = isNeighbour(cp, blockAccess, blockState, blockPos.m_122012_(), side, icon, metadata);
             if (cp.innerSeams) {
-               BlockPos posFront = blockPos.m_7494_();
+               posFront = blockPos.m_7494_();
                borders[0] = borders[0] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122024_(), side, icon, metadata);
                borders[1] = borders[1] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122029_(), side, icon, metadata);
                borders[2] = borders[2] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122019_(), side, icon, metadata);
@@ -1021,7 +931,7 @@ public class ConnectedTextures {
             borders[2] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7495_(), side, icon, metadata);
             borders[3] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
             if (cp.innerSeams) {
-               BlockPos posFront = blockPos.m_122012_();
+               posFront = blockPos.m_122012_();
                borders[0] = borders[0] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122029_(), side, icon, metadata);
                borders[1] = borders[1] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122024_(), side, icon, metadata);
                borders[2] = borders[2] && !isNeighbour(cp, blockAccess, blockState, posFront.m_7495_(), side, icon, metadata);
@@ -1034,7 +944,7 @@ public class ConnectedTextures {
             borders[2] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7495_(), side, icon, metadata);
             borders[3] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
             if (cp.innerSeams) {
-               BlockPos posFront = blockPos.m_122019_();
+               posFront = blockPos.m_122019_();
                borders[0] = borders[0] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122024_(), side, icon, metadata);
                borders[1] = borders[1] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122029_(), side, icon, metadata);
                borders[2] = borders[2] && !isNeighbour(cp, blockAccess, blockState, posFront.m_7495_(), side, icon, metadata);
@@ -1047,7 +957,7 @@ public class ConnectedTextures {
             borders[2] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7495_(), side, icon, metadata);
             borders[3] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
             if (cp.innerSeams) {
-               BlockPos posFront = blockPos.m_122024_();
+               posFront = blockPos.m_122024_();
                borders[0] = borders[0] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122012_(), side, icon, metadata);
                borders[1] = borders[1] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122019_(), side, icon, metadata);
                borders[2] = borders[2] && !isNeighbour(cp, blockAccess, blockState, posFront.m_7495_(), side, icon, metadata);
@@ -1060,7 +970,7 @@ public class ConnectedTextures {
             borders[2] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7495_(), side, icon, metadata);
             borders[3] = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
             if (cp.innerSeams) {
-               BlockPos posFront = blockPos.m_122029_();
+               posFront = blockPos.m_122029_();
                borders[0] = borders[0] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122019_(), side, icon, metadata);
                borders[1] = borders[1] && !isNeighbour(cp, blockAccess, blockState, posFront.m_122012_(), side, icon, metadata);
                borders[2] = borders[2] && !isNeighbour(cp, blockAccess, blockState, posFront.m_7495_(), side, icon, metadata);
@@ -1106,6 +1016,7 @@ public class ConnectedTextures {
       } else if (!Config.isConnectedTexturesFancy()) {
          return index;
       } else {
+         BlockPos posFront;
          switch (side) {
             case 0:
                borders[0] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_().m_122012_(), side, icon, metadata);
@@ -1113,7 +1024,7 @@ public class ConnectedTextures {
                borders[2] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_().m_122019_(), side, icon, metadata);
                borders[3] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_().m_122019_(), side, icon, metadata);
                if (cp.innerSeams) {
-                  BlockPos posFront = blockPos.m_7495_();
+                  posFront = blockPos.m_7495_();
                   borders[0] = borders[0] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_122012_(), side, icon, metadata);
                   borders[1] = borders[1] || isNeighbour(cp, blockAccess, blockState, posFront.m_122024_().m_122012_(), side, icon, metadata);
                   borders[2] = borders[2] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_122019_(), side, icon, metadata);
@@ -1126,7 +1037,7 @@ public class ConnectedTextures {
                borders[2] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_().m_122012_(), side, icon, metadata);
                borders[3] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_().m_122012_(), side, icon, metadata);
                if (cp.innerSeams) {
-                  BlockPos posFront = blockPos.m_7494_();
+                  posFront = blockPos.m_7494_();
                   borders[0] = borders[0] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_122019_(), side, icon, metadata);
                   borders[1] = borders[1] || isNeighbour(cp, blockAccess, blockState, posFront.m_122024_().m_122019_(), side, icon, metadata);
                   borders[2] = borders[2] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_122012_(), side, icon, metadata);
@@ -1139,7 +1050,7 @@ public class ConnectedTextures {
                borders[2] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_().m_7494_(), side, icon, metadata);
                borders[3] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_().m_7494_(), side, icon, metadata);
                if (cp.innerSeams) {
-                  BlockPos posFront = blockPos.m_122012_();
+                  posFront = blockPos.m_122012_();
                   borders[0] = borders[0] || isNeighbour(cp, blockAccess, blockState, posFront.m_122024_().m_7495_(), side, icon, metadata);
                   borders[1] = borders[1] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_7495_(), side, icon, metadata);
                   borders[2] = borders[2] || isNeighbour(cp, blockAccess, blockState, posFront.m_122024_().m_7494_(), side, icon, metadata);
@@ -1152,7 +1063,7 @@ public class ConnectedTextures {
                borders[2] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_().m_7494_(), side, icon, metadata);
                borders[3] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_().m_7494_(), side, icon, metadata);
                if (cp.innerSeams) {
-                  BlockPos posFront = blockPos.m_122019_();
+                  posFront = blockPos.m_122019_();
                   borders[0] = borders[0] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_7495_(), side, icon, metadata);
                   borders[1] = borders[1] || isNeighbour(cp, blockAccess, blockState, posFront.m_122024_().m_7495_(), side, icon, metadata);
                   borders[2] = borders[2] || isNeighbour(cp, blockAccess, blockState, posFront.m_122029_().m_7494_(), side, icon, metadata);
@@ -1165,7 +1076,7 @@ public class ConnectedTextures {
                borders[2] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_().m_122019_(), side, icon, metadata);
                borders[3] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_().m_122012_(), side, icon, metadata);
                if (cp.innerSeams) {
-                  BlockPos posFront = blockPos.m_122024_();
+                  posFront = blockPos.m_122024_();
                   borders[0] = borders[0] || isNeighbour(cp, blockAccess, blockState, posFront.m_7495_().m_122019_(), side, icon, metadata);
                   borders[1] = borders[1] || isNeighbour(cp, blockAccess, blockState, posFront.m_7495_().m_122012_(), side, icon, metadata);
                   borders[2] = borders[2] || isNeighbour(cp, blockAccess, blockState, posFront.m_7494_().m_122019_(), side, icon, metadata);
@@ -1178,7 +1089,7 @@ public class ConnectedTextures {
                borders[2] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_().m_122012_(), side, icon, metadata);
                borders[3] = !isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_().m_122019_(), side, icon, metadata);
                if (cp.innerSeams) {
-                  BlockPos posFront = blockPos.m_122029_();
+                  posFront = blockPos.m_122029_();
                   borders[0] = borders[0] || isNeighbour(cp, blockAccess, blockState, posFront.m_7495_().m_122012_(), side, icon, metadata);
                   borders[1] = borders[1] || isNeighbour(cp, blockAccess, blockState, posFront.m_7495_().m_122019_(), side, icon, metadata);
                   borders[2] = borders[2] || isNeighbour(cp, blockAccess, blockState, posFront.m_7494_().m_122012_(), side, icon, metadata);
@@ -1260,100 +1171,75 @@ public class ConnectedTextures {
       arr[ix2] = prev1;
    }
 
-   private static boolean isNeighbourOverlay(
-      ConnectedProperties cp,
-      BlockGetter worldReader,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
-      net.minecraft.world.level.block.state.BlockState neighbourState = worldReader.m_8055_(blockPos);
+   private static boolean isNeighbourOverlay(ConnectedProperties cp, BlockGetter worldReader, BlockState blockState, BlockPos blockPos, int side, TextureAtlasSprite icon, int metadata) {
+      BlockState neighbourState = worldReader.m_8055_(blockPos);
       if (!isFullCubeModel(neighbourState, worldReader, blockPos)) {
          return false;
       } else if (cp.connectBlocks != null && !Matches.block(neighbourState.getBlockId(), neighbourState.getMetadata(), cp.connectBlocks)) {
          return false;
       } else {
          if (cp.connectTileIcons != null) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite neighbourIcon = getNeighbourIcon(worldReader, blockState, blockPos, neighbourState, side);
+            TextureAtlasSprite neighbourIcon = getNeighbourIcon(worldReader, blockState, blockPos, neighbourState, side);
             if (!Config.isSameOne(neighbourIcon, cp.connectTileIcons)) {
                return false;
             }
          }
 
          BlockPos posNeighbourStateAbove = blockPos.m_121945_(getFacing(side));
-         net.minecraft.world.level.block.state.BlockState neighbourStateAbove = worldReader.m_8055_(posNeighbourStateAbove);
+         BlockState neighbourStateAbove = worldReader.m_8055_(posNeighbourStateAbove);
          if (neighbourStateAbove.m_60804_(worldReader, posNeighbourStateAbove)) {
             return false;
+         } else if (side == 1 && neighbourStateAbove.m_60734_() == Blocks.f_50125_) {
+            return false;
          } else {
-            return side == 1 && neighbourStateAbove.m_60734_() == Blocks.f_50125_
-               ? false
-               : !isNeighbour(cp, worldReader, blockState, blockPos, neighbourState, side, icon, metadata);
+            return !isNeighbour(cp, worldReader, blockState, blockPos, neighbourState, side, icon, metadata);
          }
       }
    }
 
-   private static boolean isFullCubeModel(net.minecraft.world.level.block.state.BlockState state, BlockGetter blockReader, BlockPos pos) {
+   private static boolean isFullCubeModel(BlockState state, BlockGetter blockReader, BlockPos pos) {
       if (BlockUtils.isFullCube(state, blockReader, pos)) {
          return true;
       } else {
          Block block = state.m_60734_();
-         return block == Blocks.f_50058_ ? true : block instanceof StainedGlassBlock;
+         if (block == Blocks.f_50058_) {
+            return true;
+         } else {
+            return block instanceof StainedGlassBlock;
+         }
       }
    }
 
-   private static boolean isNeighbourMatching(
-      ConnectedProperties cp,
-      BlockGetter worldReader,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
-      net.minecraft.world.level.block.state.BlockState neighbourState = worldReader.m_8055_(blockPos);
+   private static boolean isNeighbourMatching(ConnectedProperties cp, BlockGetter worldReader, BlockState blockState, BlockPos blockPos, int side, TextureAtlasSprite icon, int metadata) {
+      BlockState neighbourState = worldReader.m_8055_(blockPos);
       if (neighbourState == AIR_DEFAULT_STATE) {
          return false;
       } else if (cp.matchBlocks != null && !cp.matchesBlock(neighbourState.getBlockId(), neighbourState.getMetadata())) {
          return false;
       } else {
          if (cp.matchTileIcons != null) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite neighbourIcon = getNeighbourIcon(worldReader, blockState, blockPos, neighbourState, side);
+            TextureAtlasSprite neighbourIcon = getNeighbourIcon(worldReader, blockState, blockPos, neighbourState, side);
             if (neighbourIcon != icon) {
                return false;
             }
          }
 
          BlockPos posNeighbourAbove = blockPos.m_121945_(getFacing(side));
-         net.minecraft.world.level.block.state.BlockState neighbourStateAbove = worldReader.m_8055_(posNeighbourAbove);
-         return neighbourStateAbove.m_60804_(worldReader, posNeighbourAbove) ? false : side != 1 || neighbourStateAbove.m_60734_() != Blocks.f_50125_;
+         BlockState neighbourStateAbove = worldReader.m_8055_(posNeighbourAbove);
+         if (neighbourStateAbove.m_60804_(worldReader, posNeighbourAbove)) {
+            return false;
+         } else {
+            return side != 1 || neighbourStateAbove.m_60734_() != Blocks.f_50125_;
+         }
       }
    }
 
-   private static boolean isNeighbour(
-      ConnectedProperties cp,
-      BlockGetter worldReader,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
-      net.minecraft.world.level.block.state.BlockState neighbourState = worldReader.m_8055_(blockPos);
+   private static boolean isNeighbour(ConnectedProperties cp, BlockGetter worldReader, BlockState blockState, BlockPos blockPos, int side, TextureAtlasSprite icon, int metadata) {
+      BlockState neighbourState = worldReader.m_8055_(blockPos);
       return isNeighbour(cp, worldReader, blockState, blockPos, neighbourState, side, icon, metadata);
    }
 
-   private static boolean isNeighbour(
-      ConnectedProperties cp,
-      BlockGetter worldReader,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      net.minecraft.world.level.block.state.BlockState neighbourState,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
+   private static boolean isNeighbour(ConnectedProperties cp, BlockGetter worldReader, BlockState blockState, BlockPos blockPos, BlockState neighbourState, int side, TextureAtlasSprite icon, int metadata) {
       if (blockState == neighbourState) {
          return true;
       } else if (cp.connect == 2) {
@@ -1362,7 +1248,7 @@ public class ConnectedTextures {
          } else if (neighbourState == AIR_DEFAULT_STATE) {
             return false;
          } else {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite neighbourIcon = getNeighbourIcon(worldReader, blockState, blockPos, neighbourState, side);
+            TextureAtlasSprite neighbourIcon = getNeighbourIcon(worldReader, blockState, blockPos, neighbourState, side);
             return neighbourIcon == icon;
          }
       } else if (cp.connect == 1) {
@@ -1374,18 +1260,12 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getNeighbourIcon(
-      BlockGetter worldReader,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      net.minecraft.world.level.block.state.BlockState neighbourState,
-      int side
-   ) {
-      net.minecraft.client.resources.model.BakedModel model = Minecraft.m_91087_().m_91289_().m_110907_().m_110893_(neighbourState);
+   private static TextureAtlasSprite getNeighbourIcon(BlockGetter worldReader, BlockState blockState, BlockPos blockPos, BlockState neighbourState, int side) {
+      BakedModel model = Minecraft.m_91087_().m_91289_().m_110907_().m_110893_(neighbourState);
       if (model == null) {
          return null;
       } else {
-         net.minecraft.core.Direction facing = getFacing(side);
+         Direction facing = getFacing(side);
          List quads = model.m_213637_(neighbourState, facing, RANDOM);
          if (quads == null) {
             return null;
@@ -1395,15 +1275,15 @@ public class ConnectedTextures {
             }
 
             if (quads.size() > 0) {
-               net.minecraft.client.renderer.block.model.BakedQuad quad = (net.minecraft.client.renderer.block.model.BakedQuad)quads.get(0);
+               BakedQuad quad = (BakedQuad)quads.get(0);
                return quad.m_173410_();
             } else {
-               List quadsGeneral = model.m_213637_(neighbourState, null, RANDOM);
+               List quadsGeneral = model.m_213637_(neighbourState, (Direction)null, RANDOM);
                if (quadsGeneral == null) {
                   return null;
                } else {
-                  for (int i = 0; i < quadsGeneral.size(); i++) {
-                     net.minecraft.client.renderer.block.model.BakedQuad quad = (net.minecraft.client.renderer.block.model.BakedQuad)quadsGeneral.get(i);
+                  for(int i = 0; i < quadsGeneral.size(); ++i) {
+                     BakedQuad quad = (BakedQuad)quadsGeneral.get(i);
                      if (quad.m_111306_() == facing) {
                         return quad.m_173410_();
                      }
@@ -1416,77 +1296,68 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureHorizontal(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
+   private static TextureAtlasSprite getConnectedTextureHorizontal(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata) {
       boolean left;
       boolean right;
       left = false;
       right = false;
-      label46:
+      label49:
       switch (vertAxis) {
          case 0:
             switch (side) {
                case 0:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 1:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 2:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 3:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 4:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122012_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122019_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 5:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122019_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122012_(), side, icon, metadata);
                default:
-                  break label46;
+                  break label49;
             }
          case 1:
             switch (side) {
                case 0:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 1:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 2:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 3:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_122024_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 4:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_7495_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
-                  break label46;
+                  break label49;
                case 5:
                   left = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
                   right = isNeighbour(cp, blockAccess, blockState, blockPos.m_7495_(), side, icon, metadata);
                default:
-                  break label46;
+                  break label49;
             }
          case 2:
             switch (side) {
@@ -1516,33 +1387,24 @@ public class ConnectedTextures {
             }
       }
 
-      int index = 3;
-      byte var11;
+      int index = true;
+      byte index;
       if (left) {
          if (right) {
-            var11 = 1;
+            index = 1;
          } else {
-            var11 = 2;
+            index = 2;
          }
       } else if (right) {
-         var11 = 0;
+         index = 0;
       } else {
-         var11 = 3;
+         index = 3;
       }
 
-      return cp.tileIcons[var11];
+      return cp.tileIcons[index];
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureVertical(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
+   private static TextureAtlasSprite getConnectedTextureVertical(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata) {
       boolean bottom = false;
       boolean top = false;
       switch (vertAxis) {
@@ -1583,43 +1445,30 @@ public class ConnectedTextures {
             }
       }
 
-      int index = 3;
-      byte var11;
+      int index = true;
+      byte index;
       if (bottom) {
          if (top) {
-            var11 = 1;
+            index = 1;
          } else {
-            var11 = 2;
+            index = 2;
          }
       } else if (top) {
-         var11 = 0;
+         index = 0;
       } else {
-         var11 = 3;
+         index = 3;
       }
 
-      return cp.tileIcons[var11];
+      return cp.tileIcons[index];
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureHorizontalVertical(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite[] tileIcons = cp.tileIcons;
-      net.minecraft.client.renderer.texture.TextureAtlasSprite iconH = getConnectedTextureHorizontal(
-         cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata
-      );
+   private static TextureAtlasSprite getConnectedTextureHorizontalVertical(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata) {
+      TextureAtlasSprite[] tileIcons = cp.tileIcons;
+      TextureAtlasSprite iconH = getConnectedTextureHorizontal(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata);
       if (iconH != null && iconH != icon && iconH != tileIcons[3]) {
          return iconH;
       } else {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite iconV = getConnectedTextureVertical(
-            cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata
-         );
+         TextureAtlasSprite iconV = getConnectedTextureVertical(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata);
          if (iconV == tileIcons[0]) {
             return tileIcons[4];
          } else if (iconV == tileIcons[1]) {
@@ -1630,26 +1479,13 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureVerticalHorizontal(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite[] tileIcons = cp.tileIcons;
-      net.minecraft.client.renderer.texture.TextureAtlasSprite iconV = getConnectedTextureVertical(
-         cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata
-      );
+   private static TextureAtlasSprite getConnectedTextureVerticalHorizontal(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata) {
+      TextureAtlasSprite[] tileIcons = cp.tileIcons;
+      TextureAtlasSprite iconV = getConnectedTextureVertical(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata);
       if (iconV != null && iconV != icon && iconV != tileIcons[3]) {
          return iconV;
       } else {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite iconH = getConnectedTextureHorizontal(
-            cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata
-         );
+         TextureAtlasSprite iconH = getConnectedTextureHorizontal(cp, blockAccess, blockState, blockPos, vertAxis, side, icon, metadata);
          if (iconH == tileIcons[0]) {
             return tileIcons[4];
          } else if (iconH == tileIcons[1]) {
@@ -1660,16 +1496,7 @@ public class ConnectedTextures {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getConnectedTextureTop(
-      ConnectedProperties cp,
-      BlockGetter blockAccess,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockPos blockPos,
-      int vertAxis,
-      int side,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon,
-      int metadata
-   ) {
+   private static TextureAtlasSprite getConnectedTextureTop(ConnectedProperties cp, BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, int vertAxis, int side, TextureAtlasSprite icon, int metadata) {
       boolean top = false;
       switch (vertAxis) {
          case 0:
@@ -1680,12 +1507,12 @@ public class ConnectedTextures {
             top = isNeighbour(cp, blockAccess, blockState, blockPos.m_7494_(), side, icon, metadata);
             break;
          case 1:
-            if (side == 3 || side == 2) {
-               return null;
+            if (side != 3 && side != 2) {
+               top = isNeighbour(cp, blockAccess, blockState, blockPos.m_122019_(), side, icon, metadata);
+               break;
             }
 
-            top = isNeighbour(cp, blockAccess, blockState, blockPos.m_122019_(), side, icon, metadata);
-            break;
+            return null;
          case 2:
             if (side == 5 || side == 4) {
                return null;
@@ -1694,10 +1521,14 @@ public class ConnectedTextures {
             top = isNeighbour(cp, blockAccess, blockState, blockPos.m_122029_(), side, icon, metadata);
       }
 
-      return top ? cp.tileIcons[0] : null;
+      if (top) {
+         return cp.tileIcons[0];
+      } else {
+         return null;
+      }
    }
 
-   public static void updateIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   public static void updateIcons(TextureAtlas textureMap) {
       blockProperties = null;
       tileProperties = null;
       spriteQuadMaps = null;
@@ -1705,7 +1536,7 @@ public class ConnectedTextures {
       if (Config.isConnectedTextures()) {
          PackResources[] rps = Config.getResourcePacks();
 
-         for (int i = rps.length - 1; i >= 0; i--) {
+         for(int i = rps.length - 1; i >= 0; --i) {
             PackResources rp = rps[i];
             updateIcons(textureMap, rp);
          }
@@ -1722,21 +1553,22 @@ public class ConnectedTextures {
          if (tileProperties.length <= 0) {
             tileProperties = null;
          }
+
       }
    }
 
-   public static void updateIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap, PackResources rp) {
+   public static void updateIcons(TextureAtlas textureMap, PackResources rp) {
       String[] names = ResUtils.collectFiles(rp, "optifine/ctm/", ".properties", getDefaultCtmPaths());
       Arrays.sort(names);
       List tileList = makePropertyList(tileProperties);
       List blockList = makePropertyList(blockProperties);
 
-      for (int i = 0; i < names.length; i++) {
+      for(int i = 0; i < names.length; ++i) {
          String name = names[i];
          Config.dbg("ConnectedTextures: " + name);
 
          try {
-            net.minecraft.resources.ResourceLocation locFile = new net.minecraft.resources.ResourceLocation(name);
+            ResourceLocation locFile = new ResourceLocation(name);
             InputStream in = Config.getResourceStream(rp, PackType.CLIENT_RESOURCES, locFile);
             if (in == null) {
                Config.warn("ConnectedTextures file not found: " + name);
@@ -1764,29 +1596,27 @@ public class ConnectedTextures {
       Config.dbg("Multipass connected textures: " + multipass);
    }
 
-   public static void refreshIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   public static void refreshIcons(TextureAtlas textureMap) {
       refreshIcons(blockProperties, textureMap);
       refreshIcons(tileProperties, textureMap);
       emptySprite = getSprite(textureMap, LOCATION_SPRITE_EMPTY);
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite(
-      net.minecraft.client.renderer.texture.TextureAtlas textureMap, net.minecraft.resources.ResourceLocation loc
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = textureMap.m_118316_(loc);
-      if (sprite == null || net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.isMisingSprite(sprite)) {
-         Config.warn("Missing CTM sprite: " + loc);
+   private static TextureAtlasSprite getSprite(TextureAtlas textureMap, ResourceLocation loc) {
+      TextureAtlasSprite sprite = textureMap.m_118316_(loc);
+      if (sprite == null || MissingTextureAtlasSprite.isMisingSprite(sprite)) {
+         Config.warn("Missing CTM sprite: " + String.valueOf(loc));
       }
 
       return sprite;
    }
 
-   private static void refreshIcons(ConnectedProperties[][] propertiesArray, net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   private static void refreshIcons(ConnectedProperties[][] propertiesArray, TextureAtlas textureMap) {
       if (propertiesArray != null) {
-         for (int i = 0; i < propertiesArray.length; i++) {
+         for(int i = 0; i < propertiesArray.length; ++i) {
             ConnectedProperties[] properties = propertiesArray[i];
             if (properties != null) {
-               for (int c = 0; c < properties.length; c++) {
+               for(int c = 0; c < properties.length; ++c) {
                   ConnectedProperties cp = properties[c];
                   if (cp != null) {
                      cp.refreshIcons(textureMap);
@@ -1794,13 +1624,14 @@ public class ConnectedTextures {
                }
             }
          }
+
       }
    }
 
    private static List makePropertyList(ConnectedProperties[][] propsArr) {
       List list = new ArrayList();
       if (propsArr != null) {
-         for (int i = 0; i < propsArr.length; i++) {
+         for(int i = 0; i < propsArr.length; ++i) {
             ConnectedProperties[] props = propsArr[i];
             List propList = null;
             if (props != null) {
@@ -1817,15 +1648,17 @@ public class ConnectedTextures {
    private static boolean detectMultipass() {
       List propList = new ArrayList();
 
-      for (int i = 0; i < tileProperties.length; i++) {
-         ConnectedProperties[] cps = tileProperties[i];
+      int i;
+      ConnectedProperties[] cps;
+      for(i = 0; i < tileProperties.length; ++i) {
+         cps = tileProperties[i];
          if (cps != null) {
             propList.addAll(Arrays.asList(cps));
          }
       }
 
-      for (int ix = 0; ix < blockProperties.length; ix++) {
-         ConnectedProperties[] cps = blockProperties[ix];
+      for(i = 0; i < blockProperties.length; ++i) {
+         cps = blockProperties[i];
          if (cps != null) {
             propList.addAll(Arrays.asList(cps));
          }
@@ -1835,8 +1668,8 @@ public class ConnectedTextures {
       Set matchIconSet = new HashSet();
       Set tileIconSet = new HashSet();
 
-      for (int ixx = 0; ixx < props.length; ixx++) {
-         ConnectedProperties cp = props[ixx];
+      for(int i = 0; i < props.length; ++i) {
+         ConnectedProperties cp = props[i];
          if (cp.matchTileIcons != null) {
             matchIconSet.addAll(Arrays.asList(cp.matchTileIcons));
          }
@@ -1853,7 +1686,7 @@ public class ConnectedTextures {
    private static ConnectedProperties[][] propertyListToArray(List list) {
       ConnectedProperties[][] propArr = new ConnectedProperties[list.size()][];
 
-      for (int i = 0; i < list.size(); i++) {
+      for(int i = 0; i < list.size(); ++i) {
          List subList = (List)list.get(i);
          if (subList != null) {
             ConnectedProperties[] subArr = (ConnectedProperties[])subList.toArray(new ConnectedProperties[subList.size()]);
@@ -1866,25 +1699,27 @@ public class ConnectedTextures {
 
    private static void addToTileList(ConnectedProperties cp, List tileList) {
       if (cp.matchTileIcons != null) {
-         for (int i = 0; i < cp.matchTileIcons.length; i++) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite icon = cp.matchTileIcons[i];
-            if (!(icon instanceof net.minecraft.client.renderer.texture.TextureAtlasSprite)) {
-               Config.warn("TextureAtlasSprite is not TextureAtlasSprite: " + icon + ", name: " + icon.getName());
+         for(int i = 0; i < cp.matchTileIcons.length; ++i) {
+            TextureAtlasSprite icon = cp.matchTileIcons[i];
+            if (!(icon instanceof TextureAtlasSprite)) {
+               String var10000 = String.valueOf(icon);
+               Config.warn("TextureAtlasSprite is not TextureAtlasSprite: " + var10000 + ", name: " + String.valueOf(icon.getName()));
             } else {
                int tileId = icon.getIndexInMap();
                if (tileId < 0) {
-                  Config.warn("Invalid tile ID: " + tileId + ", icon: " + icon.getName());
+                  Config.warn("Invalid tile ID: " + tileId + ", icon: " + String.valueOf(icon.getName()));
                } else {
                   addToList(cp, tileList, tileId);
                }
             }
          }
+
       }
    }
 
    private static void addToBlockList(ConnectedProperties cp, List blockList) {
       if (cp.matchBlocks != null) {
-         for (int i = 0; i < cp.matchBlocks.length; i++) {
+         for(int i = 0; i < cp.matchBlocks.length; ++i) {
             int blockId = cp.matchBlocks[i].getBlockId();
             if (blockId < 0) {
                Config.warn("Invalid block ID: " + blockId);
@@ -1892,12 +1727,13 @@ public class ConnectedTextures {
                addToList(cp, blockList, blockId);
             }
          }
+
       }
    }
 
    private static void addToList(ConnectedProperties cp, List list, int id) {
-      while (id >= list.size()) {
-         list.add(null);
+      while(id >= list.size()) {
+         list.add((Object)null);
       }
 
       List subList = (List)list.get(id);
@@ -1906,7 +1742,7 @@ public class ConnectedTextures {
          list.set(id, subList);
       }
 
-      subList.add(cp);
+      ((List)subList).add(cp);
    }
 
    private static String[] getDefaultCtmPaths() {
@@ -1917,23 +1753,22 @@ public class ConnectedTextures {
       addDefaultLocation(list, "textures/block/bookshelf.png", "30_bookshelf/bookshelf.properties");
       addDefaultLocation(list, "textures/block/sandstone.png", "40_sandstone/sandstone.properties");
       addDefaultLocation(list, "textures/block/red_sandstone.png", "41_red_sandstone/red_sandstone.properties");
-      String[] colors = new String[]{
-         "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
-      };
+      String[] colors = new String[]{"white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"};
 
-      for (int i = 0; i < colors.length; i++) {
+      for(int i = 0; i < colors.length; ++i) {
          String color = colors[i];
-         String prefix = StrUtils.fillLeft(i + "", 2, '0');
+         String prefix = StrUtils.fillLeft("" + i, 2, '0');
          addDefaultLocation(list, "textures/block/" + color + "_stained_glass.png", prefix + "_glass_" + color + "/glass_" + color + ".properties");
          addDefaultLocation(list, "textures/block/" + color + "_stained_glass.png", prefix + "_glass_" + color + "/glass_pane_" + color + ".properties");
       }
 
-      return (String[])list.toArray(new String[list.size()]);
+      String[] paths = (String[])list.toArray(new String[list.size()]);
+      return paths;
    }
 
    private static void addDefaultLocation(List list, String locBase, String pathSuffix) {
       String defPath = "optifine/ctm/default/";
-      net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(locBase);
+      ResourceLocation loc = new ResourceLocation(locBase);
       PackResources rp = Config.getDefiningResourcePack(loc);
       if (rp != null) {
          if (rp.m_5542_().equals("programmer_art")) {
@@ -1943,7 +1778,28 @@ public class ConnectedTextures {
             if (rp == Config.getDefaultResourcePack()) {
                list.add(defPath + pathSuffix);
             }
+
          }
       }
+   }
+
+   static {
+      AIR_DEFAULT_STATE = Blocks.f_50016_.m_49966_();
+      emptySprite = null;
+      LOCATION_SPRITE_EMPTY = TextureUtils.LOCATION_SPRITE_EMPTY;
+      SIDES_Y_NEG_DOWN = new BlockDir[]{BlockDir.WEST, BlockDir.EAST, BlockDir.NORTH, BlockDir.SOUTH};
+      SIDES_Y_POS_UP = new BlockDir[]{BlockDir.WEST, BlockDir.EAST, BlockDir.SOUTH, BlockDir.NORTH};
+      SIDES_Z_NEG_NORTH = new BlockDir[]{BlockDir.EAST, BlockDir.WEST, BlockDir.DOWN, BlockDir.field_36};
+      SIDES_Z_POS_SOUTH = new BlockDir[]{BlockDir.WEST, BlockDir.EAST, BlockDir.DOWN, BlockDir.field_36};
+      SIDES_X_NEG_WEST = new BlockDir[]{BlockDir.NORTH, BlockDir.SOUTH, BlockDir.DOWN, BlockDir.field_36};
+      SIDES_X_POS_EAST = new BlockDir[]{BlockDir.SOUTH, BlockDir.NORTH, BlockDir.DOWN, BlockDir.field_36};
+      EDGES_Y_NEG_DOWN = new BlockDir[]{BlockDir.NORTH_EAST, BlockDir.NORTH_WEST, BlockDir.SOUTH_EAST, BlockDir.SOUTH_WEST};
+      EDGES_Y_POS_UP = new BlockDir[]{BlockDir.SOUTH_EAST, BlockDir.SOUTH_WEST, BlockDir.NORTH_EAST, BlockDir.NORTH_WEST};
+      EDGES_Z_NEG_NORTH = new BlockDir[]{BlockDir.DOWN_WEST, BlockDir.DOWN_EAST, BlockDir.UP_WEST, BlockDir.UP_EAST};
+      EDGES_Z_POS_SOUTH = new BlockDir[]{BlockDir.DOWN_EAST, BlockDir.DOWN_WEST, BlockDir.UP_EAST, BlockDir.UP_WEST};
+      EDGES_X_NEG_WEST = new BlockDir[]{BlockDir.DOWN_SOUTH, BlockDir.DOWN_NORTH, BlockDir.UP_SOUTH, BlockDir.UP_NORTH};
+      EDGES_X_POS_EAST = new BlockDir[]{BlockDir.DOWN_NORTH, BlockDir.DOWN_SOUTH, BlockDir.UP_NORTH, BlockDir.UP_SOUTH};
+      SPRITE_DEFAULT = new TextureAtlasSprite(TextureAtlas.f_118259_, new ResourceLocation("default"));
+      RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
    }
 }

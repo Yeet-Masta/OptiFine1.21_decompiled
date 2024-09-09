@@ -2,38 +2,47 @@ package net.optifine.gui;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.util.Collections;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.narration.NarratableEntry.NarrationPriority;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.optifine.util.TextureUtils;
 
 public abstract class SlotGui extends AbstractContainerEventHandler implements NarratableEntry {
-   public static final net.minecraft.resources.ResourceLocation WHITE_TEXTURE_LOCATION = TextureUtils.WHITE_TEXTURE_LOCATION;
-   public static final net.minecraft.resources.ResourceLocation MENU_LIST_BACKGROUND = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/menu_list_background.png"
-   );
-   public static final net.minecraft.resources.ResourceLocation INWORLD_MENU_LIST_BACKGROUND = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/inworld_menu_list_background.png"
-   );
+   public static final ResourceLocation WHITE_TEXTURE_LOCATION;
+   public static final ResourceLocation MENU_LIST_BACKGROUND;
+   public static final ResourceLocation INWORLD_MENU_LIST_BACKGROUND;
    protected static final int NO_DRAG = -1;
    protected static final int DRAG_OUTSIDE = -2;
    protected final Minecraft minecraft;
    protected int width;
    protected int height;
-   protected int y0;
-   protected int y1;
-   protected int x1;
-   protected int x0;
+   // $FF: renamed from: y0 int
+   protected int field_10;
+   // $FF: renamed from: y1 int
+   protected int field_11;
+   // $FF: renamed from: x1 int
+   protected int field_12;
+   // $FF: renamed from: x0 int
+   protected int field_13;
    protected final int itemHeight;
    protected boolean centerListVertically = true;
    protected int yDrag = -2;
-   protected double yo;
+   // $FF: renamed from: yo double
+   protected double field_14;
    protected boolean visible = true;
    protected boolean renderSelection = true;
    protected boolean renderHeader;
@@ -44,11 +53,11 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       this.minecraft = mcIn;
       this.width = width;
       this.height = height;
-      this.y0 = topIn;
-      this.y1 = bottomIn;
+      this.field_10 = topIn;
+      this.field_11 = bottomIn;
       this.itemHeight = slotHeightIn;
-      this.x0 = 0;
-      this.x1 = width;
+      this.field_13 = 0;
+      this.field_12 = width;
    }
 
    public void setRenderSelection(boolean p_setRenderSelection_1_) {
@@ -61,6 +70,7 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       if (!p_setRenderHeader_1_) {
          this.headerHeight = 0;
       }
+
    }
 
    public void setVisible(boolean p_setVisible_1_) {
@@ -73,7 +83,7 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
 
    protected abstract int getItemCount();
 
-   public List<? extends GuiEventListener> m_6702_() {
+   public List m_6702_() {
       return Collections.emptyList();
    }
 
@@ -92,9 +102,9 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
    protected void updateItemPosition(int p_updateItemPosition_1_, int p_updateItemPosition_2_, int p_updateItemPosition_3_, float p_updateItemPosition_4_) {
    }
 
-   protected abstract void renderItem(net.minecraft.client.gui.GuiGraphics var1, int var2, int var3, int var4, int var5, int var6, int var7, float var8);
+   protected abstract void renderItem(GuiGraphics var1, int var2, int var3, int var4, int var5, int var6, int var7, float var8);
 
-   protected void renderHeader(int p_renderHeader_1_, int p_renderHeader_2_, com.mojang.blaze3d.vertex.Tesselator p_renderHeader_3_) {
+   protected void renderHeader(int p_renderHeader_1_, int p_renderHeader_2_, Tesselator p_renderHeader_3_) {
    }
 
    protected void clickedHeader(int p_clickedHeader_1_, int p_clickedHeader_2_) {
@@ -104,86 +114,66 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
    }
 
    public int getItemAtPosition(double p_getItemAtPosition_1_, double p_getItemAtPosition_3_) {
-      int i = this.x0 + this.width / 2 - this.getRowWidth() / 2;
-      int j = this.x0 + this.width / 2 + this.getRowWidth() / 2;
-      int k = net.minecraft.util.Mth.m_14107_(p_getItemAtPosition_3_ - (double)this.y0) - this.headerHeight + (int)this.yo - 4;
+      int i = this.field_13 + this.width / 2 - this.getRowWidth() / 2;
+      int j = this.field_13 + this.width / 2 + this.getRowWidth() / 2;
+      int k = Mth.m_14107_(p_getItemAtPosition_3_ - (double)this.field_10) - this.headerHeight + (int)this.field_14 - 4;
       int l = k / this.itemHeight;
-      return p_getItemAtPosition_1_ < (double)this.getScrollbarPosition()
-            && p_getItemAtPosition_1_ >= (double)i
-            && p_getItemAtPosition_1_ <= (double)j
-            && l >= 0
-            && k >= 0
-            && l < this.getItemCount()
-         ? l
-         : -1;
+      return p_getItemAtPosition_1_ < (double)this.getScrollbarPosition() && p_getItemAtPosition_1_ >= (double)i && p_getItemAtPosition_1_ <= (double)j && l >= 0 && k >= 0 && l < this.getItemCount() ? l : -1;
    }
 
    protected void capYPosition() {
-      this.yo = net.minecraft.util.Mth.m_14008_(this.yo, 0.0, (double)this.getMaxScroll());
+      this.field_14 = Mth.m_14008_(this.field_14, 0.0, (double)this.getMaxScroll());
    }
 
    public int getMaxScroll() {
-      return Math.max(0, this.getMaxPosition() - (this.y1 - this.y0 - 4));
+      return Math.max(0, this.getMaxPosition() - (this.field_11 - this.field_10 - 4));
    }
 
    public void centerScrollOn(int p_centerScrollOn_1_) {
-      this.yo = (double)(p_centerScrollOn_1_ * this.itemHeight + this.itemHeight / 2 - (this.y1 - this.y0) / 2);
+      this.field_14 = (double)(p_centerScrollOn_1_ * this.itemHeight + this.itemHeight / 2 - (this.field_11 - this.field_10) / 2);
       this.capYPosition();
    }
 
    public int getScroll() {
-      return (int)this.yo;
+      return (int)this.field_14;
    }
 
    public boolean isMouseInList(double p_isMouseInList_1_, double p_isMouseInList_3_) {
-      return p_isMouseInList_3_ >= (double)this.y0
-         && p_isMouseInList_3_ <= (double)this.y1
-         && p_isMouseInList_1_ >= (double)this.x0
-         && p_isMouseInList_1_ <= (double)this.x1;
+      return p_isMouseInList_3_ >= (double)this.field_10 && p_isMouseInList_3_ <= (double)this.field_11 && p_isMouseInList_1_ >= (double)this.field_13 && p_isMouseInList_1_ <= (double)this.field_12;
    }
 
    public int getScrollBottom() {
-      return (int)this.yo - this.height - this.headerHeight;
+      return (int)this.field_14 - this.height - this.headerHeight;
    }
 
    public void scroll(int p_scroll_1_) {
-      this.yo += (double)p_scroll_1_;
+      this.field_14 += (double)p_scroll_1_;
       this.capYPosition();
       this.yDrag = -2;
    }
 
-   public void render(net.minecraft.client.gui.GuiGraphics graphicsIn, int p_render_1_, int p_render_2_, float p_render_3_) {
+   public void render(GuiGraphics graphicsIn, int p_render_1_, int p_render_2_, float p_render_3_) {
       if (this.visible) {
          this.renderBackground();
          int i = this.getScrollbarPosition();
          int j = i + 6;
          this.capYPosition();
-         com.mojang.blaze3d.vertex.Tesselator tessellator = com.mojang.blaze3d.vertex.Tesselator.m_85913_();
-         RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::m_172820_);
-         net.minecraft.resources.ResourceLocation menuListBackground = this.minecraft.f_91073_ != null ? INWORLD_MENU_LIST_BACKGROUND : MENU_LIST_BACKGROUND;
+         Tesselator tessellator = Tesselator.m_85913_();
+         RenderSystem.setShader(GameRenderer::m_172820_);
+         ResourceLocation menuListBackground = this.minecraft.f_91073_ != null ? INWORLD_MENU_LIST_BACKGROUND : MENU_LIST_BACKGROUND;
          RenderSystem.setShaderTexture(0, menuListBackground);
          RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
          RenderSystem.enableBlend();
          float f = 32.0F;
-         com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = tessellator.m_339075_(
-            com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85819_
-         );
-         bufferbuilder.m_167146_((float)this.x0, (float)this.y1, 0.0F)
-            .m_167083_((float)this.x0 / 32.0F, (float)(this.y1 + (int)this.yo) / 32.0F)
-            .m_167129_(32, 32, 32, 255);
-         bufferbuilder.m_167146_((float)this.x1, (float)this.y1, 0.0F)
-            .m_167083_((float)this.x1 / 32.0F, (float)(this.y1 + (int)this.yo) / 32.0F)
-            .m_167129_(32, 32, 32, 255);
-         bufferbuilder.m_167146_((float)this.x1, (float)this.y0, 0.0F)
-            .m_167083_((float)this.x1 / 32.0F, (float)(this.y0 + (int)this.yo) / 32.0F)
-            .m_167129_(32, 32, 32, 255);
-         bufferbuilder.m_167146_((float)this.x0, (float)this.y0, 0.0F)
-            .m_167083_((float)this.x0 / 32.0F, (float)(this.y0 + (int)this.yo) / 32.0F)
-            .m_167129_(32, 32, 32, 255);
+         BufferBuilder bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85819_);
+         bufferbuilder.m_167146_((float)this.field_13, (float)this.field_11, 0.0F).m_167083_((float)this.field_13 / 32.0F, (float)(this.field_11 + (int)this.field_14) / 32.0F).m_167129_(32, 32, 32, 255);
+         bufferbuilder.m_167146_((float)this.field_12, (float)this.field_11, 0.0F).m_167083_((float)this.field_12 / 32.0F, (float)(this.field_11 + (int)this.field_14) / 32.0F).m_167129_(32, 32, 32, 255);
+         bufferbuilder.m_167146_((float)this.field_12, (float)this.field_10, 0.0F).m_167083_((float)this.field_12 / 32.0F, (float)(this.field_10 + (int)this.field_14) / 32.0F).m_167129_(32, 32, 32, 255);
+         bufferbuilder.m_167146_((float)this.field_13, (float)this.field_10, 0.0F).m_167083_((float)this.field_13 / 32.0F, (float)(this.field_10 + (int)this.field_14) / 32.0F).m_167129_(32, 32, 32, 255);
          tessellator.draw(bufferbuilder);
          RenderSystem.disableBlend();
-         int k = this.x0 + this.width / 2 - this.getRowWidth() / 2 + 2;
-         int l = this.y0 + 4 - (int)this.yo;
+         int k = this.field_13 + this.width / 2 - this.getRowWidth() / 2 + 2;
+         int l = this.field_10 + 4 - (int)this.field_14;
          if (this.renderHeader) {
             this.renderHeader(k, l, tessellator);
          }
@@ -191,38 +181,33 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
          this.renderList(graphicsIn, k, l, p_render_1_, p_render_2_, p_render_3_);
          RenderSystem.disableDepthTest();
          RenderSystem.enableBlend();
-         RenderSystem.blendFuncSeparate(
-            GlStateManager.SourceFactor.SRC_ALPHA,
-            GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-            GlStateManager.SourceFactor.ZERO,
-            GlStateManager.DestFactor.ONE
-         );
-         RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::m_172820_);
+         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE);
+         RenderSystem.setShader(GameRenderer::m_172820_);
          RenderSystem.setShaderTexture(0, WHITE_TEXTURE_LOCATION);
          RenderSystem.disableTexture();
-         int delta = 2;
+         int delta = true;
          int j1 = this.getMaxScroll();
          if (j1 > 0) {
-            int k1 = (int)((float)((this.y1 - this.y0) * (this.y1 - this.y0)) / (float)this.getMaxPosition());
-            k1 = net.minecraft.util.Mth.m_14045_(k1, 32, this.y1 - this.y0 - 8);
-            int l1 = (int)this.yo * (this.y1 - this.y0 - k1) / j1 + this.y0;
-            if (l1 < this.y0) {
-               l1 = this.y0;
+            int k1 = (int)((float)((this.field_11 - this.field_10) * (this.field_11 - this.field_10)) / (float)this.getMaxPosition());
+            k1 = Mth.m_14045_(k1, 32, this.field_11 - this.field_10 - 8);
+            int l1 = (int)this.field_14 * (this.field_11 - this.field_10 - k1) / j1 + this.field_10;
+            if (l1 < this.field_10) {
+               l1 = this.field_10;
             }
 
-            bufferbuilder = tessellator.m_339075_(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85819_);
-            bufferbuilder.m_167146_((float)i, (float)this.y1, 0.0F).m_167083_(0.0F, 1.0F).m_167129_(0, 0, 0, 255);
-            bufferbuilder.m_167146_((float)j, (float)this.y1, 0.0F).m_167083_(1.0F, 1.0F).m_167129_(0, 0, 0, 255);
-            bufferbuilder.m_167146_((float)j, (float)this.y0, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(0, 0, 0, 255);
-            bufferbuilder.m_167146_((float)i, (float)this.y0, 0.0F).m_167083_(0.0F, 0.0F).m_167129_(0, 0, 0, 255);
+            bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85819_);
+            bufferbuilder.m_167146_((float)i, (float)this.field_11, 0.0F).m_167083_(0.0F, 1.0F).m_167129_(0, 0, 0, 255);
+            bufferbuilder.m_167146_((float)j, (float)this.field_11, 0.0F).m_167083_(1.0F, 1.0F).m_167129_(0, 0, 0, 255);
+            bufferbuilder.m_167146_((float)j, (float)this.field_10, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(0, 0, 0, 255);
+            bufferbuilder.m_167146_((float)i, (float)this.field_10, 0.0F).m_167083_(0.0F, 0.0F).m_167129_(0, 0, 0, 255);
             tessellator.draw(bufferbuilder);
-            bufferbuilder = tessellator.m_339075_(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85819_);
+            bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85819_);
             bufferbuilder.m_167146_((float)i, (float)(l1 + k1), 0.0F).m_167083_(0.0F, 1.0F).m_167129_(128, 128, 128, 255);
             bufferbuilder.m_167146_((float)j, (float)(l1 + k1), 0.0F).m_167083_(1.0F, 1.0F).m_167129_(128, 128, 128, 255);
             bufferbuilder.m_167146_((float)j, (float)l1, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(128, 128, 128, 255);
             bufferbuilder.m_167146_((float)i, (float)l1, 0.0F).m_167083_(0.0F, 0.0F).m_167129_(128, 128, 128, 255);
             tessellator.draw(bufferbuilder);
-            bufferbuilder = tessellator.m_339075_(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85819_);
+            bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85819_);
             bufferbuilder.m_167146_((float)i, (float)(l1 + k1 - 1), 0.0F).m_167083_(0.0F, 1.0F).m_167129_(192, 192, 192, 255);
             bufferbuilder.m_167146_((float)(j - 1), (float)(l1 + k1 - 1), 0.0F).m_167083_(1.0F, 1.0F).m_167129_(192, 192, 192, 255);
             bufferbuilder.m_167146_((float)(j - 1), (float)l1, 0.0F).m_167083_(1.0F, 0.0F).m_167129_(192, 192, 192, 255);
@@ -234,12 +219,11 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
          RenderSystem.enableTexture();
          RenderSystem.disableBlend();
       }
+
    }
 
    protected void updateScrollingState(double p_updateScrollingState_1_, double p_updateScrollingState_3_, int p_updateScrollingState_5_) {
-      this.scrolling = p_updateScrollingState_5_ == 0
-         && p_updateScrollingState_1_ >= (double)this.getScrollbarPosition()
-         && p_updateScrollingState_1_ < (double)(this.getScrollbarPosition() + 6);
+      this.scrolling = p_updateScrollingState_5_ == 0 && p_updateScrollingState_1_ >= (double)this.getScrollbarPosition() && p_updateScrollingState_1_ < (double)(this.getScrollbarPosition() + 6);
    }
 
    public boolean m_6375_(double p_mouseClicked_1_, double p_mouseClicked_3_, int p_mouseClicked_5_) {
@@ -247,10 +231,7 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       if (this.isVisible() && this.isMouseInList(p_mouseClicked_1_, p_mouseClicked_3_)) {
          int i = this.getItemAtPosition(p_mouseClicked_1_, p_mouseClicked_3_);
          if (i == -1 && p_mouseClicked_5_ == 0) {
-            this.clickedHeader(
-               (int)(p_mouseClicked_1_ - (double)(this.x0 + this.width / 2 - this.getRowWidth() / 2)),
-               (int)(p_mouseClicked_3_ - (double)this.y0) + (int)this.yo - 4
-            );
+            this.clickedHeader((int)(p_mouseClicked_1_ - (double)(this.field_13 + this.width / 2 - this.getRowWidth() / 2)), (int)(p_mouseClicked_3_ - (double)this.field_10) + (int)this.field_14 - 4);
             return true;
          } else if (i != -1 && this.selectItem(i, p_mouseClicked_5_, p_mouseClicked_1_, p_mouseClicked_3_)) {
             if (this.m_6702_().size() > i) {
@@ -279,24 +260,24 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       if (super.m_7979_(p_mouseDragged_1_, p_mouseDragged_3_, p_mouseDragged_5_, p_mouseDragged_6_, p_mouseDragged_8_)) {
          return true;
       } else if (this.isVisible() && p_mouseDragged_5_ == 0 && this.scrolling) {
-         if (p_mouseDragged_3_ < (double)this.y0) {
-            this.yo = 0.0;
-         } else if (p_mouseDragged_3_ > (double)this.y1) {
-            this.yo = (double)this.getMaxScroll();
+         if (p_mouseDragged_3_ < (double)this.field_10) {
+            this.field_14 = 0.0;
+         } else if (p_mouseDragged_3_ > (double)this.field_11) {
+            this.field_14 = (double)this.getMaxScroll();
          } else {
             double d0 = (double)this.getMaxScroll();
             if (d0 < 1.0) {
                d0 = 1.0;
             }
 
-            int i = (int)((float)((this.y1 - this.y0) * (this.y1 - this.y0)) / (float)this.getMaxPosition());
-            i = net.minecraft.util.Mth.m_14045_(i, 32, this.y1 - this.y0 - 8);
-            double d1 = d0 / (double)(this.y1 - this.y0 - i);
+            int i = (int)((float)((this.field_11 - this.field_10) * (this.field_11 - this.field_10)) / (float)this.getMaxPosition());
+            i = Mth.m_14045_(i, 32, this.field_11 - this.field_10 - 8);
+            double d1 = d0 / (double)(this.field_11 - this.field_10 - i);
             if (d1 < 1.0) {
                d1 = 1.0;
             }
 
-            this.yo += p_mouseDragged_8_ * d1;
+            this.field_14 += p_mouseDragged_8_ * d1;
             this.capYPosition();
          }
 
@@ -310,7 +291,7 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       if (!this.isVisible()) {
          return false;
       } else {
-         this.yo = this.yo - deltaV * (double)this.itemHeight / 2.0;
+         this.field_14 -= deltaV * (double)this.itemHeight / 2.0;
          return true;
       }
    }
@@ -346,42 +327,33 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       return 220;
    }
 
-   protected void renderList(
-      net.minecraft.client.gui.GuiGraphics graphicsIn,
-      int p_renderList_1_,
-      int p_renderList_2_,
-      int p_renderList_3_,
-      int p_renderList_4_,
-      float p_renderList_5_
-   ) {
+   protected void renderList(GuiGraphics graphicsIn, int p_renderList_1_, int p_renderList_2_, int p_renderList_3_, int p_renderList_4_, float p_renderList_5_) {
       int i = this.getItemCount();
-      com.mojang.blaze3d.vertex.Tesselator tessellator = com.mojang.blaze3d.vertex.Tesselator.m_85913_();
-      graphicsIn.m_280588_(this.x0, this.y0, this.x1, this.y1);
+      Tesselator tessellator = Tesselator.m_85913_();
+      graphicsIn.m_280588_(this.field_13, this.field_10, this.field_12, this.field_11);
 
-      for (int j = 0; j < i; j++) {
+      for(int j = 0; j < i; ++j) {
          int k = p_renderList_2_ + j * this.itemHeight + this.headerHeight;
          int l = this.itemHeight - 4;
-         if (k > this.y1 || k + l < this.y0) {
+         if (k > this.field_11 || k + l < this.field_10) {
             this.updateItemPosition(j, p_renderList_1_, k, p_renderList_5_);
          }
 
          if (this.renderSelection && this.isSelectedItem(j)) {
-            int i1 = this.x0 + this.width / 2 - this.getRowWidth() / 2;
-            int j1 = this.x0 + this.width / 2 + this.getRowWidth() / 2;
+            int i1 = this.field_13 + this.width / 2 - this.getRowWidth() / 2;
+            int j1 = this.field_13 + this.width / 2 + this.getRowWidth() / 2;
             RenderSystem.disableTexture();
-            RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::m_172808_);
+            RenderSystem.setShader(GameRenderer::m_172808_);
             float f = this.isFocusedNow() ? 1.0F : 0.5F;
             RenderSystem.setShaderColor(f, f, f, 1.0F);
-            com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = tessellator.m_339075_(
-               com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85814_
-            );
+            BufferBuilder bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85814_);
             bufferbuilder.m_167146_((float)i1, (float)(k + l + 2), 0.0F);
             bufferbuilder.m_167146_((float)j1, (float)(k + l + 2), 0.0F);
             bufferbuilder.m_167146_((float)j1, (float)(k - 2), 0.0F);
             bufferbuilder.m_167146_((float)i1, (float)(k - 2), 0.0F);
             tessellator.draw(bufferbuilder);
             RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
-            bufferbuilder = tessellator.m_339075_(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85814_);
+            bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85814_);
             bufferbuilder.m_167146_((float)(i1 + 1), (float)(k + l + 1), 0.0F);
             bufferbuilder.m_167146_((float)(j1 - 1), (float)(k + l + 1), 0.0F);
             bufferbuilder.m_167146_((float)(j1 - 1), (float)(k - 1), 0.0F);
@@ -391,7 +363,7 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
             RenderSystem.enableTexture();
          }
 
-         if (k + this.itemHeight >= this.y0 && k <= this.y1) {
+         if (k + this.itemHeight >= this.field_10 && k <= this.field_11) {
             this.renderItem(graphicsIn, j, p_renderList_1_, k, l, p_renderList_3_, p_renderList_4_, p_renderList_5_);
          }
       }
@@ -407,45 +379,39 @@ public abstract class SlotGui extends AbstractContainerEventHandler implements N
       return this.width / 2 + 124;
    }
 
-   protected void renderHoleBackground(
-      int p_renderHoleBackground_1_, int p_renderHoleBackground_2_, int p_renderHoleBackground_3_, int p_renderHoleBackground_4_
-   ) {
-      com.mojang.blaze3d.vertex.Tesselator tessellator = com.mojang.blaze3d.vertex.Tesselator.m_85913_();
-      RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::m_172820_);
+   protected void renderHoleBackground(int p_renderHoleBackground_1_, int p_renderHoleBackground_2_, int p_renderHoleBackground_3_, int p_renderHoleBackground_4_) {
+      Tesselator tessellator = Tesselator.m_85913_();
+      RenderSystem.setShader(GameRenderer::m_172820_);
       RenderSystem.setShaderTexture(0, Screen.f_315252_);
       RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
       float f = 32.0F;
-      com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = tessellator.m_339075_(
-         com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85819_
-      );
-      bufferbuilder.m_167146_((float)this.x0, (float)p_renderHoleBackground_2_, 0.0F)
-         .m_167083_(0.0F, (float)p_renderHoleBackground_2_ / 32.0F)
-         .m_167129_(64, 64, 64, p_renderHoleBackground_4_);
-      bufferbuilder.m_167146_((float)(this.x0 + this.width), (float)p_renderHoleBackground_2_, 0.0F)
-         .m_167083_((float)this.width / 32.0F, (float)p_renderHoleBackground_2_ / 32.0F)
-         .m_167129_(64, 64, 64, p_renderHoleBackground_4_);
-      bufferbuilder.m_167146_((float)(this.x0 + this.width), (float)p_renderHoleBackground_1_, 0.0F)
-         .m_167083_((float)this.width / 32.0F, (float)p_renderHoleBackground_1_ / 32.0F)
-         .m_167129_(64, 64, 64, p_renderHoleBackground_3_);
-      bufferbuilder.m_167146_((float)this.x0, (float)p_renderHoleBackground_1_, 0.0F)
-         .m_167083_(0.0F, (float)p_renderHoleBackground_1_ / 32.0F)
-         .m_167129_(64, 64, 64, p_renderHoleBackground_3_);
+      BufferBuilder bufferbuilder = tessellator.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85819_);
+      bufferbuilder.m_167146_((float)this.field_13, (float)p_renderHoleBackground_2_, 0.0F).m_167083_(0.0F, (float)p_renderHoleBackground_2_ / 32.0F).m_167129_(64, 64, 64, p_renderHoleBackground_4_);
+      bufferbuilder.m_167146_((float)(this.field_13 + this.width), (float)p_renderHoleBackground_2_, 0.0F).m_167083_((float)this.width / 32.0F, (float)p_renderHoleBackground_2_ / 32.0F).m_167129_(64, 64, 64, p_renderHoleBackground_4_);
+      bufferbuilder.m_167146_((float)(this.field_13 + this.width), (float)p_renderHoleBackground_1_, 0.0F).m_167083_((float)this.width / 32.0F, (float)p_renderHoleBackground_1_ / 32.0F).m_167129_(64, 64, 64, p_renderHoleBackground_3_);
+      bufferbuilder.m_167146_((float)this.field_13, (float)p_renderHoleBackground_1_, 0.0F).m_167083_(0.0F, (float)p_renderHoleBackground_1_ / 32.0F).m_167129_(64, 64, 64, p_renderHoleBackground_3_);
       tessellator.draw(bufferbuilder);
    }
 
    public void setLeftPos(int p_setLeftPos_1_) {
-      this.x0 = p_setLeftPos_1_;
-      this.x1 = p_setLeftPos_1_ + this.width;
+      this.field_13 = p_setLeftPos_1_;
+      this.field_12 = p_setLeftPos_1_ + this.width;
    }
 
    public int getItemHeight() {
       return this.itemHeight;
    }
 
-   public NarrationPriority m_142684_() {
+   public NarratableEntry.NarrationPriority m_142684_() {
       return NarrationPriority.HOVERED;
    }
 
    public void m_142291_(NarrationElementOutput output) {
+   }
+
+   static {
+      WHITE_TEXTURE_LOCATION = TextureUtils.WHITE_TEXTURE_LOCATION;
+      MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/menu_list_background.png");
+      INWORLD_MENU_LIST_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_list_background.png");
    }
 }

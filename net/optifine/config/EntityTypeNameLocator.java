@@ -1,11 +1,12 @@
 package net.optifine.config;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.util.EntityTypeUtils;
 
-public class EntityTypeNameLocator implements IObjectLocator<String> {
-   public String getObject(net.minecraft.resources.ResourceLocation loc) {
+public class EntityTypeNameLocator implements IObjectLocator {
+   public String getObject(ResourceLocation loc) {
       EntityType type = EntityTypeUtils.getEntityType(loc);
       return type == null ? null : type.m_20675_();
    }

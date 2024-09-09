@@ -27,25 +27,25 @@ public class ShaderUniform1i extends ShaderUniformBase {
 
    public int getValue() {
       int program = this.getProgram();
-      return this.programValues[program];
+      int value = this.programValues[program];
+      return value;
    }
 
-   @Override
    protected void onProgramSet(int program) {
       if (program >= this.programValues.length) {
          int[] valuesOld = this.programValues;
          int[] valuesNew = new int[program + 10];
          System.arraycopy(valuesOld, 0, valuesNew, 0, valuesOld.length);
 
-         for (int i = valuesOld.length; i < valuesNew.length; i++) {
+         for(int i = valuesOld.length; i < valuesNew.length; ++i) {
             valuesNew[i] = Integer.MIN_VALUE;
          }
 
          this.programValues = valuesNew;
       }
+
    }
 
-   @Override
    protected void resetValue() {
       this.programValues = new int[]{Integer.MIN_VALUE};
    }

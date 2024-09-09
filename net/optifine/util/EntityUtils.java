@@ -1,17 +1,19 @@
 package net.optifine.util;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
 
 public class EntityUtils {
-   private static final Map<EntityType, Integer> mapIdByType = new HashMap();
-   private static final Map<String, Integer> mapIdByLocation = new HashMap();
-   private static final Map<String, Integer> mapIdByName = new HashMap();
+   private static final Map mapIdByType = new HashMap();
+   private static final Map mapIdByLocation = new HashMap();
+   private static final Map mapIdByName = new HashMap();
 
    public static int getEntityIdByClass(Entity entity) {
       return entity == null ? -1 : getEntityIdByType(entity.m_6095_());
@@ -34,26 +36,31 @@ public class EntityUtils {
    }
 
    static {
-      for (EntityType type : BuiltInRegistries.f_256780_) {
+      Iterator it = BuiltInRegistries.f_256780_.iterator();
+
+      while(it.hasNext()) {
+         EntityType type = (EntityType)it.next();
          int id = BuiltInRegistries.f_256780_.m_7447_(type);
-         net.minecraft.resources.ResourceLocation loc = BuiltInRegistries.f_256780_.m_7981_(type);
+         ResourceLocation loc = BuiltInRegistries.f_256780_.m_7981_(type);
          String locStr = loc.toString();
          String name = loc.m_135815_();
          if (mapIdByType.containsKey(type)) {
-            Config.warn("Duplicate entity type: " + type + ", id1: " + mapIdByType.get(type) + ", id2: " + id);
+            String var10000 = String.valueOf(type);
+            Config.warn("Duplicate entity type: " + var10000 + ", id1: " + String.valueOf(mapIdByType.get(type)) + ", id2: " + id);
          }
 
          if (mapIdByLocation.containsKey(locStr)) {
-            Config.warn("Duplicate entity location: " + locStr + ", id1: " + mapIdByLocation.get(locStr) + ", id2: " + id);
+            Config.warn("Duplicate entity location: " + locStr + ", id1: " + String.valueOf(mapIdByLocation.get(locStr)) + ", id2: " + id);
          }
 
          if (mapIdByName.containsKey(locStr)) {
-            Config.warn("Duplicate entity name: " + name + ", id1: " + mapIdByName.get(name) + ", id2: " + id);
+            Config.warn("Duplicate entity name: " + name + ", id1: " + String.valueOf(mapIdByName.get(name)) + ", id2: " + id);
          }
 
          mapIdByType.put(type, id);
          mapIdByLocation.put(locStr, id);
          mapIdByName.put(name, id);
       }
+
    }
 }

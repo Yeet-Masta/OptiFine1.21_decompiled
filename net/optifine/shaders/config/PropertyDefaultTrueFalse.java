@@ -2,7 +2,7 @@ package net.optifine.shaders.config;
 
 import net.optifine.Lang;
 
-public class PropertyDefaultTrueFalse extends net.optifine.shaders.config.Property {
+public class PropertyDefaultTrueFalse extends Property {
    public static final String[] PROPERTY_VALUES = new String[]{"default", "true", "false"};
    public static final String[] USER_VALUES = new String[]{"Default", "ON", "OFF"};
 
@@ -10,7 +10,6 @@ public class PropertyDefaultTrueFalse extends net.optifine.shaders.config.Proper
       super(propertyName, PROPERTY_VALUES, userName, USER_VALUES, defaultValue);
    }
 
-   @Override
    public String getUserValue() {
       if (this.isDefault()) {
          return Lang.getDefault();

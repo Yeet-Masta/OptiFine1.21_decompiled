@@ -2,8 +2,11 @@ package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.BlazeModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.entity.BlazeRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
 import net.optifine.util.StrUtils;
@@ -13,13 +16,11 @@ public class ModelAdapterBlaze extends ModelAdapter {
       super(EntityType.f_20551_, "blaze", 0.5F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new BlazeModel(bakeModelLayer(ModelLayers.f_171270_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BlazeModel modelBlaze)) {
          return null;
       } else if (modelPart.equals("head")) {
@@ -37,16 +38,12 @@ public class ModelAdapterBlaze extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
-      return new String[]{
-         "head", "stick1", "stick2", "stick3", "stick4", "stick5", "stick6", "stick7", "stick8", "stick9", "stick10", "stick11", "stick12", "root"
-      };
+      return new String[]{"head", "stick1", "stick2", "stick3", "stick4", "stick5", "stick6", "stick7", "stick8", "stick9", "stick10", "stick11", "stick12", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       BlazeRenderer render = new BlazeRenderer(renderManager.getContext());
       render.f_115290_ = (BlazeModel)modelBase;
       render.f_114477_ = shadowSize;

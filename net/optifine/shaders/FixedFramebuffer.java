@@ -1,7 +1,6 @@
 package net.optifine.shaders;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import java.lang.invoke.StringConcatFactory;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
@@ -19,9 +18,7 @@ public class FixedFramebuffer {
    private int depthTexture;
    private IntBuffer glDrawBuffers;
 
-   public FixedFramebuffer(
-      String name, int width, int height, int[] colorTextures, int[] colorAttachments, boolean depthFilterNearest, boolean depthFilterHardware
-   ) {
+   public FixedFramebuffer(String name, int width, int height, int[] colorTextures, int[] colorAttachments, boolean depthFilterNearest, boolean depthFilterHardware) {
       this.name = name;
       this.width = width;
       this.height = height;
@@ -55,7 +52,8 @@ public class FixedFramebuffer {
       GL30.glFramebufferTexture2D(36160, 36096, 3553, this.depthTexture, 0);
       Shaders.checkGLError("FBS " + this.name + " depth");
 
-      for (int i = 0; i < this.colorTextures.length; i++) {
+      int i;
+      for(i = 0; i < this.colorTextures.length; ++i) {
          GL30.glFramebufferTexture2D(36160, this.colorAttachments[i], 3553, this.colorTextures[i], 0);
          Shaders.checkGLError("FBS " + this.name + " color");
       }
@@ -64,7 +62,7 @@ public class FixedFramebuffer {
       if (this.colorTextures.length > 0) {
          this.glDrawBuffers = BufferUtils.createIntBuffer(this.colorAttachments.length);
 
-         for (int i = 0; i < this.colorAttachments.length; i++) {
+         for(i = 0; i < this.colorAttachments.length; ++i) {
             int att = this.colorAttachments[i];
             this.glDrawBuffers.put(i, att);
          }
@@ -73,9 +71,9 @@ public class FixedFramebuffer {
          GL30.glReadBuffer(0);
       }
 
-      int status = GL30.glCheckFramebufferStatus(36160);
-      if (status != 36053) {
-         Shaders.printChatAndLogError("[Shaders] Error creating framebuffer: " + this.name + ", status: " + status);
+      i = GL30.glCheckFramebufferStatus(36160);
+      if (i != 36053) {
+         Shaders.printChatAndLogError("[Shaders] Error creating framebuffer: " + this.name + ", status: " + i);
       } else {
          SMCLog.info("Framebuffer created: " + this.name);
       }
@@ -104,6 +102,6 @@ public class FixedFramebuffer {
    }
 
    public String toString() {
-      return StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(this.name);
+      return "" + this.name;
    }
 }

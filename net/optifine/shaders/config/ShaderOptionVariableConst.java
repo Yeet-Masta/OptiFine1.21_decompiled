@@ -13,12 +13,11 @@ public class ShaderOptionVariableConst extends ShaderOptionVariable {
       this.type = type;
    }
 
-   @Override
    public String getSourceLine() {
-      return "const " + this.type + " " + this.getName() + " = " + this.getValue() + "; // Shader option " + this.getValue();
+      String var10000 = this.type;
+      return "const " + var10000 + " " + this.getName() + " = " + this.getValue() + "; // Shader option " + this.getValue();
    }
 
-   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_CONST.matcher(line);
       if (!m.matches()) {

@@ -5,14 +5,12 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.util.RandomSource;
 
 public class ConstantFloat extends FloatProvider {
-   public static final net.minecraft.util.valueproviders.ConstantFloat f_146451_ = new net.minecraft.util.valueproviders.ConstantFloat(0.0F);
-   public static final MapCodec<net.minecraft.util.valueproviders.ConstantFloat> f_146452_ = Codec.FLOAT
-      .fieldOf("value")
-      .xmap(net.minecraft.util.valueproviders.ConstantFloat::m_146458_, net.minecraft.util.valueproviders.ConstantFloat::m_146474_);
+   public static final ConstantFloat f_146451_ = new ConstantFloat(0.0F);
+   public static final MapCodec f_146452_;
    private final float f_146453_;
 
-   public static net.minecraft.util.valueproviders.ConstantFloat m_146458_(float p_146458_0_) {
-      return p_146458_0_ == 0.0F ? f_146451_ : new net.minecraft.util.valueproviders.ConstantFloat(p_146458_0_);
+   public static ConstantFloat m_146458_(float p_146458_0_) {
+      return p_146458_0_ == 0.0F ? f_146451_ : new ConstantFloat(p_146458_0_);
    }
 
    private ConstantFloat(float p_i146455_1_) {
@@ -35,11 +33,15 @@ public class ConstantFloat extends FloatProvider {
       return this.f_146453_;
    }
 
-   public FloatProviderType<?> m_141961_() {
+   public FloatProviderType m_141961_() {
       return FloatProviderType.f_146519_;
    }
 
    public String toString() {
       return Float.toString(this.f_146453_);
+   }
+
+   static {
+      f_146452_ = Codec.FLOAT.fieldOf("value").xmap(ConstantFloat::m_146458_, ConstantFloat::m_146474_);
    }
 }

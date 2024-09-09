@@ -5,7 +5,6 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 public class JSONObject extends LinkedHashMap implements Map, JSONAware, JSONStreamAware {
    private static final long serialVersionUID = -503443796854799292L;
@@ -18,14 +17,14 @@ public class JSONObject extends LinkedHashMap implements Map, JSONAware, JSONStr
          Iterator iter = map.entrySet().iterator();
          out.write(123);
 
-         while (iter.hasNext()) {
+         while(iter.hasNext()) {
             if (first) {
                first = false;
             } else {
                out.write(44);
             }
 
-            Entry entry = (Entry)iter.next();
+            Map.Entry entry = (Map.Entry)iter.next();
             out.write(34);
             out.write(escape(String.valueOf(entry.getKey())));
             out.write(34);
@@ -37,7 +36,6 @@ public class JSONObject extends LinkedHashMap implements Map, JSONAware, JSONStr
       }
    }
 
-   @Override
    public void writeJSONString(Writer out) throws IOException {
       writeJSONString(this, out);
    }
@@ -51,14 +49,14 @@ public class JSONObject extends LinkedHashMap implements Map, JSONAware, JSONStr
          Iterator iter = map.entrySet().iterator();
          sb.append('{');
 
-         while (iter.hasNext()) {
+         while(iter.hasNext()) {
             if (first) {
                first = false;
             } else {
                sb.append(',');
             }
 
-            Entry entry = (Entry)iter.next();
+            Map.Entry entry = (Map.Entry)iter.next();
             toJSONString(String.valueOf(entry.getKey()), entry.getValue(), sb);
          }
 
@@ -67,7 +65,6 @@ public class JSONObject extends LinkedHashMap implements Map, JSONAware, JSONStr
       }
    }
 
-   @Override
    public String toJSONString() {
       return toJSONString(this);
    }

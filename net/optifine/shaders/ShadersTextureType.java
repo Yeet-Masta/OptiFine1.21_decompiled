@@ -13,4 +13,9 @@ public enum ShadersTextureType {
    public String getSuffix() {
       return this.suffix;
    }
+
+   // $FF: synthetic method
+   private static ShadersTextureType[] $values() {
+      return new ShadersTextureType[]{NORMAL, SPECULAR};
+   }
 }

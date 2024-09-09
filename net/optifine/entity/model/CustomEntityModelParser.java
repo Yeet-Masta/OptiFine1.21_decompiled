@@ -9,9 +9,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.Config;
 import net.optifine.config.ConnectedParser;
 import net.optifine.entity.model.anim.ModelUpdater;
@@ -61,7 +66,7 @@ public class CustomEntityModelParser {
       Map mapModelJsons = new HashMap();
       List listModels = new ArrayList();
 
-      for (int i = 0; i < models.size(); i++) {
+      for(int i = 0; i < models.size(); ++i) {
          JsonObject elem = (JsonObject)models.get(i);
          processBaseId(elem, mapModelJsons);
          processExternalModel(elem, mapModelJsons, basePath);
@@ -73,12 +78,13 @@ public class CustomEntityModelParser {
       }
 
       CustomModelRenderer[] modelRenderers = (CustomModelRenderer[])listModels.toArray(new CustomModelRenderer[listModels.size()]);
-      net.minecraft.resources.ResourceLocation textureLocation = null;
+      ResourceLocation textureLocation = null;
       if (texture != null) {
          textureLocation = getResourceLocation(basePath, texture, ".png");
       }
 
-      return new CustomEntityRenderer(name, basePath, textureLocation, modelRenderers, shadowSize);
+      CustomEntityRenderer cer = new CustomEntityRenderer(name, basePath, textureLocation, modelRenderers, shadowSize);
+      return cer;
    }
 
    private static void processBaseId(JsonObject elem, Map mapModelJsons) {
@@ -96,35 +102,44 @@ public class CustomEntityModelParser {
    private static void processExternalModel(JsonObject elem, Map mapModelJsons, String basePath) {
       String modelPath = Json.getString(elem, "model");
       if (modelPath != null) {
-         net.minecraft.resources.ResourceLocation locJson = getResourceLocation(basePath, modelPath, ".jpm");
+         ResourceLocation locJson = getResourceLocation(basePath, modelPath, ".jpm");
 
+         String var10000;
          try {
             JsonObject modelObj = loadJson(locJson);
             if (modelObj == null) {
-               Config.warn("Model not found: " + locJson);
+               Config.warn("Model not found: " + String.valueOf(locJson));
                return;
             }
 
             copyJsonElements(modelObj, elem);
          } catch (IOException var6) {
-            Config.error(var6.getClass().getName() + ": " + var6.getMessage());
+            var10000 = var6.getClass().getName();
+            Config.error(var10000 + ": " + var6.getMessage());
          } catch (JsonParseException var7) {
-            Config.error(var7.getClass().getName() + ": " + var7.getMessage());
+            var10000 = var7.getClass().getName();
+            Config.error(var10000 + ": " + var7.getMessage());
          } catch (Exception var8) {
             var8.printStackTrace();
          }
+
       }
    }
 
    private static void copyJsonElements(JsonObject objFrom, JsonObject objTo) {
-      for (Entry<String, JsonElement> entry : objFrom.entrySet()) {
+      Set setEntries = objFrom.entrySet();
+      Iterator iterator = setEntries.iterator();
+
+      while(iterator.hasNext()) {
+         Map.Entry entry = (Map.Entry)iterator.next();
          if (!((String)entry.getKey()).equals("id") && !objTo.has((String)entry.getKey())) {
             objTo.add((String)entry.getKey(), (JsonElement)entry.getValue());
          }
       }
+
    }
 
-   public static net.minecraft.resources.ResourceLocation getResourceLocation(String basePath, String path, String extension) {
+   public static ResourceLocation getResourceLocation(String basePath, String path, String extension) {
       if (!path.endsWith(extension)) {
          path = path + extension;
       }
@@ -137,7 +152,7 @@ public class CustomEntityModelParser {
          path = "optifine/" + path.substring(2);
       }
 
-      return new net.minecraft.resources.ResourceLocation(path);
+      return new ResourceLocation(path);
    }
 
    private static void processId(JsonObject elem, Map mapModelJsons) {
@@ -157,7 +172,7 @@ public class CustomEntityModelParser {
       String modelPart = Json.getString(elem, "part");
       checkNull(modelPart, "Model part not specified, missing 'part'.");
       boolean attach = Json.getBoolean(elem, "attach", false);
-      net.minecraft.client.model.Model modelBase = new CustomEntityModel(net.minecraft.client.renderer.RenderType::m_110458_);
+      Model modelBase = new CustomEntityModel(RenderType::m_110458_);
       if (textureSize != null) {
          modelBase.textureWidth = textureSize[0];
          modelBase.textureHeight = textureSize[1];
@@ -166,12 +181,15 @@ public class CustomEntityModelParser {
       ModelUpdater mu = null;
       JsonArray animations = (JsonArray)elem.get("animations");
       if (animations != null) {
-         List<ModelVariableUpdater> listModelVariableUpdaters = new ArrayList();
+         List listModelVariableUpdaters = new ArrayList();
 
-         for (int i = 0; i < animations.size(); i++) {
+         for(int i = 0; i < animations.size(); ++i) {
             JsonObject anim = (JsonObject)animations.get(i);
+            Set entries = anim.entrySet();
+            Iterator it = entries.iterator();
 
-            for (Entry<String, JsonElement> entry : anim.entrySet()) {
+            while(it.hasNext()) {
+               Map.Entry entry = (Map.Entry)it.next();
                String key = (String)entry.getKey();
                String val = ((JsonElement)entry.getValue()).getAsString();
                ModelVariableUpdater mvu = new ModelVariableUpdater(key, val);
@@ -185,8 +203,9 @@ public class CustomEntityModelParser {
          }
       }
 
-      net.minecraft.client.model.geom.ModelPart mr = PlayerItemParser.parseModelRenderer(elem, modelBase, textureSize, basePath);
-      return new CustomModelRenderer(modelPart, attach, mr, mu);
+      ModelPart mr = PlayerItemParser.parseModelRenderer(elem, modelBase, textureSize, basePath);
+      CustomModelRenderer cmr = new CustomModelRenderer(modelPart, attach, mr, mu);
+      return cmr;
    }
 
    private static void checkNull(Object obj, String msg) {
@@ -195,7 +214,7 @@ public class CustomEntityModelParser {
       }
    }
 
-   public static JsonObject loadJson(net.minecraft.resources.ResourceLocation location) throws IOException, JsonParseException {
+   public static JsonObject loadJson(ResourceLocation location) throws IOException, JsonParseException {
       InputStream in = Config.getResourceStream(location);
       if (in == null) {
          return null;
@@ -203,7 +222,8 @@ public class CustomEntityModelParser {
          String jsonStr = Config.readInputStream(in, "ASCII");
          in.close();
          JsonParser jp = new JsonParser();
-         return (JsonObject)jp.parse(jsonStr);
+         JsonObject jo = (JsonObject)jp.parse(jsonStr);
+         return jo;
       }
    }
 }

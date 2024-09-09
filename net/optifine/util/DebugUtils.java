@@ -1,11 +1,18 @@
 package net.optifine.util;
 
+import com.mojang.blaze3d.vertex.VertexBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.Config;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
@@ -34,8 +41,8 @@ public class DebugUtils {
    private static float[] transposeMat4(float[] arr) {
       float[] arrT = new float[16];
 
-      for (int x = 0; x < 4; x++) {
-         for (int y = 0; y < 4; y++) {
+      for(int x = 0; x < 4; ++x) {
+         for(int y = 0; y < 4; ++y) {
             arrT[x * 4 + y] = arr[y * 4 + x];
          }
       }
@@ -51,7 +58,7 @@ public class DebugUtils {
    private static String getMatrix4(float[] fs) {
       StringBuffer sb = new StringBuffer();
 
-      for (int i = 0; i < fs.length; i++) {
+      for(int i = 0; i < fs.length; ++i) {
          String str = String.format("%.2f", fs[i]);
          if (i > 0) {
             if (i % 4 == 0) {
@@ -68,56 +75,62 @@ public class DebugUtils {
       return sb.toString();
    }
 
-   public static void debugVboMemory(net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection[] renderChunks) {
+   public static void debugVboMemory(SectionRenderDispatcher.RenderSection[] renderChunks) {
       if (TimedEvent.isActive("DbgVbos", 3000L)) {
          int sum = 0;
          int countChunks = 0;
          int countVbos = 0;
          int countLayers = 0;
 
-         for (int i = 0; i < renderChunks.length; i++) {
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection renderChunk = renderChunks[i];
+         for(int i = 0; i < renderChunks.length; ++i) {
+            SectionRenderDispatcher.RenderSection renderChunk = renderChunks[i];
             int sumPre = sum;
+            RenderType[] var8 = SectionRenderDispatcher.BLOCK_RENDER_LAYERS;
+            int var9 = var8.length;
 
-            for (net.minecraft.client.renderer.RenderType rt : net.minecraft.client.renderer.chunk.SectionRenderDispatcher.BLOCK_RENDER_LAYERS) {
-               com.mojang.blaze3d.vertex.VertexBuffer vb = renderChunk.m_294581_(rt);
+            for(int var10 = 0; var10 < var9; ++var10) {
+               RenderType rt = var8[var10];
+               VertexBuffer vb = renderChunk.m_294581_(rt);
                if (vb.getIndexCount() > 0) {
                   sum += vb.getIndexCount() * vb.m_166892_().m_86020_();
-                  countVbos++;
+                  ++countVbos;
                }
 
                if (renderChunk.m_293175_().isLayerUsed(rt)) {
-                  countLayers++;
+                  ++countLayers;
                }
             }
 
             if (sum > sumPre) {
-               countChunks++;
+               ++countChunks;
             }
          }
 
          Config.dbg("VRAM: " + sum / 1048576 + " MB, vbos: " + countVbos + ", layers: " + countLayers + ", chunks: " + countChunks);
-         Config.dbg("VBOs: " + GpuMemory.getBufferAllocated() / 1048576L + " MB");
+         long var10000 = GpuMemory.getBufferAllocated();
+         Config.dbg("VBOs: " + var10000 / 1048576L + " MB");
       }
    }
 
    public static void debugTextures() {
       Config.dbg(" *** TEXTURES ***");
-      net.minecraft.client.renderer.texture.TextureManager textureManager = Minecraft.m_91087_().m_91097_();
+      TextureManager textureManager = Minecraft.m_91087_().m_91097_();
       long sum = 0L;
-      Collection<net.minecraft.resources.ResourceLocation> locations = textureManager.getTextureLocations();
-      List<net.minecraft.resources.ResourceLocation> list = new ArrayList(locations);
+      Collection locations = textureManager.getTextureLocations();
+      List list = new ArrayList(locations);
       Collections.sort(list);
 
-      for (net.minecraft.resources.ResourceLocation loc : list) {
-         net.minecraft.client.renderer.texture.AbstractTexture texture = textureManager.m_118506_(loc);
-         long size = GpuMemory.getTextureSize(texture);
+      long size;
+      for(Iterator var5 = list.iterator(); var5.hasNext(); sum += size) {
+         ResourceLocation loc = (ResourceLocation)var5.next();
+         AbstractTexture texture = textureManager.m_118506_(loc);
+         size = GpuMemory.getTextureSize(texture);
          if (Config.isShaders()) {
             size *= 3L;
          }
 
-         Config.dbg(loc + " = " + size);
-         sum += size;
+         String var10000 = String.valueOf(loc);
+         Config.dbg(var10000 + " = " + size);
       }
 
       Config.dbg("All: " + sum);

@@ -10,22 +10,26 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Stream;
+import net.minecraft.Util;
 
-public class ClassInstanceMultiMap<T> extends AbstractCollection<T> {
-   private final Map<Class<?>, List<T>> f_13527_ = Maps.newHashMap();
-   private final Class<T> f_13528_;
-   private final List<T> f_13529_ = Lists.newArrayList();
+public class ClassInstanceMultiMap extends AbstractCollection {
+   private final Map f_13527_ = Maps.newHashMap();
+   private final Class f_13528_;
+   private final List f_13529_ = Lists.newArrayList();
 
-   public ClassInstanceMultiMap(Class<T> baseClassIn) {
+   public ClassInstanceMultiMap(Class baseClassIn) {
       this.f_13528_ = baseClassIn;
       this.f_13527_.put(baseClassIn, this.f_13529_);
    }
 
-   public boolean add(T p_add_1_) {
+   public boolean add(Object p_add_1_) {
       boolean flag = false;
+      Iterator var3 = this.f_13527_.entrySet().iterator();
 
-      for (Entry<Class<?>, List<T>> entry : this.f_13527_.entrySet()) {
+      while(var3.hasNext()) {
+         Map.Entry entry = (Map.Entry)var3.next();
          if (((Class)entry.getKey()).isInstance(p_add_1_)) {
             flag |= ((List)entry.getValue()).add(p_add_1_);
          }
@@ -36,10 +40,12 @@ public class ClassInstanceMultiMap<T> extends AbstractCollection<T> {
 
    public boolean remove(Object p_remove_1_) {
       boolean flag = false;
+      Iterator var3 = this.f_13527_.entrySet().iterator();
 
-      for (Entry<Class<?>, List<T>> entry : this.f_13527_.entrySet()) {
+      while(var3.hasNext()) {
+         Map.Entry entry = (Map.Entry)var3.next();
          if (((Class)entry.getKey()).isInstance(p_remove_1_)) {
-            List<T> list = (List<T>)entry.getValue();
+            List list = (List)entry.getValue();
             flag |= list.remove(p_remove_1_);
          }
       }
@@ -51,21 +57,24 @@ public class ClassInstanceMultiMap<T> extends AbstractCollection<T> {
       return this.m_13533_(p_contains_1_.getClass()).contains(p_contains_1_);
    }
 
-   public <S> Collection<S> m_13533_(Class<S> classIn) {
+   public Collection m_13533_(Class classIn) {
       if (!this.f_13528_.isAssignableFrom(classIn)) {
-         throw new IllegalArgumentException("Don't know how to search for " + classIn);
+         throw new IllegalArgumentException("Don't know how to search for " + String.valueOf(classIn));
       } else {
-         List<? extends T> list = (List<? extends T>)this.f_13527_
-            .computeIfAbsent(classIn, class2In -> (List)this.f_13529_.stream().filter(class2In::isInstance).collect(net.minecraft.Util.m_323807_()));
+         List list = (List)this.f_13527_.computeIfAbsent(classIn, (class2In) -> {
+            Stream var10000 = this.f_13529_.stream();
+            Objects.requireNonNull(class2In);
+            return (List)var10000.filter(class2In::isInstance).collect(Util.m_323807_());
+         });
          return Collections.unmodifiableCollection(list);
       }
    }
 
-   public Iterator<T> iterator() {
-      return (Iterator<T>)(this.f_13529_.isEmpty() ? Collections.emptyIterator() : Iterators.unmodifiableIterator(this.f_13529_.iterator()));
+   public Iterator iterator() {
+      return (Iterator)(this.f_13529_.isEmpty() ? Collections.emptyIterator() : Iterators.unmodifiableIterator(this.f_13529_.iterator()));
    }
 
-   public List<T> m_13532_() {
+   public List m_13532_() {
       return ImmutableList.copyOf(this.f_13529_);
    }
 
@@ -73,7 +82,7 @@ public class ClassInstanceMultiMap<T> extends AbstractCollection<T> {
       return this.f_13529_.size();
    }
 
-   public List<T> getValues() {
+   public List getValues() {
       return this.f_13529_;
    }
 }

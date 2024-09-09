@@ -3,8 +3,12 @@ package net.minecraft.client.player;
 import com.mojang.authlib.GameProfile;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.ShoulderRidingEntity;
@@ -12,34 +16,41 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import net.optifine.Config;
 import net.optifine.RandomEntities;
 import net.optifine.player.CapeUtils;
+import net.optifine.player.PlayerConfiguration;
 import net.optifine.player.PlayerConfigurations;
 import net.optifine.reflect.Reflector;
 
 public abstract class AbstractClientPlayer extends Player {
    @Nullable
    private PlayerInfo f_108546_;
-   protected net.minecraft.world.phys.Vec3 f_271420_ = net.minecraft.world.phys.Vec3.f_82478_;
+   protected Vec3 f_271420_;
    public float f_108542_;
    public float f_108543_;
    public float f_108544_;
-   public final net.minecraft.client.multiplayer.ClientLevel f_108545_;
-   private net.minecraft.resources.ResourceLocation locationOfCape = null;
-   private long reloadCapeTimeMs = 0L;
-   private boolean elytraOfCape = false;
-   private String nameClear = null;
+   public final ClientLevel f_108545_;
+   private ResourceLocation locationOfCape;
+   private long reloadCapeTimeMs;
+   private boolean elytraOfCape;
+   private String nameClear;
    public ShoulderRidingEntity entityShoulderLeft;
    public ShoulderRidingEntity entityShoulderRight;
    public ShoulderRidingEntity lastAttachedEntity;
    public float capeRotateX;
    public float capeRotateY;
    public float capeRotateZ;
-   private static final net.minecraft.resources.ResourceLocation TEXTURE_ELYTRA = new net.minecraft.resources.ResourceLocation("textures/entity/elytra.png");
+   private static final ResourceLocation TEXTURE_ELYTRA = new ResourceLocation("textures/entity/elytra.png");
 
-   public AbstractClientPlayer(net.minecraft.client.multiplayer.ClientLevel worldIn, GameProfile profileIn) {
+   public AbstractClientPlayer(ClientLevel worldIn, GameProfile profileIn) {
       super(worldIn, worldIn.m_220360_(), worldIn.m_220361_(), profileIn);
+      this.f_271420_ = Vec3.f_82478_;
+      this.locationOfCape = null;
+      this.reloadCapeTimeMs = 0L;
+      this.elytraOfCape = false;
+      this.nameClear = null;
       this.f_108545_ = worldIn;
       this.nameClear = profileIn.getName();
       if (this.nameClear != null && !this.nameClear.isEmpty()) {
@@ -76,13 +87,14 @@ public abstract class AbstractClientPlayer extends Player {
          RandomEntities.checkEntityShoulder(this.lastAttachedEntity, true);
          this.lastAttachedEntity = null;
       }
+
    }
 
-   public net.minecraft.world.phys.Vec3 m_272267_(float partialTicks) {
+   public Vec3 m_272267_(float partialTicks) {
       return this.f_271420_.m_165921_(this.m_20184_(), (double)partialTicks);
    }
 
-   public net.minecraft.client.resources.PlayerSkin m_294544_() {
+   public PlayerSkin m_294544_() {
       PlayerInfo playerinfo = this.m_108558_();
       return playerinfo == null ? DefaultPlayerSkin.m_294143_(this.m_20148_()) : playerinfo.m_293823_();
    }
@@ -115,25 +127,23 @@ public abstract class AbstractClientPlayer extends Player {
          }
       }
 
-      return Reflector.ForgeHooksClient_getFieldOfViewModifier.exists()
-         ? Reflector.callFloat(Reflector.ForgeHooksClient_getFieldOfViewModifier, this, f)
-         : net.minecraft.util.Mth.m_14179_(Minecraft.m_91087_().f_91066_.m_231925_().m_231551_().floatValue(), 1.0F, f);
+      return Reflector.ForgeHooksClient_getFieldOfViewModifier.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getFieldOfViewModifier, this, f) : Mth.m_14179_(((Double)Minecraft.m_91087_().f_91066_.m_231925_().m_231551_()).floatValue(), 1.0F, f);
    }
 
    public String getNameClear() {
       return this.nameClear;
    }
 
-   public net.minecraft.resources.ResourceLocation getLocationOfCape() {
+   public ResourceLocation getLocationOfCape() {
       return this.locationOfCape;
    }
 
-   public void setLocationOfCape(net.minecraft.resources.ResourceLocation locationOfCape) {
+   public void setLocationOfCape(ResourceLocation locationOfCape) {
       this.locationOfCape = locationOfCape;
    }
 
    public boolean hasElytraCape() {
-      net.minecraft.resources.ResourceLocation loc = this.getLocationCape();
+      ResourceLocation loc = this.getLocationCape();
       if (loc == null) {
          return false;
       } else {
@@ -158,25 +168,25 @@ public abstract class AbstractClientPlayer extends Player {
    }
 
    @Nullable
-   public net.minecraft.resources.ResourceLocation getLocationCape() {
+   public ResourceLocation getLocationCape() {
       if (!Config.isShowCapes()) {
          return null;
       } else {
          if (this.reloadCapeTimeMs != 0L && System.currentTimeMillis() > this.reloadCapeTimeMs) {
             CapeUtils.reloadCape(this);
             this.reloadCapeTimeMs = 0L;
-            PlayerConfigurations.setPlayerConfiguration(this.getNameClear(), null);
+            PlayerConfigurations.setPlayerConfiguration(this.getNameClear(), (PlayerConfiguration)null);
          }
 
          return this.locationOfCape != null ? this.locationOfCape : this.m_294544_().f_291348_();
       }
    }
 
-   public net.minecraft.resources.ResourceLocation getLocationElytra() {
+   public ResourceLocation getLocationElytra() {
       return this.hasElytraCape() ? this.locationOfCape : this.m_294544_().f_290452_();
    }
 
-   public net.minecraft.resources.ResourceLocation getSkinTextureLocation() {
+   public ResourceLocation getSkinTextureLocation() {
       PlayerInfo playerinfo = this.m_108558_();
       return playerinfo == null ? DefaultPlayerSkin.m_294143_(this.m_20148_()).f_290339_() : playerinfo.m_293823_().f_290339_();
    }

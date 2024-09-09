@@ -26,15 +26,14 @@ public class DynamicDimension {
    }
 
    public Dimension getDimension(int baseWidth, int baseHeight) {
-      return this.relative
-         ? new Dimension((int)(this.width * (float)baseWidth), (int)(this.height * (float)baseHeight))
-         : new Dimension((int)this.width, (int)this.height);
+      return this.relative ? new Dimension((int)(this.width * (float)baseWidth), (int)(this.height * (float)baseHeight)) : new Dimension((int)this.width, (int)this.height);
    }
 
    public int hashCode() {
       int hc = this.relative ? 1 : 0;
       hc = hc * 37 + (int)this.width;
-      return hc * 37 + (int)this.height;
+      hc = hc * 37 + (int)this.height;
+      return hc;
    }
 
    public boolean equals(Object obj) {
@@ -42,8 +41,10 @@ public class DynamicDimension {
          return false;
       } else if (this.relative != dim.relative) {
          return false;
+      } else if (this.width != dim.width) {
+         return false;
       } else {
-         return this.width != dim.width ? false : this.height == dim.height;
+         return this.height == dim.height;
       }
    }
 }

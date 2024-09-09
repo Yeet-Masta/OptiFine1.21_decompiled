@@ -5,53 +5,76 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
+import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.chunk.SectionCompiler;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.BlockPosM;
 import net.optifine.Config;
 import net.optifine.model.BakedQuadRetextured;
 import net.optifine.model.ListQuadsOverlay;
 
 public class RenderEnv {
-   private net.minecraft.world.level.block.state.BlockState blockState;
+   private BlockState blockState;
    private BlockPos blockPos;
    private int blockId = -1;
    private int metadata = -1;
    private int breakingAnimation = -1;
    private int smartLeaves = -1;
-   private float[] quadBounds = new float[net.minecraft.core.Direction.f_122346_.length * 2];
-   private BitSet boundsFlags = new BitSet(3);
-   private net.minecraft.client.renderer.block.ModelBlockRenderer.AmbientOcclusionFace aoFace = new net.minecraft.client.renderer.block.ModelBlockRenderer.AmbientOcclusionFace();
-   private BlockPosM colorizerBlockPosM = null;
-   private MutableBlockPos renderMutableBlockPos = null;
-   private boolean[] borderFlags = null;
-   private boolean[] borderFlags2 = null;
-   private boolean[] borderFlags3 = null;
-   private net.minecraft.core.Direction[] borderDirections = null;
-   private List<net.minecraft.client.renderer.block.model.BakedQuad> listQuadsCustomizer = new ArrayList();
-   private List<net.minecraft.client.renderer.block.model.BakedQuad> listQuadsCtmMultipass = new ArrayList();
-   private net.minecraft.client.renderer.block.model.BakedQuad[] arrayQuadsCtm1 = new net.minecraft.client.renderer.block.model.BakedQuad[1];
-   private net.minecraft.client.renderer.block.model.BakedQuad[] arrayQuadsCtm2 = new net.minecraft.client.renderer.block.model.BakedQuad[2];
-   private net.minecraft.client.renderer.block.model.BakedQuad[] arrayQuadsCtm3 = new net.minecraft.client.renderer.block.model.BakedQuad[3];
-   private net.minecraft.client.renderer.block.model.BakedQuad[] arrayQuadsCtm4 = new net.minecraft.client.renderer.block.model.BakedQuad[4];
-   private net.minecraft.client.renderer.chunk.SectionCompiler sectionCompiler;
-   private Map<net.minecraft.client.renderer.RenderType, com.mojang.blaze3d.vertex.BufferBuilder> bufferBuilderMap;
+   private float[] quadBounds;
+   private BitSet boundsFlags;
+   private ModelBlockRenderer.AmbientOcclusionFace aoFace;
+   private BlockPosM colorizerBlockPosM;
+   private BlockPos.MutableBlockPos renderMutableBlockPos;
+   private boolean[] borderFlags;
+   private boolean[] borderFlags2;
+   private boolean[] borderFlags3;
+   private Direction[] borderDirections;
+   private List listQuadsCustomizer;
+   private List listQuadsCtmMultipass;
+   private BakedQuad[] arrayQuadsCtm1;
+   private BakedQuad[] arrayQuadsCtm2;
+   private BakedQuad[] arrayQuadsCtm3;
+   private BakedQuad[] arrayQuadsCtm4;
+   private SectionCompiler sectionCompiler;
+   private Map bufferBuilderMap;
    private SectionBufferBuilderPack sectionBufferBuilderPack;
-   private ListQuadsOverlay[] listsQuadsOverlay = new ListQuadsOverlay[net.minecraft.client.renderer.RenderType.CHUNK_RENDER_TYPES.length];
-   private boolean overlaysRendered = false;
-   private Long2ByteLinkedOpenHashMap renderSideMap = new Long2ByteLinkedOpenHashMap();
+   private ListQuadsOverlay[] listsQuadsOverlay;
+   private boolean overlaysRendered;
+   private Long2ByteLinkedOpenHashMap renderSideMap;
    private static final int UNKNOWN = -1;
    private static final int FALSE = 0;
    private static final int TRUE = 1;
 
-   public RenderEnv(net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos) {
+   public RenderEnv(BlockState blockState, BlockPos blockPos) {
+      this.quadBounds = new float[Direction.f_122346_.length * 2];
+      this.boundsFlags = new BitSet(3);
+      this.aoFace = new ModelBlockRenderer.AmbientOcclusionFace();
+      this.colorizerBlockPosM = null;
+      this.renderMutableBlockPos = null;
+      this.borderFlags = null;
+      this.borderFlags2 = null;
+      this.borderFlags3 = null;
+      this.borderDirections = null;
+      this.listQuadsCustomizer = new ArrayList();
+      this.listQuadsCtmMultipass = new ArrayList();
+      this.arrayQuadsCtm1 = new BakedQuad[1];
+      this.arrayQuadsCtm2 = new BakedQuad[2];
+      this.arrayQuadsCtm3 = new BakedQuad[3];
+      this.arrayQuadsCtm4 = new BakedQuad[4];
+      this.listsQuadsOverlay = new ListQuadsOverlay[RenderType.CHUNK_RENDER_TYPES.length];
+      this.overlaysRendered = false;
+      this.renderSideMap = new Long2ByteLinkedOpenHashMap();
       this.blockState = blockState;
       this.blockPos = blockPos;
    }
 
-   public void reset(net.minecraft.world.level.block.state.BlockState blockStateIn, BlockPos blockPosIn) {
+   public void reset(BlockState blockStateIn, BlockPos blockPosIn) {
       if (this.blockState != blockStateIn || this.blockPos != blockPosIn) {
          this.blockState = blockStateIn;
          this.blockPos = blockPosIn;
@@ -87,7 +110,7 @@ public class RenderEnv {
       return this.boundsFlags;
    }
 
-   public net.minecraft.client.renderer.block.ModelBlockRenderer.AmbientOcclusionFace getAoFace() {
+   public ModelBlockRenderer.AmbientOcclusionFace getAoFace() {
       return this.aoFace;
    }
 
@@ -103,7 +126,7 @@ public class RenderEnv {
       return this.breakingAnimation == 1;
    }
 
-   public boolean isBreakingAnimation(net.minecraft.client.renderer.block.model.BakedQuad quad) {
+   public boolean isBreakingAnimation(BakedQuad quad) {
       if (this.breakingAnimation < 0) {
          if (quad instanceof BakedQuadRetextured) {
             this.breakingAnimation = 1;
@@ -119,7 +142,7 @@ public class RenderEnv {
       return this.breakingAnimation == 1;
    }
 
-   public net.minecraft.world.level.block.state.BlockState getBlockState() {
+   public BlockState getBlockState() {
       return this.blockState;
    }
 
@@ -131,9 +154,9 @@ public class RenderEnv {
       return this.colorizerBlockPosM;
    }
 
-   public MutableBlockPos getRenderMutableBlockPos() {
+   public BlockPos.MutableBlockPos getRenderMutableBlockPos() {
       if (this.renderMutableBlockPos == null) {
-         this.renderMutableBlockPos = new MutableBlockPos(0, 0, 0);
+         this.renderMutableBlockPos = new BlockPos.MutableBlockPos(0, 0, 0);
       }
 
       return this.renderMutableBlockPos;
@@ -163,18 +186,16 @@ public class RenderEnv {
       return this.borderFlags3;
    }
 
-   public net.minecraft.core.Direction[] getBorderDirections() {
+   public Direction[] getBorderDirections() {
       if (this.borderDirections == null) {
-         this.borderDirections = new net.minecraft.core.Direction[4];
+         this.borderDirections = new Direction[4];
       }
 
       return this.borderDirections;
    }
 
-   public net.minecraft.core.Direction[] getBorderDirections(
-      net.minecraft.core.Direction dir0, net.minecraft.core.Direction dir1, net.minecraft.core.Direction dir2, net.minecraft.core.Direction dir3
-   ) {
-      net.minecraft.core.Direction[] dirs = this.getBorderDirections();
+   public Direction[] getBorderDirections(Direction dir0, Direction dir1, Direction dir2, Direction dir3) {
+      Direction[] dirs = this.getBorderDirections();
       dirs[0] = dir0;
       dirs[1] = dir1;
       dirs[2] = dir2;
@@ -194,40 +215,29 @@ public class RenderEnv {
       return this.smartLeaves == 1;
    }
 
-   public List<net.minecraft.client.renderer.block.model.BakedQuad> getListQuadsCustomizer() {
+   public List getListQuadsCustomizer() {
       return this.listQuadsCustomizer;
    }
 
-   public net.minecraft.client.renderer.block.model.BakedQuad[] getArrayQuadsCtm(net.minecraft.client.renderer.block.model.BakedQuad quad) {
+   public BakedQuad[] getArrayQuadsCtm(BakedQuad quad) {
       this.arrayQuadsCtm1[0] = quad;
       return this.arrayQuadsCtm1;
    }
 
-   public net.minecraft.client.renderer.block.model.BakedQuad[] getArrayQuadsCtm(
-      net.minecraft.client.renderer.block.model.BakedQuad quad0, net.minecraft.client.renderer.block.model.BakedQuad quad1
-   ) {
+   public BakedQuad[] getArrayQuadsCtm(BakedQuad quad0, BakedQuad quad1) {
       this.arrayQuadsCtm2[0] = quad0;
       this.arrayQuadsCtm2[1] = quad1;
       return this.arrayQuadsCtm2;
    }
 
-   public net.minecraft.client.renderer.block.model.BakedQuad[] getArrayQuadsCtm(
-      net.minecraft.client.renderer.block.model.BakedQuad quad0,
-      net.minecraft.client.renderer.block.model.BakedQuad quad1,
-      net.minecraft.client.renderer.block.model.BakedQuad quad2
-   ) {
+   public BakedQuad[] getArrayQuadsCtm(BakedQuad quad0, BakedQuad quad1, BakedQuad quad2) {
       this.arrayQuadsCtm3[0] = quad0;
       this.arrayQuadsCtm3[1] = quad1;
       this.arrayQuadsCtm3[2] = quad2;
       return this.arrayQuadsCtm3;
    }
 
-   public net.minecraft.client.renderer.block.model.BakedQuad[] getArrayQuadsCtm(
-      net.minecraft.client.renderer.block.model.BakedQuad quad0,
-      net.minecraft.client.renderer.block.model.BakedQuad quad1,
-      net.minecraft.client.renderer.block.model.BakedQuad quad2,
-      net.minecraft.client.renderer.block.model.BakedQuad quad3
-   ) {
+   public BakedQuad[] getArrayQuadsCtm(BakedQuad quad0, BakedQuad quad1, BakedQuad quad2, BakedQuad quad3) {
       this.arrayQuadsCtm4[0] = quad0;
       this.arrayQuadsCtm4[1] = quad1;
       this.arrayQuadsCtm4[2] = quad2;
@@ -235,11 +245,11 @@ public class RenderEnv {
       return this.arrayQuadsCtm4;
    }
 
-   public List<net.minecraft.client.renderer.block.model.BakedQuad> getListQuadsCtmMultipass(net.minecraft.client.renderer.block.model.BakedQuad[] quads) {
+   public List getListQuadsCtmMultipass(BakedQuad[] quads) {
       this.listQuadsCtmMultipass.clear();
       if (quads != null) {
-         for (int i = 0; i < quads.length; i++) {
-            net.minecraft.client.renderer.block.model.BakedQuad quad = quads[i];
+         for(int i = 0; i < quads.length; ++i) {
+            BakedQuad quad = quads[i];
             this.listQuadsCtmMultipass.add(quad);
          }
       }
@@ -247,21 +257,17 @@ public class RenderEnv {
       return this.listQuadsCtmMultipass;
    }
 
-   public void setCompileParams(
-      net.minecraft.client.renderer.chunk.SectionCompiler sectionCompiler,
-      Map<net.minecraft.client.renderer.RenderType, com.mojang.blaze3d.vertex.BufferBuilder> bufferBuilderMap,
-      SectionBufferBuilderPack sectionBufferBuilderPack
-   ) {
+   public void setCompileParams(SectionCompiler sectionCompiler, Map bufferBuilderMap, SectionBufferBuilderPack sectionBufferBuilderPack) {
       this.sectionCompiler = sectionCompiler;
       this.bufferBuilderMap = bufferBuilderMap;
       this.sectionBufferBuilderPack = sectionBufferBuilderPack;
    }
 
-   public net.minecraft.client.renderer.chunk.SectionCompiler getSectionCompiler() {
+   public SectionCompiler getSectionCompiler() {
       return this.sectionCompiler;
    }
 
-   public Map<net.minecraft.client.renderer.RenderType, com.mojang.blaze3d.vertex.BufferBuilder> getBufferBuilderMap() {
+   public Map getBufferBuilderMap() {
       return this.bufferBuilderMap;
    }
 
@@ -269,7 +275,7 @@ public class RenderEnv {
       return this.sectionBufferBuilderPack;
    }
 
-   public ListQuadsOverlay getListQuadsOverlay(net.minecraft.client.renderer.RenderType layer) {
+   public ListQuadsOverlay getListQuadsOverlay(RenderType layer) {
       ListQuadsOverlay list = this.listsQuadsOverlay[layer.ordinal()];
       if (list == null) {
          list = new ListQuadsOverlay();

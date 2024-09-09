@@ -1,9 +1,11 @@
 package net.optifine.config;
 
+import net.minecraft.client.Options;
+
 public interface IPersitentOption {
    String getSaveKey();
 
-   void loadValue(net.minecraft.client.Options var1, String var2);
+   void loadValue(Options var1, String var2);
 
-   String getSaveText(net.minecraft.client.Options var1);
+   String getSaveText(Options var1);
 }

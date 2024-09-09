@@ -12,14 +12,15 @@ import java.io.PushbackInputStream;
 import java.io.RandomAccessFile;
 
 public class Delta {
-   public static final int S = 16;
+   // $FF: renamed from: S int
+   public static final int field_60 = 16;
    public static final boolean debug = false;
    public static final int buff_size = 1024;
 
    public static void computeDelta(SeekableSource source, InputStream targetIS, int targetLength, DiffWriter output) throws IOException, DeltaException {
       int sourceLength = (int)source.length();
       Checksum checksum = new Checksum();
-      checksum.generateChecksums(new SeekableSourceInputStream(source), sourceLength);
+      checksum.generateChecksums((InputStream)(new SeekableSourceInputStream(source)), sourceLength);
       source.seek(0L);
       PushbackInputStream target = new PushbackInputStream(new BufferedInputStream(targetIS), 1024);
       boolean done = false;
@@ -27,125 +28,135 @@ public class Delta {
       long hashf = 0L;
       byte[] b = new byte[1];
       byte[] sourcebyte = new byte[16];
+      int readBytes;
+      int targetidx;
       if (targetLength > 16 && sourceLength > 16) {
-         int bytesRead = target.read(buf, 0, 16);
-         int targetidx = bytesRead;
+         readBytes = target.read(buf, 0, 16);
+         targetidx = readBytes;
          hashf = Checksum.queryChecksum(buf, 16);
          long alternativehashf = hashf;
          boolean sourceOutofBytes = false;
 
-         while (!done) {
-            int index = checksum.findChecksumIndex(hashf);
-            if (index != -1) {
-               boolean match = true;
-               int offset = index * 16;
-               int length = 15;
-               source.seek((long)offset);
-               if (!sourceOutofBytes && source.read(sourcebyte, 0, 16) != -1) {
-                  for (int ix = 0; ix < 16; ix++) {
-                     if (sourcebyte[ix] != buf[ix]) {
-                        match = false;
-                     }
-                  }
-               } else {
-                  sourceOutofBytes = true;
-               }
-
-               if (match & !sourceOutofBytes) {
-                  long start = System.currentTimeMillis();
-                  boolean ok = true;
-                  byte[] sourceBuff = new byte[1024];
-                  byte[] targetBuff = new byte[1024];
-                  int source_idx = 0;
-                  int target_idx = 0;
-                  int tCount = 0;
-
-                  do {
-                     source_idx = source.read(sourceBuff, 0, 1024);
-                     if (source_idx == -1) {
-                        sourceOutofBytes = true;
-                        break;
-                     }
-
-                     target_idx = target.read(targetBuff, 0, source_idx);
-                     if (target_idx == -1) {
-                        break;
-                     }
-
-                     int read_idx = Math.min(source_idx, target_idx);
-                     int i = 0;
-
-                     do {
-                        targetidx++;
-                        length++;
-                        ok = sourceBuff[i] == targetBuff[i];
-                        i++;
-                        if (!ok) {
-                           b[0] = targetBuff[i - 1];
-                           if (target_idx != -1) {
-                              target.unread(targetBuff, i, target_idx - i);
+         while(true) {
+            while(true) {
+               while(!done) {
+                  int index = checksum.findChecksumIndex(hashf);
+                  if (index != -1) {
+                     boolean match = true;
+                     int offset = index * 16;
+                     int length = 15;
+                     source.seek((long)offset);
+                     if (!sourceOutofBytes && source.read(sourcebyte, 0, 16) != -1) {
+                        for(int ix = 0; ix < 16; ++ix) {
+                           if (sourcebyte[ix] != buf[ix]) {
+                              match = false;
                            }
                         }
-                     } while (i < read_idx && ok);
+                     } else {
+                        sourceOutofBytes = true;
+                     }
 
-                     b[0] = targetBuff[i - 1];
-                  } while (ok && targetLength - targetidx > 0);
+                     if (match & !sourceOutofBytes) {
+                        long start = System.currentTimeMillis();
+                        boolean ok = true;
+                        byte[] sourceBuff = new byte[1024];
+                        byte[] targetBuff = new byte[1024];
+                        int source_idx = false;
+                        int target_idx = false;
+                        int tCount = false;
 
-                  output.addCopy(offset, length);
-                  if (targetLength - targetidx <= 15) {
-                     buf[0] = b[0];
-                     int remaining = targetLength - targetidx;
-                     int readStatus = target.read(buf, 1, remaining);
-                     targetidx += remaining;
+                        int read_idx;
+                        do {
+                           int source_idx = source.read(sourceBuff, 0, 1024);
+                           if (source_idx == -1) {
+                              sourceOutofBytes = true;
+                              break;
+                           }
 
-                     for (int ixx = 0; ixx < remaining + 1; ixx++) {
-                        output.addData(buf[ixx]);
+                           int target_idx = target.read(targetBuff, 0, source_idx);
+                           if (target_idx == -1) {
+                              break;
+                           }
+
+                           read_idx = Math.min(source_idx, target_idx);
+                           int i = 0;
+
+                           do {
+                              ++targetidx;
+                              ++length;
+                              ok = sourceBuff[i] == targetBuff[i];
+                              ++i;
+                              if (!ok) {
+                                 b[0] = targetBuff[i - 1];
+                                 if (target_idx != -1) {
+                                    target.unread(targetBuff, i, target_idx - i);
+                                 }
+                              }
+                           } while(i < read_idx && ok);
+
+                           b[0] = targetBuff[i - 1];
+                        } while(ok && targetLength - targetidx > 0);
+
+                        output.addCopy(offset, length);
+                        if (targetLength - targetidx <= 15) {
+                           buf[0] = b[0];
+                           read_idx = targetLength - targetidx;
+                           target.read(buf, 1, read_idx);
+                           targetidx += read_idx;
+
+                           for(int ix = 0; ix < read_idx + 1; ++ix) {
+                              output.addData(buf[ix]);
+                           }
+
+                           done = true;
+                           continue;
+                        }
+
+                        buf[0] = b[0];
+                        target.read(buf, 1, 15);
+                        targetidx += 15;
+                        alternativehashf = hashf = Checksum.queryChecksum(buf, 16);
+                        continue;
+                     }
+                  }
+
+                  int j;
+                  if (targetLength - targetidx > 0) {
+                     target.read(b, 0, 1);
+                     ++targetidx;
+                     output.addData(buf[0]);
+                     alternativehashf = Checksum.incrementChecksum(alternativehashf, buf[0], b[0]);
+
+                     for(j = 0; j < 15; ++j) {
+                        buf[j] = buf[j + 1];
+                     }
+
+                     buf[15] = b[0];
+                     hashf = Checksum.queryChecksum(buf, 16);
+                  } else {
+                     for(j = 0; j < 16; ++j) {
+                        output.addData(buf[j]);
                      }
 
                      done = true;
-                     continue;
                   }
-
-                  buf[0] = b[0];
-                  target.read(buf, 1, 15);
-                  targetidx += 15;
-                  alternativehashf = hashf = Checksum.queryChecksum(buf, 16);
-                  continue;
-               }
-            }
-
-            if (targetLength - targetidx > 0) {
-               target.read(b, 0, 1);
-               targetidx++;
-               output.addData(buf[0]);
-               alternativehashf = Checksum.incrementChecksum(alternativehashf, buf[0], b[0]);
-
-               for (int j = 0; j < 15; j++) {
-                  buf[j] = buf[j + 1];
                }
 
-               buf[15] = b[0];
-               hashf = Checksum.queryChecksum(buf, 16);
-            } else {
-               for (int ixx = 0; ixx < 16; ixx++) {
-                  output.addData(buf[ixx]);
-               }
-
-               done = true;
+               return;
             }
          }
       } else {
-         int readBytes;
-         while ((readBytes = target.read(buf)) >= 0) {
-            for (int i = 0; i < readBytes; i++) {
-               output.addData(buf[i]);
+         while((readBytes = target.read(buf)) >= 0) {
+            for(targetidx = 0; targetidx < readBytes; ++targetidx) {
+               output.addData(buf[targetidx]);
             }
          }
+
       }
    }
 
    public static void computeDelta(byte[] source, InputStream targetIS, int targetLength, DiffWriter output) throws IOException, DeltaException {
-      computeDelta(new ByteArraySeekableSource(source), targetIS, targetLength, output);
+      computeDelta((SeekableSource)(new ByteArraySeekableSource(source)), targetIS, targetLength, output);
    }
 
    public static void computeDelta(File sourceFile, File targetFile, DiffWriter output) throws IOException, DeltaException {
@@ -154,7 +165,7 @@ public class Delta {
       InputStream targetIS = new FileInputStream(targetFile);
 
       try {
-         computeDelta(source, targetIS, targetLength, output);
+         computeDelta((SeekableSource)source, targetIS, targetLength, output);
       } catch (IOException var11) {
          throw var11;
       } catch (DeltaException var12) {
@@ -165,6 +176,7 @@ public class Delta {
          targetIS.close();
          output.close();
       }
+
    }
 
    public static void main(String[] argv) {
@@ -194,12 +206,13 @@ public class Delta {
                return;
             }
 
-            computeDelta(sourceFile, targetFile, output);
-            output.flush();
-            output.close();
+            computeDelta(sourceFile, targetFile, (DiffWriter)output);
+            ((DiffWriter)output).flush();
+            ((DiffWriter)output).close();
          } catch (Exception var5) {
             System.err.println("error while generating delta: " + var5);
          }
+
       }
    }
 }

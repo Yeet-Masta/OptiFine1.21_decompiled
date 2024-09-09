@@ -1,10 +1,17 @@
 package com.mojang.blaze3d.vertex;
 
 import java.nio.ByteBuffer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.extensions.IForgeVertexConsumer;
 import net.optifine.Config;
 import net.optifine.IRandomEntity;
@@ -20,30 +27,30 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public interface VertexConsumer extends IForgeVertexConsumer {
-   ThreadLocal<RenderEnv> RENDER_ENV = ThreadLocal.withInitial(() -> new RenderEnv(Blocks.f_50016_.m_49966_(), new BlockPos(0, 0, 0)));
+   ThreadLocal RENDER_ENV = ThreadLocal.withInitial(() -> {
+      return new RenderEnv(Blocks.f_50016_.m_49966_(), new BlockPos(0, 0, 0));
+   });
    boolean FORGE = Reflector.ForgeHooksClient.exists();
 
-   default RenderEnv getRenderEnv(net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos) {
+   default RenderEnv getRenderEnv(BlockState blockState, BlockPos blockPos) {
       RenderEnv renderEnv = (RenderEnv)RENDER_ENV.get();
       renderEnv.reset(blockState, blockPos);
       return renderEnv;
    }
 
-   com.mojang.blaze3d.vertex.VertexConsumer m_167146_(float var1, float var2, float var3);
+   VertexConsumer m_167146_(float var1, float var2, float var3);
 
-   com.mojang.blaze3d.vertex.VertexConsumer m_167129_(int var1, int var2, int var3, int var4);
+   VertexConsumer m_167129_(int var1, int var2, int var3, int var4);
 
-   com.mojang.blaze3d.vertex.VertexConsumer m_167083_(float var1, float var2);
+   VertexConsumer m_167083_(float var1, float var2);
 
-   com.mojang.blaze3d.vertex.VertexConsumer m_338369_(int var1, int var2);
+   VertexConsumer m_338369_(int var1, int var2);
 
-   com.mojang.blaze3d.vertex.VertexConsumer m_338813_(int var1, int var2);
+   VertexConsumer m_338813_(int var1, int var2);
 
-   com.mojang.blaze3d.vertex.VertexConsumer m_338525_(float var1, float var2, float var3);
+   VertexConsumer m_338525_(float var1, float var2, float var3);
 
-   default void m_338367_(
-      float x, float y, float z, int argb, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ
-   ) {
+   default void m_338367_(float x, float y, float z, int argb, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ) {
       this.m_167146_(x, y, z);
       this.m_338399_(argb);
       this.m_167083_(texU, texV);
@@ -52,113 +59,50 @@ public interface VertexConsumer extends IForgeVertexConsumer {
       this.m_338525_(normalX, normalY, normalZ);
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_340057_(float red, float green, float blue, float alpha) {
+   default VertexConsumer m_340057_(float red, float green, float blue, float alpha) {
       return this.m_167129_((int)(red * 255.0F), (int)(green * 255.0F), (int)(blue * 255.0F), (int)(alpha * 255.0F));
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_338399_(int argb) {
+   default VertexConsumer m_338399_(int argb) {
       return this.m_167129_(ARGB32.m_13665_(argb), ARGB32.m_13667_(argb), ARGB32.m_13669_(argb), ARGB32.m_13655_(argb));
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_338954_(int alpha) {
+   default VertexConsumer m_338954_(int alpha) {
       return this.m_338399_(ARGB32.m_320289_(alpha, -1));
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_338973_(int lightmapUV) {
-      return this.m_338813_(lightmapUV & 65535, lightmapUV >> 16 & 65535);
+   default VertexConsumer m_338973_(int lightmapUV) {
+      return this.m_338813_(lightmapUV & '\uffff', lightmapUV >> 16 & '\uffff');
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_338943_(int overlayUV) {
-      return this.m_338369_(overlayUV & 65535, overlayUV >> 16 & 65535);
+   default VertexConsumer m_338943_(int overlayUV) {
+      return this.m_338369_(overlayUV & '\uffff', overlayUV >> 16 & '\uffff');
    }
 
-   default void m_85995_(
-      com.mojang.blaze3d.vertex.PoseStack.Pose matrixEntryIn,
-      net.minecraft.client.renderer.block.model.BakedQuad quadIn,
-      float redIn,
-      float greenIn,
-      float blueIn,
-      float alphaIn,
-      int combinedLightIn,
-      int combinedOverlayIn
-   ) {
-      this.m_85987_(
-         matrixEntryIn,
-         quadIn,
-         this.getTempFloat4(1.0F, 1.0F, 1.0F, 1.0F),
-         redIn,
-         greenIn,
-         blueIn,
-         alphaIn,
-         this.getTempInt4(combinedLightIn, combinedLightIn, combinedLightIn, combinedLightIn),
-         combinedOverlayIn,
-         false
-      );
+   default void m_85995_(PoseStack.Pose matrixEntryIn, BakedQuad quadIn, float redIn, float greenIn, float blueIn, float alphaIn, int combinedLightIn, int combinedOverlayIn) {
+      this.m_85987_(matrixEntryIn, quadIn, this.getTempFloat4(1.0F, 1.0F, 1.0F, 1.0F), redIn, greenIn, blueIn, alphaIn, this.getTempInt4(combinedLightIn, combinedLightIn, combinedLightIn, combinedLightIn), combinedOverlayIn, false);
    }
 
-   default void putBulkData(
-      com.mojang.blaze3d.vertex.PoseStack.Pose matrixEntry,
-      net.minecraft.client.renderer.block.model.BakedQuad bakedQuad,
-      float[] baseBrightness,
-      float red,
-      float green,
-      float blue,
-      float alpha,
-      int[] lightmapCoords,
-      int overlayCoords,
-      boolean readExistingColor
-   ) {
+   default void putBulkData(PoseStack.Pose matrixEntry, BakedQuad bakedQuad, float[] baseBrightness, float red, float green, float blue, float alpha, int[] lightmapCoords, int overlayCoords, boolean readExistingColor) {
       this.m_85987_(matrixEntry, bakedQuad, baseBrightness, red, green, blue, alpha, lightmapCoords, overlayCoords, readExistingColor);
    }
 
-   default void putBulkData(
-      com.mojang.blaze3d.vertex.PoseStack.Pose matrixEntry,
-      net.minecraft.client.renderer.block.model.BakedQuad bakedQuad,
-      float red,
-      float green,
-      float blue,
-      float alpha,
-      int packedLight,
-      int packedOverlay,
-      boolean readExistingColor
-   ) {
-      this.m_85987_(
-         matrixEntry,
-         bakedQuad,
-         this.getTempFloat4(1.0F, 1.0F, 1.0F, 1.0F),
-         red,
-         green,
-         blue,
-         alpha,
-         this.getTempInt4(packedLight, packedLight, packedLight, packedLight),
-         packedOverlay,
-         readExistingColor
-      );
+   default void putBulkData(PoseStack.Pose matrixEntry, BakedQuad bakedQuad, float red, float green, float blue, float alpha, int packedLight, int packedOverlay, boolean readExistingColor) {
+      this.m_85987_(matrixEntry, bakedQuad, this.getTempFloat4(1.0F, 1.0F, 1.0F, 1.0F), red, green, blue, alpha, this.getTempInt4(packedLight, packedLight, packedLight, packedLight), packedOverlay, readExistingColor);
    }
 
-   default void m_85987_(
-      com.mojang.blaze3d.vertex.PoseStack.Pose matrixEntryIn,
-      net.minecraft.client.renderer.block.model.BakedQuad quadIn,
-      float[] colorMuls,
-      float redIn,
-      float greenIn,
-      float blueIn,
-      float alphaIn,
-      int[] combinedLightsIn,
-      int combinedOverlayIn,
-      boolean mulColor
-   ) {
+   default void m_85987_(PoseStack.Pose matrixEntryIn, BakedQuad quadIn, float[] colorMuls, float redIn, float greenIn, float blueIn, float alphaIn, int[] combinedLightsIn, int combinedOverlayIn, boolean mulColor) {
       int[] aint = this.isMultiTexture() ? quadIn.getVertexDataSingle() : quadIn.m_111303_();
       this.putSprite(quadIn.m_173410_());
-      boolean separateAoInAlpha = net.minecraft.client.renderer.block.ModelBlockRenderer.isSeparateAoLightValue();
+      boolean separateAoInAlpha = ModelBlockRenderer.isSeparateAoLightValue();
       Vec3i vec3i = quadIn.m_111306_().m_122436_();
       Matrix4f matrix4f = matrixEntryIn.m_252922_();
       Vector3f vector3f = matrixEntryIn.m_323822_((float)vec3i.m_123341_(), (float)vec3i.m_123342_(), (float)vec3i.m_123343_(), this.getTempVec3f());
       float xn = vector3f.x;
       float yn = vector3f.y;
       float zn = vector3f.z;
-      int i = 8;
-      int vertexIntSize = com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85811_.getIntegerSize();
+      int i = true;
+      int vertexIntSize = DefaultVertexFormat.f_85811_.getIntegerSize();
       int j = aint.length / vertexIntSize;
       int k = (int)(alphaIn * 255.0F);
       boolean shadersVelocity = Config.isShaders() && Shaders.useVelocityAttrib && Config.isMinecraftThread();
@@ -170,7 +114,7 @@ public interface VertexConsumer extends IForgeVertexConsumer {
          }
       }
 
-      for (int l = 0; l < j; l++) {
+      for(int l = 0; l < j; ++l) {
          int pos = l * vertexIntSize;
          float f = Float.intBitsToFloat(aint[pos + 0]);
          float f1 = Float.intBitsToFloat(aint[pos + 1]);
@@ -179,14 +123,17 @@ public interface VertexConsumer extends IForgeVertexConsumer {
          float f3;
          float f4;
          float f5;
+         int i1;
+         float f10;
+         float f9;
          if (mulColor) {
-            int col = aint[pos + 3];
-            float f6 = (float)(col & 0xFF);
-            float f7 = (float)(col >> 8 & 0xFF);
-            float f8 = (float)(col >> 16 & 0xFF);
+            i1 = aint[pos + 3];
+            float f6 = (float)(i1 & 255);
+            f10 = (float)(i1 >> 8 & 255);
+            f9 = (float)(i1 >> 16 & 255);
             f3 = f6 * colorMulAo * redIn;
-            f4 = f7 * colorMulAo * greenIn;
-            f5 = f8 * colorMulAo * blueIn;
+            f4 = f10 * colorMulAo * greenIn;
+            f5 = f9 * colorMulAo * blueIn;
          } else {
             f3 = colorMulAo * redIn * 255.0F;
             f4 = colorMulAo * greenIn * 255.0F;
@@ -197,14 +144,14 @@ public interface VertexConsumer extends IForgeVertexConsumer {
             k = (int)(colorMuls[l] * 255.0F);
          }
 
-         int i1 = ARGB32.m_13660_(k, (int)f3, (int)f4, (int)f5);
+         i1 = ARGB32.m_13660_(k, (int)f3, (int)f4, (int)f5);
          int j1 = combinedLightsIn[l];
          if (FORGE) {
             j1 = this.applyBakedLighting(aint[l], aint, pos);
          }
 
-         float f10 = Float.intBitsToFloat(aint[pos + 4]);
-         float f9 = Float.intBitsToFloat(aint[pos + 5]);
+         f10 = Float.intBitsToFloat(aint[pos + 4]);
+         f9 = Float.intBitsToFloat(aint[pos + 5]);
          float xt = MathUtils.getTransformX(matrix4f, f, f1, f2);
          float yt = MathUtils.getTransformY(matrix4f, f, f1, f2);
          float zt = MathUtils.getTransformZ(matrix4f, f, f1, f2);
@@ -219,41 +166,42 @@ public interface VertexConsumer extends IForgeVertexConsumer {
 
          this.m_338367_(xt, yt, zt, i1, f10, f9, combinedOverlayIn, j1, xn, yn, zn);
       }
+
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_340435_(Vector3f vecIn) {
+   default VertexConsumer m_340435_(Vector3f vecIn) {
       return this.m_167146_(vecIn.x(), vecIn.y(), vecIn.z());
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_340301_(com.mojang.blaze3d.vertex.PoseStack.Pose poseIn, Vector3f vecIn) {
+   default VertexConsumer m_340301_(PoseStack.Pose poseIn, Vector3f vecIn) {
       return this.m_338370_(poseIn, vecIn.x(), vecIn.y(), vecIn.z());
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_338370_(com.mojang.blaze3d.vertex.PoseStack.Pose poseIn, float x, float y, float z) {
+   default VertexConsumer m_338370_(PoseStack.Pose poseIn, float x, float y, float z) {
       return this.m_339083_(poseIn.m_252922_(), x, y, z);
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_339083_(Matrix4f matrixIn, float x, float y, float z) {
+   default VertexConsumer m_339083_(Matrix4f matrixIn, float x, float y, float z) {
       Vector3f vector3f = matrixIn.transformPosition(x, y, z, this.getTempVec3f());
       return this.m_167146_(vector3f.x(), vector3f.y(), vector3f.z());
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer m_339200_(com.mojang.blaze3d.vertex.PoseStack.Pose poseIn, float x, float y, float z) {
+   default VertexConsumer m_339200_(PoseStack.Pose poseIn, float x, float y, float z) {
       Vector3f vector3f = poseIn.m_323822_(x, y, z, this.getTempVec3f());
       return this.m_338525_(vector3f.x(), vector3f.y(), vector3f.z());
    }
 
-   default void putSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   default void putSprite(TextureAtlasSprite sprite) {
    }
 
-   default void setSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   default void setSprite(TextureAtlasSprite sprite) {
    }
 
    default boolean isMultiTexture() {
       return false;
    }
 
-   default net.minecraft.client.renderer.RenderType getRenderType() {
+   default RenderType getRenderType() {
       return null;
    }
 
@@ -277,7 +225,7 @@ public interface VertexConsumer extends IForgeVertexConsumer {
       return new int[]{i1, i2, i3, i4};
    }
 
-   default net.minecraft.client.renderer.MultiBufferSource.BufferSource getRenderTypeBuffer() {
+   default MultiBufferSource.BufferSource getRenderTypeBuffer() {
       return null;
    }
 
@@ -287,7 +235,7 @@ public interface VertexConsumer extends IForgeVertexConsumer {
    default void setMidBlock(float mbx, float mby, float mbz) {
    }
 
-   default com.mojang.blaze3d.vertex.VertexConsumer getSecondaryBuilder() {
+   default VertexConsumer getSecondaryBuilder() {
       return null;
    }
 
@@ -297,16 +245,16 @@ public interface VertexConsumer extends IForgeVertexConsumer {
 
    default int applyBakedLighting(int lightmapCoord, int[] data, int pos) {
       int offsetInt = getLightOffset(0);
-      int blBaked = net.minecraft.client.renderer.LightTexture.m_109883_(data[pos + offsetInt]);
-      int slBaked = net.minecraft.client.renderer.LightTexture.m_109894_(data[pos + offsetInt]);
+      int blBaked = LightTexture.m_109883_(data[pos + offsetInt]);
+      int slBaked = LightTexture.m_109894_(data[pos + offsetInt]);
       if (blBaked == 0 && slBaked == 0) {
          return lightmapCoord;
       } else {
-         int bl = net.minecraft.client.renderer.LightTexture.m_109883_(lightmapCoord);
-         int sl = net.minecraft.client.renderer.LightTexture.m_109894_(lightmapCoord);
+         int bl = LightTexture.m_109883_(lightmapCoord);
+         int sl = LightTexture.m_109894_(lightmapCoord);
          bl = Math.max(bl, blBaked);
          sl = Math.max(sl, slBaked);
-         return net.minecraft.client.renderer.LightTexture.m_109885_(bl, sl);
+         return LightTexture.m_109885_(bl, sl);
       }
    }
 
@@ -317,9 +265,9 @@ public interface VertexConsumer extends IForgeVertexConsumer {
    default Vector3f applyBakedNormals(int[] data, int pos, Matrix3f normalTransform) {
       int offsetNormal = 7;
       int val = data[pos + offsetNormal];
-      byte nx = (byte)(val >> 0 & 0xFF);
-      byte ny = (byte)(val >> 8 & 0xFF);
-      byte nz = (byte)(val >> 16 & 0xFF);
+      byte nx = (byte)(val >> 0 & 255);
+      byte ny = (byte)(val >> 8 & 255);
+      byte nz = (byte)(val >> 16 & 255);
       if (nx == 0 && ny == 0 && nz == 0) {
          return null;
       } else {

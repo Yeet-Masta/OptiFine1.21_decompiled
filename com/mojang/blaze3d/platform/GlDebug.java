@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mojang.logging.LogUtils;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import javax.annotation.Nullable;
@@ -21,18 +22,20 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLDebugMessageARBCallback;
+import org.lwjgl.opengl.GLDebugMessageARBCallbackI;
 import org.lwjgl.opengl.GLDebugMessageCallback;
+import org.lwjgl.opengl.GLDebugMessageCallbackI;
 import org.lwjgl.opengl.KHRDebug;
 import org.slf4j.Logger;
 
 public class GlDebug {
    private static final Logger f_84028_ = LogUtils.getLogger();
    private static final int f_166220_ = 10;
-   private static final Queue<com.mojang.blaze3d.platform.GlDebug.LogEntry> f_166221_ = EvictingQueue.create(10);
+   private static final Queue f_166221_ = EvictingQueue.create(10);
    @Nullable
-   private static volatile com.mojang.blaze3d.platform.GlDebug.LogEntry f_166222_;
-   private static final List<Integer> f_84032_ = ImmutableList.of(37190, 37191, 37192, 33387);
-   private static final List<Integer> f_84033_ = ImmutableList.of(37190, 37191, 37192);
+   private static volatile LogEntry f_166222_;
+   private static final List f_84032_ = ImmutableList.of(37190, 37191, 37192, 33387);
+   private static final List f_84033_ = ImmutableList.of(37190, 37191, 37192);
    private static boolean f_166223_;
    private static int[] ignoredErrors = makeIgnoredErrors();
 
@@ -44,7 +47,7 @@ public class GlDebug {
          String[] parts = Config.tokenize(prop, ",");
          int[] ids = new int[0];
 
-         for (int i = 0; i < parts.length; i++) {
+         for(int i = 0; i < parts.length; ++i) {
             String part = parts[i].trim();
             int id = part.startsWith("0x") ? Config.parseHexInt(part, -1) : Config.parseInt(part, -1);
             if (id < 0) {
@@ -141,26 +144,28 @@ public class GlDebug {
                         f_84028_.info(log, exc);
                      }
 
+                     String s;
                      if (Config.isShowGlErrors() && TimedEvent.isActive("ShowGlErrorDebug", 10000L) && mc.f_91073_ != null) {
-                        String errorText = Config.getGlErrorString(id);
-                        if (id == 0 || Config.equals(errorText, "Unknown")) {
-                           errorText = messageStr;
+                        s = Config.getGlErrorString(id);
+                        if (id == 0 || Config.equals(s, "Unknown")) {
+                           s = messageStr;
                         }
 
-                        String messageChat = I18n.m_118938_("of.message.openglError", new Object[]{id, errorText});
+                        String messageChat = I18n.m_118938_("of.message.openglError", new Object[]{id, s});
                         mc.f_91065_.m_93076_().m_93785_(Component.m_237113_(messageChat));
                      }
 
-                     String s = GLDebugMessageCallback.getMessage(messageLength, message);
-                     synchronized (f_166221_) {
-                        com.mojang.blaze3d.platform.GlDebug.LogEntry gldebug$logentry = f_166222_;
+                     s = GLDebugMessageCallback.getMessage(messageLength, message);
+                     synchronized(f_166221_) {
+                        LogEntry gldebug$logentry = f_166222_;
                         if (gldebug$logentry != null && gldebug$logentry.m_166239_(source, type, id, severity, s)) {
-                           gldebug$logentry.f_166232_++;
+                           ++gldebug$logentry.f_166232_;
                         } else {
-                           gldebug$logentry = new com.mojang.blaze3d.platform.GlDebug.LogEntry(source, type, id, severity, s);
+                           gldebug$logentry = new LogEntry(source, type, id, severity, s);
                            f_166221_.add(gldebug$logentry);
                            f_166222_ = gldebug$logentry;
                         }
+
                      }
                   }
                }
@@ -169,12 +174,15 @@ public class GlDebug {
       }
    }
 
-   public static List<String> m_166225_() {
-      synchronized (f_166221_) {
-         List<String> list = Lists.newArrayListWithCapacity(f_166221_.size());
+   public static List m_166225_() {
+      synchronized(f_166221_) {
+         List list = Lists.newArrayListWithCapacity(f_166221_.size());
+         Iterator var2 = f_166221_.iterator();
 
-         for (com.mojang.blaze3d.platform.GlDebug.LogEntry gldebug$logentry : f_166221_) {
-            list.add(gldebug$logentry + " x " + gldebug$logentry.f_166232_);
+         while(var2.hasNext()) {
+            LogEntry gldebug$logentry = (LogEntry)var2.next();
+            String var10001 = String.valueOf(gldebug$logentry);
+            list.add(var10001 + " x " + gldebug$logentry.f_166232_);
          }
 
          return list;
@@ -188,6 +196,8 @@ public class GlDebug {
    public static void m_84049_(int debugVerbosity, boolean synchronous) {
       if (debugVerbosity > 0) {
          GLCapabilities glcapabilities = GL.getCapabilities();
+         int j;
+         boolean flag1;
          if (glcapabilities.GL_KHR_debug) {
             f_166223_ = true;
             GL11.glEnable(37600);
@@ -195,30 +205,27 @@ public class GlDebug {
                GL11.glEnable(33346);
             }
 
-            for (int i = 0; i < f_84032_.size(); i++) {
-               boolean flag = i < debugVerbosity;
-               KHRDebug.glDebugMessageControl(4352, 4352, (Integer)f_84032_.get(i), (int[])null, flag);
+            for(j = 0; j < f_84032_.size(); ++j) {
+               flag1 = j < debugVerbosity;
+               KHRDebug.glDebugMessageControl(4352, 4352, (Integer)f_84032_.get(j), (int[])null, flag1);
             }
 
-            KHRDebug.glDebugMessageCallback(
-               GLX.make(GLDebugMessageCallback.create(com.mojang.blaze3d.platform.GlDebug::m_84038_), DebugMemoryUntracker::m_84003_), 0L
-            );
+            KHRDebug.glDebugMessageCallback((GLDebugMessageCallbackI)GLX.make(GLDebugMessageCallback.create(GlDebug::m_84038_), DebugMemoryUntracker::m_84003_), 0L);
          } else if (glcapabilities.GL_ARB_debug_output) {
             f_166223_ = true;
             if (synchronous) {
                GL11.glEnable(33346);
             }
 
-            for (int j = 0; j < f_84033_.size(); j++) {
-               boolean flag1 = j < debugVerbosity;
+            for(j = 0; j < f_84033_.size(); ++j) {
+               flag1 = j < debugVerbosity;
                ARBDebugOutput.glDebugMessageControlARB(4352, 4352, (Integer)f_84033_.get(j), (int[])null, flag1);
             }
 
-            ARBDebugOutput.glDebugMessageCallbackARB(
-               GLX.make(GLDebugMessageARBCallback.create(com.mojang.blaze3d.platform.GlDebug::m_84038_), DebugMemoryUntracker::m_84003_), 0L
-            );
+            ARBDebugOutput.glDebugMessageCallbackARB((GLDebugMessageARBCallbackI)GLX.make(GLDebugMessageARBCallback.create(GlDebug::m_84038_), DebugMemoryUntracker::m_84003_), 0L);
          }
       }
+
    }
 
    static class LogEntry {
@@ -238,25 +245,12 @@ public class GlDebug {
       }
 
       boolean m_166239_(int sourceIn, int typeIn, int idIn, int severityIn, String messageIn) {
-         return typeIn == this.f_166229_
-            && sourceIn == this.f_166228_
-            && idIn == this.f_166227_
-            && severityIn == this.f_166230_
-            && messageIn.equals(this.f_166231_);
+         return typeIn == this.f_166229_ && sourceIn == this.f_166228_ && idIn == this.f_166227_ && severityIn == this.f_166230_ && messageIn.equals(this.f_166231_);
       }
 
       public String toString() {
-         return "id="
-            + this.f_166227_
-            + ", source="
-            + com.mojang.blaze3d.platform.GlDebug.m_84055_(this.f_166228_)
-            + ", type="
-            + com.mojang.blaze3d.platform.GlDebug.m_84057_(this.f_166229_)
-            + ", severity="
-            + com.mojang.blaze3d.platform.GlDebug.m_84059_(this.f_166230_)
-            + ", message='"
-            + this.f_166231_
-            + "'";
+         int var10000 = this.f_166227_;
+         return "id=" + var10000 + ", source=" + GlDebug.m_84055_(this.f_166228_) + ", type=" + GlDebug.m_84057_(this.f_166229_) + ", severity=" + GlDebug.m_84059_(this.f_166230_) + ", message='" + this.f_166231_ + "'";
       }
    }
 }

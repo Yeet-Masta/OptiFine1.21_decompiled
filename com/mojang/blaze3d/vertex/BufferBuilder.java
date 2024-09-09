@@ -5,10 +5,17 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.BitSet;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.util.FastColor.ABGR32;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 import net.optifine.SmartAnimations;
 import net.optifine.render.BufferBuilderCache;
@@ -23,63 +30,56 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
-public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
+public class BufferBuilder implements VertexConsumer {
    private static final long f_337720_ = -1L;
    private static final long f_337398_ = -1L;
-   private static final boolean f_337242_ = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
-   private final com.mojang.blaze3d.vertex.ByteBufferBuilder f_85648_;
-   private long f_337311_ = -1L;
+   private static final boolean f_337242_;
+   private final ByteBufferBuilder f_85648_;
+   private long f_337311_;
    private int f_85654_;
-   private final com.mojang.blaze3d.vertex.VertexFormat f_85658_;
-   private final com.mojang.blaze3d.vertex.VertexFormat.Mode f_85657_;
+   private final VertexFormat f_85658_;
+   private final VertexFormat.Mode f_85657_;
    private final boolean f_85659_;
    private final boolean f_85660_;
    private final int f_337268_;
    private int f_336837_;
    private final int[] f_336980_;
    private int f_337476_;
-   private boolean f_85661_ = true;
-   private net.minecraft.client.renderer.RenderType renderType;
+   private boolean f_85661_;
+   private RenderType renderType;
    private BufferBuilderCache cache;
-   protected net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSprites;
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite quadSprite;
+   protected TextureAtlasSprite[] quadSprites;
+   private TextureAtlasSprite quadSprite;
    private MultiTextureBuilder multiTextureBuilder;
    public SVertexBuilder sVertexBuilder;
    public RenderEnv renderEnv;
    public BitSet animatedSprites;
    private VertexPosition[] quadVertexPositions;
-   protected net.minecraft.client.renderer.MultiBufferSource.BufferSource renderTypeBuffer;
+   protected MultiBufferSource.BufferSource renderTypeBuffer;
    private Vector3f midBlock;
 
-   public BufferBuilder(
-      com.mojang.blaze3d.vertex.ByteBufferBuilder byteBufferIn,
-      com.mojang.blaze3d.vertex.VertexFormat.Mode drawModeIn,
-      com.mojang.blaze3d.vertex.VertexFormat vertexFormatIn
-   ) {
-      this(byteBufferIn, drawModeIn, vertexFormatIn, null);
+   public BufferBuilder(ByteBufferBuilder byteBufferIn, VertexFormat.Mode drawModeIn, VertexFormat vertexFormatIn) {
+      this(byteBufferIn, drawModeIn, vertexFormatIn, (RenderType)null);
    }
 
-   public BufferBuilder(
-      com.mojang.blaze3d.vertex.ByteBufferBuilder byteBufferIn,
-      com.mojang.blaze3d.vertex.VertexFormat.Mode drawModeIn,
-      com.mojang.blaze3d.vertex.VertexFormat vertexFormatIn,
-      net.minecraft.client.renderer.RenderType renderTypeIn
-   ) {
-      if (!vertexFormatIn.m_339292_(com.mojang.blaze3d.vertex.VertexFormatElement.f_336661_)) {
+   public BufferBuilder(ByteBufferBuilder byteBufferIn, VertexFormat.Mode drawModeIn, VertexFormat vertexFormatIn, RenderType renderTypeIn) {
+      this.f_337311_ = -1L;
+      this.f_85661_ = true;
+      if (!vertexFormatIn.m_339292_(VertexFormatElement.f_336661_)) {
          throw new IllegalArgumentException("Cannot build mesh with no position element");
       } else {
          this.f_85648_ = byteBufferIn;
          this.f_85657_ = drawModeIn;
          this.f_85658_ = vertexFormatIn;
          this.f_337268_ = vertexFormatIn.m_86020_();
-         this.f_336837_ = vertexFormatIn.m_340128_() & ~com.mojang.blaze3d.vertex.VertexFormatElement.f_336661_.m_339950_();
+         this.f_336837_ = vertexFormatIn.m_340128_() & ~VertexFormatElement.f_336661_.m_339950_();
          if (this.f_85658_.isExtended()) {
             this.f_336837_ = SVertexFormat.removeExtendedElements(this.f_336837_);
          }
 
          this.f_336980_ = vertexFormatIn.m_338562_();
-         boolean flag = vertexFormatIn == com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85812_;
-         boolean flag1 = vertexFormatIn == com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85811_;
+         boolean flag = vertexFormatIn == DefaultVertexFormat.f_85812_;
+         boolean flag1 = vertexFormatIn == DefaultVertexFormat.f_85811_;
          this.f_85659_ = flag || flag1;
          this.f_85660_ = flag;
          this.renderType = renderTypeIn;
@@ -105,18 +105,19 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
          } else if (this.animatedSprites != null) {
             this.animatedSprites = null;
          }
+
       }
    }
 
    @Nullable
-   public com.mojang.blaze3d.vertex.MeshData m_339970_() {
+   public MeshData m_339970_() {
       this.m_231176_();
       this.m_339377_();
       if (this.animatedSprites != null) {
          SmartAnimations.spritesRendered(this.animatedSprites);
       }
 
-      com.mojang.blaze3d.vertex.MeshData meshdata = this.m_339394_();
+      MeshData meshdata = this.m_339394_();
       this.f_85661_ = true;
       this.f_85654_ = 0;
       this.f_337311_ = -1L;
@@ -129,8 +130,8 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return meshdata;
    }
 
-   public com.mojang.blaze3d.vertex.MeshData m_339905_() {
-      com.mojang.blaze3d.vertex.MeshData meshdata = this.m_339970_();
+   public MeshData m_339905_() {
+      MeshData meshdata = this.m_339970_();
       if (meshdata == null) {
          throw new IllegalStateException("BufferBuilder was empty");
       } else {
@@ -145,22 +146,18 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
    }
 
    @Nullable
-   private com.mojang.blaze3d.vertex.MeshData m_339394_() {
+   private MeshData m_339394_() {
       if (this.f_85654_ == 0) {
          return null;
       } else {
-         com.mojang.blaze3d.vertex.ByteBufferBuilder.Result bytebufferbuilder$result = this.f_85648_.m_339207_();
+         ByteBufferBuilder.Result bytebufferbuilder$result = this.f_85648_.m_339207_();
          if (bytebufferbuilder$result == null) {
             return null;
          } else {
             int i = this.f_85657_.m_166958_(this.f_85654_);
-            com.mojang.blaze3d.vertex.VertexFormat.IndexType vertexformat$indextype = com.mojang.blaze3d.vertex.VertexFormat.IndexType.m_166933_(this.f_85654_);
-            MultiTextureData mtd = this.multiTextureBuilder.build(this.f_85654_, this.renderType, this.quadSprites, null);
-            return new com.mojang.blaze3d.vertex.MeshData(
-               bytebufferbuilder$result,
-               new com.mojang.blaze3d.vertex.MeshData.DrawState(this.f_85658_, this.f_85654_, i, this.f_85657_, vertexformat$indextype),
-               mtd
-            );
+            VertexFormat.IndexType vertexformat$indextype = VertexFormat.IndexType.m_166933_(this.f_85654_);
+            MultiTextureData mtd = this.multiTextureBuilder.build(this.f_85654_, this.renderType, this.quadSprites, (int[])null);
+            return new MeshData(bytebufferbuilder$result, new MeshData.DrawState(this.f_85658_, this.f_85654_, i, this.f_85657_, vertexformat$indextype), mtd);
          }
       }
    }
@@ -168,7 +165,7 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
    private long m_340494_() {
       this.m_231176_();
       this.m_339377_();
-      this.f_85654_++;
+      ++this.f_85654_;
       long i = this.f_85648_.m_338881_(this.f_337268_);
       this.checkCapacity();
       this.f_337311_ = i;
@@ -185,7 +182,7 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return i;
    }
 
-   private long m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement elementIn) {
+   private long m_339847_(VertexFormatElement elementIn) {
       int i = this.f_337476_;
       int j = i & ~elementIn.m_339950_();
       if (j == i) {
@@ -204,18 +201,20 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
    private void m_339377_() {
       if (this.f_85654_ != 0) {
          if (this.f_337476_ != 0) {
-            String s = (String)com.mojang.blaze3d.vertex.VertexFormatElement.m_339640_(this.f_337476_)
-               .map(this.f_85658_::m_340604_)
-               .collect(Collectors.joining(", "));
+            Stream var10000 = VertexFormatElement.m_339640_(this.f_337476_);
+            VertexFormat var10001 = this.f_85658_;
+            Objects.requireNonNull(var10001);
+            String s = (String)var10000.map(var10001::m_340604_).collect(Collectors.joining(", "));
             throw new IllegalStateException("Missing elements in vertex: " + s);
          }
 
-         if (this.f_85657_ == com.mojang.blaze3d.vertex.VertexFormat.Mode.LINES || this.f_85657_ == com.mojang.blaze3d.vertex.VertexFormat.Mode.LINE_STRIP) {
+         if (this.f_85657_ == VertexFormat.Mode.LINES || this.f_85657_ == VertexFormat.Mode.LINE_STRIP) {
             long i = this.f_85648_.m_338881_(this.f_337268_);
             MemoryUtil.memCopy(i - (long)this.f_337268_, i, (long)this.f_337268_);
-            this.f_85654_++;
+            ++this.f_85654_;
          }
       }
+
    }
 
    private static void m_340259_(long ptrIn, int argbIn) {
@@ -227,14 +226,14 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       if (f_337242_) {
          MemoryUtil.memPutInt(ptrIn, uvIn);
       } else {
-         MemoryUtil.memPutShort(ptrIn, (short)(uvIn & 65535));
-         MemoryUtil.memPutShort(ptrIn + 2L, (short)(uvIn >> 16 & 65535));
+         MemoryUtil.memPutShort(ptrIn, (short)(uvIn & '\uffff'));
+         MemoryUtil.memPutShort(ptrIn + 2L, (short)(uvIn >> 16 & '\uffff'));
       }
+
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_167146_(float x, float y, float z) {
-      long i = this.m_340494_() + (long)this.f_336980_[com.mojang.blaze3d.vertex.VertexFormatElement.f_336661_.f_337730_()];
+   public VertexConsumer m_167146_(float x, float y, float z) {
+      long i = this.m_340494_() + (long)this.f_336980_[VertexFormatElement.f_336661_.f_337730_()];
       this.f_337476_ = this.f_336837_;
       MemoryUtil.memPutFloat(i, x);
       MemoryUtil.memPutFloat(i + 4L, y);
@@ -242,9 +241,8 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_167129_(int red, int green, int blue, int alpha) {
-      long i = this.m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement.f_336914_);
+   public VertexConsumer m_167129_(int red, int green, int blue, int alpha) {
+      long i = this.m_339847_(VertexFormatElement.f_336914_);
       if (i != -1L) {
          MemoryUtil.memPutByte(i, (byte)red);
          MemoryUtil.memPutByte(i + 1L, (byte)green);
@@ -259,9 +257,8 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_338399_(int argb) {
-      long i = this.m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement.f_336914_);
+   public VertexConsumer m_338399_(int argb) {
+      long i = this.m_339847_(VertexFormatElement.f_336914_);
       if (i != -1L) {
          m_340259_(i, argb);
       }
@@ -273,15 +270,14 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_167083_(float u, float v) {
+   public VertexConsumer m_167083_(float u, float v) {
       if (this.quadSprite != null && this.quadSprites != null) {
          u = this.quadSprite.toSingleU(u);
          v = this.quadSprite.toSingleV(v);
          this.quadSprites[this.f_85654_ / 4] = this.quadSprite;
       }
 
-      long i = this.m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement.f_336642_);
+      long i = this.m_339847_(VertexFormatElement.f_336642_);
       if (i != -1L) {
          MemoryUtil.memPutFloat(i, u);
          MemoryUtil.memPutFloat(i + 4L, v);
@@ -294,14 +290,12 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_338369_(int u, int v) {
-      return this.m_338494_((short)u, (short)v, com.mojang.blaze3d.vertex.VertexFormatElement.f_337543_);
+   public VertexConsumer m_338369_(int u, int v) {
+      return this.m_338494_((short)u, (short)v, VertexFormatElement.f_337543_);
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_338943_(int overlayUV) {
-      long i = this.m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement.f_337543_);
+   public VertexConsumer m_338943_(int overlayUV) {
+      long i = this.m_339847_(VertexFormatElement.f_337543_);
       if (i != -1L) {
          m_338383_(i, overlayUV);
       }
@@ -313,14 +307,12 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_338813_(int u, int v) {
-      return this.m_338494_((short)u, (short)v, com.mojang.blaze3d.vertex.VertexFormatElement.f_337050_);
+   public VertexConsumer m_338813_(int u, int v) {
+      return this.m_338494_((short)u, (short)v, VertexFormatElement.f_337050_);
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_338973_(int lightmapUV) {
-      long i = this.m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement.f_337050_);
+   public VertexConsumer m_338973_(int lightmapUV) {
+      long i = this.m_339847_(VertexFormatElement.f_337050_);
       if (i != -1L) {
          m_338383_(i, lightmapUV);
       }
@@ -332,7 +324,7 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   private com.mojang.blaze3d.vertex.VertexConsumer m_338494_(short u, short v, com.mojang.blaze3d.vertex.VertexFormatElement elementIn) {
+   private VertexConsumer m_338494_(short u, short v, VertexFormatElement elementIn) {
       long i = this.m_339847_(elementIn);
       if (i != -1L) {
          MemoryUtil.memPutShort(i, u);
@@ -346,9 +338,8 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this;
    }
 
-   @Override
-   public com.mojang.blaze3d.vertex.VertexConsumer m_338525_(float x, float y, float z) {
-      long i = this.m_339847_(com.mojang.blaze3d.vertex.VertexFormatElement.f_336839_);
+   public VertexConsumer m_338525_(float x, float y, float z) {
+      long i = this.m_339847_(VertexFormatElement.f_336839_);
       if (i != -1L) {
          MemoryUtil.memPutByte(i, m_338914_(x));
          MemoryUtil.memPutByte(i + 1L, m_338914_(y));
@@ -363,13 +354,10 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
    }
 
    public static byte m_338914_(float val) {
-      return (byte)((int)(net.minecraft.util.Mth.m_14036_(val, -1.0F, 1.0F) * 127.0F) & 0xFF);
+      return (byte)((int)(Mth.m_14036_(val, -1.0F, 1.0F) * 127.0F) & 255);
    }
 
-   @Override
-   public void m_338367_(
-      float x, float y, float z, int argb, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ
-   ) {
+   public void m_338367_(float x, float y, float z, int argb, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ) {
       if (this.f_85659_) {
          long i = this.m_340494_();
          MemoryUtil.memPutFloat(i + 0L, x);
@@ -394,12 +382,12 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
             SVertexBuilder.endAddVertex(this);
          }
       } else {
-         com.mojang.blaze3d.vertex.VertexConsumer.super.m_338367_(x, y, z, argb, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
+         VertexConsumer.super.m_338367_(x, y, z, argb, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
       }
+
    }
 
-   @Override
-   public void putSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public void putSprite(TextureAtlasSprite sprite) {
       if (this.animatedSprites != null && sprite != null && sprite.isTerrain() && sprite.getAnimationIndex() >= 0) {
          this.animatedSprites.set(sprite.getAnimationIndex());
       }
@@ -408,10 +396,10 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
          int countQuads = this.f_85654_ / 4;
          this.quadSprites[countQuads] = sprite;
       }
+
    }
 
-   @Override
-   public void setSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public void setSprite(TextureAtlasSprite sprite) {
       if (this.animatedSprites != null && sprite != null && sprite.isTerrain() && sprite.getAnimationIndex() >= 0) {
          this.animatedSprites.set(sprite.getAnimationIndex());
       }
@@ -419,15 +407,14 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       if (this.quadSprites != null) {
          this.quadSprite = sprite;
       }
+
    }
 
-   @Override
    public boolean isMultiTexture() {
       return this.quadSprites != null;
    }
 
-   @Override
-   public net.minecraft.client.renderer.RenderType getRenderType() {
+   public RenderType getRenderType() {
       return this.renderType;
    }
 
@@ -437,7 +424,7 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
             if (this.quadSprites == null) {
                if (this.f_85661_) {
                   if (this.f_85654_ > 0) {
-                     com.mojang.blaze3d.vertex.MeshData data = this.m_339970_();
+                     MeshData data = this.m_339970_();
                      if (data != null) {
                         this.renderType.m_339876_(data);
                      }
@@ -445,8 +432,9 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
 
                   this.quadSprites = this.cache.getQuadSpritesPrev();
                   if (this.quadSprites == null || this.quadSprites.length < this.getBufferQuadSize()) {
-                     this.quadSprites = new net.minecraft.client.renderer.texture.TextureAtlasSprite[this.getBufferQuadSize()];
+                     this.quadSprites = new TextureAtlasSprite[this.getBufferQuadSize()];
                   }
+
                }
             }
          }
@@ -455,11 +443,11 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
 
    private int getBufferQuadSize() {
       int vertexSize = this.f_85648_.getCapacity() / this.f_85658_.m_86020_();
-      return vertexSize / 4;
+      int quadSize = vertexSize / 4;
+      return quadSize;
    }
 
-   @Override
-   public RenderEnv getRenderEnv(net.minecraft.world.level.block.state.BlockState blockStateIn, BlockPos blockPosIn) {
+   public RenderEnv getRenderEnv(BlockState blockStateIn, BlockPos blockPosIn) {
       if (this.renderEnv == null) {
          this.renderEnv = new RenderEnv(blockStateIn, blockPosIn);
          return this.renderEnv;
@@ -469,15 +457,13 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       }
    }
 
-   private static void quadsToTriangles(
-      ByteBuffer byteBuffer, com.mojang.blaze3d.vertex.VertexFormat vertexFormat, int vertexCount, ByteBuffer byteBufferTriangles
-   ) {
+   private static void quadsToTriangles(ByteBuffer byteBuffer, VertexFormat vertexFormat, int vertexCount, ByteBuffer byteBufferTriangles) {
       int vertexSize = vertexFormat.m_86020_();
       int limit = byteBuffer.limit();
       byteBuffer.rewind();
       byteBufferTriangles.clear();
 
-      for (int v = 0; v < vertexCount; v += 4) {
+      for(int v = 0; v < vertexCount; v += 4) {
          byteBuffer.limit((v + 3) * vertexSize);
          byteBuffer.position(v * vertexSize);
          byteBufferTriangles.put(byteBuffer);
@@ -494,21 +480,18 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       byteBufferTriangles.flip();
    }
 
-   public com.mojang.blaze3d.vertex.VertexFormat.Mode getDrawMode() {
+   public VertexFormat.Mode getDrawMode() {
       return this.f_85657_;
    }
 
-   @Override
    public int getVertexCount() {
       return this.f_85654_;
    }
 
-   @Override
    public Vector3f getTempVec3f() {
       return this.cache.getTempVec3f();
    }
 
-   @Override
    public float[] getTempFloat4(float f1, float f2, float f3, float f4) {
       float[] tempFloat4 = this.cache.getTempFloat4();
       tempFloat4[0] = f1;
@@ -518,7 +501,6 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return tempFloat4;
    }
 
-   @Override
    public int[] getTempInt4(int i1, int i2, int i3, int i4) {
       int[] tempInt4 = this.cache.getTempInt4();
       tempInt4[0] = i1;
@@ -532,17 +514,20 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this.f_85654_ * this.f_85658_.getIntegerSize();
    }
 
-   @Override
-   public net.minecraft.client.renderer.MultiBufferSource.BufferSource getRenderTypeBuffer() {
+   public MultiBufferSource.BufferSource getRenderTypeBuffer() {
       return this.renderTypeBuffer;
    }
 
-   public void setRenderTypeBuffer(net.minecraft.client.renderer.MultiBufferSource.BufferSource renderTypeBuffer) {
+   public void setRenderTypeBuffer(MultiBufferSource.BufferSource renderTypeBuffer) {
       this.renderTypeBuffer = renderTypeBuffer;
    }
 
    public boolean canAddVertexText() {
-      return this.f_85658_.m_86020_() != com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85820_.m_86020_() ? false : this.f_337476_ == 0;
+      if (this.f_85658_.m_86020_() != DefaultVertexFormat.f_85820_.m_86020_()) {
+         return false;
+      } else {
+         return this.f_337476_ == 0;
+      }
    }
 
    public void addVertexText(Matrix4f mat4, float x, float y, float z, int col, float texU, float texV, int lightmapUV) {
@@ -566,14 +551,13 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       if (Config.isShaders()) {
          SVertexBuilder.endAddVertex(this);
       }
+
    }
 
-   @Override
    public boolean canAddVertexFast() {
       return this.f_85659_ && this.f_337476_ == 0 && this.f_85660_;
    }
 
-   @Override
    public void addVertexFast(float x, float y, float z, int color, float texU, float texV, int overlayUV, int lightmapUV, int normals) {
       long i = this.m_340494_();
       MemoryUtil.memPutFloat(i + 0L, x);
@@ -588,9 +572,9 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       if (Config.isShaders()) {
          SVertexBuilder.endAddVertex(this);
       }
+
    }
 
-   @Override
    public void setQuadVertexPositions(VertexPosition[] vps) {
       this.quadVertexPositions = vps;
    }
@@ -599,7 +583,6 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this.quadVertexPositions;
    }
 
-   @Override
    public void setMidBlock(float mx, float my, float mz) {
       this.midBlock.set(mx, my, mz);
    }
@@ -608,7 +591,6 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       return this.midBlock;
    }
 
-   @Override
    public void putBulkData(ByteBuffer bufferIn) {
       if (Config.isShaders()) {
          SVertexBuilder.beginAddVertexData(this, bufferIn);
@@ -623,9 +605,9 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       if (Config.isShaders()) {
          SVertexBuilder.endAddVertexData(this);
       }
+
    }
 
-   @Override
    public void getBulkData(ByteBuffer bufferIn) {
       ByteBuffer bb = this.getByteBuffer();
       bb.position(this.f_85648_.getNextResultOffset());
@@ -634,7 +616,7 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
       bb.clear();
    }
 
-   public com.mojang.blaze3d.vertex.VertexFormat getVertexFormat() {
+   public VertexFormat getVertexFormat() {
       return this.f_85658_;
    }
 
@@ -664,14 +646,15 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
 
    private void checkCapacity() {
       if (this.quadSprites != null) {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite[] sprites = this.quadSprites;
+         TextureAtlasSprite[] sprites = this.quadSprites;
          int quadSize = this.getBufferQuadSize() + 1;
          if (this.quadSprites.length < quadSize) {
-            this.quadSprites = new net.minecraft.client.renderer.texture.TextureAtlasSprite[quadSize];
+            this.quadSprites = new TextureAtlasSprite[quadSize];
             System.arraycopy(sprites, 0, this.quadSprites, 0, Math.min(sprites.length, this.quadSprites.length));
-            this.cache.setQuadSpritesPrev(null);
+            this.cache.setQuadSpritesPrev((TextureAtlasSprite[])null);
          }
       }
+
    }
 
    public boolean isDrawing() {
@@ -679,22 +662,11 @@ public class BufferBuilder implements com.mojang.blaze3d.vertex.VertexConsumer {
    }
 
    public String toString() {
-      return "renderType: "
-         + (this.renderType != null ? this.renderType.getName() : this.renderType)
-         + ", vertexFormat: "
-         + this.f_85658_.getName()
-         + ", vertexSize: "
-         + this.f_337268_
-         + ", drawMode: "
-         + this.f_85657_
-         + ", vertexCount: "
-         + this.f_85654_
-         + ", elementsLeft: "
-         + Integer.bitCount(this.f_337476_)
-         + "/"
-         + Integer.bitCount(this.f_336837_)
-         + ", byteBuffer: ("
-         + this.f_85648_
-         + ")";
+      String var10000 = String.valueOf(this.renderType != null ? this.renderType.getName() : this.renderType);
+      return "renderType: " + var10000 + ", vertexFormat: " + this.f_85658_.getName() + ", vertexSize: " + this.f_337268_ + ", drawMode: " + String.valueOf(this.f_85657_) + ", vertexCount: " + this.f_85654_ + ", elementsLeft: " + Integer.bitCount(this.f_337476_) + "/" + Integer.bitCount(this.f_336837_) + ", byteBuffer: (" + String.valueOf(this.f_85648_) + ")";
+   }
+
+   static {
+      f_337242_ = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
    }
 }

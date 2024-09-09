@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.optifine.Config;
 import net.optifine.render.MultiTextureData;
 import net.optifine.render.MultiTextureRenderer;
@@ -18,23 +19,23 @@ import net.optifine.util.GpuMemory;
 import org.joml.Matrix4f;
 
 public class VertexBuffer implements AutoCloseable {
-   private final com.mojang.blaze3d.vertex.VertexBuffer.Usage f_285574_;
+   private final Usage f_285574_;
    private int f_231217_;
    private int f_166860_;
    private int f_166862_;
    @Nullable
-   private com.mojang.blaze3d.vertex.VertexFormat f_85917_;
+   private VertexFormat f_85917_;
    @Nullable
    private RenderSystem.AutoStorageIndexBuffer f_166865_;
-   private com.mojang.blaze3d.vertex.VertexFormat.IndexType f_166861_;
+   private VertexFormat.IndexType f_166861_;
    private int f_166863_;
-   private com.mojang.blaze3d.vertex.VertexFormat.Mode f_166864_;
+   private VertexFormat.Mode f_166864_;
    private VboRegion vboRegion;
    private VboRange vboRange;
    private MultiTextureData multiTextureData;
    private static ByteBuffer emptyBuffer = GlUtil.m_166247_(0);
 
-   public VertexBuffer(com.mojang.blaze3d.vertex.VertexBuffer.Usage usageIn) {
+   public VertexBuffer(Usage usageIn) {
       this.f_285574_ = usageIn;
       RenderSystem.assertOnRenderThread();
       this.f_231217_ = GlStateManager._glGenBuffers();
@@ -42,19 +43,19 @@ public class VertexBuffer implements AutoCloseable {
       this.f_166862_ = GlStateManager._glGenVertexArrays();
    }
 
-   public void m_231221_(com.mojang.blaze3d.vertex.MeshData bufferIn) {
-      com.mojang.blaze3d.vertex.MeshData meshdata = bufferIn;
+   public void m_231221_(MeshData bufferIn) {
+      MeshData meshdata = bufferIn;
 
-      label48: {
+      label47: {
          try {
             if (this.m_231230_()) {
-               break label48;
+               break label47;
             }
 
             RenderSystem.assertOnRenderThread();
             GpuMemory.bufferFreed((long)this.getVertexBufferSize());
             GpuMemory.bufferFreed((long)this.getIndexBufferSize());
-            com.mojang.blaze3d.vertex.MeshData.DrawState meshdata$drawstate = bufferIn.m_339246_();
+            MeshData.DrawState meshdata$drawstate = bufferIn.m_339246_();
             this.f_85917_ = this.m_231218_(meshdata$drawstate, bufferIn.m_340620_());
             this.f_166865_ = this.m_231223_(meshdata$drawstate, bufferIn.m_339370_());
             this.f_166863_ = meshdata$drawstate.f_337456_();
@@ -95,10 +96,11 @@ public class VertexBuffer implements AutoCloseable {
       if (bufferIn != null) {
          bufferIn.close();
       }
+
    }
 
-   public void m_338802_(com.mojang.blaze3d.vertex.ByteBufferBuilder.Result resultIn) {
-      com.mojang.blaze3d.vertex.ByteBufferBuilder.Result bytebufferbuilder$result = resultIn;
+   public void m_338802_(ByteBufferBuilder.Result resultIn) {
+      ByteBufferBuilder.Result bytebufferbuilder$result = resultIn;
 
       label42: {
          try {
@@ -133,9 +135,10 @@ public class VertexBuffer implements AutoCloseable {
       if (resultIn != null) {
          resultIn.close();
       }
+
    }
 
-   private com.mojang.blaze3d.vertex.VertexFormat m_231218_(com.mojang.blaze3d.vertex.MeshData.DrawState drawStateIn, @Nullable ByteBuffer bufferIn) {
+   private VertexFormat m_231218_(MeshData.DrawState drawStateIn, @Nullable ByteBuffer bufferIn) {
       if (this.vboRegion != null) {
          return drawStateIn.f_336748_();
       } else {
@@ -167,7 +170,7 @@ public class VertexBuffer implements AutoCloseable {
    }
 
    @Nullable
-   private RenderSystem.AutoStorageIndexBuffer m_231223_(com.mojang.blaze3d.vertex.MeshData.DrawState drawStateIn, @Nullable ByteBuffer bufferIn) {
+   private RenderSystem.AutoStorageIndexBuffer m_231223_(MeshData.DrawState drawStateIn, @Nullable ByteBuffer bufferIn) {
       if (bufferIn != null) {
          if (this.vboRegion != null) {
             return null;
@@ -179,7 +182,7 @@ public class VertexBuffer implements AutoCloseable {
       } else {
          RenderSystem.AutoStorageIndexBuffer rendersystem$autostorageindexbuffer = RenderSystem.getSequentialBuffer(drawStateIn.f_336934_());
          int indexCount = drawStateIn.f_337456_();
-         if (this.vboRegion != null && drawStateIn.f_336934_() == com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS) {
+         if (this.vboRegion != null && drawStateIn.f_336934_() == VertexFormat.Mode.QUADS) {
             indexCount = 65536;
          }
 
@@ -192,41 +195,46 @@ public class VertexBuffer implements AutoCloseable {
    }
 
    public void m_85921_() {
-      com.mojang.blaze3d.vertex.BufferUploader.m_231208_();
+      BufferUploader.m_231208_();
       if (this.f_166862_ >= 0) {
          GlStateManager._glBindVertexArray(this.f_166862_);
       }
+
    }
 
    public static void m_85931_() {
-      com.mojang.blaze3d.vertex.BufferUploader.m_231208_();
+      BufferUploader.m_231208_();
       GlStateManager._glBindVertexArray(0);
    }
 
    public void m_166882_() {
       if (this.vboRegion != null) {
-         this.vboRegion.drawArrays(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, this.vboRange);
+         this.vboRegion.drawArrays(VertexFormat.Mode.QUADS, this.vboRange);
       } else if (this.multiTextureData != null) {
          MultiTextureRenderer.draw(this.f_166864_, this.m_231231_().f_166923_, this.multiTextureData);
       } else {
          RenderSystem.drawElements(this.f_166864_.f_166946_, this.f_166863_, this.m_231231_().f_166923_);
       }
+
    }
 
-   private com.mojang.blaze3d.vertex.VertexFormat.IndexType m_231231_() {
+   private VertexFormat.IndexType m_231231_() {
       RenderSystem.AutoStorageIndexBuffer rendersystem$autostorageindexbuffer = this.f_166865_;
       return rendersystem$autostorageindexbuffer != null ? rendersystem$autostorageindexbuffer.m_157483_() : this.f_166861_;
    }
 
-   public void m_253207_(Matrix4f matrixIn, Matrix4f projectionIn, net.minecraft.client.renderer.ShaderInstance shaderIn) {
+   public void m_253207_(Matrix4f matrixIn, Matrix4f projectionIn, ShaderInstance shaderIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> this.m_166876_(new Matrix4f(matrixIn), new Matrix4f(projectionIn), shaderIn));
+         RenderSystem.recordRenderCall(() -> {
+            this.m_166876_(new Matrix4f(matrixIn), new Matrix4f(projectionIn), shaderIn);
+         });
       } else {
          this.m_166876_(matrixIn, projectionIn, shaderIn);
       }
+
    }
 
-   private void m_166876_(Matrix4f matrixIn, Matrix4f projectionIn, net.minecraft.client.renderer.ShaderInstance shaderIn) {
+   private void m_166876_(Matrix4f matrixIn, Matrix4f projectionIn, ShaderInstance shaderIn) {
       shaderIn.m_340471_(this.f_166864_, matrixIn, projectionIn, Minecraft.m_91087_().m_91268_());
       shaderIn.m_173363_();
       boolean isShaders = Config.isShaders() && Shaders.isRenderingWorld;
@@ -267,12 +275,16 @@ public class VertexBuffer implements AutoCloseable {
       this.f_166863_ = 0;
    }
 
-   public com.mojang.blaze3d.vertex.VertexFormat m_166892_() {
+   public VertexFormat m_166892_() {
       return this.f_85917_;
    }
 
    public boolean m_231230_() {
-      return this.vboRegion != null ? false : this.f_166862_ == -1;
+      if (this.vboRegion != null) {
+         return false;
+      } else {
+         return this.f_166862_ == -1;
+      }
    }
 
    public void setVboRegion(VboRegion vboRegion) {
@@ -346,6 +358,11 @@ public class VertexBuffer implements AutoCloseable {
 
       private Usage(final int idIn) {
          this.f_285654_ = idIn;
+      }
+
+      // $FF: synthetic method
+      private static Usage[] $values() {
+         return new Usage[]{STATIC, DYNAMIC};
       }
    }
 }

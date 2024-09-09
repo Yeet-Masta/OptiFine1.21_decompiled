@@ -1,8 +1,12 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.PufferfishBigModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.PufferfishRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -13,13 +17,11 @@ public class ModelAdapterPufferFishBig extends ModelAdapter {
       super(EntityType.f_20516_, "puffer_fish_big", 0.2F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new PufferfishBigModel(bakeModelLayer(ModelLayers.f_171171_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PufferfishBigModel modelPufferFishBig)) {
          return null;
       } else if (modelPart.equals("body")) {
@@ -53,34 +55,19 @@ public class ModelAdapterPufferFishBig extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
-      return new String[]{
-         "body",
-         "fin_right",
-         "fin_left",
-         "spikes_front_top",
-         "spikes_middle_top",
-         "spikes_back_top",
-         "spikes_front_right",
-         "spikes_front_left",
-         "spikes_front_bottom",
-         "spikes_middle_bottom",
-         "spikes_back_bottom",
-         "spikes_back_right",
-         "spikes_back_left",
-         "root"
-      };
+      return new String[]{"body", "fin_right", "fin_left", "spikes_front_top", "spikes_middle_top", "spikes_back_top", "spikes_front_right", "spikes_front_left", "spikes_front_bottom", "spikes_middle_bottom", "spikes_back_bottom", "spikes_back_right", "spikes_back_left", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PufferfishRenderer customRenderer = new PufferfishRenderer(renderManager.getContext());
       customRenderer.f_114477_ = shadowSize;
-      net.minecraft.client.renderer.entity.EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> customRenderer);
+      EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> {
+         return customRenderer;
+      });
       if (!(render instanceof PufferfishRenderer renderFish)) {
-         Config.warn("Not a PufferfishRenderer: " + render);
+         Config.warn("Not a PufferfishRenderer: " + String.valueOf(render));
          return null;
       } else if (!Reflector.RenderPufferfish_modelBig.exists()) {
          Config.warn("Model field not found: RenderPufferfish.modelBig");

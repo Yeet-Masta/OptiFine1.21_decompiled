@@ -10,6 +10,7 @@ import com.mojang.blaze3d.shaders.AbstractUniform;
 import com.mojang.blaze3d.shaders.BlendMode;
 import com.mojang.blaze3d.shaders.Effect;
 import com.mojang.blaze3d.shaders.EffectProgram;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -20,10 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.Reader;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ChainedJsonException;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
@@ -36,28 +39,28 @@ public class EffectInstance implements Effect, AutoCloseable {
    private static final Logger f_108921_ = LogUtils.getLogger();
    private static final AbstractUniform f_108922_ = new AbstractUniform();
    private static final boolean f_172565_ = true;
-   private static net.minecraft.client.renderer.EffectInstance f_108923_;
+   private static EffectInstance f_108923_;
    private static int f_108924_ = -1;
-   private final Map<String, IntSupplier> f_108925_ = Maps.newHashMap();
-   private final List<String> f_108926_ = Lists.newArrayList();
-   private final List<Integer> f_108927_ = Lists.newArrayList();
-   private final List<Uniform> f_108928_ = Lists.newArrayList();
-   private final List<Integer> f_108929_ = Lists.newArrayList();
-   private final Map<String, Uniform> f_108930_ = Maps.newHashMap();
+   private final Map f_108925_ = Maps.newHashMap();
+   private final List f_108926_ = Lists.newArrayList();
+   private final List f_108927_ = Lists.newArrayList();
+   private final List f_108928_ = Lists.newArrayList();
+   private final List f_108929_ = Lists.newArrayList();
+   private final Map f_108930_ = Maps.newHashMap();
    private final int f_108931_;
    private final String f_108932_;
    private boolean f_108933_;
    private final BlendMode f_108934_;
-   private final List<Integer> f_108935_;
-   private final List<String> f_108936_;
+   private final List f_108935_;
+   private final List f_108936_;
    private final EffectProgram f_108937_;
    private final EffectProgram f_108938_;
 
    public EffectInstance(ResourceProvider resourceManagerIn, String nameIn) throws IOException {
-      net.minecraft.resources.ResourceLocation resourcelocation = net.minecraft.resources.ResourceLocation.m_340282_("shaders/program/" + nameIn + ".json");
+      ResourceLocation resourcelocation = ResourceLocation.m_340282_("shaders/program/" + nameIn + ".json");
       if (Reflector.MinecraftForge.exists()) {
-         net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.m_135820_(nameIn);
-         resourcelocation = new net.minecraft.resources.ResourceLocation(rl.m_135827_(), "shaders/program/" + rl.m_135815_() + ".json");
+         ResourceLocation rl = ResourceLocation.m_135820_(nameIn);
+         resourcelocation = new ResourceLocation(rl.m_135827_(), "shaders/program/" + rl.m_135815_() + ".json");
       }
 
       this.f_108932_ = nameIn;
@@ -70,11 +73,13 @@ public class EffectInstance implements Effect, AutoCloseable {
             JsonObject jsonobject = GsonHelper.m_13859_(reader);
             String s = GsonHelper.m_13906_(jsonobject, "vertex");
             String s1 = GsonHelper.m_13906_(jsonobject, "fragment");
-            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", null);
+            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", (JsonArray)null);
             if (jsonarray != null) {
                int i = 0;
 
-               for (JsonElement jsonelement : jsonarray) {
+               for(Iterator var11 = jsonarray.iterator(); var11.hasNext(); ++i) {
+                  JsonElement jsonelement = (JsonElement)var11.next();
+
                   try {
                      this.m_108948_(jsonelement);
                   } catch (Exception var20) {
@@ -82,18 +87,19 @@ public class EffectInstance implements Effect, AutoCloseable {
                      chainedjsonexception1.m_135908_("samplers[" + i + "]");
                      throw chainedjsonexception1;
                   }
-
-                  i++;
                }
             }
 
-            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "attributes", null);
+            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "attributes", (JsonArray)null);
+            Iterator var28;
             if (jsonarray1 != null) {
                int j = 0;
                this.f_108935_ = Lists.newArrayListWithCapacity(jsonarray1.size());
                this.f_108936_ = Lists.newArrayListWithCapacity(jsonarray1.size());
 
-               for (JsonElement jsonelement1 : jsonarray1) {
+               for(var28 = jsonarray1.iterator(); var28.hasNext(); ++j) {
+                  JsonElement jsonelement1 = (JsonElement)var28.next();
+
                   try {
                      this.f_108936_.add(GsonHelper.m_13805_(jsonelement1, "attribute"));
                   } catch (Exception var19) {
@@ -101,19 +107,19 @@ public class EffectInstance implements Effect, AutoCloseable {
                      chainedjsonexception2.m_135908_("attributes[" + j + "]");
                      throw chainedjsonexception2;
                   }
-
-                  j++;
                }
             } else {
                this.f_108935_ = null;
                this.f_108936_ = null;
             }
 
-            JsonArray jsonarray2 = GsonHelper.m_13832_(jsonobject, "uniforms", null);
+            JsonArray jsonarray2 = GsonHelper.m_13832_(jsonobject, "uniforms", (JsonArray)null);
             if (jsonarray2 != null) {
                int k = 0;
 
-               for (JsonElement jsonelement2 : jsonarray2) {
+               for(Iterator var30 = jsonarray2.iterator(); var30.hasNext(); ++k) {
+                  JsonElement jsonelement2 = (JsonElement)var30.next();
+
                   try {
                      this.m_108958_(jsonelement2);
                   } catch (Exception var18) {
@@ -121,19 +127,20 @@ public class EffectInstance implements Effect, AutoCloseable {
                      chainedjsonexception3.m_135908_("uniforms[" + k + "]");
                      throw chainedjsonexception3;
                   }
-
-                  k++;
                }
             }
 
-            this.f_108934_ = m_108950_(GsonHelper.m_13841_(jsonobject, "blend", null));
-            this.f_108937_ = m_172566_(resourceManagerIn, com.mojang.blaze3d.shaders.Program.Type.VERTEX, s);
-            this.f_108938_ = m_172566_(resourceManagerIn, com.mojang.blaze3d.shaders.Program.Type.FRAGMENT, s1);
+            this.f_108934_ = m_108950_(GsonHelper.m_13841_(jsonobject, "blend", (JsonObject)null));
+            this.f_108937_ = m_172566_(resourceManagerIn, Program.Type.VERTEX, s);
+            this.f_108938_ = m_172566_(resourceManagerIn, Program.Type.FRAGMENT, s1);
             this.f_108931_ = ProgramManager.m_85577_();
             ProgramManager.m_166623_(this);
             this.m_108967_();
             if (this.f_108936_ != null) {
-               for (String s2 : this.f_108936_) {
+               var28 = this.f_108936_.iterator();
+
+               while(var28.hasNext()) {
+                  String s2 = (String)var28.next();
                   int l = Uniform.m_85639_(this.f_108931_, s2);
                   this.f_108935_.add(l);
                }
@@ -155,26 +162,27 @@ public class EffectInstance implements Effect, AutoCloseable {
          }
       } catch (Exception var22) {
          ChainedJsonException chainedjsonexception = ChainedJsonException.m_135906_(var22);
-         chainedjsonexception.m_135910_(resourcelocation.m_135815_() + " (" + resource.m_215506_() + ")");
+         String var10001 = resourcelocation.m_135815_();
+         chainedjsonexception.m_135910_(var10001 + " (" + resource.m_215506_() + ")");
          throw chainedjsonexception;
       }
 
       this.m_108957_();
    }
 
-   public static EffectProgram m_172566_(ResourceProvider resourceManagerIn, com.mojang.blaze3d.shaders.Program.Type typeIn, String nameIn) throws IOException {
-      com.mojang.blaze3d.shaders.Program program = (com.mojang.blaze3d.shaders.Program)typeIn.m_85570_().get(nameIn);
+   public static EffectProgram m_172566_(ResourceProvider resourceManagerIn, Program.Type typeIn, String nameIn) throws IOException {
+      Program program = (Program)typeIn.m_85570_().get(nameIn);
       if (program != null && !(program instanceof EffectProgram)) {
          throw new InvalidClassException("Program is not of type EffectProgram");
       } else {
          EffectProgram effectprogram;
          if (program == null) {
-            net.minecraft.resources.ResourceLocation resourcelocation = net.minecraft.resources.ResourceLocation.m_340282_(
-               "shaders/program/" + nameIn + typeIn.m_85569_()
-            );
+            ResourceLocation resourcelocation = ResourceLocation.m_340282_("shaders/program/" + nameIn + typeIn.m_85569_());
             if (Reflector.MinecraftForge.exists()) {
-               net.minecraft.resources.ResourceLocation rl = net.minecraft.resources.ResourceLocation.m_135820_(nameIn);
-               resourcelocation = new net.minecraft.resources.ResourceLocation(rl.m_135827_(), "shaders/program/" + rl.m_135815_() + typeIn.m_85569_());
+               ResourceLocation rl = ResourceLocation.m_135820_(nameIn);
+               String var10002 = rl.m_135827_();
+               String var10003 = rl.m_135815_();
+               resourcelocation = new ResourceLocation(var10002, "shaders/program/" + var10003 + typeIn.m_85569_());
             }
 
             Resource resource = resourceManagerIn.m_215593_(resourcelocation);
@@ -264,7 +272,10 @@ public class EffectInstance implements Effect, AutoCloseable {
    }
 
    public void close() {
-      for (Uniform uniform : this.f_108928_) {
+      Iterator var1 = this.f_108928_.iterator();
+
+      while(var1.hasNext()) {
+         Uniform uniform = (Uniform)var1.next();
          uniform.close();
       }
 
@@ -276,12 +287,13 @@ public class EffectInstance implements Effect, AutoCloseable {
       f_108924_ = -1;
       f_108923_ = null;
 
-      for (int i = 0; i < this.f_108927_.size(); i++) {
+      for(int i = 0; i < this.f_108927_.size(); ++i) {
          if (this.f_108925_.get(this.f_108926_.get(i)) != null) {
-            GlStateManager._activeTexture(33984 + i);
+            GlStateManager._activeTexture('蓀' + i);
             GlStateManager._bindTexture(0);
          }
       }
+
    }
 
    public void m_108966_() {
@@ -293,11 +305,11 @@ public class EffectInstance implements Effect, AutoCloseable {
          f_108924_ = this.f_108931_;
       }
 
-      for (int i = 0; i < this.f_108927_.size(); i++) {
+      for(int i = 0; i < this.f_108927_.size(); ++i) {
          String s = (String)this.f_108926_.get(i);
          IntSupplier intsupplier = (IntSupplier)this.f_108925_.get(s);
          if (intsupplier != null) {
-            RenderSystem.activeTexture(33984 + i);
+            RenderSystem.activeTexture('蓀' + i);
             int j = intsupplier.getAsInt();
             if (j != -1) {
                RenderSystem.bindTexture(j);
@@ -306,9 +318,13 @@ public class EffectInstance implements Effect, AutoCloseable {
          }
       }
 
-      for (Uniform uniform : this.f_108928_) {
+      Iterator var5 = this.f_108928_.iterator();
+
+      while(var5.hasNext()) {
+         Uniform uniform = (Uniform)var5.next();
          uniform.m_85633_();
       }
+
    }
 
    public void m_108957_() {
@@ -330,23 +346,27 @@ public class EffectInstance implements Effect, AutoCloseable {
       RenderSystem.assertOnRenderThread();
       IntList intlist = new IntArrayList();
 
-      for (int i = 0; i < this.f_108926_.size(); i++) {
-         String s = (String)this.f_108926_.get(i);
+      int l;
+      for(l = 0; l < this.f_108926_.size(); ++l) {
+         String s = (String)this.f_108926_.get(l);
          int j = Uniform.m_85624_(this.f_108931_, s);
          if (j == -1) {
             f_108921_.warn("Shader {} could not find sampler named {} in the specified shader program.", this.f_108932_, s);
             this.f_108925_.remove(s);
-            intlist.add(i);
+            intlist.add(l);
          } else {
             this.f_108927_.add(j);
          }
       }
 
-      for (int l = intlist.size() - 1; l >= 0; l--) {
+      for(l = intlist.size() - 1; l >= 0; --l) {
          this.f_108926_.remove(intlist.getInt(l));
       }
 
-      for (Uniform uniform : this.f_108928_) {
+      Iterator var6 = this.f_108928_.iterator();
+
+      while(var6.hasNext()) {
+         Uniform uniform = (Uniform)var6.next();
          String s1 = uniform.m_85599_();
          int k = Uniform.m_85624_(this.f_108931_, s1);
          if (k == -1) {
@@ -357,17 +377,19 @@ public class EffectInstance implements Effect, AutoCloseable {
             this.f_108930_.put(s1, uniform);
          }
       }
+
    }
 
    private void m_108948_(JsonElement jsonElementIn) {
       JsonObject jsonobject = GsonHelper.m_13918_(jsonElementIn, "sampler");
       String s = GsonHelper.m_13906_(jsonobject, "name");
       if (!GsonHelper.m_13813_(jsonobject, "file")) {
-         this.f_108925_.put(s, null);
+         this.f_108925_.put(s, (Object)null);
          this.f_108926_.add(s);
       } else {
          this.f_108926_.add(s);
       }
+
    }
 
    public void m_108954_(String nameIn, IntSupplier samplerIn) {
@@ -391,7 +413,9 @@ public class EffectInstance implements Effect, AutoCloseable {
       } else {
          int k = 0;
 
-         for (JsonElement jsonelement : jsonarray) {
+         for(Iterator var9 = jsonarray.iterator(); var9.hasNext(); ++k) {
+            JsonElement jsonelement = (JsonElement)var9.next();
+
             try {
                afloat[k] = GsonHelper.m_13888_(jsonelement, "value");
             } catch (Exception var13) {
@@ -399,14 +423,12 @@ public class EffectInstance implements Effect, AutoCloseable {
                chainedjsonexception.m_135908_("values[" + k + "]");
                throw chainedjsonexception;
             }
-
-            k++;
          }
 
          if (j > 1 && jsonarray.size() == 1) {
-            while (k < j) {
+            while(k < j) {
                afloat[k] = afloat[0];
-               k++;
+               ++k;
             }
          }
 
@@ -424,11 +446,11 @@ public class EffectInstance implements Effect, AutoCloseable {
       }
    }
 
-   public com.mojang.blaze3d.shaders.Program m_108962_() {
+   public Program m_108962_() {
       return this.f_108937_;
    }
 
-   public com.mojang.blaze3d.shaders.Program m_108964_() {
+   public Program m_108964_() {
       return this.f_108938_;
    }
 

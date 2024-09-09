@@ -19,20 +19,32 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import net.minecraft.Util;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.VanillaPackResources;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.server.packs.resources.IoSupplier;
@@ -40,6 +52,7 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.debugchart.LocalSampleLogger;
 import net.optifine.config.GlVersion;
+import net.optifine.gui.GuiMessage;
 import net.optifine.reflect.Reflector;
 import net.optifine.reflect.ReflectorForge;
 import net.optifine.shaders.Shaders;
@@ -71,7 +84,7 @@ public class Config {
    public static GlVersion glVersion = null;
    public static GlVersion glslVersion = null;
    public static int minecraftVersionInt = -1;
-   private static net.minecraft.client.Options gameSettings = null;
+   private static Options gameSettings = null;
    private static Minecraft minecraft = Minecraft.m_91087_();
    private static boolean initialized = false;
    private static Thread minecraftThread = null;
@@ -88,7 +101,7 @@ public class Config {
    private static String mcDebugLast = null;
    private static int fpsMinLast = 0;
    private static int chunkUpdatesLast = 0;
-   private static net.minecraft.client.renderer.texture.TextureAtlas textureMapTerrain;
+   private static TextureAtlas textureMapTerrain;
    private static long timeLastFrameMs;
    private static long averageFrameTimeMs;
    private static long lastFrameTimeMs;
@@ -119,7 +132,7 @@ public class Config {
       return sb.toString();
    }
 
-   public static void initGameSettings(net.minecraft.client.Options settings) {
+   public static void initGameSettings(Options settings) {
       if (gameSettings == null) {
          gameSettings = settings;
          updateAvailableProcessors();
@@ -130,7 +143,7 @@ public class Config {
             ComparableVersion cv = new ComparableVersion(forgeVer);
             ComparableVersion cvMax = new ComparableVersion("47.0.3");
             if (cv.compareTo(cvMax) > 1) {
-               dbg("Forge version above " + cvMax + ", antialiasing disabled");
+               dbg("Forge version above " + String.valueOf(cvMax) + ", antialiasing disabled");
                gameSettings.ofAaLevel = 0;
             }
          }
@@ -160,9 +173,12 @@ public class Config {
       log("");
       log(getVersion());
       log("Build: " + getBuild());
-      log("OS: " + System.getProperty("os.name") + " (" + System.getProperty("os.arch") + ") version " + System.getProperty("os.version"));
-      log("Java: " + System.getProperty("java.version") + ", " + System.getProperty("java.vendor"));
-      log("VM: " + System.getProperty("java.vm.name") + " (" + System.getProperty("java.vm.info") + "), " + System.getProperty("java.vm.vendor"));
+      String var10000 = System.getProperty("os.name");
+      log("OS: " + var10000 + " (" + System.getProperty("os.arch") + ") version " + System.getProperty("os.version"));
+      var10000 = System.getProperty("java.version");
+      log("Java: " + var10000 + ", " + System.getProperty("java.vendor"));
+      var10000 = System.getProperty("java.vm.name");
+      log("VM: " + var10000 + " (" + System.getProperty("java.vm.info") + "), " + System.getProperty("java.vm.vendor"));
       log("LWJGL: " + GLFW.glfwGetVersionString());
       openGlVersion = GL11.glGetString(7938);
       openGlRenderer = GL11.glGetString(7937);
@@ -183,7 +199,8 @@ public class Config {
 
             build = readLines(in)[0];
          } catch (Exception var1) {
-            warn(var1.getClass().getName() + ": " + var1.getMessage());
+            String var10000 = var1.getClass().getName();
+            warn(var10000 + ": " + var1.getMessage());
             build = "";
          }
       }
@@ -225,7 +242,9 @@ public class Config {
 
    public static String getOpenGlVersionString() {
       GlVersion ver = getGlVersion();
-      return ver.getMajor() + "." + ver.getMinor() + "." + ver.getRelease();
+      int var10000 = ver.getMajor();
+      String verStr = "" + var10000 + "." + ver.getMinor() + "." + ver.getRelease();
+      return verStr;
    }
 
    private static GlVersion getGlVersionLwjgl() {
@@ -268,7 +287,7 @@ public class Config {
    public static GlVersion getGlVersion() {
       if (glVersion == null) {
          String verStr = GL11.glGetString(7938);
-         glVersion = parseGlVersion(verStr, null);
+         glVersion = parseGlVersion(verStr, (GlVersion)null);
          if (glVersion == null) {
             glVersion = getGlVersionLwjgl();
          }
@@ -284,7 +303,7 @@ public class Config {
    public static GlVersion getGlslVersion() {
       if (glslVersion == null) {
          String verStr = GL11.glGetString(35724);
-         glslVersion = parseGlVersion(verStr, null);
+         glslVersion = parseGlVersion(verStr, (GlVersion)null);
          if (glslVersion == null) {
             glslVersion = new GlVersion(1, 10);
          }
@@ -332,7 +351,7 @@ public class Config {
             if (countExt > 0) {
                String[] exts = new String[countExt];
 
-               for (int i = 0; i < countExt; i++) {
+               for(int i = 0; i < countExt; ++i) {
                   exts[i] = GL30.glGetStringi(7939, i);
                }
 
@@ -345,7 +364,8 @@ public class Config {
 
       try {
          String extStr = GL11.glGetString(7939);
-         return extStr.split(" ");
+         String[] exts = extStr.split(" ");
+         return exts;
       } catch (Exception var4) {
          error("", var4);
          return new String[0];
@@ -354,7 +374,7 @@ public class Config {
 
    public static void updateThreadPriorities() {
       updateAvailableProcessors();
-      int ELEVATED_PRIORITY = 8;
+      int ELEVATED_PRIORITY = true;
       if (isSingleProcessor()) {
          if (isSmoothWorld()) {
             minecraftThread.setPriority(10);
@@ -367,6 +387,7 @@ public class Config {
          minecraftThread.setPriority(10);
          setThreadPriority("Server thread", 5);
       }
+
    }
 
    private static void setThreadPriority(String prefix, int priority) {
@@ -380,15 +401,17 @@ public class Config {
          Thread[] ts = new Thread[num];
          tg.enumerate(ts, false);
 
-         for (int i = 0; i < ts.length; i++) {
+         for(int i = 0; i < ts.length; ++i) {
             Thread t = ts[i];
             if (t != null && t.getName().startsWith(prefix)) {
                t.setPriority(priority);
             }
          }
       } catch (Throwable var7) {
-         warn(var7.getClass().getName() + ": " + var7.getMessage());
+         String var10000 = var7.getClass().getName();
+         warn(var10000 + ": " + var7.getMessage());
       }
+
    }
 
    public static boolean isMinecraftThread() {
@@ -401,11 +424,11 @@ public class Config {
    }
 
    public static boolean isMipmaps() {
-      return gameSettings.m_232119_().m_231551_() > 0;
+      return (Integer)gameSettings.m_232119_().m_231551_() > 0;
    }
 
    public static int getMipmapLevels() {
-      return gameSettings.m_232119_().m_231551_();
+      return (Integer)gameSettings.m_232119_().m_231551_();
    }
 
    public static int getMipmapType() {
@@ -456,6 +479,7 @@ public class Config {
       if (logDetail) {
          LOGGER.info("[OptiFine] " + s);
       }
+
    }
 
    public static void dbg(String s) {
@@ -499,7 +523,11 @@ public class Config {
    }
 
    public static boolean isRainFancy() {
-      return gameSettings.ofRain == 0 ? isGraphicsFancy() : gameSettings.ofRain == 2;
+      if (gameSettings.ofRain == 0) {
+         return isGraphicsFancy();
+      } else {
+         return gameSettings.ofRain == 2;
+      }
    }
 
    public static boolean isRainOff() {
@@ -511,8 +539,10 @@ public class Config {
          return gameSettings.ofClouds == 2;
       } else if (isShaders() && !Shaders.shaderPackClouds.isDefault()) {
          return Shaders.shaderPackClouds.isFancy();
+      } else if (texturePackClouds != 0) {
+         return texturePackClouds == 2;
       } else {
-         return texturePackClouds != 0 ? texturePackClouds == 2 : isGraphicsFancy();
+         return isGraphicsFancy();
       }
    }
 
@@ -521,8 +551,10 @@ public class Config {
          return gameSettings.ofClouds == 3;
       } else if (isShaders() && !Shaders.shaderPackClouds.isDefault()) {
          return Shaders.shaderPackClouds.isOff();
+      } else if (texturePackClouds != 0) {
+         return texturePackClouds == 3;
       } else {
-         return texturePackClouds != 0 ? texturePackClouds == 3 : false;
+         return false;
       }
    }
 
@@ -531,7 +563,7 @@ public class Config {
       ResourceManager rm = getResourceManager();
       if (rm != null) {
          try {
-            InputStream in = rm.m_215593_(new net.minecraft.resources.ResourceLocation("optifine/color.properties")).m_215507_();
+            InputStream in = rm.m_215593_(new ResourceLocation("optifine/color.properties")).m_215507_();
             if (in == null) {
                return;
             }
@@ -559,6 +591,7 @@ public class Config {
             }
          } catch (Exception var4) {
          }
+
       }
    }
 
@@ -567,7 +600,11 @@ public class Config {
    }
 
    public static boolean isTreesFancy() {
-      return gameSettings.ofTrees == 0 ? isGraphicsFancy() : gameSettings.ofTrees != 1;
+      if (gameSettings.ofTrees == 0) {
+         return isGraphicsFancy();
+      } else {
+         return gameSettings.ofTrees != 1;
+      }
    }
 
    public static boolean isTreesSmart() {
@@ -575,7 +612,11 @@ public class Config {
    }
 
    public static boolean isCullFacesLeaves() {
-      return gameSettings.ofTrees == 0 ? !isGraphicsFancy() : gameSettings.ofTrees == 4;
+      if (gameSettings.ofTrees == 0) {
+         return !isGraphicsFancy();
+      } else {
+         return gameSettings.ofTrees == 4;
+      }
    }
 
    public static int limit(int val, int min, int max) {
@@ -696,7 +737,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(list.size() * 5);
 
-         for (int i = 0; i < list.size(); i++) {
+         for(int i = 0; i < list.size(); ++i) {
             Object obj = list.get(i);
             if (i > 0) {
                buf.append(separator);
@@ -719,7 +760,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             Object obj = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -742,7 +783,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             int x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -765,7 +806,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             float x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -782,7 +823,7 @@ public class Config {
       return minecraft;
    }
 
-   public static net.minecraft.client.renderer.texture.TextureManager getTextureManager() {
+   public static TextureManager getTextureManager() {
       return minecraft.m_91097_();
    }
 
@@ -790,20 +831,20 @@ public class Config {
       return minecraft.m_91098_();
    }
 
-   public static InputStream getResourceStream(net.minecraft.resources.ResourceLocation location) throws IOException {
+   public static InputStream getResourceStream(ResourceLocation location) throws IOException {
       return getResourceStream(minecraft.m_91098_(), location);
    }
 
-   public static InputStream getResourceStream(ResourceManager resourceManager, net.minecraft.resources.ResourceLocation location) throws IOException {
+   public static InputStream getResourceStream(ResourceManager resourceManager, ResourceLocation location) throws IOException {
       Resource res = resourceManager.m_215593_(location);
       return res == null ? null : res.m_215507_();
    }
 
-   public static Resource getResource(net.minecraft.resources.ResourceLocation location) throws IOException {
+   public static Resource getResource(ResourceLocation location) throws IOException {
       return minecraft.m_91098_().m_215593_(location);
    }
 
-   public static boolean hasResource(net.minecraft.resources.ResourceLocation location) {
+   public static boolean hasResource(ResourceLocation location) {
       if (location == null) {
          return false;
       } else {
@@ -812,7 +853,7 @@ public class Config {
       }
    }
 
-   public static boolean hasResource(ResourceManager resourceManager, net.minecraft.resources.ResourceLocation location) {
+   public static boolean hasResource(ResourceManager resourceManager, ResourceLocation location) {
       try {
          Resource res = resourceManager.m_215593_(location);
          return res != null;
@@ -821,9 +862,9 @@ public class Config {
       }
    }
 
-   public static boolean hasResource(PackResources rp, net.minecraft.resources.ResourceLocation loc) {
+   public static boolean hasResource(PackResources rp, ResourceLocation loc) {
       if (rp != null && loc != null) {
-         IoSupplier<InputStream> supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
+         IoSupplier supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
          return supplier != null;
       } else {
          return false;
@@ -832,17 +873,20 @@ public class Config {
 
    public static PackResources[] getResourcePacks() {
       PackRepository rep = minecraft.m_91099_();
-      Collection<Pack> packInfos = rep.m_10524_();
+      Collection packInfos = rep.m_10524_();
       List list = new ArrayList();
+      Iterator it = packInfos.iterator();
 
-      for (Pack rpic : packInfos) {
+      while(it.hasNext()) {
+         Pack rpic = (Pack)it.next();
          PackResources rp = rpic.m_10445_();
          if (rp != getDefaultResourcePack()) {
             list.add(rp);
          }
       }
 
-      return (PackResources[])list.toArray(new PackResources[list.size()]);
+      PackResources[] rps = (PackResources[])list.toArray(new PackResources[list.size()]);
+      return rps;
    }
 
    public static String getResourcePackNames() {
@@ -855,29 +899,30 @@ public class Config {
          } else {
             String[] names = new String[rps.length];
 
-            for (int i = 0; i < rps.length; i++) {
+            for(int i = 0; i < rps.length; ++i) {
                names[i] = rps[i].m_5542_();
             }
 
-            return arrayToString((Object[])names);
+            String nameStr = arrayToString((Object[])names);
+            return nameStr;
          }
       }
    }
 
-   public static net.minecraft.server.packs.VanillaPackResources getDefaultResourcePack() {
+   public static VanillaPackResources getDefaultResourcePack() {
       return minecraft.m_246804_();
    }
 
-   public static boolean isFromDefaultResourcePack(net.minecraft.resources.ResourceLocation loc) {
+   public static boolean isFromDefaultResourcePack(ResourceLocation loc) {
       return getDefiningResourcePack(loc) == getDefaultResourcePack();
    }
 
-   public static PackResources getDefiningResourcePack(net.minecraft.resources.ResourceLocation location) {
+   public static PackResources getDefiningResourcePack(ResourceLocation location) {
       PackRepository rep = minecraft.m_91099_();
-      Collection<Pack> packInfos = rep.m_10524_();
-      List<Pack> entries = (List<Pack>)packInfos;
+      Collection packInfos = rep.m_10524_();
+      List entries = (List)packInfos;
 
-      for (int i = entries.size() - 1; i >= 0; i--) {
+      for(int i = entries.size() - 1; i >= 0; --i) {
          Pack entry = (Pack)entries.get(i);
          PackResources rp = entry.m_10445_();
          if (rp.m_214146_(PackType.CLIENT_RESOURCES, location) != null) {
@@ -888,24 +933,24 @@ public class Config {
       return null;
    }
 
-   public static InputStream getResourceStream(PackResources rp, PackType type, net.minecraft.resources.ResourceLocation location) throws IOException {
-      IoSupplier<InputStream> supplier = rp.m_214146_(type, location);
+   public static InputStream getResourceStream(PackResources rp, PackType type, ResourceLocation location) throws IOException {
+      IoSupplier supplier = rp.m_214146_(type, location);
       return supplier == null ? null : (InputStream)supplier.m_247737_();
    }
 
-   public static net.minecraft.client.renderer.LevelRenderer getRenderGlobal() {
+   public static LevelRenderer getRenderGlobal() {
       return minecraft.f_91060_;
    }
 
-   public static net.minecraft.client.renderer.LevelRenderer getWorldRenderer() {
+   public static LevelRenderer getWorldRenderer() {
       return minecraft.f_91060_;
    }
 
-   public static net.minecraft.client.renderer.GameRenderer getGameRenderer() {
+   public static GameRenderer getGameRenderer() {
       return minecraft.f_91063_;
    }
 
-   public static net.minecraft.client.renderer.entity.EntityRenderDispatcher getEntityRenderDispatcher() {
+   public static EntityRenderDispatcher getEntityRenderDispatcher() {
       return minecraft.m_91290_();
    }
 
@@ -930,18 +975,28 @@ public class Config {
    }
 
    public static boolean isSunTexture() {
-      return !isSunMoonEnabled() ? false : !isShaders() || Shaders.isSun();
+      if (!isSunMoonEnabled()) {
+         return false;
+      } else {
+         return !isShaders() || Shaders.isSun();
+      }
    }
 
    public static boolean isMoonTexture() {
-      return !isSunMoonEnabled() ? false : !isShaders() || Shaders.isMoon();
+      if (!isSunMoonEnabled()) {
+         return false;
+      } else {
+         return !isShaders() || Shaders.isMoon();
+      }
    }
 
    public static boolean isVignetteEnabled() {
       if (isShaders() && !Shaders.isVignette()) {
          return false;
+      } else if (gameSettings.ofVignette == 0) {
+         return isGraphicsFancy();
       } else {
-         return gameSettings.ofVignette == 0 ? isGraphicsFancy() : gameSettings.ofVignette == 2;
+         return gameSettings.ofVignette == 2;
       }
    }
 
@@ -955,6 +1010,7 @@ public class Config {
       } catch (InterruptedException var3) {
          error("", var3);
       }
+
    }
 
    public static boolean isTimeDayOnly() {
@@ -990,7 +1046,11 @@ public class Config {
    }
 
    public static boolean isMultiTexture() {
-      return getAnisotropicFilterLevel() > 1 ? true : getAntialiasingLevel() > 0;
+      if (getAnisotropicFilterLevel() > 1) {
+         return true;
+      } else {
+         return getAntialiasingLevel() > 0;
+      }
    }
 
    public static boolean between(int val, int min, int max) {
@@ -1090,12 +1150,13 @@ public class Config {
       StringTokenizer tok = new StringTokenizer(str, delim);
       List list = new ArrayList();
 
-      while (tok.hasMoreTokens()) {
+      while(tok.hasMoreTokens()) {
          String token = tok.nextToken();
          list.add(token);
       }
 
-      return (String[])list.toArray(new String[list.size()]);
+      String[] strs = (String[])list.toArray(new String[list.size()]);
+      return strs;
    }
 
    public static boolean isAnimatedTerrain() {
@@ -1125,14 +1186,15 @@ public class Config {
             minecraft.f_91065_.m_93076_().m_93785_(Component.m_237113_(message));
          }
       }
+
    }
 
    public static boolean isSmoothBiomes() {
-      return gameSettings.m_232121_().m_231551_() > 0;
+      return (Integer)gameSettings.m_232121_().m_231551_() > 0;
    }
 
    public static int getBiomeBlendRadius() {
-      return gameSettings.m_232121_().m_231551_();
+      return (Integer)gameSettings.m_232121_().m_231551_();
    }
 
    public static boolean isCustomColors() {
@@ -1181,7 +1243,7 @@ public class Config {
 
    public static String[] readLines(File file) throws IOException {
       FileInputStream fis = new FileInputStream(file);
-      return readLines(fis);
+      return readLines((InputStream)fis);
    }
 
    public static String[] readLines(InputStream is) throws IOException {
@@ -1189,10 +1251,11 @@ public class Config {
       InputStreamReader isr = new InputStreamReader(is, "ASCII");
       BufferedReader br = new BufferedReader(isr);
 
-      while (true) {
+      while(true) {
          String line = br.readLine();
          if (line == null) {
-            return (String[])list.toArray(new String[list.size()]);
+            String[] lines = (String[])list.toArray(new String[list.size()]);
+            return lines;
          }
 
          list.add(line);
@@ -1213,7 +1276,7 @@ public class Config {
       BufferedReader br = new BufferedReader(inr);
       StringBuffer sb = new StringBuffer();
 
-      while (true) {
+      while(true) {
          String line = br.readLine();
          if (line == null) {
             in.close();
@@ -1229,18 +1292,19 @@ public class Config {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       byte[] buf = new byte[1024];
 
-      while (true) {
+      while(true) {
          int len = is.read(buf);
          if (len < 0) {
             is.close();
-            return baos.toByteArray();
+            byte[] bytes = baos.toByteArray();
+            return bytes;
          }
 
          baos.write(buf, 0, len);
       }
    }
 
-   public static net.minecraft.client.Options getGameSettings() {
+   public static Options getGameSettings() {
       return gameSettings;
    }
 
@@ -1304,14 +1368,16 @@ public class Config {
       x += x << 3;
       x ^= x >> 4;
       x *= 668265261;
-      return x ^ x >> 15;
+      x ^= x >> 15;
+      return x;
    }
 
    public static int getRandom(BlockPos blockPos, int face) {
       int rand = intHash(face + 37);
       rand = intHash(rand + blockPos.m_123341_());
       rand = intHash(rand + blockPos.m_123343_());
-      return intHash(rand + blockPos.m_123342_());
+      rand = intHash(rand + blockPos.m_123342_());
+      return rand;
    }
 
    public static int getAvailableProcessors() {
@@ -1343,7 +1409,12 @@ public class Config {
    }
 
    public static int getChunkViewDistance() {
-      return gameSettings == null ? 10 : gameSettings.m_231984_().m_231551_();
+      if (gameSettings == null) {
+         return 10;
+      } else {
+         int chunkDistance = (Integer)gameSettings.m_231984_().m_231551_();
+         return chunkDistance;
+      }
    }
 
    public static boolean equals(Object o1, Object o2) {
@@ -1358,7 +1429,7 @@ public class Config {
       if (bs == null) {
          return false;
       } else {
-         for (int i = 0; i < bs.length; i++) {
+         for(int i = 0; i < bs.length; ++i) {
             Object b = bs[i];
             if (equals(a, b)) {
                return true;
@@ -1370,7 +1441,7 @@ public class Config {
    }
 
    public static boolean equalsOne(int val, int[] vals) {
-      for (int i = 0; i < vals.length; i++) {
+      for(int i = 0; i < vals.length; ++i) {
          if (vals[i] == val) {
             return true;
          }
@@ -1383,7 +1454,7 @@ public class Config {
       if (bs == null) {
          return false;
       } else {
-         for (int i = 0; i < bs.length; i++) {
+         for(int i = 0; i < bs.length; ++i) {
             Object b = bs[i];
             if (a == b) {
                return true;
@@ -1402,9 +1473,12 @@ public class Config {
       BufferedImage var2 = ImageIO.read(is);
       int[] var3 = var2.getRGB(0, 0, var2.getWidth(), var2.getHeight(), (int[])null, 0, var2.getWidth());
       ByteBuffer var4 = ByteBuffer.allocate(4 * var3.length);
+      int[] var5 = var3;
+      int var6 = var3.length;
 
-      for (int var8 : var3) {
-         var4.putInt(var8 << 8 | var8 >> 24 & 0xFF);
+      for(int var7 = 0; var7 < var6; ++var7) {
+         int var8 = var5[var7];
+         var4.putInt(var8 << 8 | var8 >> 24 & 255);
       }
 
       var4.flip();
@@ -1449,7 +1523,8 @@ public class Config {
    public static Object[] removeObjectFromArray(Object[] arr, Object obj) {
       List list = new ArrayList(Arrays.asList(arr));
       list.remove(obj);
-      return collectionToArray(list, arr.getClass().getComponentType());
+      Object[] newArr = collectionToArray(list, arr.getClass().getComponentType());
+      return newArr;
    }
 
    public static Object[] collectionToArray(Collection coll, Class elementClass) {
@@ -1458,7 +1533,7 @@ public class Config {
       } else if (elementClass == null) {
          return null;
       } else if (elementClass.isPrimitive()) {
-         throw new IllegalArgumentException("Can not make arrays with primitive elements (int, double), element class: " + elementClass);
+         throw new IllegalArgumentException("Can not make arrays with primitive elements (int, double), element class: " + String.valueOf(elementClass));
       } else {
          Object[] array = (Object[])Array.newInstance(elementClass, coll.size());
          return coll.toArray(array);
@@ -1472,12 +1547,15 @@ public class Config {
    public static String getFpsString() {
       int fps = getFpsAverage();
       int fpsMin = getFpsMin();
+      String fpsStr;
       if (showFrameTime) {
-         String timeMs = String.format("%.1f", 1000.0 / (double)limit(fps, 1, Integer.MAX_VALUE));
+         fpsStr = String.format("%.1f", 1000.0 / (double)limit(fps, 1, Integer.MAX_VALUE));
          String timeMaxMs = String.format("%.1f", 1000.0 / (double)limit(fpsMin, 1, Integer.MAX_VALUE));
-         return timeMs + "/" + timeMaxMs + " ms";
+         String fpsStr = fpsStr + "/" + timeMaxMs + " ms";
+         return fpsStr;
       } else {
-         return fps + "/" + fpsMin + " fps";
+         fpsStr = "" + fps + "/" + fpsMin + " fps";
+         return fpsStr;
       }
    }
 
@@ -1486,7 +1564,8 @@ public class Config {
    }
 
    public static int getFpsAverage() {
-      return Reflector.getFieldValueInt(Reflector.Minecraft_debugFPS, -1);
+      int fps = Reflector.getFieldValueInt(Reflector.Minecraft_debugFPS, -1);
+      return fps;
    }
 
    public static int getFpsMin() {
@@ -1509,7 +1588,7 @@ public class Config {
          long timeMaxNs = timeAvgNs;
          long timeTotalNs = 0L;
 
-         for (int ix = sl.m_322219_() - 1; ix > 0 && (double)timeTotalNs < 1.0E9; ix--) {
+         for(int ix = sl.m_322219_() - 1; ix > 0 && (double)timeTotalNs < 1.0E9; --ix) {
             long timeNs = sl.m_318870_(ix);
             if (timeNs > timeMaxNs) {
                timeMaxNs = timeNs;
@@ -1524,8 +1603,8 @@ public class Config {
    }
 
    private static void updateChunkUpdates() {
-      chunkUpdatesLast = net.minecraft.client.renderer.chunk.SectionRenderDispatcher.renderChunksUpdated;
-      net.minecraft.client.renderer.chunk.SectionRenderDispatcher.renderChunksUpdated = 0;
+      chunkUpdatesLast = SectionRenderDispatcher.renderChunksUpdated;
+      SectionRenderDispatcher.renderChunksUpdated = 0;
    }
 
    public static int getBitsOs() {
@@ -1536,7 +1615,7 @@ public class Config {
    public static int getBitsJre() {
       String[] propNames = new String[]{"sun.arch.data.model", "com.ibm.vm.bitmode", "os.arch"};
 
-      for (int i = 0; i < propNames.length; i++) {
+      for(int i = 0; i < propNames.length; ++i) {
          String propName = propNames[i];
          String propVal = System.getProperty(propName);
          if (propVal != null && propVal.contains("64")) {
@@ -1560,7 +1639,7 @@ public class Config {
    }
 
    public static void showGuiMessage(String line1, String line2) {
-      net.optifine.gui.GuiMessage gui = new net.optifine.gui.GuiMessage(minecraft.f_91080_, line1, line2);
+      GuiMessage gui = new GuiMessage(minecraft.f_91080_, line1, line2);
       minecraft.m_91152_(gui);
    }
 
@@ -1575,7 +1654,7 @@ public class Config {
          int[] newArray = new int[newLen];
          System.arraycopy(intArray, 0, newArray, 0, arrLen);
 
-         for (int index = 0; index < copyFrom.length; index++) {
+         for(int index = 0; index < copyFrom.length; ++index) {
             newArray[index + arrLen] = copyFrom[index];
          }
 
@@ -1592,11 +1671,11 @@ public class Config {
       fos.close();
    }
 
-   public static void setTextureMap(net.minecraft.client.renderer.texture.TextureAtlas textureMapTerrain) {
+   public static void setTextureMap(TextureAtlas textureMapTerrain) {
       Config.textureMapTerrain = textureMapTerrain;
    }
 
-   public static net.minecraft.client.renderer.texture.TextureAtlas getTextureMap() {
+   public static TextureAtlas getTextureMap() {
       return textureMapTerrain;
    }
 
@@ -1636,7 +1715,7 @@ public class Config {
       } else {
          int[] intArr = new int[arr.length];
 
-         for (int i = 0; i < intArr.length; i++) {
+         for(int i = 0; i < intArr.length; ++i) {
             intArr[i] = arr[i];
          }
 
@@ -1645,7 +1724,11 @@ public class Config {
    }
 
    public static boolean isRenderRegions() {
-      return isMultiTexture() ? false : gameSettings.ofRenderRegions && GlStateManager.vboRegions;
+      if (isMultiTexture()) {
+         return false;
+      } else {
+         return gameSettings.ofRenderRegions && GlStateManager.vboRegions;
+      }
    }
 
    public static boolean isVbo() {
@@ -1657,9 +1740,9 @@ public class Config {
    }
 
    public static boolean openWebLink(URI uri) {
-      net.minecraft.Util.setExceptionOpenUrl(null);
-      net.minecraft.Util.m_137581_().m_137648_(uri);
-      Exception error = net.minecraft.Util.getExceptionOpenUrl();
+      Util.setExceptionOpenUrl((Exception)null);
+      Util.m_137581_().m_137648_(uri);
+      Exception error = Util.getExceptionOpenUrl();
       return error == null;
    }
 
@@ -1673,7 +1756,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             boolean x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -1687,7 +1770,11 @@ public class Config {
    }
 
    public static boolean isIntegratedServerRunning() {
-      return minecraft.m_91092_() == null ? false : minecraft.m_91090_();
+      if (minecraft.m_91092_() == null) {
+         return false;
+      } else {
+         return minecraft.m_91090_();
+      }
    }
 
    public static IntBuffer createDirectIntBuffer(int capacity) {
@@ -1737,8 +1824,8 @@ public class Config {
       if (minecraft.m_91265_() == null) {
          return false;
       } else {
-         if (minecraft.m_91265_() instanceof net.minecraft.client.gui.screens.LoadingOverlay) {
-            net.minecraft.client.gui.screens.LoadingOverlay rlpg = (net.minecraft.client.gui.screens.LoadingOverlay)minecraft.m_91265_();
+         if (minecraft.m_91265_() instanceof LoadingOverlay) {
+            LoadingOverlay rlpg = (LoadingOverlay)minecraft.m_91265_();
             if (rlpg.isFadeOut()) {
                return false;
             }
@@ -1749,7 +1836,11 @@ public class Config {
    }
 
    public static boolean isQuadsToTriangles() {
-      return !isShaders() ? false : !Shaders.canRenderQuads();
+      if (!isShaders()) {
+         return false;
+      } else {
+         return !Shaders.canRenderQuads();
+      }
    }
 
    public static void frameStart() {
@@ -1765,6 +1856,7 @@ public class Config {
          updateFpsMin();
          updateChunkUpdates();
       }
+
    }
 
    public static long getLastFrameTimeMs() {
@@ -1776,11 +1868,13 @@ public class Config {
    }
 
    public static float getAverageFrameTimeSec() {
-      return (float)getAverageFrameTimeMs() / 1000.0F;
+      float frameTimeSec = (float)getAverageFrameTimeMs() / 1000.0F;
+      return frameTimeSec;
    }
 
    public static long getAverageFrameFps() {
-      return 1000L / getAverageFrameTimeMs();
+      long frameFps = 1000L / getAverageFrameTimeMs();
+      return frameFps;
    }
 
    public static void checkNull(Object obj, String msg) throws NullPointerException {

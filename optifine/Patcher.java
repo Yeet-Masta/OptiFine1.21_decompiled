@@ -36,64 +36,69 @@ public class Patcher {
             baseFile = Differ.detectBaseFile(diffFile);
          }
 
-         if (!baseFile.exists() || !baseFile.isFile()) {
-            throw new IOException("Base file not found: " + baseFile);
-         } else if (diffFile.exists() && diffFile.isFile()) {
-            process(baseFile, diffFile, modFile);
+         if (baseFile.exists() && baseFile.isFile()) {
+            if (diffFile.exists() && diffFile.isFile()) {
+               process(baseFile, diffFile, modFile);
+            } else {
+               throw new IOException("Diff file not found: " + modFile);
+            }
          } else {
-            throw new IOException("Diff file not found: " + modFile);
+            throw new IOException("Base file not found: " + baseFile);
          }
       }
    }
 
    public static void process(File baseFile, File diffFile, File modFile) throws Exception {
       ZipFile diffZip = new ZipFile(diffFile);
-      Map<String, String> cfgMap = getConfigurationMap(diffZip);
+      Map cfgMap = getConfigurationMap(diffZip);
       Pattern[] patterns = getConfigurationPatterns(cfgMap);
       ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(modFile));
       ZipFile baseZip = new ZipFile(baseFile);
       ZipResourceProvider zrp = new ZipResourceProvider(baseZip);
       Enumeration diffZipEntries = diffZip.entries();
 
-      while (diffZipEntries.hasMoreElements()) {
-         ZipEntry diffZipEntry = (ZipEntry)diffZipEntries.nextElement();
-         InputStream in = diffZip.getInputStream(diffZipEntry);
-         byte[] bytes = Utils.readAll(in);
-         String name = diffZipEntry.getName();
-         if (name.startsWith("patch/") && name.endsWith(".xdelta")) {
-            name = name.substring("patch/".length());
-            name = name.substring(0, name.length() - ".xdelta".length());
-            byte[] bytesMod = applyPatch(name, bytes, patterns, cfgMap, zrp);
-            String nameMd5 = "patch/" + name + ".md5";
-            ZipEntry diffZipEntryMd5 = diffZip.getEntry(nameMd5);
-            if (diffZipEntryMd5 != null) {
-               byte[] md5 = Utils.readAll(diffZip.getInputStream(diffZipEntryMd5));
-               String md5Str = new String(md5, "ASCII");
-               byte[] md5Mod = HashUtils.getHashMd5(bytesMod);
-               String md5ModStr = HashUtils.toHexString(md5Mod);
-               if (!md5Str.equals(md5ModStr)) {
-                  throw new Exception("MD5 not matching, name: " + name + ", saved: " + md5Str + ", patched: " + md5ModStr);
+      while(true) {
+         while(diffZipEntries.hasMoreElements()) {
+            ZipEntry diffZipEntry = (ZipEntry)diffZipEntries.nextElement();
+            InputStream in = diffZip.getInputStream(diffZipEntry);
+            byte[] bytes = Utils.readAll(in);
+            String name = diffZipEntry.getName();
+            if (name.startsWith("patch/") && name.endsWith(".xdelta")) {
+               name = name.substring("patch/".length());
+               name = name.substring(0, name.length() - ".xdelta".length());
+               byte[] bytesMod = applyPatch(name, bytes, patterns, cfgMap, zrp);
+               String nameMd5 = "patch/" + name + ".md5";
+               ZipEntry diffZipEntryMd5 = diffZip.getEntry(nameMd5);
+               if (diffZipEntryMd5 != null) {
+                  byte[] md5 = Utils.readAll(diffZip.getInputStream(diffZipEntryMd5));
+                  String md5Str = new String(md5, "ASCII");
+                  byte[] md5Mod = HashUtils.getHashMd5(bytesMod);
+                  String md5ModStr = HashUtils.toHexString(md5Mod);
+                  if (!md5Str.equals(md5ModStr)) {
+                     throw new Exception("MD5 not matching, name: " + name + ", saved: " + md5Str + ", patched: " + md5ModStr);
+                  }
                }
+
+               ZipEntry zipEntryMod = new ZipEntry(name);
+               zipOut.putNextEntry(zipEntryMod);
+               zipOut.write(bytesMod);
+               zipOut.closeEntry();
+               Utils.dbg("Mod: " + name);
+            } else if (!name.startsWith("patch/") || !name.endsWith(".md5")) {
+               ZipEntry zipEntrySame = new ZipEntry(name);
+               zipOut.putNextEntry(zipEntrySame);
+               zipOut.write(bytes);
+               zipOut.closeEntry();
+               Utils.dbg("Same: " + zipEntrySame.getName());
             }
-
-            ZipEntry zipEntryMod = new ZipEntry(name);
-            zipOut.putNextEntry(zipEntryMod);
-            zipOut.write(bytesMod);
-            zipOut.closeEntry();
-            Utils.dbg("Mod: " + name);
-         } else if (!name.startsWith("patch/") || !name.endsWith(".md5")) {
-            ZipEntry zipEntrySame = new ZipEntry(name);
-            zipOut.putNextEntry(zipEntrySame);
-            zipOut.write(bytes);
-            zipOut.closeEntry();
-            Utils.dbg("Same: " + zipEntrySame.getName());
          }
-      }
 
-      zipOut.close();
+         zipOut.close();
+         return;
+      }
    }
 
-   public static byte[] applyPatch(String name, byte[] bytesDiff, Pattern[] patterns, Map<String, String> cfgMap, IResourceProvider resourceProvider) throws IOException, PatchException {
+   public static byte[] applyPatch(String name, byte[] bytesDiff, Pattern[] patterns, Map cfgMap, IResourceProvider resourceProvider) throws IOException, PatchException {
       name = Utils.removePrefix(name, "/");
       String baseName = getPatchBase(name, patterns, cfgMap);
       if (baseName == null) {
@@ -113,11 +118,11 @@ public class Patcher {
       }
    }
 
-   public static Pattern[] getConfigurationPatterns(Map<String, String> cfgMap) {
+   public static Pattern[] getConfigurationPatterns(Map cfgMap) {
       String[] cfgKeys = (String[])cfgMap.keySet().toArray(new String[0]);
       Pattern[] patterns = new Pattern[cfgKeys.length];
 
-      for (int i = 0; i < cfgKeys.length; i++) {
+      for(int i = 0; i < cfgKeys.length; ++i) {
          String key = cfgKeys[i];
          patterns[i] = Pattern.compile(key);
       }
@@ -125,17 +130,17 @@ public class Patcher {
       return patterns;
    }
 
-   public static Map<String, String> getConfigurationMap(ZipFile modZip) throws IOException {
-      Map<String, String> cfgMap = getConfigurationMap(modZip, "patch.cfg");
-      Map<String, String> cfgMap2 = getConfigurationMap(modZip, "patch2.cfg");
-      Map<String, String> cfgMap3 = getConfigurationMap(modZip, "patch3.cfg");
+   public static Map getConfigurationMap(ZipFile modZip) throws IOException {
+      Map cfgMap = getConfigurationMap(modZip, "patch.cfg");
+      Map cfgMap2 = getConfigurationMap(modZip, "patch2.cfg");
+      Map cfgMap3 = getConfigurationMap(modZip, "patch3.cfg");
       cfgMap.putAll(cfgMap2);
       cfgMap.putAll(cfgMap3);
       return cfgMap;
    }
 
-   public static Map<String, String> getConfigurationMap(ZipFile modZip, String pathConfig) throws IOException {
-      Map<String, String> cfgMap = new LinkedHashMap();
+   public static Map getConfigurationMap(ZipFile modZip, String pathConfig) throws IOException {
+      Map cfgMap = new LinkedHashMap();
       if (modZip == null) {
          return cfgMap;
       } else {
@@ -147,7 +152,7 @@ public class Patcher {
             String[] lines = Utils.readLines(inPatch, "ASCII");
             inPatch.close();
 
-            for (int i = 0; i < lines.length; i++) {
+            for(int i = 0; i < lines.length; ++i) {
                String line = lines[i].trim();
                if (!line.startsWith("#") && line.length() > 0) {
                   String[] parts = Utils.tokenize(line, "=");
@@ -166,10 +171,10 @@ public class Patcher {
       }
    }
 
-   public static String getPatchBase(String name, Pattern[] patterns, Map<String, String> cfgMap) {
+   public static String getPatchBase(String name, Pattern[] patterns, Map cfgMap) {
       name = Utils.removePrefix(name, "/");
 
-      for (int i = 0; i < patterns.length; i++) {
+      for(int i = 0; i < patterns.length; ++i) {
          Pattern pattern = patterns[i];
          Matcher matcher = pattern.matcher(name);
          if (matcher.matches()) {
@@ -178,7 +183,7 @@ public class Patcher {
                return name;
             }
 
-            for (int g = 1; g <= matcher.groupCount(); g++) {
+            for(int g = 1; g <= matcher.groupCount(); ++g) {
                base = base.replace("$" + g, matcher.group(g));
             }
 

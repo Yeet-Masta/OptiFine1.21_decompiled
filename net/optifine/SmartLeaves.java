@@ -1,41 +1,46 @@
 package net.optifine;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.optifine.model.ModelUtils;
 import net.optifine.util.RandomUtils;
 
 public class SmartLeaves {
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesCullAcacia = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesCullBirch = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesCullDarkOak = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesCullJungle = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesCullOak = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesCullSpruce = null;
+   private static BakedModel modelLeavesCullAcacia = null;
+   private static BakedModel modelLeavesCullBirch = null;
+   private static BakedModel modelLeavesCullDarkOak = null;
+   private static BakedModel modelLeavesCullJungle = null;
+   private static BakedModel modelLeavesCullOak = null;
+   private static BakedModel modelLeavesCullSpruce = null;
    private static List generalQuadsCullAcacia = null;
    private static List generalQuadsCullBirch = null;
    private static List generalQuadsCullDarkOak = null;
    private static List generalQuadsCullJungle = null;
    private static List generalQuadsCullOak = null;
    private static List generalQuadsCullSpruce = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesDoubleAcacia = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesDoubleBirch = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesDoubleDarkOak = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesDoubleJungle = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesDoubleOak = null;
-   private static net.minecraft.client.resources.model.BakedModel modelLeavesDoubleSpruce = null;
+   private static BakedModel modelLeavesDoubleAcacia = null;
+   private static BakedModel modelLeavesDoubleBirch = null;
+   private static BakedModel modelLeavesDoubleDarkOak = null;
+   private static BakedModel modelLeavesDoubleJungle = null;
+   private static BakedModel modelLeavesDoubleOak = null;
+   private static BakedModel modelLeavesDoubleSpruce = null;
    private static final RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
 
-   public static net.minecraft.client.resources.model.BakedModel getLeavesModel(
-      net.minecraft.client.resources.model.BakedModel model, net.minecraft.world.level.block.state.BlockState stateIn
-   ) {
+   public static BakedModel getLeavesModel(BakedModel model, BlockState stateIn) {
       if (!Config.isTreesSmart()) {
          return model;
       } else {
-         List generalQuads = model.m_213637_(stateIn, null, RANDOM);
+         List generalQuads = model.m_213637_(stateIn, (Direction)null, RANDOM);
          if (generalQuads == generalQuadsCullAcacia) {
             return modelLeavesDoubleAcacia;
          } else if (generalQuads == generalQuadsCullBirch) {
@@ -52,7 +57,7 @@ public class SmartLeaves {
       }
    }
 
-   public static boolean isSameLeaves(net.minecraft.world.level.block.state.BlockState state1, net.minecraft.world.level.block.state.BlockState state2) {
+   public static boolean isSameLeaves(BlockState state1, BlockState state2) {
       if (state1 == state2) {
          return true;
       } else {
@@ -85,36 +90,40 @@ public class SmartLeaves {
       if (updatedTypes.size() > 0) {
          Config.dbg("Enable face culling: " + Config.arrayToString(updatedTypes.toArray()));
       }
+
    }
 
-   private static List getGeneralQuadsSafe(net.minecraft.client.resources.model.BakedModel model) {
-      return model == null ? null : model.m_213637_(null, null, RANDOM);
+   private static List getGeneralQuadsSafe(BakedModel model) {
+      return model == null ? null : model.m_213637_((BlockState)null, (Direction)null, RANDOM);
    }
 
-   static net.minecraft.client.resources.model.BakedModel getModelCull(String type, List updatedTypes) {
+   static BakedModel getModelCull(String type, List updatedTypes) {
       ModelManager modelManager = Config.getModelManager();
       if (modelManager == null) {
          return null;
       } else {
-         net.minecraft.resources.ResourceLocation locState = new net.minecraft.resources.ResourceLocation("blockstates/" + type + "_leaves.json");
+         ResourceLocation locState = new ResourceLocation("blockstates/" + type + "_leaves.json");
          if (!Config.isFromDefaultResourcePack(locState)) {
             return null;
          } else {
-            net.minecraft.resources.ResourceLocation locModel = new net.minecraft.resources.ResourceLocation("models/block/" + type + "_leaves.json");
+            ResourceLocation locModel = new ResourceLocation("models/block/" + type + "_leaves.json");
             if (!Config.isFromDefaultResourcePack(locModel)) {
                return null;
             } else {
                ModelResourceLocation mrl = ModelResourceLocation.m_245263_(type + "_leaves", "normal");
-               net.minecraft.client.resources.model.BakedModel model = modelManager.m_119422_(mrl);
+               BakedModel model = modelManager.m_119422_(mrl);
                if (model != null && model != modelManager.m_119409_()) {
-                  List listGeneral = model.m_213637_(null, null, RANDOM);
+                  List listGeneral = model.m_213637_((BlockState)null, (Direction)null, RANDOM);
                   if (listGeneral.size() == 0) {
                      return model;
                   } else if (listGeneral.size() != 6) {
                      return null;
                   } else {
-                     for (net.minecraft.client.renderer.block.model.BakedQuad quad : listGeneral) {
-                        List listFace = model.m_213637_(null, quad.m_111306_(), RANDOM);
+                     Iterator it = listGeneral.iterator();
+
+                     while(it.hasNext()) {
+                        BakedQuad quad = (BakedQuad)it.next();
+                        List listFace = model.m_213637_((BlockState)null, quad.m_111306_(), RANDOM);
                         if (listFace.size() > 0) {
                            return null;
                         }
@@ -134,34 +143,34 @@ public class SmartLeaves {
       }
    }
 
-   private static net.minecraft.client.resources.model.BakedModel getModelDoubleFace(net.minecraft.client.resources.model.BakedModel model) {
+   private static BakedModel getModelDoubleFace(BakedModel model) {
       if (model == null) {
          return null;
-      } else if (model.m_213637_(null, null, RANDOM).size() > 0) {
-         Config.warn("SmartLeaves: Model is not cube, general quads: " + model.m_213637_(null, null, RANDOM).size() + ", model: " + model);
+      } else if (model.m_213637_((BlockState)null, (Direction)null, RANDOM).size() > 0) {
+         int var15 = model.m_213637_((BlockState)null, (Direction)null, RANDOM).size();
+         Config.warn("SmartLeaves: Model is not cube, general quads: " + var15 + ", model: " + String.valueOf(model));
          return model;
       } else {
-         net.minecraft.core.Direction[] faces = net.minecraft.core.Direction.f_122346_;
+         Direction[] faces = Direction.f_122346_;
 
-         for (int i = 0; i < faces.length; i++) {
-            net.minecraft.core.Direction face = faces[i];
-            List<net.minecraft.client.renderer.block.model.BakedQuad> quads = model.m_213637_(null, face, RANDOM);
+         for(int i = 0; i < faces.length; ++i) {
+            Direction face = faces[i];
+            List quads = model.m_213637_((BlockState)null, face, RANDOM);
             if (quads.size() != 1) {
-               Config.warn("SmartLeaves: Model is not cube, side: " + face + ", quads: " + quads.size() + ", model: " + model);
+               String var10000 = String.valueOf(face);
+               Config.warn("SmartLeaves: Model is not cube, side: " + var10000 + ", quads: " + quads.size() + ", model: " + String.valueOf(model));
                return model;
             }
          }
 
-         net.minecraft.client.resources.model.BakedModel model2 = net.optifine.model.ModelUtils.duplicateModel(model);
+         BakedModel model2 = ModelUtils.duplicateModel(model);
          List[] faceQuads = new List[faces.length];
 
-         for (int ix = 0; ix < faces.length; ix++) {
-            net.minecraft.core.Direction face = faces[ix];
-            List<net.minecraft.client.renderer.block.model.BakedQuad> quads = model2.m_213637_(null, face, RANDOM);
-            net.minecraft.client.renderer.block.model.BakedQuad quad = (net.minecraft.client.renderer.block.model.BakedQuad)quads.get(0);
-            net.minecraft.client.renderer.block.model.BakedQuad quad2 = new net.minecraft.client.renderer.block.model.BakedQuad(
-               (int[])quad.m_111303_().clone(), quad.m_111305_(), quad.m_111306_(), quad.m_173410_(), quad.m_111307_()
-            );
+         for(int i = 0; i < faces.length; ++i) {
+            Direction face = faces[i];
+            List quads = model2.m_213637_((BlockState)null, face, RANDOM);
+            BakedQuad quad = (BakedQuad)quads.get(0);
+            BakedQuad quad2 = new BakedQuad((int[])quad.m_111303_().clone(), quad.m_111305_(), quad.m_111306_(), quad.m_173410_(), quad.m_111307_());
             int[] vd = quad2.m_111303_();
             int[] vd2 = (int[])vd.clone();
             int step = vd.length / 4;

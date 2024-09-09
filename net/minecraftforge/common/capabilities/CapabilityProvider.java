@@ -2,8 +2,8 @@ package net.minecraftforge.common.capabilities;
 
 import net.minecraft.src.C_4917_;
 
-public abstract class CapabilityProvider<B> {
-   protected CapabilityProvider(Class<B> baseClass) {
+public abstract class CapabilityProvider {
+   protected CapabilityProvider(Class baseClass) {
    }
 
    public final void gatherCapabilities() {

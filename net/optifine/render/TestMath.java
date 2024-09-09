@@ -15,7 +15,7 @@ public class TestMath {
       int count = 1;
       dbg("Test math: " + count);
 
-      for (int i = 0; i < count; i++) {
+      for(int i = 0; i < count; ++i) {
          testMatrix4f_mulTranslate();
          testMatrix4f_mulScale();
          testMatrix4f_mulQuaternion();
@@ -41,6 +41,7 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
+
    }
 
    private static void testMatrix4f_mulScale() {
@@ -57,6 +58,7 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
+
    }
 
    private static void testMatrix4f_mulQuaternion() {
@@ -71,6 +73,7 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
+
    }
 
    private static void testMatrix3f_mulQuaternion() {
@@ -85,6 +88,7 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
+
    }
 
    private static void testVector3f_transform() {
@@ -102,6 +106,7 @@ public class TestMath {
          dbg(v.toString());
          dbg(v2.toString());
       }
+
    }
 
    private static void testVector4f_transform() {
@@ -120,6 +125,7 @@ public class TestMath {
          dbg(v.toString());
          dbg(v2.toString());
       }
+
    }
 
    private static void dbg(String str) {

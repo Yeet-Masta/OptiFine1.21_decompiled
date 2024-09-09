@@ -3,9 +3,18 @@ package net.optifine;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.render.RenderUtils;
 import net.optifine.util.PropertiesOrdered;
 import net.optifine.util.TextureUtils;
@@ -18,10 +27,10 @@ public class EmissiveTextures {
    private static boolean hasEmissive = false;
    private static boolean renderEmissive = false;
    private static final String SUFFIX_PNG = ".png";
-   private static final net.minecraft.resources.ResourceLocation LOCATION_TEXTURE_EMPTY = TextureUtils.LOCATION_TEXTURE_EMPTY;
-   private static final net.minecraft.resources.ResourceLocation LOCATION_SPRITE_EMPTY = TextureUtils.LOCATION_SPRITE_EMPTY;
-   private static net.minecraft.client.renderer.texture.TextureManager textureManager;
-   private static int countRecursive = 0;
+   private static final ResourceLocation LOCATION_TEXTURE_EMPTY;
+   private static final ResourceLocation LOCATION_SPRITE_EMPTY;
+   private static TextureManager textureManager;
+   private static int countRecursive;
 
    public static boolean isActive() {
       return active;
@@ -33,24 +42,24 @@ public class EmissiveTextures {
 
    public static void beginRender() {
       if (render) {
-         countRecursive++;
+         ++countRecursive;
       } else {
          render = true;
          hasEmissive = false;
       }
    }
 
-   public static net.minecraft.resources.ResourceLocation getEmissiveTexture(net.minecraft.resources.ResourceLocation locationIn) {
+   public static ResourceLocation getEmissiveTexture(ResourceLocation locationIn) {
       if (!render) {
          return locationIn;
       } else {
-         net.minecraft.client.renderer.texture.AbstractTexture texture = textureManager.m_118506_(locationIn);
-         if (texture instanceof net.minecraft.client.renderer.texture.TextureAtlas) {
+         AbstractTexture texture = textureManager.m_118506_(locationIn);
+         if (texture instanceof TextureAtlas) {
             return locationIn;
          } else {
-            net.minecraft.resources.ResourceLocation locationEmissive = null;
-            if (texture instanceof net.minecraft.client.renderer.texture.SimpleTexture) {
-               locationEmissive = ((net.minecraft.client.renderer.texture.SimpleTexture)texture).locationEmissive;
+            ResourceLocation locationEmissive = null;
+            if (texture instanceof SimpleTexture) {
+               locationEmissive = ((SimpleTexture)texture).locationEmissive;
             }
 
             if (!renderEmissive) {
@@ -70,11 +79,11 @@ public class EmissiveTextures {
       }
    }
 
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite getEmissiveSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public static TextureAtlasSprite getEmissiveSprite(TextureAtlasSprite sprite) {
       if (!render) {
          return sprite;
       } else {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite spriteEmissive = sprite.spriteEmissive;
+         TextureAtlasSprite spriteEmissive = sprite.spriteEmissive;
          if (!renderEmissive) {
             if (spriteEmissive != null) {
                hasEmissive = true;
@@ -91,11 +100,11 @@ public class EmissiveTextures {
       }
    }
 
-   public static net.minecraft.client.renderer.block.model.BakedQuad getEmissiveQuad(net.minecraft.client.renderer.block.model.BakedQuad quad) {
+   public static BakedQuad getEmissiveQuad(BakedQuad quad) {
       if (!render) {
          return quad;
       } else {
-         net.minecraft.client.renderer.block.model.BakedQuad quadEmissive = quad.getQuadEmissive();
+         BakedQuad quadEmissive = quad.getQuadEmissive();
          if (!renderEmissive) {
             if (quadEmissive != null) {
                hasEmissive = true;
@@ -127,7 +136,7 @@ public class EmissiveTextures {
 
    public static void endRender() {
       if (countRecursive > 0) {
-         countRecursive--;
+         --countRecursive;
       } else {
          render = false;
          hasEmissive = false;
@@ -142,7 +151,7 @@ public class EmissiveTextures {
       if (Config.isEmissiveTextures()) {
          try {
             String fileName = "optifine/emissive.properties";
-            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(fileName);
+            ResourceLocation loc = new ResourceLocation(fileName);
             InputStream in = Config.getResourceStream(loc);
             if (in == null) {
                return;
@@ -163,28 +172,33 @@ public class EmissiveTextures {
          } catch (IOException var5) {
             var5.printStackTrace();
          }
+
       }
    }
 
-   public static void updateIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap, Set<net.minecraft.resources.ResourceLocation> locations) {
+   public static void updateIcons(TextureAtlas textureMap, Set locations) {
       if (active) {
-         for (net.minecraft.resources.ResourceLocation loc : locations) {
+         Iterator var2 = locations.iterator();
+
+         while(var2.hasNext()) {
+            ResourceLocation loc = (ResourceLocation)var2.next();
             checkEmissive(textureMap, loc);
          }
+
       }
    }
 
-   private static void checkEmissive(net.minecraft.client.renderer.texture.TextureAtlas textureMap, net.minecraft.resources.ResourceLocation locSprite) {
+   private static void checkEmissive(TextureAtlas textureMap, ResourceLocation locSprite) {
       String suffixEm = getSuffixEmissive();
       if (suffixEm != null) {
          if (!locSprite.m_135815_().endsWith(suffixEm)) {
-            net.minecraft.resources.ResourceLocation locSpriteEm = new net.minecraft.resources.ResourceLocation(
-               locSprite.m_135827_(), locSprite.m_135815_() + suffixEm
-            );
-            net.minecraft.resources.ResourceLocation locPngEm = textureMap.getSpritePath(locSpriteEm);
+            String var10002 = locSprite.m_135827_();
+            String var10003 = locSprite.m_135815_();
+            ResourceLocation locSpriteEm = new ResourceLocation(var10002, var10003 + suffixEm);
+            ResourceLocation locPngEm = textureMap.getSpritePath(locSpriteEm);
             if (Config.hasResource(locPngEm)) {
-               net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = textureMap.registerSprite(locSprite);
-               net.minecraft.client.renderer.texture.TextureAtlasSprite spriteEmissive = textureMap.registerSprite(locSpriteEm);
+               TextureAtlasSprite sprite = textureMap.registerSprite(locSprite);
+               TextureAtlasSprite spriteEmissive = textureMap.registerSprite(locSpriteEm);
                spriteEmissive.isSpriteEmissive = true;
                sprite.spriteEmissive = spriteEmissive;
                textureMap.registerSprite(LOCATION_SPRITE_EMPTY);
@@ -193,19 +207,22 @@ public class EmissiveTextures {
       }
    }
 
-   public static void refreshIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
-      for (net.minecraft.client.renderer.texture.TextureAtlasSprite sprite : textureMap.getRegisteredSprites()) {
+   public static void refreshIcons(TextureAtlas textureMap) {
+      Collection sprites = textureMap.getRegisteredSprites();
+      Iterator var2 = sprites.iterator();
+
+      while(var2.hasNext()) {
+         TextureAtlasSprite sprite = (TextureAtlasSprite)var2.next();
          refreshIcon(sprite, textureMap);
       }
+
    }
 
-   private static void refreshIcon(
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite, net.minecraft.client.renderer.texture.TextureAtlas textureMap
-   ) {
+   private static void refreshIcon(TextureAtlasSprite sprite, TextureAtlas textureMap) {
       if (sprite.spriteEmissive != null) {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite spriteNew = textureMap.getUploadedSprite(sprite.getName());
+         TextureAtlasSprite spriteNew = textureMap.getUploadedSprite(sprite.getName());
          if (spriteNew != null) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite spriteEmissiveNew = textureMap.getUploadedSprite(sprite.spriteEmissive.getName());
+            TextureAtlasSprite spriteEmissiveNew = textureMap.getUploadedSprite(sprite.spriteEmissive.getName());
             if (spriteEmissiveNew != null) {
                spriteEmissiveNew.isSpriteEmissive = true;
                spriteNew.spriteEmissive = spriteEmissiveNew;
@@ -222,11 +239,11 @@ public class EmissiveTextures {
       Config.warn("EmissiveTextures: " + str);
    }
 
-   public static boolean isEmissive(net.minecraft.resources.ResourceLocation loc) {
+   public static boolean isEmissive(ResourceLocation loc) {
       return suffixEmissivePng == null ? false : loc.m_135815_().endsWith(suffixEmissivePng);
    }
 
-   public static void loadTexture(net.minecraft.resources.ResourceLocation loc, net.minecraft.client.renderer.texture.SimpleTexture tex) {
+   public static void loadTexture(ResourceLocation loc, SimpleTexture tex) {
       if (loc != null && tex != null) {
          tex.isEmissive = false;
          tex.locationEmissive = null;
@@ -236,8 +253,9 @@ public class EmissiveTextures {
                if (path.endsWith(suffixEmissivePng)) {
                   tex.isEmissive = true;
                } else {
-                  String pathEmPng = path.substring(0, path.length() - ".png".length()) + suffixEmissivePng;
-                  net.minecraft.resources.ResourceLocation locEmPng = new net.minecraft.resources.ResourceLocation(loc.m_135827_(), pathEmPng);
+                  String var10000 = path.substring(0, path.length() - ".png".length());
+                  String pathEmPng = var10000 + suffixEmissivePng;
+                  ResourceLocation locEmPng = new ResourceLocation(loc.m_135827_(), pathEmPng);
                   if (Config.hasResource(locEmPng)) {
                      tex.locationEmissive = locEmPng;
                   }
@@ -245,5 +263,11 @@ public class EmissiveTextures {
             }
          }
       }
+   }
+
+   static {
+      LOCATION_TEXTURE_EMPTY = TextureUtils.LOCATION_TEXTURE_EMPTY;
+      LOCATION_SPRITE_EMPTY = TextureUtils.LOCATION_SPRITE_EMPTY;
+      countRecursive = 0;
    }
 }

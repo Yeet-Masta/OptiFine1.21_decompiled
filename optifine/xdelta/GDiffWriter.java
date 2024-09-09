@@ -22,7 +22,6 @@ public class GDiffWriter implements DiffWriter {
       this.debug = flag;
    }
 
-   @Override
    public void addCopy(int offset, int length) throws IOException {
       if (this.buflen > 0) {
          this.writeBuf();
@@ -61,23 +60,23 @@ public class GDiffWriter implements DiffWriter {
          this.output.writeInt(offset);
          this.output.writeShort(length);
       }
+
    }
 
-   @Override
    public void addData(byte b) throws IOException {
       if (this.buflen >= 246) {
          this.writeBuf();
       }
 
       this.buf[this.buflen] = b;
-      this.buflen++;
+      ++this.buflen;
    }
 
    private void writeBuf() throws IOException {
       if (this.debug) {
          System.err.print("DATA:");
 
-         for (int ix = 0; ix < this.buflen; ix++) {
+         for(int ix = 0; ix < this.buflen; ++ix) {
             if (this.buf[ix] == 10) {
                System.err.print("\\n");
             } else {
@@ -96,7 +95,6 @@ public class GDiffWriter implements DiffWriter {
       this.buflen = 0;
    }
 
-   @Override
    public void flush() throws IOException {
       if (this.buflen > 0) {
          this.writeBuf();
@@ -106,7 +104,6 @@ public class GDiffWriter implements DiffWriter {
       this.output.flush();
    }
 
-   @Override
    public void close() throws IOException {
       this.flush();
    }

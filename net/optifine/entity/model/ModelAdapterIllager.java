@@ -1,6 +1,8 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.model.IllagerModel;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.entity.EntityType;
 
 public abstract class ModelAdapterIllager extends ModelAdapter {
@@ -12,8 +14,7 @@ public abstract class ModelAdapterIllager extends ModelAdapter {
       super(type, name, shadowSize, aliases);
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof IllagerModel modelVillager)) {
          return null;
       } else if (modelPart.equals("head")) {
@@ -39,7 +40,6 @@ public abstract class ModelAdapterIllager extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "hat", "body", "arms", "right_leg", "left_leg", "nose", "right_arm", "left_arm", "root"};
    }

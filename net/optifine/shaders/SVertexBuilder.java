@@ -1,8 +1,14 @@
 package net.optifine.shaders;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 import net.optifine.render.VertexPosition;
 import org.joml.Vector3f;
@@ -25,40 +31,40 @@ public class SVertexBuilder {
    }
 
    public void pushEntity(long data) {
-      this.entityDataIndex++;
+      ++this.entityDataIndex;
       this.entityData[this.entityDataIndex] = data;
    }
 
    public void popEntity() {
       this.entityData[this.entityDataIndex] = 0L;
-      this.entityDataIndex--;
+      --this.entityDataIndex;
    }
 
-   public static void pushEntity(net.minecraft.world.level.block.state.BlockState blockState, com.mojang.blaze3d.vertex.VertexConsumer ivb) {
-      if (ivb instanceof com.mojang.blaze3d.vertex.BufferBuilder wrr) {
+   public static void pushEntity(BlockState blockState, VertexConsumer ivb) {
+      if (ivb instanceof BufferBuilder wrr) {
          int blockId = BlockAliases.getAliasBlockId(blockState);
          int metadata = BlockAliases.getAliasMetadata(blockState);
          int renderType = BlockAliases.getRenderType(blockState);
-         int dataLo = ((renderType & 65535) << 16) + (blockId & 65535);
-         int dataHi = metadata & 65535;
+         int dataLo = ((renderType & '\uffff') << 16) + (blockId & '\uffff');
+         int dataHi = metadata & '\uffff';
          wrr.sVertexBuilder.pushEntity(((long)dataHi << 32) + (long)dataLo);
       }
    }
 
-   public static void popEntity(com.mojang.blaze3d.vertex.VertexConsumer ivb) {
-      if (ivb instanceof com.mojang.blaze3d.vertex.BufferBuilder wrr) {
+   public static void popEntity(VertexConsumer ivb) {
+      if (ivb instanceof BufferBuilder wrr) {
          wrr.sVertexBuilder.popEntity();
       }
    }
 
-   public static boolean popEntity(boolean value, com.mojang.blaze3d.vertex.BufferBuilder wrr) {
+   public static boolean popEntity(boolean value, BufferBuilder wrr) {
       wrr.sVertexBuilder.popEntity();
       return value;
    }
 
-   public static void endSetVertexFormat(com.mojang.blaze3d.vertex.BufferBuilder wrr) {
+   public static void endSetVertexFormat(BufferBuilder wrr) {
       SVertexBuilder svb = wrr.sVertexBuilder;
-      com.mojang.blaze3d.vertex.VertexFormat vf = wrr.getVertexFormat();
+      VertexFormat vf = wrr.getVertexFormat();
       svb.vertexSize = vf.m_86020_() / 4;
       svb.hasNormal = vf.hasNormal();
       svb.hasTangent = svb.hasNormal;
@@ -68,17 +74,18 @@ public class SVertexBuilder {
       svb.offsetUVCenter = 8;
    }
 
-   public static void beginAddVertex(com.mojang.blaze3d.vertex.BufferBuilder wrr) {
+   public static void beginAddVertex(BufferBuilder wrr) {
       if (wrr.getVertexCount() == 0) {
          endSetVertexFormat(wrr);
       }
+
    }
 
-   public static void endAddVertex(com.mojang.blaze3d.vertex.BufferBuilder wrr) {
-      if (!Config.isMinecraftThread() || !net.minecraft.client.renderer.entity.ItemRenderer.isRenderItemGui()) {
+   public static void endAddVertex(BufferBuilder wrr) {
+      if (!Config.isMinecraftThread() || !ItemRenderer.isRenderItemGui()) {
          SVertexBuilder svb = wrr.sVertexBuilder;
          if (svb.vertexSize == 18) {
-            if (wrr.getDrawMode() == com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS && wrr.getVertexCount() % 4 == 0) {
+            if (wrr.getDrawMode() == VertexFormat.Mode.QUADS && wrr.getVertexCount() % 4 == 0) {
                svb.calcNormal(wrr, wrr.getBufferIntSize() - 4 * svb.vertexSize);
             }
 
@@ -88,10 +95,11 @@ public class SVertexBuilder {
             wrr.getIntBuffer().put(pos, (int)eData);
             wrr.getIntBuffer().put(pos + 1, (int)(eData >> 32));
          }
+
       }
    }
 
-   public static void beginAddVertexData(com.mojang.blaze3d.vertex.BufferBuilder wrr, int[] data) {
+   public static void beginAddVertexData(BufferBuilder wrr, int[] data) {
       if (wrr.getVertexCount() == 0) {
          endSetVertexFormat(wrr);
       }
@@ -100,14 +108,15 @@ public class SVertexBuilder {
       if (svb.vertexSize == 18) {
          long eData = svb.entityData[svb.entityDataIndex];
 
-         for (int pos = 13; pos + 1 < data.length; pos += 18) {
+         for(int pos = 13; pos + 1 < data.length; pos += 18) {
             data[pos] = (int)eData;
             data[pos + 1] = (int)(eData >> 32);
          }
       }
+
    }
 
-   public static void beginAddVertexData(com.mojang.blaze3d.vertex.BufferBuilder wrr, ByteBuffer byteBuffer) {
+   public static void beginAddVertexData(BufferBuilder wrr, ByteBuffer byteBuffer) {
       if (wrr.getVertexCount() == 0) {
          endSetVertexFormat(wrr);
       }
@@ -117,23 +126,25 @@ public class SVertexBuilder {
          long eData = svb.entityData[svb.entityDataIndex];
          int dataLengthInt = byteBuffer.limit() / 4;
 
-         for (int posInt = 13; posInt + 1 < dataLengthInt; posInt += 18) {
+         for(int posInt = 13; posInt + 1 < dataLengthInt; posInt += 18) {
             int dataInt0 = (int)eData;
             int dataInt1 = (int)(eData >> 32);
             byteBuffer.putInt(posInt * 4, dataInt0);
             byteBuffer.putInt((posInt + 1) * 4, dataInt1);
          }
       }
+
    }
 
-   public static void endAddVertexData(com.mojang.blaze3d.vertex.BufferBuilder wrr) {
+   public static void endAddVertexData(BufferBuilder wrr) {
       SVertexBuilder svb = wrr.sVertexBuilder;
-      if (svb.vertexSize == 18 && wrr.getDrawMode() == com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS && wrr.getVertexCount() % 4 == 0) {
+      if (svb.vertexSize == 18 && wrr.getDrawMode() == VertexFormat.Mode.QUADS && wrr.getVertexCount() % 4 == 0) {
          svb.calcNormal(wrr, wrr.getBufferIntSize() - 4 * svb.vertexSize);
       }
+
    }
 
-   public void calcNormal(com.mojang.blaze3d.vertex.BufferBuilder wrr, int baseIndex) {
+   public void calcNormal(BufferBuilder wrr, int baseIndex) {
       baseIndex += wrr.getIntStartPosition();
       FloatBuffer floatBuffer = wrr.getFloatBuffer();
       IntBuffer intBuffer = wrr.getIntBuffer();
@@ -203,16 +214,16 @@ public class SVertexBuilder {
       float tan3y = vnx * tan1z - vnz * tan1x;
       float tan3z = vny * tan1x - vnx * tan1y;
       float tan1w = tan2x * tan3x + tan2y * tan3y + tan2z * tan3z < 0.0F ? -1.0F : 1.0F;
-      int bnx = (int)(vnx * 127.0F) & 0xFF;
-      int bny = (int)(vny * 127.0F) & 0xFF;
-      int bnz = (int)(vnz * 127.0F) & 0xFF;
+      int bnx = (int)(vnx * 127.0F) & 255;
+      int bny = (int)(vny * 127.0F) & 255;
+      int bnz = (int)(vnz * 127.0F) & 255;
       int packedNormal = (bnz << 16) + (bny << 8) + bnx;
       intBuffer.put(baseIndex + 0 * this.vertexSize + this.offsetNormal, packedNormal);
       intBuffer.put(baseIndex + 1 * this.vertexSize + this.offsetNormal, packedNormal);
       intBuffer.put(baseIndex + 2 * this.vertexSize + this.offsetNormal, packedNormal);
       intBuffer.put(baseIndex + 3 * this.vertexSize + this.offsetNormal, packedNormal);
-      int packedTan1xy = ((int)(tan1x * 32767.0F) & 65535) + (((int)(tan1y * 32767.0F) & 65535) << 16);
-      int packedTan1zw = ((int)(tan1z * 32767.0F) & 65535) + (((int)(tan1w * 32767.0F) & 65535) << 16);
+      int packedTan1xy = ((int)(tan1x * 32767.0F) & '\uffff') + (((int)(tan1y * 32767.0F) & '\uffff') << 16);
+      int packedTan1zw = ((int)(tan1z * 32767.0F) & '\uffff') + (((int)(tan1w * 32767.0F) & '\uffff') << 16);
       intBuffer.put(baseIndex + 0 * this.vertexSize + 11, packedTan1xy);
       intBuffer.put(baseIndex + 0 * this.vertexSize + 11 + 1, packedTan1zw);
       intBuffer.put(baseIndex + 1 * this.vertexSize + 11, packedTan1xy);
@@ -238,10 +249,10 @@ public class SVertexBuilder {
          this.setVelocity(floatBuffer, baseIndex, 1, vps, frameId, v1x, v1y, v1z);
          this.setVelocity(floatBuffer, baseIndex, 2, vps, frameId, v2x, v2y, v2z);
          this.setVelocity(floatBuffer, baseIndex, 3, vps, frameId, v3x, v3y, v3z);
-         wrr.setQuadVertexPositions(null);
+         wrr.setQuadVertexPositions((VertexPosition[])null);
       }
 
-      if (wrr.getVertexFormat() == com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85811_) {
+      if (wrr.getVertexFormat() == DefaultVertexFormat.f_85811_) {
          Vector3f mb = wrr.getMidBlock();
          float mbx = mb.x();
          float mby = mb.y();
@@ -251,12 +262,13 @@ public class SVertexBuilder {
          this.setMidBlock(intBuffer, baseIndex, 2, mbx - v2x, mby - v2y, mbz - v2z);
          this.setMidBlock(intBuffer, baseIndex, 3, mbx - v3x, mby - v3y, mbz - v3z);
       }
+
    }
 
    public void setMidBlock(IntBuffer intBuffer, int baseIndex, int vertex, float mbx, float mby, float mbz) {
-      int imbx = (int)(mbx * 64.0F) & 0xFF;
-      int imby = (int)(mby * 64.0F) & 0xFF;
-      int imbz = (int)(mbz * 64.0F) & 0xFF;
+      int imbx = (int)(mbx * 64.0F) & 255;
+      int imby = (int)(mby * 64.0F) & 255;
+      int imbz = (int)(mbz * 64.0F) & 255;
       int packedMidBlock = (imbz << 16) + (imby << 8) + imbx;
       intBuffer.put(baseIndex + vertex * this.vertexSize + 8, packedMidBlock);
    }
@@ -281,19 +293,20 @@ public class SVertexBuilder {
       floatBuffer.put(offset + 2, vz);
    }
 
-   public static void calcNormalChunkLayer(com.mojang.blaze3d.vertex.BufferBuilder wrr) {
-      if (wrr.getVertexFormat().hasNormal() && wrr.getDrawMode() == com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS && wrr.getVertexCount() % 4 == 0) {
+   public static void calcNormalChunkLayer(BufferBuilder wrr) {
+      if (wrr.getVertexFormat().hasNormal() && wrr.getDrawMode() == VertexFormat.Mode.QUADS && wrr.getVertexCount() % 4 == 0) {
          SVertexBuilder svb = wrr.sVertexBuilder;
          endSetVertexFormat(wrr);
          int indexEnd = wrr.getVertexCount() * svb.vertexSize;
 
-         for (int index = 0; index < indexEnd; index += svb.vertexSize * 4) {
+         for(int index = 0; index < indexEnd; index += svb.vertexSize * 4) {
             svb.calcNormal(wrr, index);
          }
       }
+
    }
 
-   public static boolean preDrawArrays(com.mojang.blaze3d.vertex.VertexFormat vf) {
+   public static boolean preDrawArrays(VertexFormat vf) {
       int vertexSizeByte = vf.m_86020_();
       if (vertexSizeByte != 72) {
          return false;

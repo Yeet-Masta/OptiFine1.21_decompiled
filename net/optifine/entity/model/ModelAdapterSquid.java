@@ -1,8 +1,11 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.SquidModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.SquidRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -17,13 +20,11 @@ public class ModelAdapterSquid extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new SquidModel(bakeModelLayer(ModelLayers.f_171246_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SquidModel modelSquid)) {
          return null;
       } else if (modelPart.equals("body")) {
@@ -41,14 +42,12 @@ public class ModelAdapterSquid extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tentacle1", "tentacle2", "tentacle3", "tentacle4", "tentacle5", "tentacle6", "tentacle7", "tentacle8", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SquidRenderer render = new SquidRenderer(renderManager.getContext(), (SquidModel)modelBase);
       render.f_115290_ = (SquidModel)modelBase;
       render.f_114477_ = shadowSize;

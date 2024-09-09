@@ -1,8 +1,12 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.TropicalFishModelA;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.TropicalFishRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -17,13 +21,11 @@ public class ModelAdapterTropicalFishA extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new TropicalFishModelA(bakeModelLayer(ModelLayers.f_171258_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof TropicalFishModelA modelTropicalFish)) {
          return null;
       } else if (modelPart.equals("body")) {
@@ -41,19 +43,19 @@ public class ModelAdapterTropicalFishA extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tail", "fin_right", "fin_left", "fin_top", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TropicalFishRenderer customRenderer = new TropicalFishRenderer(renderManager.getContext());
       customRenderer.f_114477_ = shadowSize;
-      net.minecraft.client.renderer.entity.EntityRenderer render = rendererCache.get(EntityType.f_20489_, index, () -> customRenderer);
+      EntityRenderer render = rendererCache.get(EntityType.f_20489_, index, () -> {
+         return customRenderer;
+      });
       if (!(render instanceof TropicalFishRenderer renderFish)) {
-         Config.warn("Not a TropicalFishRenderer: " + render);
+         Config.warn("Not a TropicalFishRenderer: " + String.valueOf(render));
          return null;
       } else if (!Reflector.RenderTropicalFish_modelA.exists()) {
          Config.warn("Model field not found: RenderTropicalFish.modelA");

@@ -5,7 +5,6 @@ import com.google.common.collect.Sets;
 import com.mojang.blaze3d.font.GlyphInfo;
 import com.mojang.blaze3d.font.GlyphProvider;
 import com.mojang.blaze3d.font.SheetGlyphInfo;
-import com.mojang.blaze3d.font.GlyphProvider.Conditional;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -13,40 +12,51 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.client.gui.font.glyphs.SpecialGlyphs;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
 public class FontSet implements AutoCloseable {
    private static final RandomSource f_95050_ = RandomSource.m_216327_();
    private static final float f_242991_ = 32.0F;
-   private final net.minecraft.client.renderer.texture.TextureManager f_95051_;
-   private final net.minecraft.resources.ResourceLocation f_95052_;
-   private net.minecraft.client.gui.font.glyphs.BakedGlyph f_95053_;
-   private net.minecraft.client.gui.font.glyphs.BakedGlyph f_95054_;
-   private List<Conditional> f_315683_ = List.of();
-   private List<GlyphProvider> f_317127_ = List.of();
-   private final CodepointMap<net.minecraft.client.gui.font.glyphs.BakedGlyph> f_95056_ = new CodepointMap(
-      net.minecraft.client.gui.font.glyphs.BakedGlyph[]::new, net.minecraft.client.gui.font.glyphs.BakedGlyph[][]::new
-   );
-   private final CodepointMap<net.minecraft.client.gui.font.FontSet.GlyphInfoFilter> f_95057_ = new CodepointMap(
-      net.minecraft.client.gui.font.FontSet.GlyphInfoFilter[]::new, net.minecraft.client.gui.font.FontSet.GlyphInfoFilter[][]::new
-   );
-   private final Int2ObjectMap<IntList> f_95058_ = new Int2ObjectOpenHashMap();
-   private final List<FontTexture> f_95059_ = Lists.newArrayList();
+   private final TextureManager f_95051_;
+   private final ResourceLocation f_95052_;
+   private BakedGlyph f_95053_;
+   private BakedGlyph f_95054_;
+   private List f_315683_ = List.of();
+   private List f_317127_ = List.of();
+   private final CodepointMap f_95056_ = new CodepointMap((x$0) -> {
+      return new BakedGlyph[x$0];
+   }, (x$0) -> {
+      return new BakedGlyph[x$0][];
+   });
+   private final CodepointMap f_95057_ = new CodepointMap((x$0) -> {
+      return new GlyphInfoFilter[x$0];
+   }, (x$0) -> {
+      return new GlyphInfoFilter[x$0][];
+   });
+   private final Int2ObjectMap f_95058_ = new Int2ObjectOpenHashMap();
+   private final List f_95059_ = Lists.newArrayList();
 
-   public FontSet(net.minecraft.client.renderer.texture.TextureManager textureManagerIn, net.minecraft.resources.ResourceLocation resourceLocationIn) {
+   public FontSet(TextureManager textureManagerIn, ResourceLocation resourceLocationIn) {
       this.f_95051_ = textureManagerIn;
       this.f_95052_ = resourceLocationIn;
    }
 
-   public void m_321905_(List<Conditional> conditionalsIn, Set<FontOption> fontOptionsIn) {
+   public void m_321905_(List conditionalsIn, Set fontOptionsIn) {
       this.f_315683_ = conditionalsIn;
       this.m_95071_(fontOptionsIn);
    }
 
-   public void m_95071_(Set<FontOption> glyphProvidersIn) {
+   public void m_95071_(Set glyphProvidersIn) {
       this.f_317127_ = List.of();
       this.m_322787_();
       this.f_317127_ = this.m_321621_(this.f_315683_, glyphProvidersIn);
@@ -61,34 +71,41 @@ public class FontSet implements AutoCloseable {
       this.f_95054_ = SpecialGlyphs.WHITE.m_213604_(this::m_232556_);
    }
 
-   private List<GlyphProvider> m_321621_(List<Conditional> conditionalsIn, Set<FontOption> fontOptionsIn) {
+   private List m_321621_(List conditionalsIn, Set fontOptionsIn) {
       IntSet intset = new IntOpenHashSet();
-      List<GlyphProvider> list = new ArrayList();
+      List list = new ArrayList();
+      Iterator var5 = conditionalsIn.iterator();
 
-      for (Conditional glyphprovider$conditional : conditionalsIn) {
+      while(var5.hasNext()) {
+         GlyphProvider.Conditional glyphprovider$conditional = (GlyphProvider.Conditional)var5.next();
          if (glyphprovider$conditional.f_316533_().m_319512_(fontOptionsIn)) {
             list.add(glyphprovider$conditional.f_316017_());
             intset.addAll(glyphprovider$conditional.f_316017_().m_6990_());
          }
       }
 
-      Set<GlyphProvider> set = Sets.newHashSet();
-      intset.forEach(
-         charIn -> {
-            for (GlyphProvider glyphprovider : list) {
-               GlyphInfo glyphinfo = glyphprovider.m_214022_(charIn);
-               if (glyphinfo != null) {
-                  set.add(glyphprovider);
-                  if (glyphinfo != SpecialGlyphs.MISSING) {
-                     ((IntList)this.f_95058_.computeIfAbsent(net.minecraft.util.Mth.m_14167_(glyphinfo.m_83827_(false)), widthIn -> new IntArrayList()))
-                        .add(charIn);
-                  }
-                  break;
+      Set set = Sets.newHashSet();
+      intset.forEach((charIn) -> {
+         Iterator var4 = list.iterator();
+
+         while(var4.hasNext()) {
+            GlyphProvider glyphprovider = (GlyphProvider)var4.next();
+            GlyphInfo glyphinfo = glyphprovider.m_214022_(charIn);
+            if (glyphinfo != null) {
+               set.add(glyphprovider);
+               if (glyphinfo != SpecialGlyphs.MISSING) {
+                  ((IntList)this.f_95058_.computeIfAbsent(Mth.m_14167_(glyphinfo.m_83827_(false)), (widthIn) -> {
+                     return new IntArrayList();
+                  })).add(charIn);
                }
+               break;
             }
          }
-      );
-      return list.stream().filter(set::contains).toList();
+
+      });
+      Stream var10000 = list.stream();
+      Objects.requireNonNull(set);
+      return var10000.filter(set::contains).toList();
    }
 
    public void close() {
@@ -96,7 +113,10 @@ public class FontSet implements AutoCloseable {
    }
 
    private void m_95080_() {
-      for (FontTexture fonttexture : this.f_95059_) {
+      Iterator var1 = this.f_95059_.iterator();
+
+      while(var1.hasNext()) {
+         FontTexture fonttexture = (FontTexture)var1.next();
          fonttexture.close();
       }
 
@@ -113,10 +133,12 @@ public class FontSet implements AutoCloseable {
       }
    }
 
-   private net.minecraft.client.gui.font.FontSet.GlyphInfoFilter m_243121_(int charIn) {
+   private GlyphInfoFilter m_243121_(int charIn) {
       GlyphInfo glyphinfo = null;
+      Iterator var3 = this.f_317127_.iterator();
 
-      for (GlyphProvider glyphprovider : this.f_317127_) {
+      while(var3.hasNext()) {
+         GlyphProvider glyphprovider = (GlyphProvider)var3.next();
          GlyphInfo glyphinfo1 = glyphprovider.m_214022_(charIn);
          if (glyphinfo1 != null) {
             if (glyphinfo == null) {
@@ -124,77 +146,98 @@ public class FontSet implements AutoCloseable {
             }
 
             if (!m_243068_(glyphinfo1)) {
-               return new net.minecraft.client.gui.font.FontSet.GlyphInfoFilter(glyphinfo, glyphinfo1);
+               return new GlyphInfoFilter(glyphinfo, glyphinfo1);
             }
          }
       }
 
-      return glyphinfo != null
-         ? new net.minecraft.client.gui.font.FontSet.GlyphInfoFilter(glyphinfo, SpecialGlyphs.MISSING)
-         : net.minecraft.client.gui.font.FontSet.GlyphInfoFilter.f_243023_;
+      return glyphinfo != null ? new GlyphInfoFilter(glyphinfo, SpecialGlyphs.MISSING) : FontSet.GlyphInfoFilter.f_243023_;
    }
 
    public GlyphInfo m_243128_(int charIn, boolean notFishyIn) {
-      net.minecraft.client.gui.font.FontSet.GlyphInfoFilter gif = (net.minecraft.client.gui.font.FontSet.GlyphInfoFilter)this.f_95057_.m_284412_(charIn);
-      return gif != null
-         ? gif.m_243099_(notFishyIn)
-         : ((net.minecraft.client.gui.font.FontSet.GlyphInfoFilter)this.f_95057_.m_284450_(charIn, this::m_243121_)).m_243099_(notFishyIn);
+      GlyphInfoFilter gif = (GlyphInfoFilter)this.f_95057_.m_284412_(charIn);
+      return gif != null ? gif.m_243099_(notFishyIn) : ((GlyphInfoFilter)this.f_95057_.m_284450_(charIn, this::m_243121_)).m_243099_(notFishyIn);
    }
 
-   private net.minecraft.client.gui.font.glyphs.BakedGlyph m_232564_(int charIn) {
-      for (GlyphProvider glyphprovider : this.f_317127_) {
-         GlyphInfo glyphinfo = glyphprovider.m_214022_(charIn);
-         if (glyphinfo != null) {
-            return glyphinfo.m_213604_(this::m_232556_);
+   private BakedGlyph m_232564_(int charIn) {
+      Iterator var2 = this.f_317127_.iterator();
+
+      GlyphInfo glyphinfo;
+      do {
+         if (!var2.hasNext()) {
+            return this.f_95053_;
          }
-      }
 
-      return this.f_95053_;
+         GlyphProvider glyphprovider = (GlyphProvider)var2.next();
+         glyphinfo = glyphprovider.m_214022_(charIn);
+      } while(glyphinfo == null);
+
+      return glyphinfo.m_213604_(this::m_232556_);
    }
 
-   public net.minecraft.client.gui.font.glyphs.BakedGlyph m_95078_(int character) {
-      net.minecraft.client.gui.font.glyphs.BakedGlyph bg = (net.minecraft.client.gui.font.glyphs.BakedGlyph)this.f_95056_.m_284412_(character);
-      return bg != null ? bg : (net.minecraft.client.gui.font.glyphs.BakedGlyph)this.f_95056_.m_284450_(character, this::m_232564_);
+   public BakedGlyph m_95078_(int character) {
+      BakedGlyph bg = (BakedGlyph)this.f_95056_.m_284412_(character);
+      return bg != null ? bg : (BakedGlyph)this.f_95056_.m_284450_(character, this::m_232564_);
    }
 
-   private net.minecraft.client.gui.font.glyphs.BakedGlyph m_232556_(SheetGlyphInfo glyphInfoIn) {
-      for (FontTexture fonttexture : this.f_95059_) {
-         net.minecraft.client.gui.font.glyphs.BakedGlyph bakedglyph = fonttexture.m_232568_(glyphInfoIn);
-         if (bakedglyph != null) {
-            return bakedglyph;
+   private BakedGlyph m_232556_(SheetGlyphInfo glyphInfoIn) {
+      Iterator var2 = this.f_95059_.iterator();
+
+      BakedGlyph bakedglyph;
+      do {
+         if (!var2.hasNext()) {
+            ResourceLocation resourcelocation = this.f_95052_.m_266382_("/" + this.f_95059_.size());
+            boolean flag = glyphInfoIn.m_213965_();
+            GlyphRenderTypes glyphrendertypes = flag ? GlyphRenderTypes.m_284354_(resourcelocation) : GlyphRenderTypes.m_284520_(resourcelocation);
+            FontTexture fonttexture1 = new FontTexture(glyphrendertypes, flag);
+            this.f_95059_.add(fonttexture1);
+            this.f_95051_.m_118495_(resourcelocation, fonttexture1);
+            BakedGlyph bakedglyph1 = fonttexture1.m_232568_(glyphInfoIn);
+            return bakedglyph1 == null ? this.f_95053_ : bakedglyph1;
          }
-      }
 
-      net.minecraft.resources.ResourceLocation resourcelocation = this.f_95052_.m_266382_("/" + this.f_95059_.size());
-      boolean flag = glyphInfoIn.m_213965_();
-      GlyphRenderTypes glyphrendertypes = flag ? GlyphRenderTypes.m_284354_(resourcelocation) : GlyphRenderTypes.m_284520_(resourcelocation);
-      FontTexture fonttexture1 = new FontTexture(glyphrendertypes, flag);
-      this.f_95059_.add(fonttexture1);
-      this.f_95051_.m_118495_(resourcelocation, fonttexture1);
-      net.minecraft.client.gui.font.glyphs.BakedGlyph bakedglyph1 = fonttexture1.m_232568_(glyphInfoIn);
-      return bakedglyph1 == null ? this.f_95053_ : bakedglyph1;
+         FontTexture fonttexture = (FontTexture)var2.next();
+         bakedglyph = fonttexture.m_232568_(glyphInfoIn);
+      } while(bakedglyph == null);
+
+      return bakedglyph;
    }
 
-   public net.minecraft.client.gui.font.glyphs.BakedGlyph m_95067_(GlyphInfo glyph) {
-      IntList intlist = (IntList)this.f_95058_.get(net.minecraft.util.Mth.m_14167_(glyph.m_83827_(false)));
+   public BakedGlyph m_95067_(GlyphInfo glyph) {
+      IntList intlist = (IntList)this.f_95058_.get(Mth.m_14167_(glyph.m_83827_(false)));
       return intlist != null && !intlist.isEmpty() ? this.m_95078_(intlist.getInt(f_95050_.m_188503_(intlist.size()))) : this.f_95053_;
    }
 
-   public net.minecraft.resources.ResourceLocation m_321601_() {
+   public ResourceLocation m_321601_() {
       return this.f_95052_;
    }
 
-   public net.minecraft.client.gui.font.glyphs.BakedGlyph m_95064_() {
+   public BakedGlyph m_95064_() {
       return this.f_95054_;
    }
 
    static record GlyphInfoFilter(GlyphInfo f_243013_, GlyphInfo f_243006_) {
-      static final net.minecraft.client.gui.font.FontSet.GlyphInfoFilter f_243023_ = new net.minecraft.client.gui.font.FontSet.GlyphInfoFilter(
-         SpecialGlyphs.MISSING, SpecialGlyphs.MISSING
-      );
+      static final GlyphInfoFilter f_243023_;
+
+      GlyphInfoFilter(GlyphInfo glyphInfo, GlyphInfo glyphInfoNotFishy) {
+         this.f_243013_ = glyphInfo;
+         this.f_243006_ = glyphInfoNotFishy;
+      }
 
       GlyphInfo m_243099_(boolean notFishyIn) {
          return notFishyIn ? this.f_243006_ : this.f_243013_;
+      }
+
+      public GlyphInfo f_243013_() {
+         return this.f_243013_;
+      }
+
+      public GlyphInfo f_243006_() {
+         return this.f_243006_;
+      }
+
+      static {
+         f_243023_ = new GlyphInfoFilter(SpecialGlyphs.MISSING, SpecialGlyphs.MISSING);
       }
    }
 }

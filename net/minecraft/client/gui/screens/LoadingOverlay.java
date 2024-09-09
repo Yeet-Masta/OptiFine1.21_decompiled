@@ -1,6 +1,7 @@
 package net.minecraft.client.gui.screens;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,13 +10,20 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.VanillaPackResources;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.server.packs.resources.ReloadInstance;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.Mth;
 import net.minecraft.util.FastColor.ARGB32;
 import net.optifine.Config;
 import net.optifine.render.GlBlendState;
@@ -23,12 +31,12 @@ import net.optifine.shaders.config.ShaderPackParser;
 import net.optifine.util.PropertiesOrdered;
 
 public class LoadingOverlay extends Overlay {
-   public static final net.minecraft.resources.ResourceLocation f_96160_ = net.minecraft.resources.ResourceLocation.m_340282_(
-      "textures/gui/title/mojangstudios.png"
-   );
+   public static final ResourceLocation f_96160_ = ResourceLocation.m_340282_("textures/gui/title/mojangstudios.png");
    private static final int f_169316_ = ARGB32.m_13660_(255, 239, 50, 61);
    private static final int f_169317_ = ARGB32.m_13660_(255, 0, 0, 0);
-   private static final IntSupplier f_96161_ = () -> Minecraft.m_91087_().f_91066_.m_231838_().m_231551_() ? f_169317_ : f_169316_;
+   private static final IntSupplier f_96161_ = () -> {
+      return (Boolean)Minecraft.m_91087_().f_91066_.m_231838_().m_231551_() ? f_169317_ : f_169316_;
+   };
    private static final int f_169318_ = 240;
    private static final float f_169319_ = 60.0F;
    private static final int f_169320_ = 60;
@@ -39,19 +47,25 @@ public class LoadingOverlay extends Overlay {
    public static final long f_169315_ = 500L;
    private final Minecraft f_96163_;
    private final ReloadInstance f_96164_;
-   private final Consumer<Optional<Throwable>> f_96165_;
+   private final Consumer f_96165_;
    private final boolean f_96166_;
    private float f_96167_;
    private long f_96168_ = -1L;
    private long f_96169_ = -1L;
-   private int colorBackground = f_96161_.getAsInt();
-   private int colorBar = f_96161_.getAsInt();
-   private int colorOutline = 16777215;
-   private int colorProgress = 16777215;
-   private GlBlendState blendState = null;
-   private boolean fadeOut = false;
+   private int colorBackground;
+   private int colorBar;
+   private int colorOutline;
+   private int colorProgress;
+   private GlBlendState blendState;
+   private boolean fadeOut;
 
-   public LoadingOverlay(Minecraft mcIn, ReloadInstance reloaderIn, Consumer<Optional<Throwable>> completedIn, boolean reloadingIn) {
+   public LoadingOverlay(Minecraft mcIn, ReloadInstance reloaderIn, Consumer completedIn, boolean reloadingIn) {
+      this.colorBackground = f_96161_.getAsInt();
+      this.colorBar = f_96161_.getAsInt();
+      this.colorOutline = 16777215;
+      this.colorProgress = 16777215;
+      this.blendState = null;
+      this.fadeOut = false;
       this.f_96163_ = mcIn;
       this.f_96164_ = reloaderIn;
       this.f_96165_ = completedIn;
@@ -59,17 +73,17 @@ public class LoadingOverlay extends Overlay {
    }
 
    public static void m_96189_(Minecraft mc) {
-      mc.m_91097_().m_118495_(f_96160_, new net.minecraft.client.gui.screens.LoadingOverlay.LogoTexture());
+      mc.m_91097_().m_118495_(f_96160_, new LogoTexture());
    }
 
    private static int m_169324_(int colorIn, int alphaIn) {
       return colorIn & 16777215 | alphaIn << 24;
    }
 
-   public void m_88315_(net.minecraft.client.gui.GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
+   public void m_88315_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
       int i = graphicsIn.m_280182_();
       int j = graphicsIn.m_280206_();
-      long k = net.minecraft.Util.m_137550_();
+      long k = Util.m_137550_();
       if (this.f_96166_ && this.f_96169_ == -1L) {
          this.f_96169_ = k;
       }
@@ -77,34 +91,35 @@ public class LoadingOverlay extends Overlay {
       float f = this.f_96168_ > -1L ? (float)(k - this.f_96168_) / 1000.0F : -1.0F;
       float f1 = this.f_96169_ > -1L ? (float)(k - this.f_96169_) / 500.0F : -1.0F;
       float f2;
+      int j2;
       if (f >= 1.0F) {
          this.fadeOut = true;
          if (this.f_96163_.f_91080_ != null) {
             this.f_96163_.f_91080_.m_88315_(graphicsIn, 0, 0, partialTicks);
          }
 
-         int l = net.minecraft.util.Mth.m_14167_((1.0F - net.minecraft.util.Mth.m_14036_(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
-         graphicsIn.m_285944_(net.minecraft.client.renderer.RenderType.m_286086_(), 0, 0, i, j, m_169324_(this.colorBackground, l));
-         f2 = 1.0F - net.minecraft.util.Mth.m_14036_(f - 1.0F, 0.0F, 1.0F);
+         j2 = Mth.m_14167_((1.0F - Mth.m_14036_(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
+         graphicsIn.m_285944_(RenderType.m_286086_(), 0, 0, i, j, m_169324_(this.colorBackground, j2));
+         f2 = 1.0F - Mth.m_14036_(f - 1.0F, 0.0F, 1.0F);
       } else if (this.f_96166_) {
          if (this.f_96163_.f_91080_ != null && f1 < 1.0F) {
             this.f_96163_.f_91080_.m_88315_(graphicsIn, mouseX, mouseY, partialTicks);
          }
 
-         int l1 = net.minecraft.util.Mth.m_14165_(net.minecraft.util.Mth.m_14008_((double)f1, 0.15, 1.0) * 255.0);
-         graphicsIn.m_285944_(net.minecraft.client.renderer.RenderType.m_286086_(), 0, 0, i, j, m_169324_(this.colorBackground, l1));
-         f2 = net.minecraft.util.Mth.m_14036_(f1, 0.0F, 1.0F);
+         j2 = Mth.m_14165_(Mth.m_14008_((double)f1, 0.15, 1.0) * 255.0);
+         graphicsIn.m_285944_(RenderType.m_286086_(), 0, 0, i, j, m_169324_(this.colorBackground, j2));
+         f2 = Mth.m_14036_(f1, 0.0F, 1.0F);
       } else {
-         int i2 = this.colorBackground;
-         float f3 = (float)(i2 >> 16 & 0xFF) / 255.0F;
-         float f4 = (float)(i2 >> 8 & 0xFF) / 255.0F;
-         float f5 = (float)(i2 & 0xFF) / 255.0F;
+         j2 = this.colorBackground;
+         float f3 = (float)(j2 >> 16 & 255) / 255.0F;
+         float f4 = (float)(j2 >> 8 & 255) / 255.0F;
+         float f5 = (float)(j2 & 255) / 255.0F;
          GlStateManager._clearColor(f3, f4, f5, 1.0F);
          GlStateManager._clear(16384, Minecraft.f_91002_);
          f2 = 1.0F;
       }
 
-      int j2 = (int)((double)graphicsIn.m_280182_() * 0.5);
+      j2 = (int)((double)graphicsIn.m_280182_() * 0.5);
       int k2 = (int)((double)graphicsIn.m_280206_() * 0.5);
       double d1 = Math.min((double)graphicsIn.m_280182_() * 0.75, (double)graphicsIn.m_280206_()) * 0.25;
       int i1 = (int)(d1 * 0.5);
@@ -135,17 +150,17 @@ public class LoadingOverlay extends Overlay {
       RenderSystem.enableDepthTest();
       int k1 = (int)((double)graphicsIn.m_280206_() * 0.8325);
       float f6 = this.f_96164_.m_7750_();
-      this.f_96167_ = net.minecraft.util.Mth.m_14036_(this.f_96167_ * 0.95F + f6 * 0.050000012F, 0.0F, 1.0F);
+      this.f_96167_ = Mth.m_14036_(this.f_96167_ * 0.95F + f6 * 0.050000012F, 0.0F, 1.0F);
       if (f < 1.0F) {
-         this.m_96182_(graphicsIn, i / 2 - j1, k1 - 5, i / 2 + j1, k1 + 5, 1.0F - net.minecraft.util.Mth.m_14036_(f, 0.0F, 1.0F));
+         this.m_96182_(graphicsIn, i / 2 - j1, k1 - 5, i / 2 + j1, k1 + 5, 1.0F - Mth.m_14036_(f, 0.0F, 1.0F));
       }
 
       if (f >= 2.0F) {
-         this.f_96163_.m_91150_(null);
+         this.f_96163_.m_91150_((Overlay)null);
       }
 
       if (this.f_96168_ == -1L && this.f_96164_.m_7746_() && (!this.f_96166_ || f1 >= 2.0F)) {
-         this.f_96168_ = net.minecraft.Util.m_137550_();
+         this.f_96168_ = Util.m_137550_();
 
          try {
             this.f_96164_.m_7748_();
@@ -158,27 +173,32 @@ public class LoadingOverlay extends Overlay {
             this.f_96163_.f_91080_.m_6575_(this.f_96163_, graphicsIn.m_280182_(), graphicsIn.m_280206_());
          }
       }
+
    }
 
-   private void m_96182_(net.minecraft.client.gui.GuiGraphics graphicsIn, int left, int top, int right, int bottom, float alpha) {
-      int i = net.minecraft.util.Mth.m_14167_((float)(right - left - 2) * this.f_96167_);
+   private void m_96182_(GuiGraphics graphicsIn, int left, int top, int right, int bottom, float alpha) {
+      int i = Mth.m_14167_((float)(right - left - 2) * this.f_96167_);
       int j = Math.round(alpha * 255.0F);
+      int colProgR;
+      int colProgG;
+      int colProgB;
+      int k;
       if (this.colorBar != this.colorBackground) {
-         int colBgR = this.colorBar >> 16 & 0xFF;
-         int colBgG = this.colorBar >> 8 & 0xFF;
-         int colBgB = this.colorBar & 0xFF;
-         int colBg = ARGB32.m_13660_(j, colBgR, colBgG, colBgB);
-         graphicsIn.m_280509_(left, top, right, bottom, colBg);
+         colProgR = this.colorBar >> 16 & 255;
+         colProgG = this.colorBar >> 8 & 255;
+         colProgB = this.colorBar & 255;
+         k = ARGB32.m_13660_(j, colProgR, colProgG, colProgB);
+         graphicsIn.m_280509_(left, top, right, bottom, k);
       }
 
-      int colProgR = this.colorProgress >> 16 & 0xFF;
-      int colProgG = this.colorProgress >> 8 & 0xFF;
-      int colProgB = this.colorProgress & 0xFF;
-      int k = ARGB32.m_13660_(j, colProgR, colProgG, colProgB);
+      colProgR = this.colorProgress >> 16 & 255;
+      colProgG = this.colorProgress >> 8 & 255;
+      colProgB = this.colorProgress & 255;
+      k = ARGB32.m_13660_(j, colProgR, colProgG, colProgB);
       graphicsIn.m_280509_(left + 2, top + 2, left + i, bottom - 2, k);
-      int colOutR = this.colorOutline >> 16 & 0xFF;
-      int colOutG = this.colorOutline >> 8 & 0xFF;
-      int colOutB = this.colorOutline & 0xFF;
+      int colOutR = this.colorOutline >> 16 & 255;
+      int colOutG = this.colorOutline >> 8 & 255;
+      int colOutB = this.colorOutline & 255;
       k = ARGB32.m_13660_(j, colOutR, colOutG, colOutB);
       graphicsIn.m_280509_(left + 1, top, right - 1, top + 1, k);
       graphicsIn.m_280509_(left + 1, bottom, right - 1, bottom - 1, k);
@@ -198,7 +218,7 @@ public class LoadingOverlay extends Overlay {
       if (Config.isCustomColors()) {
          try {
             String fileName = "optifine/color.properties";
-            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(fileName);
+            ResourceLocation loc = new ResourceLocation(fileName);
             if (!Config.hasResource(loc)) {
                return;
             }
@@ -214,8 +234,10 @@ public class LoadingOverlay extends Overlay {
             this.colorProgress = readColor(props, "screen.loading.progress", this.colorProgress);
             this.blendState = ShaderPackParser.parseBlendState(props.getProperty("screen.loading.blend"));
          } catch (Exception var5) {
-            Config.warn(var5.getClass().getName() + ": " + var5.getMessage());
+            String var10000 = var5.getClass().getName();
+            Config.warn(var10000 + ": " + var5.getMessage());
          }
+
       }
    }
 
@@ -243,7 +265,8 @@ public class LoadingOverlay extends Overlay {
          str = str.trim();
 
          try {
-            return Integer.parseInt(str, 16) & 16777215;
+            int val = Integer.parseInt(str, 16) & 16777215;
+            return val;
          } catch (NumberFormatException var3) {
             return colDef;
          }
@@ -258,30 +281,23 @@ public class LoadingOverlay extends Overlay {
       return guiChat.f_95573_.m_94155_();
    }
 
-   static class LogoTexture extends net.minecraft.client.renderer.texture.SimpleTexture {
+   static class LogoTexture extends SimpleTexture {
       public LogoTexture() {
-         super(net.minecraft.client.gui.screens.LoadingOverlay.f_96160_);
+         super(LoadingOverlay.f_96160_);
       }
 
-      @Override
-      protected net.minecraft.client.renderer.texture.SimpleTexture.TextureImage m_6335_(ResourceManager resourceManager) {
-         net.minecraft.server.packs.VanillaPackResources vanillapackresources = Minecraft.m_91087_().m_246804_();
-         IoSupplier<InputStream> iosupplier = vanillapackresources.m_214146_(
-            PackType.CLIENT_RESOURCES, net.minecraft.client.gui.screens.LoadingOverlay.f_96160_
-         );
+      protected SimpleTexture.TextureImage m_6335_(ResourceManager resourceManager) {
+         VanillaPackResources vanillapackresources = Minecraft.m_91087_().m_246804_();
+         IoSupplier iosupplier = vanillapackresources.m_214146_(PackType.CLIENT_RESOURCES, LoadingOverlay.f_96160_);
          if (iosupplier == null) {
-            return new net.minecraft.client.renderer.texture.SimpleTexture.TextureImage(
-               new FileNotFoundException(net.minecraft.client.gui.screens.LoadingOverlay.f_96160_.toString())
-            );
+            return new SimpleTexture.TextureImage(new FileNotFoundException(LoadingOverlay.f_96160_.toString()));
          } else {
             try {
                InputStream inputstream = getLogoInputStream(resourceManager, iosupplier);
 
-               net.minecraft.client.renderer.texture.SimpleTexture.TextureImage simpletexture$textureimage;
+               SimpleTexture.TextureImage simpletexture$textureimage;
                try {
-                  simpletexture$textureimage = new net.minecraft.client.renderer.texture.SimpleTexture.TextureImage(
-                     new TextureMetadataSection(true, true), com.mojang.blaze3d.platform.NativeImage.m_85058_(inputstream)
-                  );
+                  simpletexture$textureimage = new SimpleTexture.TextureImage(new TextureMetadataSection(true, true), NativeImage.m_85058_(inputstream));
                } catch (Throwable var9) {
                   if (inputstream != null) {
                      try {
@@ -300,15 +316,13 @@ public class LoadingOverlay extends Overlay {
 
                return simpletexture$textureimage;
             } catch (IOException var10) {
-               return new net.minecraft.client.renderer.texture.SimpleTexture.TextureImage(var10);
+               return new SimpleTexture.TextureImage(var10);
             }
          }
       }
 
-      private static InputStream getLogoInputStream(ResourceManager resourceManager, IoSupplier<InputStream> inputStream) throws IOException {
-         return resourceManager.m_213713_(net.minecraft.client.gui.screens.LoadingOverlay.f_96160_).isPresent()
-            ? ((Resource)resourceManager.m_213713_(net.minecraft.client.gui.screens.LoadingOverlay.f_96160_).get()).m_215507_()
-            : (InputStream)inputStream.m_247737_();
+      private static InputStream getLogoInputStream(ResourceManager resourceManager, IoSupplier inputStream) throws IOException {
+         return resourceManager.m_213713_(LoadingOverlay.f_96160_).isPresent() ? ((Resource)resourceManager.m_213713_(LoadingOverlay.f_96160_).get()).m_215507_() : (InputStream)inputStream.m_247737_();
       }
    }
 }

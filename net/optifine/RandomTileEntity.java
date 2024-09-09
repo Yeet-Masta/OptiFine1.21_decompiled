@@ -1,31 +1,34 @@
 package net.optifine;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.entity.BedBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.optifine.util.TileEntityUtils;
 
 public class RandomTileEntity implements IRandomEntity {
-   private net.minecraft.world.level.block.entity.BlockEntity tileEntity;
+   private BlockEntity tileEntity;
    private static final CompoundTag EMPTY_TAG = new CompoundTag();
 
-   @Override
    public int getId() {
       return Config.getRandom(this.getSpawnPosition(), 0);
    }
 
-   @Override
    public BlockPos getSpawnPosition() {
-      if (this.tileEntity instanceof BedBlockEntity bbe) {
-         net.minecraft.world.level.block.state.BlockState bs = bbe.m_58900_();
+      if (this.tileEntity instanceof BedBlockEntity) {
+         BedBlockEntity bbe = (BedBlockEntity)this.tileEntity;
+         BlockState bs = bbe.m_58900_();
          BedPart part = (BedPart)bs.m_61143_(BedBlock.f_49440_);
          if (part == BedPart.HEAD) {
-            net.minecraft.core.Direction dir = (net.minecraft.core.Direction)bs.m_61143_(BedBlock.f_54117_);
+            Direction dir = (Direction)bs.m_61143_(BedBlock.f_54117_);
             return this.tileEntity.m_58899_().m_121945_(dir.m_122424_());
          }
       }
@@ -33,35 +36,31 @@ public class RandomTileEntity implements IRandomEntity {
       return this.tileEntity.m_58899_();
    }
 
-   @Override
    public String getName() {
-      return TileEntityUtils.getTileEntityName(this.tileEntity);
+      String name = TileEntityUtils.getTileEntityName(this.tileEntity);
+      return name;
    }
 
-   @Override
    public Biome getSpawnBiome() {
       return (Biome)this.tileEntity.m_58904_().m_204166_(this.tileEntity.m_58899_()).m_203334_();
    }
 
-   @Override
    public int getHealth() {
       return -1;
    }
 
-   @Override
    public int getMaxHealth() {
       return -1;
    }
 
-   public net.minecraft.world.level.block.entity.BlockEntity getTileEntity() {
+   public BlockEntity getTileEntity() {
       return this.tileEntity;
    }
 
-   public void setTileEntity(net.minecraft.world.level.block.entity.BlockEntity tileEntity) {
+   public void setTileEntity(BlockEntity tileEntity) {
       this.tileEntity = tileEntity;
    }
 
-   @Override
    public CompoundTag getNbtTag() {
       CompoundTag nbt = this.tileEntity.nbtTag;
       long timeMs = System.currentTimeMillis();
@@ -73,7 +72,7 @@ public class RandomTileEntity implements IRandomEntity {
       return nbt;
    }
 
-   private static CompoundTag makeNbtTag(net.minecraft.world.level.block.entity.BlockEntity te) {
+   private static CompoundTag makeNbtTag(BlockEntity te) {
       Level world = te.m_58904_();
       if (world == null) {
          return EMPTY_TAG;
@@ -83,13 +82,11 @@ public class RandomTileEntity implements IRandomEntity {
       }
    }
 
-   @Override
-   public net.minecraft.world.item.DyeColor getColor() {
+   public DyeColor getColor() {
       return RandomEntityRule.getBlockEntityColor(this.tileEntity);
    }
 
-   @Override
-   public net.minecraft.world.level.block.state.BlockState getBlockState() {
+   public BlockState getBlockState() {
       return this.tileEntity.m_58900_();
    }
 

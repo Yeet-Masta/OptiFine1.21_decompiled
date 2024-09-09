@@ -1,6 +1,7 @@
 package net.minecraft.client.resources.metadata.animation;
 
 import com.google.common.collect.Lists;
+import java.util.Iterator;
 import java.util.List;
 
 public class AnimationMetadataSection {
@@ -8,21 +9,18 @@ public class AnimationMetadataSection {
    public static final String f_174858_ = "animation";
    public static final int f_174859_ = 1;
    public static final int f_174860_ = -1;
-   public static final net.minecraft.client.resources.metadata.animation.AnimationMetadataSection f_119012_ = new net.minecraft.client.resources.metadata.animation.AnimationMetadataSection(
-      Lists.newArrayList(), -1, -1, 1, false
-   ) {
-      @Override
+   public static final AnimationMetadataSection f_119012_ = new AnimationMetadataSection(Lists.newArrayList(), -1, -1, 1, false) {
       public FrameSize m_245821_(int widthIn, int heightIn) {
          return new FrameSize(widthIn, heightIn);
       }
    };
-   private final List<AnimationFrame> f_119013_;
+   private final List f_119013_;
    private int f_119014_;
    private int f_119015_;
    private final int f_119016_;
    private final boolean f_119017_;
 
-   public AnimationMetadataSection(List<AnimationFrame> animationFramesIn, int frameWidthIn, int frameHeightIn, int frameTimeIn, boolean interpolateIn) {
+   public AnimationMetadataSection(List animationFramesIn, int frameWidthIn, int frameHeightIn, int frameTimeIn, boolean interpolateIn) {
       this.f_119013_ = animationFramesIn;
       this.f_119014_ = frameWidthIn;
       this.f_119015_ = frameHeightIn;
@@ -49,13 +47,17 @@ public class AnimationMetadataSection {
       return this.f_119017_;
    }
 
-   public void m_174861_(net.minecraft.client.resources.metadata.animation.AnimationMetadataSection.FrameOutput frameOutputIn) {
-      for (AnimationFrame animationframe : this.f_119013_) {
+   public void m_174861_(FrameOutput frameOutputIn) {
+      Iterator var2 = this.f_119013_.iterator();
+
+      while(var2.hasNext()) {
+         AnimationFrame animationframe = (AnimationFrame)var2.next();
          frameOutputIn.m_174863_(animationframe.m_119010_(), animationframe.m_174856_(this.f_119016_));
       }
+
    }
 
-   public List<AnimationFrame> getAnimationFrames() {
+   public List getAnimationFrames() {
       return this.f_119013_;
    }
 

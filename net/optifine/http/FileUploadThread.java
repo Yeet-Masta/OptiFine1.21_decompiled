@@ -18,10 +18,11 @@ public class FileUploadThread extends Thread {
    public void run() {
       try {
          HttpUtils.post(this.urlString, this.headers, this.content);
-         this.listener.fileUploadFinished(this.urlString, this.content, null);
+         this.listener.fileUploadFinished(this.urlString, this.content, (Throwable)null);
       } catch (Exception var2) {
          this.listener.fileUploadFinished(this.urlString, this.content, var2);
       }
+
    }
 
    public String getUrlString() {

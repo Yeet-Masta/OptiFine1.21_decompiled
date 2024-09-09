@@ -1,6 +1,10 @@
 package net.optifine.gui;
 
+import java.util.Iterator;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -18,34 +22,15 @@ public class GuiQuickInfoOF extends GuiScreenOF {
 
    public void m_7856_() {
       this.m_169413_();
-      net.minecraft.client.OptionInstance[] options = new net.minecraft.client.OptionInstance[]{
-         Option.QUICK_INFO,
-         Option.QUICK_INFO_FPS,
-         Option.QUICK_INFO_CHUNKS,
-         Option.QUICK_INFO_ENTITIES,
-         Option.QUICK_INFO_PARTICLES,
-         Option.QUICK_INFO_UPDATES,
-         Option.QUICK_INFO_GPU,
-         Option.QUICK_INFO_POS,
-         Option.QUICK_INFO_BIOME,
-         Option.QUICK_INFO_FACING,
-         Option.QUICK_INFO_LIGHT,
-         Option.QUICK_INFO_MEMORY,
-         Option.QUICK_INFO_NATIVE_MEMORY,
-         Option.QUICK_INFO_TARGET_BLOCK,
-         Option.QUICK_INFO_TARGET_FLUID,
-         Option.QUICK_INFO_TARGET_ENTITY,
-         Option.QUICK_INFO_LABELS,
-         Option.QUICK_INFO_BACKGROUND
-      };
+      OptionInstance[] options = new OptionInstance[]{Option.QUICK_INFO, Option.QUICK_INFO_FPS, Option.QUICK_INFO_CHUNKS, Option.QUICK_INFO_ENTITIES, Option.QUICK_INFO_PARTICLES, Option.QUICK_INFO_UPDATES, Option.QUICK_INFO_GPU, Option.QUICK_INFO_POS, Option.QUICK_INFO_BIOME, Option.QUICK_INFO_FACING, Option.QUICK_INFO_LIGHT, Option.QUICK_INFO_MEMORY, Option.QUICK_INFO_NATIVE_MEMORY, Option.QUICK_INFO_TARGET_BLOCK, Option.QUICK_INFO_TARGET_FLUID, Option.QUICK_INFO_TARGET_ENTITY, Option.QUICK_INFO_LABELS, Option.QUICK_INFO_BACKGROUND};
 
-      for (int i = 0; i < options.length; i++) {
-         net.minecraft.client.OptionInstance opt = options[i];
+      for(int i = 0; i < options.length; ++i) {
+         OptionInstance opt = options[i];
          if (opt != null) {
             int x = this.f_96543_ / 2 - 155 + i % 2 * 160;
             int y = this.f_96544_ / 6 + 21 * (i / 2) - 12;
             AbstractWidget guielement = (AbstractWidget)this.m_142416_(opt.m_231507_(this.f_96541_.f_91066_, x, y, 150));
-            guielement.m_257544_(null);
+            guielement.m_257544_((Tooltip)null);
          }
       }
 
@@ -55,21 +40,20 @@ public class GuiQuickInfoOF extends GuiScreenOF {
       this.updateSubOptions();
    }
 
-   @Override
    protected void actionPerformed(AbstractWidget guiElement) {
       this.updateSubOptions();
       if (guiElement instanceof GuiButtonOF guibutton) {
          if (guibutton.f_93623_) {
-            if (guibutton.id == 200) {
+            if (guibutton.field_45 == 200) {
                this.f_96541_.f_91066_.m_92169_();
                this.f_96541_.m_91152_(this.prevScreen);
             }
 
-            if (guibutton.id == 210) {
+            if (guibutton.field_45 == 210) {
                this.f_96541_.f_91066_.setAllQuickInfos(true);
             }
 
-            if (guibutton.id == 211) {
+            if (guibutton.field_45 == 211) {
                this.f_96541_.f_91066_.setAllQuickInfos(false);
             }
 
@@ -80,15 +64,17 @@ public class GuiQuickInfoOF extends GuiScreenOF {
 
    private void updateSubOptions() {
       boolean enabled = this.settings.ofQuickInfo;
+      Iterator var2 = this.getButtonList().iterator();
 
-      for (AbstractWidget aw : this.getButtonList()) {
-         if (aw instanceof IOptionControl) {
-            IOptionControl oc = (IOptionControl)aw;
+      while(var2.hasNext()) {
+         AbstractWidget aw = (AbstractWidget)var2.next();
+         if (aw instanceof IOptionControl oc) {
             if (oc.getControlOption() != Option.QUICK_INFO) {
                aw.f_93623_ = enabled;
             }
          }
       }
+
    }
 
    public void m_7861_() {
@@ -96,7 +82,7 @@ public class GuiQuickInfoOF extends GuiScreenOF {
       super.m_7861_();
    }
 
-   public void m_88315_(net.minecraft.client.gui.GuiGraphics graphicsIn, int x, int y, float partialTicks) {
+   public void m_88315_(GuiGraphics graphicsIn, int x, int y, float partialTicks) {
       super.m_88315_(graphicsIn, x, y, partialTicks);
       drawCenteredString(graphicsIn, this.f_96541_.f_91062_, this.f_96539_, this.f_96543_ / 2, 15, 16777215);
       this.tooltipManager.drawTooltips(graphicsIn, x, y, this.getButtonList());

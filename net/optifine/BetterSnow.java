@@ -1,5 +1,6 @@
 package net.optifine;
 
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
@@ -26,26 +27,27 @@ import net.minecraft.world.level.block.TallGrassBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.VineBlock;
 import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
 public class BetterSnow {
-   private static net.minecraft.client.resources.model.BakedModel modelSnowLayer = null;
+   private static BakedModel modelSnowLayer = null;
 
    public static void update() {
       modelSnowLayer = Config.getMinecraft().m_91289_().m_110907_().m_110893_(Blocks.f_50125_.m_49966_());
    }
 
-   public static net.minecraft.client.resources.model.BakedModel getModelSnowLayer() {
+   public static BakedModel getModelSnowLayer() {
       return modelSnowLayer;
    }
 
-   public static net.minecraft.world.level.block.state.BlockState getStateSnowLayer() {
+   public static BlockState getStateSnowLayer() {
       return Blocks.f_50125_.m_49966_();
    }
 
-   public static boolean shouldRender(BlockAndTintGetter lightReader, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos) {
+   public static boolean shouldRender(BlockAndTintGetter lightReader, BlockState blockState, BlockPos blockPos) {
       if (!(lightReader instanceof BlockGetter)) {
          return false;
       } else {
@@ -55,11 +57,8 @@ public class BetterSnow {
 
    private static boolean hasSnowNeighbours(BlockGetter blockAccess, BlockPos pos) {
       Block blockSnow = Blocks.f_50125_;
-      if (blockAccess.m_8055_(pos.m_122012_()).m_60734_() == blockSnow
-         || blockAccess.m_8055_(pos.m_122019_()).m_60734_() == blockSnow
-         || blockAccess.m_8055_(pos.m_122024_()).m_60734_() == blockSnow
-         || blockAccess.m_8055_(pos.m_122029_()).m_60734_() == blockSnow) {
-         net.minecraft.world.level.block.state.BlockState bsDown = blockAccess.m_8055_(pos.m_7495_());
+      if (blockAccess.m_8055_(pos.m_122012_()).m_60734_() == blockSnow || blockAccess.m_8055_(pos.m_122019_()).m_60734_() == blockSnow || blockAccess.m_8055_(pos.m_122024_()).m_60734_() == blockSnow || blockAccess.m_8055_(pos.m_122029_()).m_60734_() == blockSnow) {
+         BlockState bsDown = blockAccess.m_8055_(pos.m_7495_());
          if (bsDown.m_60804_(blockAccess, pos)) {
             return true;
          }
@@ -77,27 +76,17 @@ public class BetterSnow {
       return false;
    }
 
-   private static boolean checkBlock(BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos) {
+   private static boolean checkBlock(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos) {
       if (blockState.m_60804_(blockAccess, blockPos)) {
          return false;
       } else {
          Block block = blockState.m_60734_();
          if (block == Blocks.f_50127_) {
             return false;
-         } else if (!(block instanceof BushBlock)
-            || !(block instanceof DoublePlantBlock)
-               && !(block instanceof FlowerBlock)
-               && !(block instanceof MushroomBlock)
-               && !(block instanceof SaplingBlock)
-               && !(block instanceof TallGrassBlock)) {
-            if (block instanceof FenceBlock
-               || block instanceof FenceGateBlock
-               || block instanceof FlowerPotBlock
-               || block instanceof CrossCollisionBlock
-               || block instanceof SugarCaneBlock
-               || block instanceof WallBlock) {
-               return true;
-            } else if (block instanceof RedstoneTorchBlock) {
+         } else if (block instanceof BushBlock && (block instanceof DoublePlantBlock || block instanceof FlowerBlock || block instanceof MushroomBlock || block instanceof SaplingBlock || block instanceof TallGrassBlock)) {
+            return true;
+         } else if (!(block instanceof FenceBlock) && !(block instanceof FenceGateBlock) && !(block instanceof FlowerPotBlock) && !(block instanceof CrossCollisionBlock) && !(block instanceof SugarCaneBlock) && !(block instanceof WallBlock)) {
+            if (block instanceof RedstoneTorchBlock) {
                return true;
             } else if (block instanceof StairBlock) {
                return blockState.m_61143_(StairBlock.f_56842_) == Half.TOP;
@@ -111,8 +100,10 @@ public class BetterSnow {
                return true;
             } else if (block instanceof LeverBlock) {
                return true;
+            } else if (block instanceof TurtleEggBlock) {
+               return true;
             } else {
-               return block instanceof TurtleEggBlock ? true : block instanceof VineBlock;
+               return block instanceof VineBlock;
             }
          } else {
             return true;

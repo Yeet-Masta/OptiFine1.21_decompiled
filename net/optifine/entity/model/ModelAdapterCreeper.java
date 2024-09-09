@@ -2,8 +2,11 @@ package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.CreeperModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.entity.CreeperRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterCreeper extends ModelAdapter {
@@ -15,13 +18,11 @@ public class ModelAdapterCreeper extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new CreeperModel(bakeModelLayer(ModelLayers.f_171285_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof CreeperModel modelCreeper)) {
          return null;
       } else if (modelPart.equals("head")) {
@@ -41,14 +42,12 @@ public class ModelAdapterCreeper extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "leg1", "leg2", "leg3", "leg4", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       CreeperRenderer render = new CreeperRenderer(renderManager.getContext());
       render.f_115290_ = (CreeperModel)modelBase;
       render.f_114477_ = shadowSize;

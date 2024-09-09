@@ -2,6 +2,7 @@ package net.minecraft.client.gui.screens;
 
 import javax.annotation.Nullable;
 import net.minecraft.client.GameNarrator;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ProgressListener;
 import net.optifine.CustomLoadingScreen;
@@ -53,10 +54,10 @@ public class ProgressScreen extends Screen implements ProgressListener {
       this.f_96509_ = true;
    }
 
-   public void m_88315_(net.minecraft.client.gui.GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
+   public void m_88315_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
       if (this.f_96509_) {
          if (this.f_169362_) {
-            this.f_96541_.m_91152_(null);
+            this.f_96541_.m_91152_((Screen)null);
          }
       } else {
          super.m_88315_(graphicsIn, mouseX, mouseY, partialTicks);
@@ -66,19 +67,19 @@ public class ProgressScreen extends Screen implements ProgressListener {
             }
 
             if (this.f_96507_ != null && this.f_96508_ != 0) {
-               graphicsIn.m_280653_(
-                  this.f_96547_, Component.m_237119_().m_7220_(this.f_96507_).m_130946_(" " + this.f_96508_ + "%"), this.f_96543_ / 2, 90, 16777215
-               );
+               graphicsIn.m_280653_(this.f_96547_, Component.m_237119_().m_7220_(this.f_96507_).m_130946_(" " + this.f_96508_ + "%"), this.f_96543_ / 2, 90, 16777215);
             }
          }
       }
+
    }
 
-   public void m_280273_(net.minecraft.client.gui.GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
+   public void m_280273_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
       if (this.customLoadingScreen != null && this.f_96541_.f_91073_ == null) {
          this.customLoadingScreen.drawBackground(this.f_96543_, this.f_96544_);
       } else {
          super.m_280273_(graphicsIn, mouseX, mouseY, partialTicks);
       }
+
    }
 }

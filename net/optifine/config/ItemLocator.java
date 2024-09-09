@@ -1,9 +1,12 @@
 package net.optifine.config;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.optifine.util.ItemUtils;
 
-public class ItemLocator implements IObjectLocator<Item> {
-   public Item getObject(net.minecraft.resources.ResourceLocation loc) {
-      return net.optifine.util.ItemUtils.getItem(loc);
+public class ItemLocator implements IObjectLocator {
+   public Item getObject(ResourceLocation loc) {
+      Item item = ItemUtils.getItem(loc);
+      return item;
    }
 }

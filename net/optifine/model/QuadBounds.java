@@ -1,17 +1,19 @@
 package net.optifine.model;
 
+import net.minecraft.core.Direction;
+
 public class QuadBounds {
    private float minX = Float.MAX_VALUE;
    private float minY = Float.MAX_VALUE;
    private float minZ = Float.MAX_VALUE;
-   private float maxX = -Float.MAX_VALUE;
-   private float maxY = -Float.MAX_VALUE;
-   private float maxZ = -Float.MAX_VALUE;
+   private float maxX = -3.4028235E38F;
+   private float maxY = -3.4028235E38F;
+   private float maxZ = -3.4028235E38F;
 
    public QuadBounds(int[] vertexData) {
       int step = vertexData.length / 4;
 
-      for (int i = 0; i < 4; i++) {
+      for(int i = 0; i < 4; ++i) {
          int pos = i * step;
          float x = Float.intBitsToFloat(vertexData[pos + 0]);
          float y = Float.intBitsToFloat(vertexData[pos + 1]);
@@ -40,6 +42,7 @@ public class QuadBounds {
             this.maxZ = z;
          }
       }
+
    }
 
    public float getMinX() {
@@ -66,7 +69,7 @@ public class QuadBounds {
       return this.maxZ;
    }
 
-   public boolean isFaceQuad(net.minecraft.core.Direction face) {
+   public boolean isFaceQuad(Direction face) {
       float min;
       float max;
       float val;
@@ -76,7 +79,7 @@ public class QuadBounds {
             max = this.getMaxY();
             val = 0.0F;
             break;
-         case UP:
+         case field_61:
             min = this.getMinY();
             max = this.getMaxY();
             val = 1.0F;
@@ -108,14 +111,14 @@ public class QuadBounds {
       return min == val && max == val;
    }
 
-   public boolean isFullQuad(net.minecraft.core.Direction face) {
+   public boolean isFullQuad(Direction face) {
       float min1;
       float max1;
       float min2;
       float max2;
       switch (face) {
          case DOWN:
-         case UP:
+         case field_61:
             min1 = this.getMinX();
             max1 = this.getMaxX();
             min2 = this.getMinZ();

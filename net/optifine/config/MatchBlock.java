@@ -1,5 +1,6 @@
 package net.optifine.config;
 
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 
 public class MatchBlock {
@@ -15,6 +16,7 @@ public class MatchBlock {
       if (metadata >= 0) {
          this.metadatas = new int[]{metadata};
       }
+
    }
 
    public MatchBlock(int blockId, int[] metadatas) {
@@ -30,18 +32,26 @@ public class MatchBlock {
       return this.metadatas;
    }
 
-   public boolean matches(net.minecraft.world.level.block.state.BlockState blockState) {
-      return blockState.getBlockId() != this.blockId ? false : Matches.metadata(blockState.getMetadata(), this.metadatas);
+   public boolean matches(BlockState blockState) {
+      if (blockState.getBlockId() != this.blockId) {
+         return false;
+      } else {
+         return Matches.metadata(blockState.getMetadata(), this.metadatas);
+      }
    }
 
    public boolean matches(int id, int metadata) {
-      return id != this.blockId ? false : Matches.metadata(metadata, this.metadatas);
+      if (id != this.blockId) {
+         return false;
+      } else {
+         return Matches.metadata(metadata, this.metadatas);
+      }
    }
 
    public void addMetadata(int metadata) {
       if (this.metadatas != null) {
          if (metadata >= 0) {
-            for (int i = 0; i < this.metadatas.length; i++) {
+            for(int i = 0; i < this.metadatas.length; ++i) {
                if (this.metadatas[i] == metadata) {
                   return;
                }
@@ -53,13 +63,15 @@ public class MatchBlock {
    }
 
    public void addMetadatas(int[] mds) {
-      for (int i = 0; i < mds.length; i++) {
+      for(int i = 0; i < mds.length; ++i) {
          int md = mds[i];
          this.addMetadata(md);
       }
+
    }
 
    public String toString() {
-      return this.blockId + ":" + Config.arrayToString(this.metadatas);
+      int var10000 = this.blockId;
+      return "" + var10000 + ":" + Config.arrayToString(this.metadatas);
    }
 }

@@ -1,8 +1,11 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.world.entity.EntityType;
 
@@ -11,13 +14,11 @@ public class ModelAdapterParrot extends ModelAdapter {
       super(EntityType.f_20508_, "parrot", 0.3F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new ParrotModel(bakeModelLayer(ModelLayers.f_171203_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ParrotModel modelParrot)) {
          return null;
       } else if (modelPart.equals("body")) {
@@ -39,14 +40,12 @@ public class ModelAdapterParrot extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tail", "left_wing", "right_wing", "head", "left_leg", "right_leg", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ParrotRenderer render = new ParrotRenderer(renderManager.getContext());
       render.f_115290_ = (ParrotModel)modelBase;
       render.f_114477_ = shadowSize;

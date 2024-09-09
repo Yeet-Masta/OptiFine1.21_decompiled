@@ -7,31 +7,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.config.ConnectedParser;
 import net.optifine.util.PropertiesOrdered;
 
-public class RandomEntityProperties<T> {
+public class RandomEntityProperties {
    private String name = null;
    private String basePath = null;
-   private RandomEntityContext<T> context;
-   private T[] resources = null;
-   private RandomEntityRule<T>[] rules = null;
+   private RandomEntityContext context;
+   private Object[] resources = null;
+   private RandomEntityRule[] rules = null;
    private int matchingRuleIndex = -1;
 
-   public RandomEntityProperties(String path, net.minecraft.resources.ResourceLocation baseLoc, int[] variants, RandomEntityContext<T> context) {
+   public RandomEntityProperties(String path, ResourceLocation baseLoc, int[] variants, RandomEntityContext context) {
       ConnectedParser cp = new ConnectedParser(context.getName());
       this.name = cp.parseName(path);
       this.basePath = cp.parseBasePath(path);
       this.context = context;
-      this.resources = (T[])(new Object[variants.length]);
+      this.resources = new Object[variants.length];
 
-      for (int i = 0; i < variants.length; i++) {
+      for(int i = 0; i < variants.length; ++i) {
          int index = variants[i];
          this.resources[i] = context.makeResource(baseLoc, index);
       }
+
    }
 
-   public RandomEntityProperties(Properties props, String path, net.minecraft.resources.ResourceLocation baseResLoc, RandomEntityContext<T> context) {
+   public RandomEntityProperties(Properties props, String path, ResourceLocation baseResLoc, RandomEntityContext context) {
       ConnectedParser cp = context.getConnectedParser();
       this.name = cp.parseName(path);
       this.basePath = cp.parseBasePath(path);
@@ -47,19 +49,19 @@ public class RandomEntityProperties<T> {
       return this.basePath;
    }
 
-   public T[] getResources() {
+   public Object[] getResources() {
       return this.resources;
    }
 
-   public List<T> getAllResources() {
-      List<T> list = new ArrayList();
+   public List getAllResources() {
+      List list = new ArrayList();
       if (this.resources != null) {
          list.addAll(Arrays.asList(this.resources));
       }
 
       if (this.rules != null) {
-         for (int i = 0; i < this.rules.length; i++) {
-            RandomEntityRule<T> rule = this.rules[i];
+         for(int i = 0; i < this.rules.length; ++i) {
+            RandomEntityRule rule = this.rules[i];
             if (rule.getResources() != null) {
                list.addAll(Arrays.asList(rule.getResources()));
             }
@@ -69,11 +71,12 @@ public class RandomEntityProperties<T> {
       return list;
    }
 
-   public T getResource(IRandomEntity randomEntity, T resDef) {
+   public Object getResource(IRandomEntity randomEntity, Object resDef) {
       this.matchingRuleIndex = 0;
+      int randomId;
       if (this.rules != null) {
-         for (int i = 0; i < this.rules.length; i++) {
-            RandomEntityRule<T> rule = this.rules[i];
+         for(randomId = 0; randomId < this.rules.length; ++randomId) {
+            RandomEntityRule rule = this.rules[randomId];
             if (rule.matches(randomEntity)) {
                this.matchingRuleIndex = rule.getIndex();
                return rule.getResource(randomEntity.getId(), resDef);
@@ -82,7 +85,7 @@ public class RandomEntityProperties<T> {
       }
 
       if (this.resources != null) {
-         int randomId = randomEntity.getId();
+         randomId = randomEntity.getId();
          int index = randomId % this.resources.length;
          return this.resources[index];
       } else {
@@ -90,16 +93,19 @@ public class RandomEntityProperties<T> {
       }
    }
 
-   private RandomEntityRule<T>[] parseRules(Properties props, String pathProps, net.minecraft.resources.ResourceLocation baseResLoc) {
+   private RandomEntityRule[] parseRules(Properties props, String pathProps, ResourceLocation baseResLoc) {
       List list = new ArrayList();
       int maxIndex = 10;
 
-      for (int i = 0; i < maxIndex; i++) {
+      for(int i = 0; i < maxIndex; ++i) {
          int index = i + 1;
          String valTextures = null;
          String[] keys = this.context.getResourceKeys();
+         String[] var10 = keys;
+         int var11 = keys.length;
 
-         for (String key : keys) {
+         for(int var12 = 0; var12 < var11; ++var12) {
+            String key = var10[var12];
             valTextures = props.getProperty(key + "." + index);
             if (valTextures != null) {
                break;
@@ -107,13 +113,14 @@ public class RandomEntityProperties<T> {
          }
 
          if (valTextures != null) {
-            RandomEntityRule<T> rule = new RandomEntityRule<>(props, pathProps, baseResLoc, index, valTextures, this.context);
+            RandomEntityRule rule = new RandomEntityRule(props, pathProps, baseResLoc, index, valTextures, this.context);
             list.add(rule);
             maxIndex = index + 10;
          }
       }
 
-      return (RandomEntityRule<T>[])list.toArray(new RandomEntityRule[list.size()]);
+      RandomEntityRule[] rules = (RandomEntityRule[])list.toArray(new RandomEntityRule[list.size()]);
+      return rules;
    }
 
    public boolean isValid(String path) {
@@ -122,8 +129,9 @@ public class RandomEntityProperties<T> {
          Config.warn("No " + resNamePlural + " specified: " + path);
          return false;
       } else {
+         int i;
          if (this.rules != null) {
-            for (int i = 0; i < this.rules.length; i++) {
+            for(i = 0; i < this.rules.length; ++i) {
                RandomEntityRule rule = this.rules[i];
                if (!rule.isValid(path)) {
                   return false;
@@ -132,8 +140,8 @@ public class RandomEntityProperties<T> {
          }
 
          if (this.resources != null) {
-            for (int ix = 0; ix < this.resources.length; ix++) {
-               T res = this.resources[ix];
+            for(i = 0; i < this.resources.length; ++i) {
+               Object res = this.resources[i];
                if (res == null) {
                   return false;
                }
@@ -145,16 +153,18 @@ public class RandomEntityProperties<T> {
    }
 
    public boolean isDefault() {
-      return this.rules != null ? false : this.resources == null;
+      if (this.rules != null) {
+         return false;
+      } else {
+         return this.resources == null;
+      }
    }
 
    public int getMatchingRuleIndex() {
       return this.matchingRuleIndex;
    }
 
-   public static RandomEntityProperties parse(
-      net.minecraft.resources.ResourceLocation propLoc, net.minecraft.resources.ResourceLocation resLoc, RandomEntityContext context
-   ) {
+   public static RandomEntityProperties parse(ResourceLocation propLoc, ResourceLocation resLoc, RandomEntityContext context) {
       String contextName = context.getName();
 
       try {

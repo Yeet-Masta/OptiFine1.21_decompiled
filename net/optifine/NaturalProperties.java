@@ -2,6 +2,10 @@ package net.optifine;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 
 public class NaturalProperties {
    public int rotation = 1;
@@ -27,12 +31,14 @@ public class NaturalProperties {
    }
 
    public boolean isValid() {
-      return this.rotation == 2 || this.rotation == 4 ? true : this.flip;
+      if (this.rotation != 2 && this.rotation != 4) {
+         return this.flip;
+      } else {
+         return true;
+      }
    }
 
-   public synchronized net.minecraft.client.renderer.block.model.BakedQuad getQuad(
-      net.minecraft.client.renderer.block.model.BakedQuad quadIn, int rotate, boolean flipU
-   ) {
+   public synchronized BakedQuad getQuad(BakedQuad quadIn, int rotate, boolean flipU) {
       int index = rotate;
       if (flipU) {
          index = rotate | 4;
@@ -42,13 +48,13 @@ public class NaturalProperties {
          Map map = this.quadMaps[index];
          if (map == null) {
             map = new IdentityHashMap(1);
-            this.quadMaps[index] = map;
+            this.quadMaps[index] = (Map)map;
          }
 
-         net.minecraft.client.renderer.block.model.BakedQuad quad = (net.minecraft.client.renderer.block.model.BakedQuad)map.get(quadIn);
+         BakedQuad quad = (BakedQuad)((Map)map).get(quadIn);
          if (quad == null) {
             quad = this.makeQuad(quadIn, rotate, flipU);
-            map.put(quadIn, quad);
+            ((Map)map).put(quadIn, quad);
          }
 
          return quad;
@@ -57,18 +63,19 @@ public class NaturalProperties {
       }
    }
 
-   private net.minecraft.client.renderer.block.model.BakedQuad makeQuad(net.minecraft.client.renderer.block.model.BakedQuad quad, int rotate, boolean flipU) {
+   private BakedQuad makeQuad(BakedQuad quad, int rotate, boolean flipU) {
       int[] vertexData = quad.m_111303_();
       int tintIndex = quad.m_111305_();
-      net.minecraft.core.Direction face = quad.m_111306_();
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = quad.m_173410_();
+      Direction face = quad.m_111306_();
+      TextureAtlasSprite sprite = quad.m_173410_();
       boolean shade = quad.m_111307_();
       if (!this.isFullSprite(quad)) {
          rotate = 0;
       }
 
       vertexData = this.transformVertexData(vertexData, rotate, flipU);
-      return new net.minecraft.client.renderer.block.model.BakedQuad(vertexData, tintIndex, face, sprite, shade);
+      BakedQuad bq = new BakedQuad(vertexData, tintIndex, face, sprite, shade);
+      return bq;
    }
 
    private int[] transformVertexData(int[] vertexData, int rotate, boolean flipU) {
@@ -81,25 +88,29 @@ public class NaturalProperties {
       v2 %= 4;
       int step = vertexData2.length / 4;
 
-      for (int v = 0; v < 4; v++) {
+      for(int v = 0; v < 4; ++v) {
          int pos = v * step;
          int pos2 = v2 * step;
          vertexData2[pos2 + 4] = vertexData[pos + 4];
          vertexData2[pos2 + 4 + 1] = vertexData[pos + 4 + 1];
          if (flipU) {
-            if (--v2 < 0) {
+            --v2;
+            if (v2 < 0) {
                v2 = 3;
             }
-         } else if (++v2 > 3) {
-            v2 = 0;
+         } else {
+            ++v2;
+            if (v2 > 3) {
+               v2 = 0;
+            }
          }
       }
 
       return vertexData2;
    }
 
-   private boolean isFullSprite(net.minecraft.client.renderer.block.model.BakedQuad quad) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = quad.m_173410_();
+   private boolean isFullSprite(BakedQuad quad) {
+      TextureAtlasSprite sprite = quad.m_173410_();
       float uMin = sprite.m_118409_();
       float uMax = sprite.m_118410_();
       float uSize = uMax - uMin;
@@ -111,7 +122,7 @@ public class NaturalProperties {
       int[] vertexData = quad.m_111303_();
       int step = vertexData.length / 4;
 
-      for (int i = 0; i < 4; i++) {
+      for(int i = 0; i < 4; ++i) {
          int pos = i * step;
          float u = Float.intBitsToFloat(vertexData[pos + 4]);
          float v = Float.intBitsToFloat(vertexData[pos + 4 + 1]);
@@ -128,7 +139,7 @@ public class NaturalProperties {
    }
 
    private boolean equalsDelta(float x1, float x2, float deltaMax) {
-      float deltaAbs = net.minecraft.util.Mth.m_14154_(x1 - x2);
+      float deltaAbs = Mth.m_14154_(x1 - x2);
       return deltaAbs < deltaMax;
    }
 }

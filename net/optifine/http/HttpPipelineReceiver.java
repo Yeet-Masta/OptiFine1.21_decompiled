@@ -13,8 +13,10 @@ public class HttpPipelineReceiver extends Thread {
    private HttpPipelineConnection httpPipelineConnection = null;
    private static final Charset ASCII = Charset.forName("ASCII");
    private static final String HEADER_CONTENT_LENGTH = "Content-Length";
-   private static final char CR = '\r';
-   private static final char LF = '\n';
+   // $FF: renamed from: CR char
+   private static final char field_54 = '\r';
+   // $FF: renamed from: LF char
+   private static final char field_55 = '\n';
 
    public HttpPipelineReceiver(HttpPipelineConnection httpPipelineConnection) {
       super("HttpPipelineReceiver");
@@ -22,7 +24,7 @@ public class HttpPipelineReceiver extends Thread {
    }
 
    public void run() {
-      while (!Thread.interrupted()) {
+      while(!Thread.interrupted()) {
          HttpPipelineRequest currentRequest = null;
 
          try {
@@ -36,6 +38,7 @@ public class HttpPipelineReceiver extends Thread {
             this.httpPipelineConnection.onExceptionReceive(currentRequest, var5);
          }
       }
+
    }
 
    private HttpResponse readResponse(InputStream in) throws IOException {
@@ -47,10 +50,11 @@ public class HttpPipelineReceiver extends Thread {
          String http = parts[0];
          int status = Config.parseInt(parts[1], 0);
          String message = parts[2];
-         Map<String, String> headers = new LinkedHashMap();
+         Map headers = new LinkedHashMap();
 
-         while (true) {
+         while(true) {
             String line = this.readLine(in);
+            String enc;
             if (line.length() <= 0) {
                byte[] body = null;
                String lenStr = (String)headers.get("Content-Length");
@@ -61,7 +65,7 @@ public class HttpPipelineReceiver extends Thread {
                      this.readFull(body, in);
                   }
                } else {
-                  String enc = (String)headers.get("Transfer-Encoding");
+                  enc = (String)headers.get("Transfer-Encoding");
                   if (Config.equals(enc, "chunked")) {
                      body = this.readContentChunked(in);
                   }
@@ -72,9 +76,9 @@ public class HttpPipelineReceiver extends Thread {
 
             int pos = line.indexOf(":");
             if (pos > 0) {
-               String key = line.substring(0, pos).trim();
+               enc = line.substring(0, pos).trim();
                String val = line.substring(pos + 1).trim();
-               headers.put(key, val);
+               headers.put(enc, val);
             }
          }
       }
@@ -92,22 +96,20 @@ public class HttpPipelineReceiver extends Thread {
          this.readFull(buf, in);
          baos.write(buf);
          this.readLine(in);
-      } while (len != 0);
+      } while(len != 0);
 
       return baos.toByteArray();
    }
 
    private void readFull(byte[] buf, InputStream in) throws IOException {
-      int pos = 0;
-
-      while (pos < buf.length) {
-         int len = in.read(buf, pos, buf.length - pos);
+      int len;
+      for(int pos = 0; pos < buf.length; pos += len) {
+         len = in.read(buf, pos, buf.length - pos);
          if (len < 0) {
             throw new EOFException();
          }
-
-         pos += len;
       }
+
    }
 
    private String readLine(InputStream in) throws IOException {
@@ -115,7 +117,7 @@ public class HttpPipelineReceiver extends Thread {
       int prev = -1;
       boolean hasCRLF = false;
 
-      while (true) {
+      while(true) {
          int i = in.read();
          if (i < 0) {
             break;

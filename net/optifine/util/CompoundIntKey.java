@@ -4,9 +4,10 @@ import net.optifine.Config;
 
 public class CompoundIntKey {
    private int[] keys;
-   private int hashcode = 0;
+   private int hashcode;
 
    public CompoundIntKey(int[] keys) {
+      this.hashcode = 0;
       this.keys = (int[])keys.clone();
    }
 
@@ -26,7 +27,7 @@ public class CompoundIntKey {
       if (this.hashcode == 0) {
          this.hashcode = 7;
 
-         for (int i = 0; i < this.keys.length; i++) {
+         for(int i = 0; i < this.keys.length; ++i) {
             int key = this.keys[i];
             this.hashcode = 31 * this.hashcode + key;
          }
@@ -40,14 +41,15 @@ public class CompoundIntKey {
          return false;
       } else if (obj == this) {
          return true;
-      } else if (!(obj instanceof CompoundIntKey ck)) {
+      } else if (!(obj instanceof CompoundIntKey)) {
          return false;
       } else {
+         CompoundIntKey ck = (CompoundIntKey)obj;
          int[] ckKeys = ck.getKeys();
          if (ckKeys.length != this.keys.length) {
             return false;
          } else {
-            for (int i = 0; i < this.keys.length; i++) {
+            for(int i = 0; i < this.keys.length; ++i) {
                if (this.keys[i] != ckKeys[i]) {
                   return false;
                }

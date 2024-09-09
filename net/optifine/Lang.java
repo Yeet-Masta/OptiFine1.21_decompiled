@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.IoSupplier;
@@ -27,7 +28,7 @@ public class Lang {
 
    public static void resourcesReloaded() {
       Map localeProperties = new HashMap();
-      List<String> listFiles = new ArrayList();
+      List listFiles = new ArrayList();
       String PREFIX = "optifine/lang/";
       String EN_US = "en_us";
       String SUFFIX = ".lang";
@@ -37,21 +38,22 @@ public class Lang {
       }
 
       String[] files = (String[])listFiles.toArray(new String[listFiles.size()]);
-      loadResources(Config.getDefaultResourcePack(), files, localeProperties);
+      loadResources((PackResources)Config.getDefaultResourcePack(), (String[])files, localeProperties);
       PackResources[] resourcePacks = Config.getResourcePacks();
 
-      for (int i = 0; i < resourcePacks.length; i++) {
+      for(int i = 0; i < resourcePacks.length; ++i) {
          PackResources rp = resourcePacks[i];
-         loadResources(rp, files, localeProperties);
+         loadResources((PackResources)rp, (String[])files, localeProperties);
       }
+
    }
 
    private static void loadResources(PackResources rp, String[] files, Map localeProperties) {
       try {
-         for (int i = 0; i < files.length; i++) {
+         for(int i = 0; i < files.length; ++i) {
             String file = files[i];
-            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(file);
-            IoSupplier<InputStream> supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
+            ResourceLocation loc = new ResourceLocation(file);
+            IoSupplier supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
             if (supplier != null) {
                InputStream in = (InputStream)supplier.m_247737_();
                if (in != null) {
@@ -62,13 +64,14 @@ public class Lang {
       } catch (IOException var8) {
          var8.printStackTrace();
       }
+
    }
 
    public static void loadLocaleData(InputStream is, Map localeProperties) throws IOException {
       Iterator it = IOUtils.readLines(is, Charsets.UTF_8).iterator();
       is.close();
 
-      while (it.hasNext()) {
+      while(it.hasNext()) {
          String line = (String)it.next();
          if (!line.isEmpty() && line.charAt(0) != '#') {
             String[] parts = (String[])Iterables.toArray(splitter.split(line), String.class);
@@ -79,17 +82,19 @@ public class Lang {
             }
          }
       }
+
    }
 
-   public static void loadResources(ResourceManager resourceManager, String langCode, Map<String, String> map) {
+   public static void loadResources(ResourceManager resourceManager, String langCode, Map map) {
       try {
          String pathLang = "optifine/lang/" + langCode + ".lang";
-         net.minecraft.resources.ResourceLocation locLang = new net.minecraft.resources.ResourceLocation(pathLang);
+         ResourceLocation locLang = new ResourceLocation(pathLang);
          Resource res = resourceManager.m_215593_(locLang);
          InputStream is = res.m_215507_();
          loadLocaleData(is, map);
       } catch (IOException var7) {
       }
+
    }
 
    public static String get(String key) {

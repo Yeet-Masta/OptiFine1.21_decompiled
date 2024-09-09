@@ -5,9 +5,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.mojang.blaze3d.platform.NativeImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.Config;
 import net.optifine.http.HttpPipeline;
 import net.optifine.http.HttpUtils;
@@ -31,7 +33,7 @@ public class PlayerConfigurationParser {
          PlayerConfiguration pc = new PlayerConfiguration();
          JsonArray items = (JsonArray)jo.get("items");
          if (items != null) {
-            for (int i = 0; i < items.size(); i++) {
+            for(int i = 0; i < items.size(); ++i) {
                JsonObject item = (JsonObject)items.get(i);
                boolean active = Json.getBoolean(item, "active", true);
                if (active) {
@@ -52,13 +54,13 @@ public class PlayerConfigurationParser {
                               texturePath = "items/" + type + "/users/" + this.player + ".png";
                            }
 
-                           com.mojang.blaze3d.platform.NativeImage image = this.downloadTextureImage(texturePath);
+                           NativeImage image = this.downloadTextureImage(texturePath);
                            if (image == null) {
                               continue;
                            }
 
                            model.setTextureImage(image);
-                           net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation("optifine.net", texturePath);
+                           ResourceLocation loc = new ResourceLocation("optifine.net", texturePath);
                            model.setTextureLocation(loc);
                         }
 
@@ -73,12 +75,14 @@ public class PlayerConfigurationParser {
       }
    }
 
-   private com.mojang.blaze3d.platform.NativeImage downloadTextureImage(String texturePath) {
-      String textureUrl = HttpUtils.getPlayerItemsUrl() + "/" + texturePath;
+   private NativeImage downloadTextureImage(String texturePath) {
+      String var10000 = HttpUtils.getPlayerItemsUrl();
+      String textureUrl = var10000 + "/" + texturePath;
 
       try {
          byte[] body = HttpPipeline.get(textureUrl, Minecraft.m_91087_().m_91096_());
-         return com.mojang.blaze3d.platform.NativeImage.m_85058_(new ByteArrayInputStream(body));
+         NativeImage image = NativeImage.m_85058_(new ByteArrayInputStream(body));
+         return image;
       } catch (IOException var5) {
          Config.warn("Error loading item texture " + texturePath + ": " + var5.getClass().getName() + ": " + var5.getMessage());
          return null;
@@ -86,14 +90,16 @@ public class PlayerConfigurationParser {
    }
 
    private PlayerItemModel downloadModel(String modelPath) {
-      String modelUrl = HttpUtils.getPlayerItemsUrl() + "/" + modelPath;
+      String var10000 = HttpUtils.getPlayerItemsUrl();
+      String modelUrl = var10000 + "/" + modelPath;
 
       try {
          byte[] bytes = HttpPipeline.get(modelUrl, Minecraft.m_91087_().m_91096_());
          String jsonStr = new String(bytes, "ASCII");
          JsonParser jp = new JsonParser();
          JsonObject jo = (JsonObject)jp.parse(jsonStr);
-         return PlayerItemParser.parseItemModel(jo);
+         PlayerItemModel pim = PlayerItemParser.parseItemModel(jo);
+         return pim;
       } catch (Exception var8) {
          Config.warn("Error loading item model " + modelPath + ": " + var8.getClass().getName() + ": " + var8.getMessage());
          return null;

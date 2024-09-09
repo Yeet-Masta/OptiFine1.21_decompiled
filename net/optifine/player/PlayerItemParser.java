@@ -8,10 +8,15 @@ import com.google.gson.JsonParser;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.Config;
 import net.optifine.entity.model.CustomEntityModelParser;
 import net.optifine.model.Attachment;
@@ -75,7 +80,7 @@ public class PlayerItemParser {
          List listModels = new ArrayList();
          new ArrayList();
 
-         for (int i = 0; i < models.size(); i++) {
+         for(int i = 0; i < models.size(); ++i) {
             JsonObject elem = (JsonObject)models.get(i);
             String baseId = Json.getString(elem, "baseId");
             if (baseId != null) {
@@ -85,7 +90,11 @@ public class PlayerItemParser {
                   continue;
                }
 
-               for (Entry<String, JsonElement> entry : baseObj.entrySet()) {
+               Set setEntries = baseObj.entrySet();
+               Iterator iterator = setEntries.iterator();
+
+               while(iterator.hasNext()) {
+                  Map.Entry entry = (Map.Entry)iterator.next();
                   if (!elem.has((String)entry.getKey())) {
                      elem.add((String)entry.getKey(), (JsonElement)entry.getValue());
                   }
@@ -118,14 +127,14 @@ public class PlayerItemParser {
       }
    }
 
-   private static net.minecraft.resources.ResourceLocation makeResourceLocation(String texture) {
+   private static ResourceLocation makeResourceLocation(String texture) {
       int pos = texture.indexOf(58);
       if (pos < 0) {
-         return new net.minecraft.resources.ResourceLocation(texture);
+         return new ResourceLocation(texture);
       } else {
          String domain = texture.substring(0, pos);
          String path = texture.substring(pos + 1);
-         return new net.minecraft.resources.ResourceLocation(domain, path);
+         return new ResourceLocation(domain, path);
       }
    }
 
@@ -160,20 +169,19 @@ public class PlayerItemParser {
       } else {
          String attachToStr = Json.getString(elem, "attachTo");
          int attachTo = parseAttachModel(attachToStr);
-         net.minecraft.client.model.Model modelBase = new ModelPlayerItem(net.minecraft.client.renderer.RenderType::m_110458_);
+         Model modelBase = new ModelPlayerItem(RenderType::m_110458_);
          modelBase.textureWidth = textureDim.width;
          modelBase.textureHeight = textureDim.height;
-         net.minecraft.client.model.geom.ModelPart mr = parseModelRenderer(elem, modelBase, null, null);
-         return new PlayerItemRenderer(attachTo, mr);
+         ModelPart mr = parseModelRenderer(elem, modelBase, (int[])null, (String)null);
+         PlayerItemRenderer pir = new PlayerItemRenderer(attachTo, mr);
+         return pir;
       }
    }
 
-   public static net.minecraft.client.model.geom.ModelPart parseModelRenderer(
-      JsonObject elem, net.minecraft.client.model.Model modelBase, int[] parentTextureSize, String basePath
-   ) {
-      List<net.minecraft.client.model.geom.ModelPart.Cube> cubeList = new ArrayList();
-      Map<String, net.minecraft.client.model.geom.ModelPart> childModels = new HashMap();
-      net.minecraft.client.model.geom.ModelPart mr = new net.minecraft.client.model.geom.ModelPart(cubeList, childModels);
+   public static ModelPart parseModelRenderer(JsonObject elem, Model modelBase, int[] parentTextureSize, String basePath) {
+      List cubeList = new ArrayList();
+      Map childModels = new HashMap();
+      ModelPart mr = new ModelPart(cubeList, childModels);
       mr.setCustom(true);
       mr.setTextureSize(modelBase.textureWidth, modelBase.textureHeight);
       String id = Json.getString(elem, "id");
@@ -215,8 +223,8 @@ public class PlayerItemParser {
 
       float[] rotateAngles = Json.parseFloatArray(elem.get("rotate"), 3, new float[3]);
 
-      for (int i = 0; i < rotateAngles.length; i++) {
-         rotateAngles[i] = rotateAngles[i] / 180.0F * (float) Math.PI;
+      for(int i = 0; i < rotateAngles.length; ++i) {
+         rotateAngles[i] = rotateAngles[i] / 180.0F * 3.1415927F;
       }
 
       if (invertX) {
@@ -249,16 +257,19 @@ public class PlayerItemParser {
       Attachment[] attachments = parseAttachments(elem.getAsJsonObject("attachments"));
       mr.setAttachments(attachments);
       JsonArray boxes = elem.getAsJsonArray("boxes");
+      JsonObject box;
+      float[] coordinates;
+      float sizeAdd;
       if (boxes != null) {
-         for (int i = 0; i < boxes.size(); i++) {
-            JsonObject box = boxes.get(i).getAsJsonObject();
+         for(int i = 0; i < boxes.size(); ++i) {
+            box = boxes.get(i).getAsJsonObject();
             float[] textureOffset = Json.parseFloatArray(box.get("textureOffset"), 2);
             float[][] faceUvs = parseFaceUvs(box);
             if (textureOffset == null && faceUvs == null) {
                throw new JsonParseException("Texture offset not specified");
             }
 
-            float[] coordinates = Json.parseFloatArray(box.get("coordinates"), 6);
+            coordinates = Json.parseFloatArray(box.get("coordinates"), 6);
             if (coordinates == null) {
                throw new JsonParseException("Coordinates not specified");
             }
@@ -275,69 +286,61 @@ public class PlayerItemParser {
                coordinates[2] = -coordinates[2] - coordinates[5];
             }
 
-            float sizeAdd = Json.getFloat(box, "sizeAdd", 0.0F);
+            sizeAdd = Json.getFloat(box, "sizeAdd", 0.0F);
             if (faceUvs != null) {
                mr.addBox(faceUvs, coordinates[0], coordinates[1], coordinates[2], coordinates[3], coordinates[4], coordinates[5], sizeAdd);
             } else {
                mr.setTextureOffset(textureOffset[0], textureOffset[1]);
-               mr.addBox(
-                  coordinates[0],
-                  coordinates[1],
-                  coordinates[2],
-                  (float)((int)coordinates[3]),
-                  (float)((int)coordinates[4]),
-                  (float)((int)coordinates[5]),
-                  sizeAdd
-               );
+               mr.addBox(coordinates[0], coordinates[1], coordinates[2], (float)((int)coordinates[3]), (float)((int)coordinates[4]), (float)((int)coordinates[5]), sizeAdd);
             }
          }
       }
 
       JsonArray sprites = elem.getAsJsonArray("sprites");
       if (sprites != null) {
-         for (int i = 0; i < sprites.size(); i++) {
+         for(int i = 0; i < sprites.size(); ++i) {
             JsonObject sprite = sprites.get(i).getAsJsonObject();
-            int[] textureOffsetx = Json.parseIntArray(sprite.get("textureOffset"), 2);
-            if (textureOffsetx == null) {
+            int[] textureOffset = Json.parseIntArray(sprite.get("textureOffset"), 2);
+            if (textureOffset == null) {
                throw new JsonParseException("Texture offset not specified");
             }
 
-            float[] coordinatesx = Json.parseFloatArray(sprite.get("coordinates"), 6);
-            if (coordinatesx == null) {
+            coordinates = Json.parseFloatArray(sprite.get("coordinates"), 6);
+            if (coordinates == null) {
                throw new JsonParseException("Coordinates not specified");
             }
 
             if (invertX) {
-               coordinatesx[0] = -coordinatesx[0] - coordinatesx[3];
+               coordinates[0] = -coordinates[0] - coordinates[3];
             }
 
             if (invertY) {
-               coordinatesx[1] = -coordinatesx[1] - coordinatesx[4];
+               coordinates[1] = -coordinates[1] - coordinates[4];
             }
 
             if (invertZ) {
-               coordinatesx[2] = -coordinatesx[2] - coordinatesx[5];
+               coordinates[2] = -coordinates[2] - coordinates[5];
             }
 
-            float sizeAdd = Json.getFloat(sprite, "sizeAdd", 0.0F);
-            mr.setTextureOffset((float)textureOffsetx[0], (float)textureOffsetx[1]);
-            mr.addSprite(coordinatesx[0], coordinatesx[1], coordinatesx[2], (int)coordinatesx[3], (int)coordinatesx[4], (int)coordinatesx[5], sizeAdd);
+            sizeAdd = Json.getFloat(sprite, "sizeAdd", 0.0F);
+            mr.setTextureOffset((float)textureOffset[0], (float)textureOffset[1]);
+            mr.addSprite(coordinates[0], coordinates[1], coordinates[2], (int)coordinates[3], (int)coordinates[4], (int)coordinates[5], sizeAdd);
          }
       }
 
-      JsonObject submodel = (JsonObject)elem.get("submodel");
-      if (submodel != null) {
-         net.minecraft.client.model.geom.ModelPart subMr = parseModelRenderer(submodel, modelBase, textureSize, basePath);
+      box = (JsonObject)elem.get("submodel");
+      if (box != null) {
+         ModelPart subMr = parseModelRenderer(box, modelBase, textureSize, basePath);
          mr.addChildModel(getNextModelId(), subMr);
       }
 
       JsonArray submodels = (JsonArray)elem.get("submodels");
       if (submodels != null) {
-         for (int i = 0; i < submodels.size(); i++) {
+         for(int i = 0; i < submodels.size(); ++i) {
             JsonObject sm = (JsonObject)submodels.get(i);
-            net.minecraft.client.model.geom.ModelPart subMr = parseModelRenderer(sm, modelBase, textureSize, basePath);
+            ModelPart subMr = parseModelRenderer(sm, modelBase, textureSize, basePath);
             if (subMr.getId() != null) {
-               net.minecraft.client.model.geom.ModelPart subMrId = mr.getChild(subMr.getId());
+               ModelPart subMrId = mr.getChild(subMr.getId());
                if (subMrId != null) {
                   Config.warn("Duplicate model ID: " + subMr.getId());
                }
@@ -351,16 +354,24 @@ public class PlayerItemParser {
    }
 
    private static Attachment[] parseAttachments(JsonObject jo) {
-      List<Attachment> list = new ArrayList();
+      List list = new ArrayList();
+      AttachmentType[] var2 = AttachmentType.values();
+      int var3 = var2.length;
 
-      for (AttachmentType type : AttachmentType.values()) {
+      for(int var4 = 0; var4 < var3; ++var4) {
+         AttachmentType type = var2[var4];
          Attachment at = Attachment.parse(jo, type);
          if (at != null) {
             list.add(at);
          }
       }
 
-      return list.isEmpty() ? null : (Attachment[])list.toArray(new Attachment[list.size()]);
+      if (list.isEmpty()) {
+         return null;
+      } else {
+         Attachment[] ats = (Attachment[])list.toArray(new Attachment[list.size()]);
+         return ats;
+      }
    }
 
    public static String getNextModelId() {
@@ -368,14 +379,7 @@ public class PlayerItemParser {
    }
 
    private static float[][] parseFaceUvs(JsonObject box) {
-      float[][] uvs = new float[][]{
-         Json.parseFloatArray(box.get("uvDown"), 4),
-         Json.parseFloatArray(box.get("uvUp"), 4),
-         Json.parseFloatArray(box.get("uvNorth"), 4),
-         Json.parseFloatArray(box.get("uvSouth"), 4),
-         Json.parseFloatArray(box.get("uvWest"), 4),
-         Json.parseFloatArray(box.get("uvEast"), 4)
-      };
+      float[][] uvs = new float[][]{Json.parseFloatArray(box.get("uvDown"), 4), Json.parseFloatArray(box.get("uvUp"), 4), Json.parseFloatArray(box.get("uvNorth"), 4), Json.parseFloatArray(box.get("uvSouth"), 4), Json.parseFloatArray(box.get("uvWest"), 4), Json.parseFloatArray(box.get("uvEast"), 4)};
       if (uvs[2] == null) {
          uvs[2] = Json.parseFloatArray(box.get("uvFront"), 4);
       }
@@ -394,12 +398,16 @@ public class PlayerItemParser {
 
       boolean defined = false;
 
-      for (int i = 0; i < uvs.length; i++) {
+      for(int i = 0; i < uvs.length; ++i) {
          if (uvs[i] != null) {
             defined = true;
          }
       }
 
-      return !defined ? null : uvs;
+      if (!defined) {
+         return null;
+      } else {
+         return uvs;
+      }
    }
 }

@@ -12,10 +12,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.VideoMode;
-import com.mojang.blaze3d.platform.InputConstants.Key;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
@@ -51,8 +52,11 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
+import net.minecraft.Util;
+import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.GpuWarnlistManager;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
@@ -69,6 +73,7 @@ import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.GsonHelper;
+import net.minecraft.util.Mth;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.ChatVisiblity;
@@ -93,7 +98,7 @@ import org.slf4j.Logger;
 public class Options {
    static final Logger f_92077_ = LogUtils.getLogger();
    static final Gson f_92078_ = new Gson();
-   private static final TypeToken<List<String>> f_290931_ = new TypeToken<List<String>>() {
+   private static final TypeToken f_290931_ = new TypeToken() {
    };
    public static final int f_168406_ = 2;
    public static final int f_168407_ = 4;
@@ -104,781 +109,248 @@ public class Options {
    private static final Splitter f_92107_ = Splitter.on(':').limit(2);
    public static final String f_193766_ = "";
    private static final Component f_231789_ = Component.m_237115_("options.darkMojangStudiosBackgroundColor.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_168413_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.darkMojangStudiosBackgroundColor", net.minecraft.client.OptionInstance.m_231535_(f_231789_), false
-   );
+   private final OptionInstance f_168413_;
    private static final Component f_231790_ = Component.m_237115_("options.hideLightningFlashes.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_231791_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.hideLightningFlashes", net.minecraft.client.OptionInstance.m_231535_(f_231790_), false
-   );
+   private final OptionInstance f_231791_;
    private static final Component f_302626_ = Component.m_237115_("options.hideSplashTexts.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_302346_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.hideSplashTexts", net.minecraft.client.OptionInstance.m_231535_(f_302626_), false
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92053_ = new net.minecraft.client.OptionInstance<>(
-      "options.sensitivity", net.minecraft.client.OptionInstance.m_231498_(), (p_232095_0_, p_232095_1_) -> {
-         if (p_232095_1_ == 0.0) {
-            return m_231921_(p_232095_0_, Component.m_237115_("options.sensitivity.min"));
-         } else {
-            return p_232095_1_ == 1.0 ? m_231921_(p_232095_0_, Component.m_237115_("options.sensitivity.max")) : m_231897_(p_232095_0_, 2.0 * p_232095_1_);
-         }
-      }, net.minecraft.client.OptionInstance.UnitDouble.INSTANCE, 0.5, p_232114_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Integer> f_92106_;
-   private final net.minecraft.client.OptionInstance<Integer> f_193768_;
-   private int f_193765_ = 0;
-   private final net.minecraft.client.OptionInstance<Double> f_92112_ = new net.minecraft.client.OptionInstance<>(
-      "options.entityDistanceScaling",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.Options::m_231897_,
-      new net.minecraft.client.OptionInstance.IntRange(2, 20).m_231657_(p_232019_0_ -> (double)p_232019_0_ / 4.0, p_232111_0_ -> (int)(p_232111_0_ * 4.0)),
-      Codec.doubleRange(0.5, 5.0),
-      1.0,
-      p_232040_0_ -> {
-      }
-   );
+   private final OptionInstance f_302346_;
+   private final OptionInstance f_92053_;
+   private final OptionInstance f_92106_;
+   private final OptionInstance f_193768_;
+   private int f_193765_;
+   private final OptionInstance f_92112_;
    public static final int f_231811_ = 260;
-   private final net.minecraft.client.OptionInstance<Integer> f_92113_ = new net.minecraft.client.OptionInstance<>(
-      "options.framerateLimit",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_232047_0_, p_232047_1_) -> {
-         if (this.m_231817_().m_231551_()) {
-            return m_231921_(p_232047_0_, Component.m_237115_("of.options.framerateLimit.vsync"));
-         } else {
-            return p_232047_1_ == 260
-               ? m_231921_(p_232047_0_, Component.m_237115_("options.framerateLimit.max"))
-               : m_231921_(p_232047_0_, Component.m_237110_("options.framerate", new Object[]{p_232047_1_}));
-         }
-      },
-      new net.minecraft.client.OptionInstance.IntRange(0, 52).m_231657_(p_232002_0_ -> p_232002_0_ * 5, p_232093_0_ -> p_232093_0_ / 5),
-      Codec.intRange(0, 260),
-      120,
-      p_232085_0_ -> {
-         this.m_231817_().m_231514_(p_232085_0_ == 0);
-         Minecraft.m_91087_().m_91268_().m_85380_(p_232085_0_);
-      }
-   );
-   private final net.minecraft.client.OptionInstance<CloudStatus> f_231792_ = new net.minecraft.client.OptionInstance<>(
-      "options.renderClouds",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.OptionInstance.m_231546_(),
-      new net.minecraft.client.OptionInstance.Enum<>(
-         Arrays.asList(CloudStatus.values()),
-         Codec.withAlternative(CloudStatus.f_291249_, Codec.BOOL, p_232081_0_ -> p_232081_0_ ? CloudStatus.FANCY : CloudStatus.OFF)
-      ),
-      CloudStatus.FANCY,
-      p_231853_0_ -> {
-         if (Minecraft.m_91085_()) {
-            com.mojang.blaze3d.pipeline.RenderTarget rendertarget = Minecraft.m_91087_().f_91060_.m_109832_();
-            if (rendertarget != null) {
-               rendertarget.m_83954_(Minecraft.f_91002_);
-            }
-         }
-      }
-   );
+   private final OptionInstance f_92113_;
+   private final OptionInstance f_231792_;
    private static final Component f_231793_ = Component.m_237115_("options.graphics.fast.tooltip");
-   private static final Component f_231794_ = Component.m_237110_(
-      "options.graphics.fabulous.tooltip", new Object[]{Component.m_237115_("options.graphics.fabulous").m_130940_(ChatFormatting.ITALIC)}
-   );
-   private static final Component f_231785_ = Component.m_237115_("options.graphics.fancy.tooltip");
-   private final net.minecraft.client.OptionInstance<GraphicsStatus> f_92115_ = new net.minecraft.client.OptionInstance<>(
-      "options.graphics",
-      p_317296_0_ -> {
-         if (Boolean.TRUE) {
-            return null;
-         } else {
-            return switch (p_317296_0_) {
-               case FANCY -> Tooltip.m_257550_(f_231785_);
-               case FAST -> Tooltip.m_257550_(f_231793_);
-               case FABULOUS -> Tooltip.m_257550_(f_231794_);
-               default -> throw new MatchException(null, null);
-            };
-         }
-      },
-      (p_231903_0_, p_231903_1_) -> {
-         MutableComponent mutablecomponent = Component.m_237115_(p_231903_1_.m_35968_());
-         return p_231903_1_ == GraphicsStatus.FABULOUS ? mutablecomponent.m_130940_(ChatFormatting.ITALIC) : mutablecomponent;
-      },
-      new net.minecraft.client.OptionInstance.AltEnum<>(
-         Arrays.asList(GraphicsStatus.values()),
-         (List<GraphicsStatus>)Stream.of(GraphicsStatus.values()).filter(p_231942_0_ -> p_231942_0_ != GraphicsStatus.FABULOUS).collect(Collectors.toList()),
-         () -> !Config.isShaders() && GLX.isUsingFBOs() ? Minecraft.m_91087_().m_91396_() && Minecraft.m_91087_().m_91105_().m_109251_() : true,
-         (p_231861_0_, p_231861_1_) -> {
-            Minecraft minecraft = Minecraft.m_91087_();
-            GpuWarnlistManager gpuwarnlistmanager = minecraft.m_91105_();
-            if (p_231861_1_ == GraphicsStatus.FABULOUS && gpuwarnlistmanager.m_109240_()) {
-               gpuwarnlistmanager.m_109247_();
-            } else {
-               p_231861_0_.m_231514_(p_231861_1_);
-               this.updateRenderClouds();
-               minecraft.f_91060_.m_109818_();
-            }
-         },
-         Codec.INT.xmap(GraphicsStatus::m_90774_, GraphicsStatus::m_35965_)
-      ),
-      GraphicsStatus.FANCY,
-      p_231855_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92116_ = net.minecraft.client.OptionInstance.m_231528_(
-      "options.ao", true, p_231849_0_ -> Minecraft.m_91087_().f_91060_.m_109818_()
-   );
-   private static final Component f_231786_ = Component.m_237115_("options.prioritizeChunkUpdates.none.tooltip");
-   private static final Component f_231787_ = Component.m_237115_("options.prioritizeChunkUpdates.byPlayer.tooltip");
-   private static final Component f_231788_ = Component.m_237115_("options.prioritizeChunkUpdates.nearby.tooltip");
-   private final net.minecraft.client.OptionInstance<PrioritizeChunkUpdates> f_193769_ = new net.minecraft.client.OptionInstance<>(
-      "options.prioritizeChunkUpdates",
-      p_317297_0_ -> {
-         if (Boolean.TRUE) {
-            return null;
-         } else {
-            return switch (p_317297_0_) {
-               case NONE -> Tooltip.m_257550_(f_231786_);
-               case PLAYER_AFFECTED -> Tooltip.m_257550_(f_231787_);
-               case NEARBY -> Tooltip.m_257550_(f_231788_);
-               default -> throw new MatchException(null, null);
-            };
-         }
-      },
-      net.minecraft.client.OptionInstance.m_231546_(),
-      new net.minecraft.client.OptionInstance.Enum<>(
-         Arrays.asList(PrioritizeChunkUpdates.values()), Codec.INT.xmap(PrioritizeChunkUpdates::m_193787_, PrioritizeChunkUpdates::m_35965_)
-      ),
-      PrioritizeChunkUpdates.NONE,
-      p_231870_0_ -> {
-      }
-   );
-   public List<String> f_92117_ = Lists.newArrayList();
-   public List<String> f_92118_ = Lists.newArrayList();
-   private final net.minecraft.client.OptionInstance<ChatVisiblity> f_92119_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.visibility",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.OptionInstance.m_231546_(),
-      new net.minecraft.client.OptionInstance.Enum<>(Arrays.asList(ChatVisiblity.values()), Codec.INT.xmap(ChatVisiblity::m_35966_, ChatVisiblity::m_35965_)),
-      ChatVisiblity.FULL,
-      p_231843_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92120_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.opacity",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_232087_0_, p_232087_1_) -> m_231897_(p_232087_0_, p_232087_1_ * 0.9 + 0.1),
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_232105_0_ -> Minecraft.m_91087_().f_91065_.m_93076_().m_93769_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92121_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.line_spacing",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.Options::m_231897_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      0.0,
-      p_232102_0_ -> {
-      }
-   );
-   private static final Component f_315005_ = Component.m_237115_("options.accessibility.menu_background_blurriness.tooltip");
+   private static final Component f_231794_;
+   private static final Component f_231785_;
+   private final OptionInstance f_92115_;
+   private final OptionInstance f_92116_;
+   private static final Component f_231786_;
+   private static final Component f_231787_;
+   private static final Component f_231788_;
+   private final OptionInstance f_193769_;
+   public List f_92117_;
+   public List f_92118_;
+   private final OptionInstance f_92119_;
+   private final OptionInstance f_92120_;
+   private final OptionInstance f_92121_;
+   private static final Component f_315005_;
    private static final int f_315767_ = 5;
-   private final net.minecraft.client.OptionInstance<Integer> f_317010_ = new net.minecraft.client.OptionInstance<>(
-      "options.accessibility.menu_background_blurriness",
-      net.minecraft.client.OptionInstance.m_231535_(f_315005_),
-      net.minecraft.client.Options::m_338389_,
-      new net.minecraft.client.OptionInstance.IntRange(0, 10),
-      5,
-      p_232108_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92122_ = new net.minecraft.client.OptionInstance<>(
-      "options.accessibility.text_background_opacity",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.Options::m_231897_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      0.5,
-      p_232099_0_ -> Minecraft.m_91087_().f_91065_.m_93076_().m_93769_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_244402_ = new net.minecraft.client.OptionInstance<>(
-      "options.accessibility.panorama_speed",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.Options::m_231897_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_232038_0_ -> {
-      }
-   );
-   private static final Component f_273812_ = Component.m_237115_("options.accessibility.high_contrast.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_273910_ = net.minecraft.client.OptionInstance.m_257874_(
-      "options.accessibility.high_contrast", net.minecraft.client.OptionInstance.m_231535_(f_273812_), false, p_275764_1_ -> {
-         PackRepository packrepository = Minecraft.m_91087_().m_91099_();
-         boolean flag1 = packrepository.m_10523_().contains("high_contrast");
-         if (!flag1 && p_275764_1_) {
-            if (packrepository.m_275855_("high_contrast")) {
-               this.m_274546_(packrepository);
-            }
-         } else if (flag1 && !p_275764_1_ && packrepository.m_275853_("high_contrast")) {
-            this.m_274546_(packrepository);
-         }
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_290977_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.accessibility.narrator_hotkey",
-      net.minecraft.client.OptionInstance.m_231535_(
-         Minecraft.f_91002_
-            ? Component.m_237115_("options.accessibility.narrator_hotkey.mac.tooltip")
-            : Component.m_237115_("options.accessibility.narrator_hotkey.tooltip")
-      ),
-      true
-   );
+   private final OptionInstance f_317010_;
+   private final OptionInstance f_92122_;
+   private final OptionInstance f_244402_;
+   private static final Component f_273812_;
+   private final OptionInstance f_273910_;
+   private final OptionInstance f_290977_;
    @Nullable
    public String f_92123_;
    public boolean f_92124_;
    public boolean f_92125_;
-   public boolean f_92126_ = true;
-   private final Set<PlayerModelPart> f_92108_ = EnumSet.allOf(PlayerModelPart.class);
-   private final net.minecraft.client.OptionInstance<HumanoidArm> f_92127_ = new net.minecraft.client.OptionInstance<>(
-      "options.mainHand",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.OptionInstance.m_231546_(),
-      new net.minecraft.client.OptionInstance.Enum<>(Arrays.asList(HumanoidArm.values()), HumanoidArm.f_291347_),
-      HumanoidArm.RIGHT,
-      p_231841_1_ -> this.m_92172_()
-   );
+   public boolean f_92126_;
+   private final Set f_92108_;
+   private final OptionInstance f_92127_;
    public int f_92128_;
    public int f_92129_;
-   private final net.minecraft.client.OptionInstance<Double> f_92131_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.scale",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_232077_0_, p_232077_1_) -> (Component)(p_232077_1_ == 0.0 ? CommonComponents.m_130663_(p_232077_0_, false) : m_231897_(p_232077_0_, p_232077_1_)),
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_232091_0_ -> Minecraft.m_91087_().f_91065_.m_93076_().m_93769_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92132_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.width",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_232067_0_, p_232067_1_) -> m_231952_(p_232067_0_, (int)((double)net.minecraft.client.gui.components.ChatComponent.m_93798_(p_232067_1_) / 4.0571431)),
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_232083_0_ -> Minecraft.m_91087_().f_91065_.m_93076_().m_93769_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92133_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.height.unfocused",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_232057_0_, p_232057_1_) -> m_231952_(p_232057_0_, net.minecraft.client.gui.components.ChatComponent.m_93811_(p_232057_1_)),
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      net.minecraft.client.gui.components.ChatComponent.m_232477_(),
-      p_232073_0_ -> Minecraft.m_91087_().f_91065_.m_93076_().m_93769_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92134_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.height.focused",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_232044_0_, p_232044_1_) -> m_231952_(p_232044_0_, net.minecraft.client.gui.components.ChatComponent.m_93811_(p_232044_1_)),
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_232063_0_ -> Minecraft.m_91087_().f_91065_.m_93076_().m_93769_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92135_ = new net.minecraft.client.OptionInstance<>(
-      "options.chat.delay_instant",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_241715_0_, p_241715_1_) -> p_241715_1_ <= 0.0
-            ? Component.m_237115_("options.chat.delay_none")
-            : Component.m_237110_("options.chat.delay", new Object[]{String.format(Locale.ROOT, "%.1f", p_241715_1_)}),
-      new net.minecraft.client.OptionInstance.IntRange(0, 60).m_231657_(p_231985_0_ -> (double)p_231985_0_ / 10.0, p_232053_0_ -> (int)(p_232053_0_ * 10.0)),
-      Codec.doubleRange(0.0, 6.0),
-      0.0,
-      p_240679_0_ -> Minecraft.m_91087_().m_240442_().m_240692_(p_240679_0_)
-   );
-   private static final Component f_263815_ = Component.m_237115_("options.notifications.display_time.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_263718_ = new net.minecraft.client.OptionInstance<>(
-      "options.notifications.display_time",
-      net.minecraft.client.OptionInstance.m_231535_(f_263815_),
-      (p_231961_0_, p_231961_1_) -> m_231921_(p_231961_0_, Component.m_237110_("options.multiplier", new Object[]{p_231961_1_})),
-      new net.minecraft.client.OptionInstance.IntRange(5, 100).m_231657_(p_263860_0_ -> (double)p_263860_0_ / 10.0, p_263861_0_ -> (int)(p_263861_0_ * 10.0)),
-      Codec.doubleRange(0.5, 10.0),
-      1.0,
-      p_231851_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Integer> f_92027_ = new net.minecraft.client.OptionInstance<>(
-      "options.mipmapLevels", net.minecraft.client.OptionInstance.m_231498_(), (p_232032_0_, p_232032_1_) -> {
-         if ((double)p_232032_1_.intValue() >= 4.0) {
-            return m_231921_(p_232032_0_, Component.m_237115_("of.general.max"));
-         } else {
-            return (Component)(p_232032_1_ == 0 ? CommonComponents.m_130663_(p_232032_0_, false) : m_231900_(p_232032_0_, p_232032_1_));
-         }
-      }, new net.minecraft.client.OptionInstance.IntRange(0, 4), 4, p_232023_0_ -> this.updateMipmaps()
-   );
-   public boolean f_92028_ = true;
-   private final net.minecraft.client.OptionInstance<AttackIndicatorStatus> f_92029_ = new net.minecraft.client.OptionInstance<>(
-      "options.attackIndicator",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.OptionInstance.m_231546_(),
-      new net.minecraft.client.OptionInstance.Enum<>(
-         Arrays.asList(AttackIndicatorStatus.values()), Codec.INT.xmap(AttackIndicatorStatus::m_90509_, AttackIndicatorStatus::m_35965_)
-      ),
-      AttackIndicatorStatus.CROSSHAIR,
-      p_231987_0_ -> {
-      }
-   );
-   public TutorialSteps f_92030_ = TutorialSteps.MOVEMENT;
-   public boolean f_92031_ = false;
-   public boolean f_168405_ = false;
-   private final net.minecraft.client.OptionInstance<Integer> f_92032_ = new net.minecraft.client.OptionInstance<>(
-      "options.biomeBlendRadius", net.minecraft.client.OptionInstance.m_231498_(), (p_232015_0_, p_232015_1_) -> {
-         int i = p_232015_1_ * 2 + 1;
-         return m_231921_(p_232015_0_, Component.m_237115_("options.biomeBlendRadius." + i));
-      }, new net.minecraft.client.OptionInstance.IntRange(0, 7, false), 2, p_232025_0_ -> Minecraft.m_91087_().f_91060_.m_109818_()
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92033_ = new net.minecraft.client.OptionInstance<>(
-      "options.mouseWheelSensitivity",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_241716_0_, p_241716_1_) -> m_231921_(p_241716_0_, Component.m_237113_(String.format(Locale.ROOT, "%.2f", p_241716_1_))),
-      new net.minecraft.client.OptionInstance.IntRange(-200, 100).m_231657_(net.minecraft.client.Options::m_231965_, net.minecraft.client.Options::m_231839_),
-      Codec.doubleRange(m_231965_(-200), m_231965_(100)),
-      m_231965_(0),
-      p_231946_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92034_ = net.minecraft.client.OptionInstance.m_231528_(
-      "options.rawMouseInput", true, p_232061_0_ -> {
-         com.mojang.blaze3d.platform.Window window = Minecraft.m_91087_().m_91268_();
-         if (window != null) {
-            window.m_85424_(p_232061_0_);
-         }
-      }
-   );
-   public int f_92035_ = 1;
-   private final net.minecraft.client.OptionInstance<Boolean> f_92036_ = net.minecraft.client.OptionInstance.m_231525_("options.autoJump", false);
-   private final net.minecraft.client.OptionInstance<Boolean> f_256834_ = net.minecraft.client.OptionInstance.m_231525_("options.operatorItemsTab", false);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92037_ = net.minecraft.client.OptionInstance.m_231525_("options.autoSuggestCommands", true);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92038_ = net.minecraft.client.OptionInstance.m_231525_("options.chat.color", true);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92039_ = net.minecraft.client.OptionInstance.m_231525_("options.chat.links", true);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92040_ = net.minecraft.client.OptionInstance.m_231525_("options.chat.links.prompt", true);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92041_ = net.minecraft.client.OptionInstance.m_231528_("options.vsync", true, p_232051_0_ -> {
-      if (Minecraft.m_91087_().m_91268_() != null) {
-         Minecraft.m_91087_().m_91268_().m_85409_(p_232051_0_);
-      }
-   });
-   private final net.minecraft.client.OptionInstance<Boolean> f_92042_ = net.minecraft.client.OptionInstance.m_231525_("options.entityShadows", true);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92043_ = net.minecraft.client.OptionInstance.m_231528_(
-      "options.forceUnicodeFont", false, p_317299_0_ -> m_320153_()
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_314642_ = net.minecraft.client.OptionInstance.m_257874_(
-      "options.japaneseGlyphVariants",
-      net.minecraft.client.OptionInstance.m_231535_(Component.m_237115_("options.japaneseGlyphVariants.tooltip")),
-      m_324081_(),
-      p_317300_0_ -> m_320153_()
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92044_ = net.minecraft.client.OptionInstance.m_231525_("options.invertMouse", false);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92045_ = net.minecraft.client.OptionInstance.m_231525_("options.discrete_mouse_scroll", false);
-   private static final Component f_337252_ = Component.m_237115_("options.realmsNotifications.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_92046_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.realmsNotifications", net.minecraft.client.OptionInstance.m_231535_(f_337252_), true
-   );
-   private static final Component f_231804_ = Component.m_237115_("options.allowServerListing.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_193762_ = net.minecraft.client.OptionInstance.m_257874_(
-      "options.allowServerListing", net.minecraft.client.OptionInstance.m_231535_(f_231804_), true, p_232021_1_ -> this.m_92172_()
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92047_ = net.minecraft.client.OptionInstance.m_231525_("options.reducedDebugInfo", false);
-   private final Map<SoundSource, net.minecraft.client.OptionInstance<Double>> f_244498_ = net.minecraft.Util.m_137469_(
-      new EnumMap(SoundSource.class), p_244656_1_ -> {
-         for (SoundSource soundsource : SoundSource.values()) {
-            p_244656_1_.put(soundsource, this.m_247249_("soundCategory." + soundsource.m_12676_(), soundsource));
-         }
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92049_ = net.minecraft.client.OptionInstance.m_231525_("options.showSubtitles", false);
-   private static final Component f_231805_ = Component.m_237115_("options.directionalAudio.on.tooltip");
-   private static final Component f_231806_ = Component.m_237115_("options.directionalAudio.off.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_231807_ = net.minecraft.client.OptionInstance.m_257874_(
-      "options.directionalAudio", p_257068_0_ -> p_257068_0_ ? Tooltip.m_257550_(f_231805_) : Tooltip.m_257550_(f_231806_), false, p_263137_0_ -> {
-         SoundManager soundmanager = Minecraft.m_91087_().m_91106_();
-         soundmanager.m_194526_();
-         soundmanager.m_120367_(SimpleSoundInstance.m_263171_(SoundEvents.f_12490_, 1.0F));
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92050_ = new net.minecraft.client.OptionInstance<>(
-      "options.accessibility.text_background",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_231975_0_, p_231975_1_) -> p_231975_1_
-            ? Component.m_237115_("options.accessibility.text_background.chat")
-            : Component.m_237115_("options.accessibility.text_background.everywhere"),
-      net.minecraft.client.OptionInstance.f_231471_,
-      true,
-      p_231874_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92051_ = net.minecraft.client.OptionInstance.m_231525_("options.touchscreen", false);
-   private final net.minecraft.client.OptionInstance<Boolean> f_92052_ = net.minecraft.client.OptionInstance.m_231528_(
-      "options.fullscreen", false, p_231969_1_ -> {
-         Minecraft minecraft = Minecraft.m_91087_();
-         if (minecraft.m_91268_() != null && minecraft.m_91268_().m_85440_() != p_231969_1_) {
-            minecraft.m_91268_().m_85438_();
-            this.m_231829_().m_231514_(minecraft.m_91268_().m_85440_());
-         }
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92080_ = net.minecraft.client.OptionInstance.m_231525_("options.viewBobbing", true);
-   private static final Component f_231808_ = Component.m_237115_("options.key.toggle");
-   private static final Component f_231809_ = Component.m_237115_("options.key.hold");
-   private final net.minecraft.client.OptionInstance<Boolean> f_92081_ = new net.minecraft.client.OptionInstance<>(
-      "key.sneak",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_231955_0_, p_231955_1_) -> p_231955_1_ ? f_231808_ : f_231809_,
-      net.minecraft.client.OptionInstance.f_231471_,
-      false,
-      p_231989_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_92082_ = new net.minecraft.client.OptionInstance<>(
-      "key.sprint",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_231909_0_, p_231909_1_) -> p_231909_1_ ? f_231808_ : f_231809_,
-      net.minecraft.client.OptionInstance.f_231471_,
-      false,
-      p_231971_0_ -> {
-      }
-   );
+   private final OptionInstance f_92131_;
+   private final OptionInstance f_92132_;
+   private final OptionInstance f_92133_;
+   private final OptionInstance f_92134_;
+   private final OptionInstance f_92135_;
+   private static final Component f_263815_;
+   private final OptionInstance f_263718_;
+   private final OptionInstance f_92027_;
+   public boolean f_92028_;
+   private final OptionInstance f_92029_;
+   public TutorialSteps f_92030_;
+   public boolean f_92031_;
+   public boolean f_168405_;
+   private final OptionInstance f_92032_;
+   private final OptionInstance f_92033_;
+   private final OptionInstance f_92034_;
+   public int f_92035_;
+   private final OptionInstance f_92036_;
+   private final OptionInstance f_256834_;
+   private final OptionInstance f_92037_;
+   private final OptionInstance f_92038_;
+   private final OptionInstance f_92039_;
+   private final OptionInstance f_92040_;
+   private final OptionInstance f_92041_;
+   private final OptionInstance f_92042_;
+   private final OptionInstance f_92043_;
+   private final OptionInstance f_314642_;
+   private final OptionInstance f_92044_;
+   private final OptionInstance f_92045_;
+   private static final Component f_337252_;
+   private final OptionInstance f_92046_;
+   private static final Component f_231804_;
+   private final OptionInstance f_193762_;
+   private final OptionInstance f_92047_;
+   private final Map f_244498_;
+   private final OptionInstance f_92049_;
+   private static final Component f_231805_;
+   private static final Component f_231806_;
+   private final OptionInstance f_231807_;
+   private final OptionInstance f_92050_;
+   private final OptionInstance f_92051_;
+   private final OptionInstance f_92052_;
+   private final OptionInstance f_92080_;
+   private static final Component f_231808_;
+   private static final Component f_231809_;
+   private final OptionInstance f_92081_;
+   private final OptionInstance f_92082_;
    public boolean f_92083_;
-   private static final Component f_231810_ = Component.m_237115_("options.hideMatchedNames.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_92084_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.hideMatchedNames", net.minecraft.client.OptionInstance.m_231535_(f_231810_), true
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_193763_ = net.minecraft.client.OptionInstance.m_231525_("options.autosaveIndicator", true);
-   private static final Component f_231797_ = Component.m_237115_("options.onlyShowSecureChat.tooltip");
-   private final net.minecraft.client.OptionInstance<Boolean> f_231798_ = net.minecraft.client.OptionInstance.m_257536_(
-      "options.onlyShowSecureChat", net.minecraft.client.OptionInstance.m_231535_(f_231797_), false
-   );
-   public final KeyMapping f_92085_ = new KeyMapping("key.forward", 87, "key.categories.movement");
-   public final KeyMapping f_92086_ = new KeyMapping("key.left", 65, "key.categories.movement");
-   public final KeyMapping f_92087_ = new KeyMapping("key.back", 83, "key.categories.movement");
-   public final KeyMapping f_92088_ = new KeyMapping("key.right", 68, "key.categories.movement");
-   public final KeyMapping f_92089_ = new KeyMapping("key.jump", 32, "key.categories.movement");
-   public final KeyMapping f_92090_ = new ToggleKeyMapping("key.sneak", 340, "key.categories.movement", this.f_92081_::m_231551_);
-   public final KeyMapping f_92091_ = new ToggleKeyMapping("key.sprint", 341, "key.categories.movement", this.f_92082_::m_231551_);
-   public final KeyMapping f_92092_ = new KeyMapping("key.inventory", 69, "key.categories.inventory");
-   public final KeyMapping f_92093_ = new KeyMapping("key.swapOffhand", 70, "key.categories.inventory");
-   public final KeyMapping f_92094_ = new KeyMapping("key.drop", 81, "key.categories.inventory");
-   public final KeyMapping f_92095_ = new KeyMapping("key.use", Type.MOUSE, 1, "key.categories.gameplay");
-   public final KeyMapping f_92096_ = new KeyMapping("key.attack", Type.MOUSE, 0, "key.categories.gameplay");
-   public final KeyMapping f_92097_ = new KeyMapping("key.pickItem", Type.MOUSE, 2, "key.categories.gameplay");
-   public final KeyMapping f_92098_ = new KeyMapping("key.chat", 84, "key.categories.multiplayer");
-   public final KeyMapping f_92099_ = new KeyMapping("key.playerlist", 258, "key.categories.multiplayer");
-   public final KeyMapping f_92100_ = new KeyMapping("key.command", 47, "key.categories.multiplayer");
-   public final KeyMapping f_92101_ = new KeyMapping("key.socialInteractions", 80, "key.categories.multiplayer");
-   public final KeyMapping f_92102_ = new KeyMapping("key.screenshot", 291, "key.categories.misc");
-   public final KeyMapping f_92103_ = new KeyMapping("key.togglePerspective", 294, "key.categories.misc");
-   public final KeyMapping f_92104_ = new KeyMapping("key.smoothCamera", InputConstants.f_84822_.m_84873_(), "key.categories.misc");
-   public final KeyMapping f_92105_ = new KeyMapping("key.fullscreen", 300, "key.categories.misc");
-   public final KeyMapping f_92054_ = new KeyMapping("key.spectatorOutlines", InputConstants.f_84822_.m_84873_(), "key.categories.misc");
-   public final KeyMapping f_92055_ = new KeyMapping("key.advancements", 76, "key.categories.misc");
-   public final KeyMapping[] f_92056_ = new KeyMapping[]{
-      new KeyMapping("key.hotbar.1", 49, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.2", 50, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.3", 51, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.4", 52, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.5", 53, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.6", 54, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.7", 55, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.8", 56, "key.categories.inventory"),
-      new KeyMapping("key.hotbar.9", 57, "key.categories.inventory")
-   };
-   public final KeyMapping f_92057_ = new KeyMapping("key.saveToolbarActivator", 67, "key.categories.creative");
-   public final KeyMapping f_92058_ = new KeyMapping("key.loadToolbarActivator", 88, "key.categories.creative");
-   public KeyMapping[] f_92059_ = (KeyMapping[])ArrayUtils.addAll(
-      new KeyMapping[]{
-         this.f_92096_,
-         this.f_92095_,
-         this.f_92085_,
-         this.f_92086_,
-         this.f_92087_,
-         this.f_92088_,
-         this.f_92089_,
-         this.f_92090_,
-         this.f_92091_,
-         this.f_92094_,
-         this.f_92092_,
-         this.f_92098_,
-         this.f_92099_,
-         this.f_92097_,
-         this.f_92100_,
-         this.f_92101_,
-         this.f_92102_,
-         this.f_92103_,
-         this.f_92104_,
-         this.f_92105_,
-         this.f_92054_,
-         this.f_92093_,
-         this.f_92057_,
-         this.f_92058_,
-         this.f_92055_
-      },
-      this.f_92056_
-   );
+   private static final Component f_231810_;
+   private final OptionInstance f_92084_;
+   private final OptionInstance f_193763_;
+   private static final Component f_231797_;
+   private final OptionInstance f_231798_;
+   public final KeyMapping f_92085_;
+   public final KeyMapping f_92086_;
+   public final KeyMapping f_92087_;
+   public final KeyMapping f_92088_;
+   public final KeyMapping f_92089_;
+   public final KeyMapping f_92090_;
+   public final KeyMapping f_92091_;
+   public final KeyMapping f_92092_;
+   public final KeyMapping f_92093_;
+   public final KeyMapping f_92094_;
+   public final KeyMapping f_92095_;
+   public final KeyMapping f_92096_;
+   public final KeyMapping f_92097_;
+   public final KeyMapping f_92098_;
+   public final KeyMapping f_92099_;
+   public final KeyMapping f_92100_;
+   public final KeyMapping f_92101_;
+   public final KeyMapping f_92102_;
+   public final KeyMapping f_92103_;
+   public final KeyMapping f_92104_;
+   public final KeyMapping f_92105_;
+   public final KeyMapping f_92054_;
+   public final KeyMapping f_92055_;
+   public final KeyMapping[] f_92056_;
+   public final KeyMapping f_92057_;
+   public final KeyMapping f_92058_;
+   public KeyMapping[] f_92059_;
    protected Minecraft f_92060_;
    private final File f_92110_;
    public boolean f_92062_;
-   private CameraType f_92111_ = CameraType.FIRST_PERSON;
-   public String f_92066_ = "";
+   private CameraType f_92111_;
+   public String f_92066_;
    public boolean f_92067_;
-   private final net.minecraft.client.OptionInstance<Integer> f_92068_ = new net.minecraft.client.OptionInstance<>(
-      "options.fov",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_231998_0_, p_231998_1_) -> {
-         return switch (p_231998_1_) {
-            case 70 -> m_231921_(p_231998_0_, Component.m_237115_("options.fov.min"));
-            case 110 -> m_231921_(p_231998_0_, Component.m_237115_("options.fov.max"));
-            default -> m_231900_(p_231998_0_, p_231998_1_);
-         };
-      },
-      new net.minecraft.client.OptionInstance.IntRange(30, 110),
-      Codec.DOUBLE.xmap(p_232006_0_ -> (int)(p_232006_0_ * 40.0 + 70.0), p_232008_0_ -> ((double)p_232008_0_.intValue() - 70.0) / 40.0),
-      70,
-      p_231991_0_ -> Minecraft.m_91087_().f_91060_.m_109826_()
-   );
-   private static final Component f_260656_ = Component.m_237110_(
-      "options.telemetry.button.tooltip",
-      new Object[]{Component.m_237115_("options.telemetry.state.minimal"), Component.m_237115_("options.telemetry.state.all")}
-   );
-   private final net.minecraft.client.OptionInstance<Boolean> f_260461_ = net.minecraft.client.OptionInstance.m_260965_(
-      "options.telemetry.button",
-      net.minecraft.client.OptionInstance.m_231535_(f_260656_),
-      (p_260741_0_, p_260741_1_) -> {
-         Minecraft minecraft = Minecraft.m_91087_();
-         if (!minecraft.m_261210_()) {
-            return Component.m_237115_("options.telemetry.state.none");
-         } else {
-            return p_260741_1_ && minecraft.m_261227_()
-               ? Component.m_237115_("options.telemetry.state.all")
-               : Component.m_237115_("options.telemetry.state.minimal");
-         }
-      },
-      false,
-      p_231948_0_ -> {
-      }
-   );
-   private static final Component f_231799_ = Component.m_237115_("options.screenEffectScale.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_92069_ = new net.minecraft.client.OptionInstance<>(
-      "options.screenEffectScale",
-      net.minecraft.client.OptionInstance.m_231535_(f_231799_),
-      net.minecraft.client.Options::m_324758_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_231876_0_ -> {
-      }
-   );
-   private static final Component f_231800_ = Component.m_237115_("options.fovEffectScale.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_92070_ = new net.minecraft.client.OptionInstance<>(
-      "options.fovEffectScale",
-      net.minecraft.client.OptionInstance.m_231535_(f_231800_),
-      net.minecraft.client.Options::m_324758_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE.m_231750_(net.minecraft.util.Mth::m_144952_, Math::sqrt),
-      Codec.doubleRange(0.0, 1.0),
-      1.0,
-      p_231973_0_ -> {
-      }
-   );
-   private static final Component f_231801_ = Component.m_237115_("options.darknessEffectScale.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_231802_ = new net.minecraft.client.OptionInstance<>(
-      "options.darknessEffectScale",
-      net.minecraft.client.OptionInstance.m_231535_(f_231801_),
-      net.minecraft.client.Options::m_324758_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE.m_231750_(net.minecraft.util.Mth::m_144952_, Math::sqrt),
-      1.0,
-      p_231868_0_ -> {
-      }
-   );
-   private static final Component f_267409_ = Component.m_237115_("options.glintSpeed.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_267458_ = new net.minecraft.client.OptionInstance<>(
-      "options.glintSpeed",
-      net.minecraft.client.OptionInstance.m_231535_(f_267409_),
-      net.minecraft.client.Options::m_324758_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      0.5,
-      p_241717_0_ -> {
-      }
-   );
-   private static final Component f_267450_ = Component.m_237115_("options.glintStrength.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_267462_ = new net.minecraft.client.OptionInstance<>(
-      "options.glintStrength",
-      net.minecraft.client.OptionInstance.m_231535_(f_267450_),
-      net.minecraft.client.Options::m_324758_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      0.75,
-      RenderSystem::setShaderGlintAlpha
-   );
-   private static final Component f_268597_ = Component.m_237115_("options.damageTiltStrength.tooltip");
-   private final net.minecraft.client.OptionInstance<Double> f_268427_ = new net.minecraft.client.OptionInstance<>(
-      "options.damageTiltStrength",
-      net.minecraft.client.OptionInstance.m_231535_(f_268597_),
-      net.minecraft.client.Options::m_324758_,
-      net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-      1.0,
-      p_260742_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<Double> f_92071_ = new net.minecraft.client.OptionInstance<>(
-      "options.gamma", net.minecraft.client.OptionInstance.m_231498_(), (p_231912_0_, p_231912_1_) -> {
-         int i = (int)(p_231912_1_ * 100.0);
-         if (i == 0) {
-            return m_231921_(p_231912_0_, Component.m_237115_("options.gamma.min"));
-         } else if (i == 50) {
-            return m_231921_(p_231912_0_, Component.m_237115_("options.gamma.default"));
-         } else {
-            return i == 100 ? m_231921_(p_231912_0_, Component.m_237115_("options.gamma.max")) : m_231900_(p_231912_0_, i);
-         }
-      }, net.minecraft.client.OptionInstance.UnitDouble.INSTANCE, 0.5, p_263858_0_ -> {
-      }
-   );
+   private final OptionInstance f_92068_;
+   private static final Component f_260656_;
+   private final OptionInstance f_260461_;
+   private static final Component f_231799_;
+   private final OptionInstance f_92069_;
+   private static final Component f_231800_;
+   private final OptionInstance f_92070_;
+   private static final Component f_231801_;
+   private final OptionInstance f_231802_;
+   private static final Component f_267409_;
+   private final OptionInstance f_267458_;
+   private static final Component f_267450_;
+   private final OptionInstance f_267462_;
+   private static final Component f_268597_;
+   private final OptionInstance f_268427_;
+   private final OptionInstance f_92071_;
    public static final int f_278127_ = 0;
    private static final int f_276073_ = 2147483646;
-   private final net.minecraft.client.OptionInstance<Integer> f_92072_ = new net.minecraft.client.OptionInstance<>(
-      "options.guiScale",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_231981_0_, p_231981_1_) -> p_231981_1_ == 0 ? Component.m_237115_("options.guiScale.auto") : Component.m_237113_(Integer.toString(p_231981_1_)),
-      new net.minecraft.client.OptionInstance.ClampingLazyMaxIntRange(0, () -> {
-         Minecraft minecraft = Minecraft.m_91087_();
-         return !minecraft.m_91396_() ? 2147483646 : minecraft.m_91268_().m_85385_(0, minecraft.m_91390_());
-      }, 2147483646),
-      0,
-      p_317301_1_ -> this.f_92060_.m_5741_()
-   );
-   private final net.minecraft.client.OptionInstance<ParticleStatus> f_92073_ = new net.minecraft.client.OptionInstance<>(
-      "options.particles",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      net.minecraft.client.OptionInstance.m_231546_(),
-      new net.minecraft.client.OptionInstance.Enum<>(Arrays.asList(ParticleStatus.values()), Codec.INT.xmap(ParticleStatus::m_92196_, ParticleStatus::m_35965_)),
-      ParticleStatus.ALL,
-      p_267500_0_ -> {
-      }
-   );
-   private final net.minecraft.client.OptionInstance<NarratorStatus> f_231803_ = new net.minecraft.client.OptionInstance<>(
-      "options.narrator",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_240390_1_, p_240390_2_) -> (Component)(this.f_92060_.m_240477_().m_93316_()
-            ? p_240390_2_.m_91621_()
-            : Component.m_237115_("options.narrator.notavailable")),
-      new net.minecraft.client.OptionInstance.Enum<>(Arrays.asList(NarratorStatus.values()), Codec.INT.xmap(NarratorStatus::m_91619_, NarratorStatus::m_91618_)),
-      NarratorStatus.OFF,
-      p_240389_1_ -> this.f_92060_.m_240477_().m_93317_(p_240389_1_)
-   );
-   public String f_92075_ = "en_us";
-   private final net.minecraft.client.OptionInstance<String> f_193764_ = new net.minecraft.client.OptionInstance<>(
-      "options.audioDevice",
-      net.minecraft.client.OptionInstance.m_231498_(),
-      (p_231918_0_, p_231918_1_) -> {
-         if ("".equals(p_231918_1_)) {
-            return Component.m_237115_("options.audioDevice.default");
-         } else {
-            return p_231918_1_.startsWith("OpenAL Soft on ")
-               ? Component.m_237113_(p_231918_1_.substring(SoundEngine.f_194470_))
-               : Component.m_237113_(p_231918_1_);
-         }
-      },
-      new net.minecraft.client.OptionInstance.LazyEnum<>(
-         () -> Stream.concat(Stream.of(""), Minecraft.m_91087_().m_91106_().m_194525_().stream()).toList(),
-         p_232010_0_ -> Minecraft.m_91087_().m_91396_()
-                  && (p_232010_0_ == null || p_232010_0_.isEmpty())
-                  && !Minecraft.m_91087_().m_91106_().m_194525_().contains(p_232010_0_)
-               ? Optional.empty()
-               : Optional.of(p_232010_0_),
-         Codec.STRING
-      ),
-      "",
-      p_263138_0_ -> {
-         SoundManager soundmanager = Minecraft.m_91087_().m_91106_();
-         soundmanager.m_194526_();
-         soundmanager.m_120367_(SimpleSoundInstance.m_263171_(SoundEvents.f_12490_, 1.0F));
-      }
-   );
-   public boolean f_263744_ = true;
+   private final OptionInstance f_92072_;
+   private final OptionInstance f_92073_;
+   private final OptionInstance f_231803_;
+   public String f_92075_;
+   private final OptionInstance f_193764_;
+   public boolean f_263744_;
    public boolean f_92076_;
-   public int ofFogType = 1;
-   public float ofFogStart = 0.8F;
-   public int ofMipmapType = 0;
-   public boolean ofOcclusionFancy = false;
-   public boolean ofSmoothFps = false;
-   public boolean ofSmoothWorld = Config.isSingleProcessor();
-   public boolean ofLazyChunkLoading = Config.isSingleProcessor();
-   public boolean ofRenderRegions = false;
-   public boolean ofSmartAnimations = false;
-   public double ofAoLevel = 1.0;
-   public int ofAaLevel = 0;
-   public int ofAfLevel = 1;
-   public int ofClouds = 0;
-   public double ofCloudsHeight = 0.0;
-   public int ofTrees = 0;
-   public int ofRain = 0;
-   public int ofBetterGrass = 3;
-   public int ofAutoSaveTicks = 4000;
-   public boolean ofLagometer = false;
-   public boolean ofProfiler = false;
-   public boolean ofWeather = true;
-   public boolean ofSky = true;
-   public boolean ofStars = true;
-   public boolean ofSunMoon = true;
-   public int ofVignette = 0;
-   public int ofChunkUpdates = 1;
-   public boolean ofChunkUpdatesDynamic = false;
-   public int ofTime = 0;
-   public boolean ofBetterSnow = false;
-   public boolean ofSwampColors = true;
-   public boolean ofRandomEntities = true;
-   public boolean ofCustomFonts = true;
-   public boolean ofCustomColors = true;
-   public boolean ofCustomSky = true;
-   public boolean ofShowCapes = true;
-   public int ofConnectedTextures = 2;
-   public boolean ofCustomItems = true;
-   public boolean ofNaturalTextures = false;
-   public boolean ofEmissiveTextures = true;
-   public boolean ofFastMath = false;
-   public boolean ofFastRender = false;
-   public boolean ofDynamicFov = true;
-   public boolean ofAlternateBlocks = true;
-   public int ofDynamicLights = 3;
-   public boolean ofCustomEntityModels = true;
-   public boolean ofCustomGuis = true;
-   public boolean ofShowGlErrors = true;
-   public int ofScreenshotSize = 1;
-   public int ofChatBackground = 0;
-   public boolean ofChatShadow = true;
-   public int ofTelemetry = 0;
-   public boolean ofHeldItemTooltips = true;
-   public int ofAnimatedWater = 0;
-   public int ofAnimatedLava = 0;
-   public boolean ofAnimatedFire = true;
-   public boolean ofAnimatedPortal = true;
-   public boolean ofAnimatedRedstone = true;
-   public boolean ofAnimatedExplosion = true;
-   public boolean ofAnimatedFlame = true;
-   public boolean ofAnimatedSmoke = true;
-   public boolean ofVoidParticles = true;
-   public boolean ofWaterParticles = true;
-   public boolean ofRainSplash = true;
-   public boolean ofPortalParticles = true;
-   public boolean ofPotionParticles = true;
-   public boolean ofFireworkParticles = true;
-   public boolean ofDrippingWaterLava = true;
-   public boolean ofAnimatedTerrain = true;
-   public boolean ofAnimatedTextures = true;
-   public boolean ofQuickInfo = false;
-   public int ofQuickInfoFps = Option.FULL.getValue();
-   public boolean ofQuickInfoChunks = true;
-   public boolean ofQuickInfoEntities = true;
-   public boolean ofQuickInfoParticles = false;
-   public boolean ofQuickInfoUpdates = true;
-   public boolean ofQuickInfoGpu = false;
-   public int ofQuickInfoPos = Option.COMPACT.getValue();
-   public int ofQuickInfoFacing = Option.OFF.getValue();
-   public boolean ofQuickInfoBiome = false;
-   public boolean ofQuickInfoLight = false;
-   public int ofQuickInfoMemory = Option.OFF.getValue();
-   public int ofQuickInfoNativeMemory = Option.OFF.getValue();
-   public int ofQuickInfoTargetBlock = Option.OFF.getValue();
-   public int ofQuickInfoTargetFluid = Option.OFF.getValue();
-   public int ofQuickInfoTargetEntity = Option.OFF.getValue();
-   public int ofQuickInfoLabels = Option.COMPACT.getValue();
-   public boolean ofQuickInfoBackground = false;
+   public int ofFogType;
+   public float ofFogStart;
+   public int ofMipmapType;
+   public boolean ofOcclusionFancy;
+   public boolean ofSmoothFps;
+   public boolean ofSmoothWorld;
+   public boolean ofLazyChunkLoading;
+   public boolean ofRenderRegions;
+   public boolean ofSmartAnimations;
+   public double ofAoLevel;
+   public int ofAaLevel;
+   public int ofAfLevel;
+   public int ofClouds;
+   public double ofCloudsHeight;
+   public int ofTrees;
+   public int ofRain;
+   public int ofBetterGrass;
+   public int ofAutoSaveTicks;
+   public boolean ofLagometer;
+   public boolean ofProfiler;
+   public boolean ofWeather;
+   public boolean ofSky;
+   public boolean ofStars;
+   public boolean ofSunMoon;
+   public int ofVignette;
+   public int ofChunkUpdates;
+   public boolean ofChunkUpdatesDynamic;
+   public int ofTime;
+   public boolean ofBetterSnow;
+   public boolean ofSwampColors;
+   public boolean ofRandomEntities;
+   public boolean ofCustomFonts;
+   public boolean ofCustomColors;
+   public boolean ofCustomSky;
+   public boolean ofShowCapes;
+   public int ofConnectedTextures;
+   public boolean ofCustomItems;
+   public boolean ofNaturalTextures;
+   public boolean ofEmissiveTextures;
+   public boolean ofFastMath;
+   public boolean ofFastRender;
+   public boolean ofDynamicFov;
+   public boolean ofAlternateBlocks;
+   public int ofDynamicLights;
+   public boolean ofCustomEntityModels;
+   public boolean ofCustomGuis;
+   public boolean ofShowGlErrors;
+   public int ofScreenshotSize;
+   public int ofChatBackground;
+   public boolean ofChatShadow;
+   public int ofTelemetry;
+   public boolean ofHeldItemTooltips;
+   public int ofAnimatedWater;
+   public int ofAnimatedLava;
+   public boolean ofAnimatedFire;
+   public boolean ofAnimatedPortal;
+   public boolean ofAnimatedRedstone;
+   public boolean ofAnimatedExplosion;
+   public boolean ofAnimatedFlame;
+   public boolean ofAnimatedSmoke;
+   public boolean ofVoidParticles;
+   public boolean ofWaterParticles;
+   public boolean ofRainSplash;
+   public boolean ofPortalParticles;
+   public boolean ofPotionParticles;
+   public boolean ofFireworkParticles;
+   public boolean ofDrippingWaterLava;
+   public boolean ofAnimatedTerrain;
+   public boolean ofAnimatedTextures;
+   public boolean ofQuickInfo;
+   public int ofQuickInfoFps;
+   public boolean ofQuickInfoChunks;
+   public boolean ofQuickInfoEntities;
+   public boolean ofQuickInfoParticles;
+   public boolean ofQuickInfoUpdates;
+   public boolean ofQuickInfoGpu;
+   public int ofQuickInfoPos;
+   public int ofQuickInfoFacing;
+   public boolean ofQuickInfoBiome;
+   public boolean ofQuickInfoLight;
+   public int ofQuickInfoMemory;
+   public int ofQuickInfoNativeMemory;
+   public int ofQuickInfoTargetBlock;
+   public int ofQuickInfoTargetFluid;
+   public int ofQuickInfoTargetEntity;
+   public int ofQuickInfoLabels;
+   public boolean ofQuickInfoBackground;
    public static final int DEFAULT = 0;
    public static final int FAST = 1;
    public static final int FANCY = 2;
@@ -892,93 +364,96 @@ public class Options {
    public static final int ANIM_OFF = 2;
    public static final String DEFAULT_STR = "Default";
    public static final double CHAT_WIDTH_SCALE = 4.0571431;
-   public static final int[] VALS_FAST_FANCY_OFF = new int[]{1, 2, 3};
-   private static final int[] OF_TREES_VALUES = new int[]{0, 1, 4, 2};
-   private static final int[] OF_DYNAMIC_LIGHTS = new int[]{3, 1, 2};
-   private static final String[] KEYS_DYNAMIC_LIGHTS = new String[]{"options.off", "options.graphics.fast", "options.graphics.fancy"};
+   public static final int[] VALS_FAST_FANCY_OFF;
+   private static final int[] OF_TREES_VALUES;
+   private static final int[] OF_DYNAMIC_LIGHTS;
+   private static final String[] KEYS_DYNAMIC_LIGHTS;
    public static final int TELEM_ON = 0;
    public static final int TELEM_ANON = 1;
    public static final int TELEM_OFF = 2;
-   private static final int[] OF_TELEMETRY = new int[]{0, 1, 2};
-   private static final String[] KEYS_TELEMETRY = new String[]{"options.on", "of.general.anonymous", "options.off"};
+   private static final int[] OF_TELEMETRY;
+   private static final String[] KEYS_TELEMETRY;
    public KeyMapping ofKeyBindZoom;
    private File optionsFileOF;
    private boolean loadOptions;
    private boolean saveOptions;
-   public final net.minecraft.client.OptionInstance GRAPHICS = this.f_92115_;
-   public final net.minecraft.client.OptionInstance RENDER_DISTANCE;
-   public final net.minecraft.client.OptionInstance SIMULATION_DISTANCE;
-   public final net.minecraft.client.OptionInstance AO = this.f_92116_;
-   public final net.minecraft.client.OptionInstance FRAMERATE_LIMIT = this.f_92113_;
-   public final net.minecraft.client.OptionInstance GUI_SCALE = this.f_92072_;
-   public final net.minecraft.client.OptionInstance ENTITY_SHADOWS = this.f_92042_;
-   public final net.minecraft.client.OptionInstance GAMMA = this.f_92071_;
-   public final net.minecraft.client.OptionInstance ATTACK_INDICATOR = this.f_92029_;
-   public final net.minecraft.client.OptionInstance PARTICLES = this.f_92073_;
-   public final net.minecraft.client.OptionInstance VIEW_BOBBING = this.f_92080_;
-   public final net.minecraft.client.OptionInstance AUTOSAVE_INDICATOR = this.f_193763_;
-   public final net.minecraft.client.OptionInstance ENTITY_DISTANCE_SCALING = this.f_92112_;
-   public final net.minecraft.client.OptionInstance BIOME_BLEND_RADIUS = this.f_92032_;
-   public final net.minecraft.client.OptionInstance FULLSCREEN = this.f_92052_;
-   public final net.minecraft.client.OptionInstance PRIORITIZE_CHUNK_UPDATES = this.f_193769_;
-   public final net.minecraft.client.OptionInstance MIPMAP_LEVELS = this.f_92027_;
-   public final net.minecraft.client.OptionInstance SCREEN_EFFECT_SCALE = this.f_92069_;
-   public final net.minecraft.client.OptionInstance FOV_EFFECT_SCALE = this.f_92070_;
+   public final OptionInstance GRAPHICS;
+   public final OptionInstance RENDER_DISTANCE;
+   public final OptionInstance SIMULATION_DISTANCE;
+   // $FF: renamed from: AO net.minecraft.client.OptionInstance
+   public final OptionInstance field_19;
+   public final OptionInstance FRAMERATE_LIMIT;
+   public final OptionInstance GUI_SCALE;
+   public final OptionInstance ENTITY_SHADOWS;
+   public final OptionInstance GAMMA;
+   public final OptionInstance ATTACK_INDICATOR;
+   public final OptionInstance PARTICLES;
+   public final OptionInstance VIEW_BOBBING;
+   public final OptionInstance AUTOSAVE_INDICATOR;
+   public final OptionInstance ENTITY_DISTANCE_SCALING;
+   public final OptionInstance BIOME_BLEND_RADIUS;
+   public final OptionInstance FULLSCREEN;
+   public final OptionInstance PRIORITIZE_CHUNK_UPDATES;
+   public final OptionInstance MIPMAP_LEVELS;
+   public final OptionInstance SCREEN_EFFECT_SCALE;
+   public final OptionInstance FOV_EFFECT_SCALE;
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231838_() {
+   public OptionInstance m_231838_() {
       return this.f_168413_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231935_() {
+   public OptionInstance m_231935_() {
       return this.f_231791_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_307023_() {
+   public OptionInstance m_307023_() {
       return this.f_302346_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_231964_() {
+   public OptionInstance m_231964_() {
       return this.f_92053_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_231984_() {
+   public OptionInstance m_231984_() {
       return this.f_92106_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_232001_() {
+   public OptionInstance m_232001_() {
       return this.f_193768_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232018_() {
+   public OptionInstance m_232018_() {
       return this.f_92112_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_232035_() {
+   public OptionInstance m_232035_() {
       return this.f_92113_;
    }
 
-   public net.minecraft.client.OptionInstance<CloudStatus> m_232050_() {
+   public OptionInstance m_232050_() {
       return this.f_231792_;
    }
 
-   public net.minecraft.client.OptionInstance<GraphicsStatus> m_232060_() {
+   public OptionInstance m_232060_() {
       return this.f_92115_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_232070_() {
+   public OptionInstance m_232070_() {
       return this.f_92116_;
    }
 
-   public net.minecraft.client.OptionInstance<PrioritizeChunkUpdates> m_232080_() {
+   public OptionInstance m_232080_() {
       return this.f_193769_;
    }
 
    public void m_274546_(PackRepository repoIn) {
-      List<String> list = ImmutableList.copyOf(this.f_92117_);
+      List list = ImmutableList.copyOf(this.f_92117_);
       this.f_92117_.clear();
       this.f_92118_.clear();
+      Iterator var3 = repoIn.m_10524_().iterator();
 
-      for (Pack pack : repoIn.m_10524_()) {
+      while(var3.hasNext()) {
+         Pack pack = (Pack)var3.next();
          if (!pack.m_10450_()) {
             this.f_92117_.add(pack.m_10446_());
             if (!pack.m_10443_().m_10489_()) {
@@ -988,85 +463,86 @@ public class Options {
       }
 
       this.m_92169_();
-      List<String> list1 = ImmutableList.copyOf(this.f_92117_);
+      List list1 = ImmutableList.copyOf(this.f_92117_);
       if (!list1.equals(list)) {
          this.f_92060_.m_91391_();
       }
+
    }
 
-   public net.minecraft.client.OptionInstance<ChatVisiblity> m_232090_() {
+   public OptionInstance m_232090_() {
       return this.f_92119_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232098_() {
+   public OptionInstance m_232098_() {
       return this.f_92120_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232101_() {
+   public OptionInstance m_232101_() {
       return this.f_92121_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_323040_() {
+   public OptionInstance m_323040_() {
       return this.f_317010_;
    }
 
    public int m_321110_() {
-      return this.m_323040_().m_231551_();
+      return (Integer)this.m_323040_().m_231551_();
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232104_() {
+   public OptionInstance m_232104_() {
       return this.f_92122_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_245201_() {
+   public OptionInstance m_245201_() {
       return this.f_244402_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_274330_() {
+   public OptionInstance m_274330_() {
       return this.f_273910_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_292959_() {
+   public OptionInstance m_292959_() {
       return this.f_290977_;
    }
 
-   public net.minecraft.client.OptionInstance<HumanoidArm> m_232107_() {
+   public OptionInstance m_232107_() {
       return this.f_92127_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232110_() {
+   public OptionInstance m_232110_() {
       return this.f_92131_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232113_() {
+   public OptionInstance m_232113_() {
       return this.f_92132_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232116_() {
+   public OptionInstance m_232116_() {
       return this.f_92133_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232117_() {
+   public OptionInstance m_232117_() {
       return this.f_92134_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232118_() {
+   public OptionInstance m_232118_() {
       return this.f_92135_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_264038_() {
+   public OptionInstance m_264038_() {
       return this.f_263718_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_232119_() {
+   public OptionInstance m_232119_() {
       return this.f_92027_;
    }
 
-   public net.minecraft.client.OptionInstance<AttackIndicatorStatus> m_232120_() {
+   public OptionInstance m_232120_() {
       return this.f_92029_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_232121_() {
+   public OptionInstance m_232121_() {
       return this.f_92032_;
    }
 
@@ -1075,46 +551,46 @@ public class Options {
    }
 
    private static int m_231839_(double valueIn) {
-      return net.minecraft.util.Mth.m_14107_(Math.log10(valueIn) * 100.0);
+      return Mth.m_14107_(Math.log10(valueIn) * 100.0);
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_232122_() {
+   public OptionInstance m_232122_() {
       return this.f_92033_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_232123_() {
+   public OptionInstance m_232123_() {
       return this.f_92034_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231812_() {
+   public OptionInstance m_231812_() {
       return this.f_92036_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_257871_() {
+   public OptionInstance m_257871_() {
       return this.f_256834_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231813_() {
+   public OptionInstance m_231813_() {
       return this.f_92037_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231814_() {
+   public OptionInstance m_231814_() {
       return this.f_92038_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231815_() {
+   public OptionInstance m_231815_() {
       return this.f_92039_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231816_() {
+   public OptionInstance m_231816_() {
       return this.f_92040_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231817_() {
+   public OptionInstance m_231817_() {
       return this.f_92041_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231818_() {
+   public OptionInstance m_231818_() {
       return this.f_92042_;
    }
 
@@ -1124,9 +600,10 @@ public class Options {
          minecraft.m_323618_();
          minecraft.m_5741_();
       }
+
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231819_() {
+   public OptionInstance m_231819_() {
       return this.f_92043_;
    }
 
@@ -1134,142 +611,137 @@ public class Options {
       return Locale.getDefault().getLanguage().equalsIgnoreCase("ja");
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_321442_() {
+   public OptionInstance m_321442_() {
       return this.f_314642_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231820_() {
+   public OptionInstance m_231820_() {
       return this.f_92044_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231821_() {
+   public OptionInstance m_231821_() {
       return this.f_92045_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231822_() {
+   public OptionInstance m_231822_() {
       return this.f_92046_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231823_() {
+   public OptionInstance m_231823_() {
       return this.f_193762_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231824_() {
+   public OptionInstance m_231824_() {
       return this.f_92047_;
    }
 
    public final float m_92147_(SoundSource category) {
-      return this.m_246669_(category).m_231551_().floatValue();
+      return ((Double)this.m_246669_(category).m_231551_()).floatValue();
    }
 
-   public final net.minecraft.client.OptionInstance<Double> m_246669_(SoundSource p_246669_1_) {
-      return (net.minecraft.client.OptionInstance<Double>)Objects.requireNonNull((net.minecraft.client.OptionInstance)this.f_244498_.get(p_246669_1_));
+   public final OptionInstance m_246669_(SoundSource p_246669_1_) {
+      return (OptionInstance)Objects.requireNonNull((OptionInstance)this.f_244498_.get(p_246669_1_));
    }
 
-   private net.minecraft.client.OptionInstance<Double> m_247249_(String p_247249_1_, SoundSource p_247249_2_) {
-      return new net.minecraft.client.OptionInstance<>(
-         p_247249_1_,
-         net.minecraft.client.OptionInstance.m_231498_(),
-         net.minecraft.client.Options::m_324758_,
-         net.minecraft.client.OptionInstance.UnitDouble.INSTANCE,
-         1.0,
-         p_244657_1_ -> Minecraft.m_91087_().m_91106_().m_120358_(p_247249_2_, p_244657_1_.floatValue())
-      );
+   private OptionInstance m_247249_(String p_247249_1_, SoundSource p_247249_2_) {
+      return new OptionInstance(p_247249_1_, OptionInstance.m_231498_(), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_244657_1_) -> {
+         Minecraft.m_91087_().m_91106_().m_120358_(p_247249_2_, p_244657_1_.floatValue());
+      });
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231825_() {
+   public OptionInstance m_231825_() {
       return this.f_92049_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231826_() {
+   public OptionInstance m_231826_() {
       return this.f_231807_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231827_() {
+   public OptionInstance m_231827_() {
       return this.f_92050_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231828_() {
+   public OptionInstance m_231828_() {
       return this.f_92051_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231829_() {
+   public OptionInstance m_231829_() {
       return this.f_92052_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231830_() {
+   public OptionInstance m_231830_() {
       return this.f_92080_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231831_() {
+   public OptionInstance m_231831_() {
       return this.f_92081_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231832_() {
+   public OptionInstance m_231832_() {
       return this.f_92082_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231833_() {
+   public OptionInstance m_231833_() {
       return this.f_92084_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231834_() {
+   public OptionInstance m_231834_() {
       return this.f_193763_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_231836_() {
+   public OptionInstance m_231836_() {
       return this.f_231798_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_231837_() {
+   public OptionInstance m_231837_() {
       return this.f_92068_;
    }
 
-   public net.minecraft.client.OptionInstance<Boolean> m_261324_() {
+   public OptionInstance m_261324_() {
       return this.f_260461_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_231924_() {
+   public OptionInstance m_231924_() {
       return this.f_92069_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_231925_() {
+   public OptionInstance m_231925_() {
       return this.f_92070_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_231926_() {
+   public OptionInstance m_231926_() {
       return this.f_231802_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_267805_() {
+   public OptionInstance m_267805_() {
       return this.f_267458_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_267782_() {
+   public OptionInstance m_267782_() {
       return this.f_267462_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_269326_() {
+   public OptionInstance m_269326_() {
       return this.f_268427_;
    }
 
-   public net.minecraft.client.OptionInstance<Double> m_231927_() {
+   public OptionInstance m_231927_() {
       return this.f_92071_;
    }
 
-   public net.minecraft.client.OptionInstance<Integer> m_231928_() {
+   public OptionInstance m_231928_() {
       return this.f_92072_;
    }
 
-   public net.minecraft.client.OptionInstance<ParticleStatus> m_231929_() {
+   public OptionInstance m_231929_() {
       return this.f_92073_;
    }
 
-   public net.minecraft.client.OptionInstance<NarratorStatus> m_231930_() {
+   public OptionInstance m_231930_() {
       return this.f_231803_;
    }
 
-   public net.minecraft.client.OptionInstance<String> m_231931_() {
+   public OptionInstance m_231931_() {
       return this.f_193764_;
    }
 
@@ -1279,6 +751,516 @@ public class Options {
    }
 
    public Options(Minecraft mcIn, File mcDataDir) {
+      this.f_168413_ = OptionInstance.m_257536_("options.darkMojangStudiosBackgroundColor", OptionInstance.m_231535_(f_231789_), false);
+      this.f_231791_ = OptionInstance.m_257536_("options.hideLightningFlashes", OptionInstance.m_231535_(f_231790_), false);
+      this.f_302346_ = OptionInstance.m_257536_("options.hideSplashTexts", OptionInstance.m_231535_(f_302626_), false);
+      this.f_92053_ = new OptionInstance("options.sensitivity", OptionInstance.m_231498_(), (p_232095_0_, p_232095_1_) -> {
+         if (p_232095_1_ == 0.0) {
+            return m_231921_(p_232095_0_, Component.m_237115_("options.sensitivity.min"));
+         } else {
+            return p_232095_1_ == 1.0 ? m_231921_(p_232095_0_, Component.m_237115_("options.sensitivity.max")) : m_231897_(p_232095_0_, 2.0 * p_232095_1_);
+         }
+      }, OptionInstance.UnitDouble.INSTANCE, 0.5, (p_232114_0_) -> {
+      });
+      this.f_193765_ = 0;
+      this.f_92112_ = new OptionInstance("options.entityDistanceScaling", OptionInstance.m_231498_(), Options::m_231897_, (new OptionInstance.IntRange(2, 20)).m_231657_((p_232019_0_) -> {
+         return (double)p_232019_0_ / 4.0;
+      }, (p_232111_0_) -> {
+         return (int)(p_232111_0_ * 4.0);
+      }), Codec.doubleRange(0.5, 5.0), 1.0, (p_232040_0_) -> {
+      });
+      this.f_92113_ = new OptionInstance("options.framerateLimit", OptionInstance.m_231498_(), (p_232047_0_, p_232047_1_) -> {
+         if ((Boolean)this.m_231817_().m_231551_()) {
+            return m_231921_(p_232047_0_, Component.m_237115_("of.options.framerateLimit.vsync"));
+         } else {
+            return p_232047_1_ == 260 ? m_231921_(p_232047_0_, Component.m_237115_("options.framerateLimit.max")) : m_231921_(p_232047_0_, Component.m_237110_("options.framerate", new Object[]{p_232047_1_}));
+         }
+      }, (new OptionInstance.IntRange(0, 52)).m_231657_((p_232002_0_) -> {
+         return p_232002_0_ * 5;
+      }, (p_232093_0_) -> {
+         return p_232093_0_ / 5;
+      }), Codec.intRange(0, 260), 120, (p_232085_0_) -> {
+         this.m_231817_().m_231514_(p_232085_0_ == 0);
+         Minecraft.m_91087_().m_91268_().m_85380_(p_232085_0_);
+      });
+      this.f_231792_ = new OptionInstance("options.renderClouds", OptionInstance.m_231498_(), OptionInstance.m_231546_(), new OptionInstance.Enum(Arrays.asList(CloudStatus.values()), Codec.withAlternative(CloudStatus.f_291249_, Codec.BOOL, (p_232081_0_) -> {
+         return p_232081_0_ ? CloudStatus.FANCY : CloudStatus.OFF;
+      })), CloudStatus.FANCY, (p_231853_0_) -> {
+         if (Minecraft.m_91085_()) {
+            RenderTarget rendertarget = Minecraft.m_91087_().f_91060_.m_109832_();
+            if (rendertarget != null) {
+               rendertarget.m_83954_(Minecraft.f_91002_);
+            }
+         }
+
+      });
+      this.f_92115_ = new OptionInstance("options.graphics", (p_317296_0_) -> {
+         if (Boolean.TRUE) {
+            return null;
+         } else {
+            Tooltip var10000;
+            switch (p_317296_0_) {
+               case FANCY:
+                  var10000 = Tooltip.m_257550_(f_231785_);
+                  break;
+               case FAST:
+                  var10000 = Tooltip.m_257550_(f_231793_);
+                  break;
+               case FABULOUS:
+                  var10000 = Tooltip.m_257550_(f_231794_);
+                  break;
+               default:
+                  throw new MatchException((String)null, (Throwable)null);
+            }
+
+            return var10000;
+         }
+      }, (p_231903_0_, p_231903_1_) -> {
+         MutableComponent mutablecomponent = Component.m_237115_(p_231903_1_.m_35968_());
+         return p_231903_1_ == GraphicsStatus.FABULOUS ? mutablecomponent.m_130940_(ChatFormatting.ITALIC) : mutablecomponent;
+      }, new OptionInstance.AltEnum(Arrays.asList(GraphicsStatus.values()), (List)Stream.of(GraphicsStatus.values()).filter((p_231942_0_) -> {
+         return p_231942_0_ != GraphicsStatus.FABULOUS;
+      }).collect(Collectors.toList()), () -> {
+         if (!Config.isShaders() && GLX.isUsingFBOs()) {
+            return Minecraft.m_91087_().m_91396_() && Minecraft.m_91087_().m_91105_().m_109251_();
+         } else {
+            return true;
+         }
+      }, (p_231861_0_, p_231861_1_) -> {
+         Minecraft minecraft = Minecraft.m_91087_();
+         GpuWarnlistManager gpuwarnlistmanager = minecraft.m_91105_();
+         if (p_231861_1_ == GraphicsStatus.FABULOUS && gpuwarnlistmanager.m_109240_()) {
+            gpuwarnlistmanager.m_109247_();
+         } else {
+            p_231861_0_.m_231514_(p_231861_1_);
+            this.updateRenderClouds();
+            minecraft.f_91060_.m_109818_();
+         }
+
+      }, Codec.INT.xmap(GraphicsStatus::m_90774_, GraphicsStatus::m_35965_)), GraphicsStatus.FANCY, (p_231855_0_) -> {
+      });
+      this.f_92116_ = OptionInstance.m_231528_("options.ao", true, (p_231849_0_) -> {
+         Minecraft.m_91087_().f_91060_.m_109818_();
+      });
+      this.f_193769_ = new OptionInstance("options.prioritizeChunkUpdates", (p_317297_0_) -> {
+         if (Boolean.TRUE) {
+            return null;
+         } else {
+            Tooltip var10000;
+            switch (p_317297_0_) {
+               case NONE:
+                  var10000 = Tooltip.m_257550_(f_231786_);
+                  break;
+               case PLAYER_AFFECTED:
+                  var10000 = Tooltip.m_257550_(f_231787_);
+                  break;
+               case NEARBY:
+                  var10000 = Tooltip.m_257550_(f_231788_);
+                  break;
+               default:
+                  throw new MatchException((String)null, (Throwable)null);
+            }
+
+            return var10000;
+         }
+      }, OptionInstance.m_231546_(), new OptionInstance.Enum(Arrays.asList(PrioritizeChunkUpdates.values()), Codec.INT.xmap(PrioritizeChunkUpdates::m_193787_, PrioritizeChunkUpdates::m_35965_)), PrioritizeChunkUpdates.NONE, (p_231870_0_) -> {
+      });
+      this.f_92117_ = Lists.newArrayList();
+      this.f_92118_ = Lists.newArrayList();
+      this.f_92119_ = new OptionInstance("options.chat.visibility", OptionInstance.m_231498_(), OptionInstance.m_231546_(), new OptionInstance.Enum(Arrays.asList(ChatVisiblity.values()), Codec.INT.xmap(ChatVisiblity::m_35966_, ChatVisiblity::m_35965_)), ChatVisiblity.FULL, (p_231843_0_) -> {
+      });
+      this.f_92120_ = new OptionInstance("options.chat.opacity", OptionInstance.m_231498_(), (p_232087_0_, p_232087_1_) -> {
+         return m_231897_(p_232087_0_, p_232087_1_ * 0.9 + 0.1);
+      }, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_232105_0_) -> {
+         Minecraft.m_91087_().f_91065_.m_93076_().m_93769_();
+      });
+      this.f_92121_ = new OptionInstance("options.chat.line_spacing", OptionInstance.m_231498_(), Options::m_231897_, OptionInstance.UnitDouble.INSTANCE, 0.0, (p_232102_0_) -> {
+      });
+      this.f_317010_ = new OptionInstance("options.accessibility.menu_background_blurriness", OptionInstance.m_231535_(f_315005_), Options::m_338389_, new OptionInstance.IntRange(0, 10), 5, (p_232108_0_) -> {
+      });
+      this.f_92122_ = new OptionInstance("options.accessibility.text_background_opacity", OptionInstance.m_231498_(), Options::m_231897_, OptionInstance.UnitDouble.INSTANCE, 0.5, (p_232099_0_) -> {
+         Minecraft.m_91087_().f_91065_.m_93076_().m_93769_();
+      });
+      this.f_244402_ = new OptionInstance("options.accessibility.panorama_speed", OptionInstance.m_231498_(), Options::m_231897_, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_232038_0_) -> {
+      });
+      this.f_273910_ = OptionInstance.m_257874_("options.accessibility.high_contrast", OptionInstance.m_231535_(f_273812_), false, (p_275764_1_) -> {
+         PackRepository packrepository = Minecraft.m_91087_().m_91099_();
+         boolean flag1 = packrepository.m_10523_().contains("high_contrast");
+         if (!flag1 && p_275764_1_) {
+            if (packrepository.m_275855_("high_contrast")) {
+               this.m_274546_(packrepository);
+            }
+         } else if (flag1 && !p_275764_1_ && packrepository.m_275853_("high_contrast")) {
+            this.m_274546_(packrepository);
+         }
+
+      });
+      this.f_290977_ = OptionInstance.m_257536_("options.accessibility.narrator_hotkey", OptionInstance.m_231535_(Minecraft.f_91002_ ? Component.m_237115_("options.accessibility.narrator_hotkey.mac.tooltip") : Component.m_237115_("options.accessibility.narrator_hotkey.tooltip")), true);
+      this.f_92126_ = true;
+      this.f_92108_ = EnumSet.allOf(PlayerModelPart.class);
+      this.f_92127_ = new OptionInstance("options.mainHand", OptionInstance.m_231498_(), OptionInstance.m_231546_(), new OptionInstance.Enum(Arrays.asList(HumanoidArm.values()), HumanoidArm.f_291347_), HumanoidArm.RIGHT, (p_231841_1_) -> {
+         this.m_92172_();
+      });
+      this.f_92131_ = new OptionInstance("options.chat.scale", OptionInstance.m_231498_(), (p_232077_0_, p_232077_1_) -> {
+         return (Component)(p_232077_1_ == 0.0 ? CommonComponents.m_130663_(p_232077_0_, false) : m_231897_(p_232077_0_, p_232077_1_));
+      }, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_232091_0_) -> {
+         Minecraft.m_91087_().f_91065_.m_93076_().m_93769_();
+      });
+      this.f_92132_ = new OptionInstance("options.chat.width", OptionInstance.m_231498_(), (p_232067_0_, p_232067_1_) -> {
+         return m_231952_(p_232067_0_, (int)((double)ChatComponent.m_93798_(p_232067_1_) / 4.0571431));
+      }, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_232083_0_) -> {
+         Minecraft.m_91087_().f_91065_.m_93076_().m_93769_();
+      });
+      this.f_92133_ = new OptionInstance("options.chat.height.unfocused", OptionInstance.m_231498_(), (p_232057_0_, p_232057_1_) -> {
+         return m_231952_(p_232057_0_, ChatComponent.m_93811_(p_232057_1_));
+      }, OptionInstance.UnitDouble.INSTANCE, ChatComponent.m_232477_(), (p_232073_0_) -> {
+         Minecraft.m_91087_().f_91065_.m_93076_().m_93769_();
+      });
+      this.f_92134_ = new OptionInstance("options.chat.height.focused", OptionInstance.m_231498_(), (p_232044_0_, p_232044_1_) -> {
+         return m_231952_(p_232044_0_, ChatComponent.m_93811_(p_232044_1_));
+      }, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_232063_0_) -> {
+         Minecraft.m_91087_().f_91065_.m_93076_().m_93769_();
+      });
+      this.f_92135_ = new OptionInstance("options.chat.delay_instant", OptionInstance.m_231498_(), (p_241715_0_, p_241715_1_) -> {
+         return p_241715_1_ <= 0.0 ? Component.m_237115_("options.chat.delay_none") : Component.m_237110_("options.chat.delay", new Object[]{String.format(Locale.ROOT, "%.1f", p_241715_1_)});
+      }, (new OptionInstance.IntRange(0, 60)).m_231657_((p_231985_0_) -> {
+         return (double)p_231985_0_ / 10.0;
+      }, (p_232053_0_) -> {
+         return (int)(p_232053_0_ * 10.0);
+      }), Codec.doubleRange(0.0, 6.0), 0.0, (p_240679_0_) -> {
+         Minecraft.m_91087_().m_240442_().m_240692_(p_240679_0_);
+      });
+      this.f_263718_ = new OptionInstance("options.notifications.display_time", OptionInstance.m_231535_(f_263815_), (p_231961_0_, p_231961_1_) -> {
+         return m_231921_(p_231961_0_, Component.m_237110_("options.multiplier", new Object[]{p_231961_1_}));
+      }, (new OptionInstance.IntRange(5, 100)).m_231657_((p_263860_0_) -> {
+         return (double)p_263860_0_ / 10.0;
+      }, (p_263861_0_) -> {
+         return (int)(p_263861_0_ * 10.0);
+      }), Codec.doubleRange(0.5, 10.0), 1.0, (p_231851_0_) -> {
+      });
+      this.f_92027_ = new OptionInstance("options.mipmapLevels", OptionInstance.m_231498_(), (p_232032_0_, p_232032_1_) -> {
+         if ((double)p_232032_1_ >= 4.0) {
+            return m_231921_(p_232032_0_, Component.m_237115_("of.general.max"));
+         } else {
+            return (Component)(p_232032_1_ == 0 ? CommonComponents.m_130663_(p_232032_0_, false) : m_231900_(p_232032_0_, p_232032_1_));
+         }
+      }, new OptionInstance.IntRange(0, 4), 4, (p_232023_0_) -> {
+         this.updateMipmaps();
+      });
+      this.f_92028_ = true;
+      this.f_92029_ = new OptionInstance("options.attackIndicator", OptionInstance.m_231498_(), OptionInstance.m_231546_(), new OptionInstance.Enum(Arrays.asList(AttackIndicatorStatus.values()), Codec.INT.xmap(AttackIndicatorStatus::m_90509_, AttackIndicatorStatus::m_35965_)), AttackIndicatorStatus.CROSSHAIR, (p_231987_0_) -> {
+      });
+      this.f_92030_ = TutorialSteps.MOVEMENT;
+      this.f_92031_ = false;
+      this.f_168405_ = false;
+      this.f_92032_ = new OptionInstance("options.biomeBlendRadius", OptionInstance.m_231498_(), (p_232015_0_, p_232015_1_) -> {
+         int i = p_232015_1_ * 2 + 1;
+         return m_231921_(p_232015_0_, Component.m_237115_("options.biomeBlendRadius." + i));
+      }, new OptionInstance.IntRange(0, 7, false), 2, (p_232025_0_) -> {
+         Minecraft.m_91087_().f_91060_.m_109818_();
+      });
+      this.f_92033_ = new OptionInstance("options.mouseWheelSensitivity", OptionInstance.m_231498_(), (p_241716_0_, p_241716_1_) -> {
+         return m_231921_(p_241716_0_, Component.m_237113_(String.format(Locale.ROOT, "%.2f", p_241716_1_)));
+      }, (new OptionInstance.IntRange(-200, 100)).m_231657_(Options::m_231965_, Options::m_231839_), Codec.doubleRange(m_231965_(-200), m_231965_(100)), m_231965_(0), (p_231946_0_) -> {
+      });
+      this.f_92034_ = OptionInstance.m_231528_("options.rawMouseInput", true, (p_232061_0_) -> {
+         Window window = Minecraft.m_91087_().m_91268_();
+         if (window != null) {
+            window.m_85424_(p_232061_0_);
+         }
+
+      });
+      this.f_92035_ = 1;
+      this.f_92036_ = OptionInstance.m_231525_("options.autoJump", false);
+      this.f_256834_ = OptionInstance.m_231525_("options.operatorItemsTab", false);
+      this.f_92037_ = OptionInstance.m_231525_("options.autoSuggestCommands", true);
+      this.f_92038_ = OptionInstance.m_231525_("options.chat.color", true);
+      this.f_92039_ = OptionInstance.m_231525_("options.chat.links", true);
+      this.f_92040_ = OptionInstance.m_231525_("options.chat.links.prompt", true);
+      this.f_92041_ = OptionInstance.m_231528_("options.vsync", true, (p_232051_0_) -> {
+         if (Minecraft.m_91087_().m_91268_() != null) {
+            Minecraft.m_91087_().m_91268_().m_85409_(p_232051_0_);
+         }
+
+      });
+      this.f_92042_ = OptionInstance.m_231525_("options.entityShadows", true);
+      this.f_92043_ = OptionInstance.m_231528_("options.forceUnicodeFont", false, (p_317299_0_) -> {
+         m_320153_();
+      });
+      this.f_314642_ = OptionInstance.m_257874_("options.japaneseGlyphVariants", OptionInstance.m_231535_(Component.m_237115_("options.japaneseGlyphVariants.tooltip")), m_324081_(), (p_317300_0_) -> {
+         m_320153_();
+      });
+      this.f_92044_ = OptionInstance.m_231525_("options.invertMouse", false);
+      this.f_92045_ = OptionInstance.m_231525_("options.discrete_mouse_scroll", false);
+      this.f_92046_ = OptionInstance.m_257536_("options.realmsNotifications", OptionInstance.m_231535_(f_337252_), true);
+      this.f_193762_ = OptionInstance.m_257874_("options.allowServerListing", OptionInstance.m_231535_(f_231804_), true, (p_232021_1_) -> {
+         this.m_92172_();
+      });
+      this.f_92047_ = OptionInstance.m_231525_("options.reducedDebugInfo", false);
+      this.f_244498_ = (Map)Util.m_137469_(new EnumMap(SoundSource.class), (p_244656_1_) -> {
+         SoundSource[] var2 = SoundSource.values();
+         int var3 = var2.length;
+
+         for(int var4 = 0; var4 < var3; ++var4) {
+            SoundSource soundsource = var2[var4];
+            p_244656_1_.put(soundsource, this.m_247249_("soundCategory." + soundsource.m_12676_(), soundsource));
+         }
+
+      });
+      this.f_92049_ = OptionInstance.m_231525_("options.showSubtitles", false);
+      this.f_231807_ = OptionInstance.m_257874_("options.directionalAudio", (p_257068_0_) -> {
+         return p_257068_0_ ? Tooltip.m_257550_(f_231805_) : Tooltip.m_257550_(f_231806_);
+      }, false, (p_263137_0_) -> {
+         SoundManager soundmanager = Minecraft.m_91087_().m_91106_();
+         soundmanager.m_194526_();
+         soundmanager.m_120367_(SimpleSoundInstance.m_263171_(SoundEvents.f_12490_, 1.0F));
+      });
+      this.f_92050_ = new OptionInstance("options.accessibility.text_background", OptionInstance.m_231498_(), (p_231975_0_, p_231975_1_) -> {
+         return p_231975_1_ ? Component.m_237115_("options.accessibility.text_background.chat") : Component.m_237115_("options.accessibility.text_background.everywhere");
+      }, OptionInstance.f_231471_, true, (p_231874_0_) -> {
+      });
+      this.f_92051_ = OptionInstance.m_231525_("options.touchscreen", false);
+      this.f_92052_ = OptionInstance.m_231528_("options.fullscreen", false, (p_231969_1_) -> {
+         Minecraft minecraft = Minecraft.m_91087_();
+         if (minecraft.m_91268_() != null && minecraft.m_91268_().m_85440_() != p_231969_1_) {
+            minecraft.m_91268_().m_85438_();
+            this.m_231829_().m_231514_(minecraft.m_91268_().m_85440_());
+         }
+
+      });
+      this.f_92080_ = OptionInstance.m_231525_("options.viewBobbing", true);
+      this.f_92081_ = new OptionInstance("key.sneak", OptionInstance.m_231498_(), (p_231955_0_, p_231955_1_) -> {
+         return p_231955_1_ ? f_231808_ : f_231809_;
+      }, OptionInstance.f_231471_, false, (p_231989_0_) -> {
+      });
+      this.f_92082_ = new OptionInstance("key.sprint", OptionInstance.m_231498_(), (p_231909_0_, p_231909_1_) -> {
+         return p_231909_1_ ? f_231808_ : f_231809_;
+      }, OptionInstance.f_231471_, false, (p_231971_0_) -> {
+      });
+      this.f_92084_ = OptionInstance.m_257536_("options.hideMatchedNames", OptionInstance.m_231535_(f_231810_), true);
+      this.f_193763_ = OptionInstance.m_231525_("options.autosaveIndicator", true);
+      this.f_231798_ = OptionInstance.m_257536_("options.onlyShowSecureChat", OptionInstance.m_231535_(f_231797_), false);
+      this.f_92085_ = new KeyMapping("key.forward", 87, "key.categories.movement");
+      this.f_92086_ = new KeyMapping("key.left", 65, "key.categories.movement");
+      this.f_92087_ = new KeyMapping("key.back", 83, "key.categories.movement");
+      this.f_92088_ = new KeyMapping("key.right", 68, "key.categories.movement");
+      this.f_92089_ = new KeyMapping("key.jump", 32, "key.categories.movement");
+      OptionInstance var10006 = this.f_92081_;
+      Objects.requireNonNull(var10006);
+      this.f_92090_ = new ToggleKeyMapping("key.sneak", 340, "key.categories.movement", var10006::m_231551_);
+      var10006 = this.f_92082_;
+      Objects.requireNonNull(var10006);
+      this.f_92091_ = new ToggleKeyMapping("key.sprint", 341, "key.categories.movement", var10006::m_231551_);
+      this.f_92092_ = new KeyMapping("key.inventory", 69, "key.categories.inventory");
+      this.f_92093_ = new KeyMapping("key.swapOffhand", 70, "key.categories.inventory");
+      this.f_92094_ = new KeyMapping("key.drop", 81, "key.categories.inventory");
+      this.f_92095_ = new KeyMapping("key.use", Type.MOUSE, 1, "key.categories.gameplay");
+      this.f_92096_ = new KeyMapping("key.attack", Type.MOUSE, 0, "key.categories.gameplay");
+      this.f_92097_ = new KeyMapping("key.pickItem", Type.MOUSE, 2, "key.categories.gameplay");
+      this.f_92098_ = new KeyMapping("key.chat", 84, "key.categories.multiplayer");
+      this.f_92099_ = new KeyMapping("key.playerlist", 258, "key.categories.multiplayer");
+      this.f_92100_ = new KeyMapping("key.command", 47, "key.categories.multiplayer");
+      this.f_92101_ = new KeyMapping("key.socialInteractions", 80, "key.categories.multiplayer");
+      this.f_92102_ = new KeyMapping("key.screenshot", 291, "key.categories.misc");
+      this.f_92103_ = new KeyMapping("key.togglePerspective", 294, "key.categories.misc");
+      this.f_92104_ = new KeyMapping("key.smoothCamera", InputConstants.f_84822_.m_84873_(), "key.categories.misc");
+      this.f_92105_ = new KeyMapping("key.fullscreen", 300, "key.categories.misc");
+      this.f_92054_ = new KeyMapping("key.spectatorOutlines", InputConstants.f_84822_.m_84873_(), "key.categories.misc");
+      this.f_92055_ = new KeyMapping("key.advancements", 76, "key.categories.misc");
+      this.f_92056_ = new KeyMapping[]{new KeyMapping("key.hotbar.1", 49, "key.categories.inventory"), new KeyMapping("key.hotbar.2", 50, "key.categories.inventory"), new KeyMapping("key.hotbar.3", 51, "key.categories.inventory"), new KeyMapping("key.hotbar.4", 52, "key.categories.inventory"), new KeyMapping("key.hotbar.5", 53, "key.categories.inventory"), new KeyMapping("key.hotbar.6", 54, "key.categories.inventory"), new KeyMapping("key.hotbar.7", 55, "key.categories.inventory"), new KeyMapping("key.hotbar.8", 56, "key.categories.inventory"), new KeyMapping("key.hotbar.9", 57, "key.categories.inventory")};
+      this.f_92057_ = new KeyMapping("key.saveToolbarActivator", 67, "key.categories.creative");
+      this.f_92058_ = new KeyMapping("key.loadToolbarActivator", 88, "key.categories.creative");
+      this.f_92059_ = (KeyMapping[])ArrayUtils.addAll(new KeyMapping[]{this.f_92096_, this.f_92095_, this.f_92085_, this.f_92086_, this.f_92087_, this.f_92088_, this.f_92089_, this.f_92090_, this.f_92091_, this.f_92094_, this.f_92092_, this.f_92098_, this.f_92099_, this.f_92097_, this.f_92100_, this.f_92101_, this.f_92102_, this.f_92103_, this.f_92104_, this.f_92105_, this.f_92054_, this.f_92093_, this.f_92057_, this.f_92058_, this.f_92055_}, this.f_92056_);
+      this.f_92111_ = CameraType.FIRST_PERSON;
+      this.f_92066_ = "";
+      this.f_92068_ = new OptionInstance("options.fov", OptionInstance.m_231498_(), (p_231998_0_, p_231998_1_) -> {
+         Component var10000;
+         switch (p_231998_1_) {
+            case 70:
+               var10000 = m_231921_(p_231998_0_, Component.m_237115_("options.fov.min"));
+               break;
+            case 110:
+               var10000 = m_231921_(p_231998_0_, Component.m_237115_("options.fov.max"));
+               break;
+            default:
+               var10000 = m_231900_(p_231998_0_, p_231998_1_);
+         }
+
+         return var10000;
+      }, new OptionInstance.IntRange(30, 110), Codec.DOUBLE.xmap((p_232006_0_) -> {
+         return (int)(p_232006_0_ * 40.0 + 70.0);
+      }, (p_232008_0_) -> {
+         return ((double)p_232008_0_ - 70.0) / 40.0;
+      }), 70, (p_231991_0_) -> {
+         Minecraft.m_91087_().f_91060_.m_109826_();
+      });
+      this.f_260461_ = OptionInstance.m_260965_("options.telemetry.button", OptionInstance.m_231535_(f_260656_), (p_260741_0_, p_260741_1_) -> {
+         Minecraft minecraft = Minecraft.m_91087_();
+         if (!minecraft.m_261210_()) {
+            return Component.m_237115_("options.telemetry.state.none");
+         } else {
+            return p_260741_1_ && minecraft.m_261227_() ? Component.m_237115_("options.telemetry.state.all") : Component.m_237115_("options.telemetry.state.minimal");
+         }
+      }, false, (p_231948_0_) -> {
+      });
+      this.f_92069_ = new OptionInstance("options.screenEffectScale", OptionInstance.m_231535_(f_231799_), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_231876_0_) -> {
+      });
+      this.f_92070_ = new OptionInstance("options.fovEffectScale", OptionInstance.m_231535_(f_231800_), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE.m_231750_(Mth::m_144952_, Math::sqrt), Codec.doubleRange(0.0, 1.0), 1.0, (p_231973_0_) -> {
+      });
+      this.f_231802_ = new OptionInstance("options.darknessEffectScale", OptionInstance.m_231535_(f_231801_), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE.m_231750_(Mth::m_144952_, Math::sqrt), 1.0, (p_231868_0_) -> {
+      });
+      this.f_267458_ = new OptionInstance("options.glintSpeed", OptionInstance.m_231535_(f_267409_), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE, 0.5, (p_241717_0_) -> {
+      });
+      this.f_267462_ = new OptionInstance("options.glintStrength", OptionInstance.m_231535_(f_267450_), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE, 0.75, RenderSystem::setShaderGlintAlpha);
+      this.f_268427_ = new OptionInstance("options.damageTiltStrength", OptionInstance.m_231535_(f_268597_), Options::m_324758_, OptionInstance.UnitDouble.INSTANCE, 1.0, (p_260742_0_) -> {
+      });
+      this.f_92071_ = new OptionInstance("options.gamma", OptionInstance.m_231498_(), (p_231912_0_, p_231912_1_) -> {
+         int i = (int)(p_231912_1_ * 100.0);
+         if (i == 0) {
+            return m_231921_(p_231912_0_, Component.m_237115_("options.gamma.min"));
+         } else if (i == 50) {
+            return m_231921_(p_231912_0_, Component.m_237115_("options.gamma.default"));
+         } else {
+            return i == 100 ? m_231921_(p_231912_0_, Component.m_237115_("options.gamma.max")) : m_231900_(p_231912_0_, i);
+         }
+      }, OptionInstance.UnitDouble.INSTANCE, 0.5, (p_263858_0_) -> {
+      });
+      this.f_92072_ = new OptionInstance("options.guiScale", OptionInstance.m_231498_(), (p_231981_0_, p_231981_1_) -> {
+         return p_231981_1_ == 0 ? Component.m_237115_("options.guiScale.auto") : Component.m_237113_(Integer.toString(p_231981_1_));
+      }, new OptionInstance.ClampingLazyMaxIntRange(0, () -> {
+         Minecraft minecraft = Minecraft.m_91087_();
+         return !minecraft.m_91396_() ? 2147483646 : minecraft.m_91268_().m_85385_(0, minecraft.m_91390_());
+      }, 2147483646), 0, (p_317301_1_) -> {
+         this.f_92060_.m_5741_();
+      });
+      this.f_92073_ = new OptionInstance("options.particles", OptionInstance.m_231498_(), OptionInstance.m_231546_(), new OptionInstance.Enum(Arrays.asList(ParticleStatus.values()), Codec.INT.xmap(ParticleStatus::m_92196_, ParticleStatus::m_35965_)), ParticleStatus.ALL, (p_267500_0_) -> {
+      });
+      this.f_231803_ = new OptionInstance("options.narrator", OptionInstance.m_231498_(), (p_240390_1_, p_240390_2_) -> {
+         return (Component)(this.f_92060_.m_240477_().m_93316_() ? p_240390_2_.m_91621_() : Component.m_237115_("options.narrator.notavailable"));
+      }, new OptionInstance.Enum(Arrays.asList(NarratorStatus.values()), Codec.INT.xmap(NarratorStatus::m_91619_, NarratorStatus::m_91618_)), NarratorStatus.OFF, (p_240389_1_) -> {
+         this.f_92060_.m_240477_().m_93317_(p_240389_1_);
+      });
+      this.f_92075_ = "en_us";
+      this.f_193764_ = new OptionInstance("options.audioDevice", OptionInstance.m_231498_(), (p_231918_0_, p_231918_1_) -> {
+         if ("".equals(p_231918_1_)) {
+            return Component.m_237115_("options.audioDevice.default");
+         } else {
+            return p_231918_1_.startsWith("OpenAL Soft on ") ? Component.m_237113_(p_231918_1_.substring(SoundEngine.f_194470_)) : Component.m_237113_(p_231918_1_);
+         }
+      }, new OptionInstance.LazyEnum(() -> {
+         return Stream.concat(Stream.of(""), Minecraft.m_91087_().m_91106_().m_194525_().stream()).toList();
+      }, (p_232010_0_) -> {
+         return Minecraft.m_91087_().m_91396_() && (p_232010_0_ == null || p_232010_0_.isEmpty()) && !Minecraft.m_91087_().m_91106_().m_194525_().contains(p_232010_0_) ? Optional.empty() : Optional.of(p_232010_0_);
+      }, Codec.STRING), "", (p_263138_0_) -> {
+         SoundManager soundmanager = Minecraft.m_91087_().m_91106_();
+         soundmanager.m_194526_();
+         soundmanager.m_120367_(SimpleSoundInstance.m_263171_(SoundEvents.f_12490_, 1.0F));
+      });
+      this.f_263744_ = true;
+      this.ofFogType = 1;
+      this.ofFogStart = 0.8F;
+      this.ofMipmapType = 0;
+      this.ofOcclusionFancy = false;
+      this.ofSmoothFps = false;
+      this.ofSmoothWorld = Config.isSingleProcessor();
+      this.ofLazyChunkLoading = Config.isSingleProcessor();
+      this.ofRenderRegions = false;
+      this.ofSmartAnimations = false;
+      this.ofAoLevel = 1.0;
+      this.ofAaLevel = 0;
+      this.ofAfLevel = 1;
+      this.ofClouds = 0;
+      this.ofCloudsHeight = 0.0;
+      this.ofTrees = 0;
+      this.ofRain = 0;
+      this.ofBetterGrass = 3;
+      this.ofAutoSaveTicks = 4000;
+      this.ofLagometer = false;
+      this.ofProfiler = false;
+      this.ofWeather = true;
+      this.ofSky = true;
+      this.ofStars = true;
+      this.ofSunMoon = true;
+      this.ofVignette = 0;
+      this.ofChunkUpdates = 1;
+      this.ofChunkUpdatesDynamic = false;
+      this.ofTime = 0;
+      this.ofBetterSnow = false;
+      this.ofSwampColors = true;
+      this.ofRandomEntities = true;
+      this.ofCustomFonts = true;
+      this.ofCustomColors = true;
+      this.ofCustomSky = true;
+      this.ofShowCapes = true;
+      this.ofConnectedTextures = 2;
+      this.ofCustomItems = true;
+      this.ofNaturalTextures = false;
+      this.ofEmissiveTextures = true;
+      this.ofFastMath = false;
+      this.ofFastRender = false;
+      this.ofDynamicFov = true;
+      this.ofAlternateBlocks = true;
+      this.ofDynamicLights = 3;
+      this.ofCustomEntityModels = true;
+      this.ofCustomGuis = true;
+      this.ofShowGlErrors = true;
+      this.ofScreenshotSize = 1;
+      this.ofChatBackground = 0;
+      this.ofChatShadow = true;
+      this.ofTelemetry = 0;
+      this.ofHeldItemTooltips = true;
+      this.ofAnimatedWater = 0;
+      this.ofAnimatedLava = 0;
+      this.ofAnimatedFire = true;
+      this.ofAnimatedPortal = true;
+      this.ofAnimatedRedstone = true;
+      this.ofAnimatedExplosion = true;
+      this.ofAnimatedFlame = true;
+      this.ofAnimatedSmoke = true;
+      this.ofVoidParticles = true;
+      this.ofWaterParticles = true;
+      this.ofRainSplash = true;
+      this.ofPortalParticles = true;
+      this.ofPotionParticles = true;
+      this.ofFireworkParticles = true;
+      this.ofDrippingWaterLava = true;
+      this.ofAnimatedTerrain = true;
+      this.ofAnimatedTextures = true;
+      this.ofQuickInfo = false;
+      this.ofQuickInfoFps = Option.FULL.getValue();
+      this.ofQuickInfoChunks = true;
+      this.ofQuickInfoEntities = true;
+      this.ofQuickInfoParticles = false;
+      this.ofQuickInfoUpdates = true;
+      this.ofQuickInfoGpu = false;
+      this.ofQuickInfoPos = Option.COMPACT.getValue();
+      this.ofQuickInfoFacing = Option.OFF.getValue();
+      this.ofQuickInfoBiome = false;
+      this.ofQuickInfoLight = false;
+      this.ofQuickInfoMemory = Option.OFF.getValue();
+      this.ofQuickInfoNativeMemory = Option.OFF.getValue();
+      this.ofQuickInfoTargetBlock = Option.OFF.getValue();
+      this.ofQuickInfoTargetFluid = Option.OFF.getValue();
+      this.ofQuickInfoTargetEntity = Option.OFF.getValue();
+      this.ofQuickInfoLabels = Option.COMPACT.getValue();
+      this.ofQuickInfoBackground = false;
+      this.GRAPHICS = this.f_92115_;
+      this.field_19 = this.f_92116_;
+      this.FRAMERATE_LIMIT = this.f_92113_;
+      this.GUI_SCALE = this.f_92072_;
+      this.ENTITY_SHADOWS = this.f_92042_;
+      this.GAMMA = this.f_92071_;
+      this.ATTACK_INDICATOR = this.f_92029_;
+      this.PARTICLES = this.f_92073_;
+      this.VIEW_BOBBING = this.f_92080_;
+      this.AUTOSAVE_INDICATOR = this.f_193763_;
+      this.ENTITY_DISTANCE_SCALING = this.f_92112_;
+      this.BIOME_BLEND_RADIUS = this.f_92032_;
+      this.FULLSCREEN = this.f_92052_;
+      this.PRIORITIZE_CHUNK_UPDATES = this.f_193769_;
+      this.MIPMAP_LEVELS = this.f_92027_;
+      this.SCREEN_EFFECT_SCALE = this.f_92069_;
+      this.FOV_EFFECT_SCALE = this.f_92070_;
       this.setForgeKeybindProperties();
       long MB = 1000000L;
       int maxRenderDist = 32;
@@ -1293,28 +1275,20 @@ public class Options {
       this.f_92060_ = mcIn;
       this.f_92110_ = new File(mcDataDir, "options.txt");
       boolean flag = Runtime.getRuntime().maxMemory() >= 1000000000L;
-      this.f_92106_ = new net.minecraft.client.OptionInstance<>(
-         "options.renderDistance",
-         net.minecraft.client.OptionInstance.m_231498_(),
-         (p_231915_0_, p_231915_1_) -> m_231921_(p_231915_0_, Component.m_237110_("options.chunks", new Object[]{p_231915_1_})),
-         new net.minecraft.client.OptionInstance.IntRange(2, flag ? maxRenderDist : 16, false),
-         12,
-         p_231950_0_ -> Minecraft.m_91087_().f_91060_.m_109826_()
-      );
-      this.f_193768_ = new net.minecraft.client.OptionInstance<>(
-         "options.simulationDistance",
-         net.minecraft.client.OptionInstance.m_231498_(),
-         (p_263859_0_, p_263859_1_) -> m_231921_(p_263859_0_, Component.m_237110_("options.chunks", new Object[]{p_263859_1_})),
-         new net.minecraft.client.OptionInstance.IntRange(5, flag ? 32 : 16, false),
-         12,
-         p_268764_0_ -> {
-         }
-      );
-      this.f_92076_ = net.minecraft.Util.m_137581_() == net.minecraft.Util.OS.WINDOWS;
+      this.f_92106_ = new OptionInstance("options.renderDistance", OptionInstance.m_231498_(), (p_231915_0_, p_231915_1_) -> {
+         return m_231921_(p_231915_0_, Component.m_237110_("options.chunks", new Object[]{p_231915_1_}));
+      }, new OptionInstance.IntRange(2, flag ? maxRenderDist : 16, false), 12, (p_231950_0_) -> {
+         Minecraft.m_91087_().f_91060_.m_109826_();
+      });
+      this.f_193768_ = new OptionInstance("options.simulationDistance", OptionInstance.m_231498_(), (p_263859_0_, p_263859_1_) -> {
+         return m_231921_(p_263859_0_, Component.m_237110_("options.chunks", new Object[]{p_263859_1_}));
+      }, new OptionInstance.IntRange(5, flag ? 32 : 16, false), 12, (p_268764_0_) -> {
+      });
+      this.f_92076_ = Util.m_137581_() == Util.class_0.WINDOWS;
       this.RENDER_DISTANCE = this.f_92106_;
       this.SIMULATION_DISTANCE = this.f_193768_;
       this.optionsFileOF = new File(mcDataDir, "optionsof.txt");
-      this.m_232035_().m_231514_(this.m_232035_().getMaxValue());
+      this.m_232035_().m_231514_((Integer)this.m_232035_().getMaxValue());
       this.ofKeyBindZoom = new KeyMapping("of.key.zoom", 67, "key.categories.misc");
       this.f_92059_ = (KeyMapping[])ArrayUtils.add(this.f_92059_, this.ofKeyBindZoom);
       KeyUtils.fixKeyConflicts(this.f_92059_, new KeyMapping[]{this.ofKeyBindZoom});
@@ -1324,29 +1298,29 @@ public class Options {
    }
 
    public float m_92141_(float opacityIn) {
-      return this.f_92050_.m_231551_() ? opacityIn : this.m_232104_().m_231551_().floatValue();
+      return (Boolean)this.f_92050_.m_231551_() ? opacityIn : ((Double)this.m_232104_().m_231551_()).floatValue();
    }
 
    public int m_92170_(float opacityIn) {
-      return (int)(this.m_92141_(opacityIn) * 255.0F) << 24 & 0xFF000000;
+      return (int)(this.m_92141_(opacityIn) * 255.0F) << 24 & -16777216;
    }
 
    public int m_92143_(int colorIn) {
-      return this.f_92050_.m_231551_() ? colorIn : (int)(this.f_92122_.m_231551_() * 255.0) << 24 & 0xFF000000;
+      return (Boolean)this.f_92050_.m_231551_() ? colorIn : (int)((Double)this.f_92122_.m_231551_() * 255.0) << 24 & -16777216;
    }
 
-   public void m_92159_(KeyMapping keyBindingIn, Key inputIn) {
+   public void m_92159_(KeyMapping keyBindingIn, InputConstants.Key inputIn) {
       keyBindingIn.m_90848_(inputIn);
       this.m_92169_();
    }
 
-   private void m_323232_(net.minecraft.client.Options.OptionAccess optionAccessIn) {
+   private void m_323232_(OptionAccess optionAccessIn) {
       optionAccessIn.m_232124_("ao", this.f_92116_);
       optionAccessIn.m_232124_("biomeBlendRadius", this.f_92032_);
       optionAccessIn.m_232124_("enableVsync", this.f_92041_);
       if (this.loadOptions) {
-         if (this.m_231817_().m_231551_()) {
-            this.f_92113_.m_231514_(this.f_92113_.getMinValue());
+         if ((Boolean)this.m_231817_().m_231551_()) {
+            this.f_92113_.m_231514_((Integer)this.f_92113_.getMinValue());
          }
 
          this.updateVSync();
@@ -1371,8 +1345,8 @@ public class Options {
 
       optionAccessIn.m_232124_("guiScale", this.f_92072_);
       optionAccessIn.m_232124_("maxFps", this.f_92113_);
-      if (this.loadOptions && this.m_231817_().m_231551_()) {
-         this.m_232035_().m_231514_(this.m_232035_().getMinValue());
+      if (this.loadOptions && (Boolean)this.m_231817_().m_231551_()) {
+         this.m_232035_().m_231514_((Integer)this.m_232035_().getMinValue());
       }
 
       optionAccessIn.m_232124_("mipmapLevels", this.f_92027_);
@@ -1386,7 +1360,7 @@ public class Options {
       optionAccessIn.m_232124_("soundDevice", this.f_193764_);
    }
 
-   private void m_168427_(net.minecraft.client.Options.FieldAccess fieldAccessIn) {
+   private void m_168427_(FieldAccess fieldAccessIn) {
       this.m_323232_(fieldAccessIn);
       fieldAccessIn.m_232124_("autoJump", this.f_92036_);
       fieldAccessIn.m_232124_("operatorItemsTab", this.f_256834_);
@@ -1410,8 +1384,16 @@ public class Options {
       fieldAccessIn.m_232124_("damageTiltStrength", this.f_268427_);
       fieldAccessIn.m_232124_("highContrast", this.f_273910_);
       fieldAccessIn.m_232124_("narratorHotkey", this.f_290977_);
-      this.f_92117_ = fieldAccessIn.m_142634_("resourcePacks", this.f_92117_, net.minecraft.client.Options::m_292893_, f_92078_::toJson);
-      this.f_92118_ = fieldAccessIn.m_142634_("incompatibleResourcePacks", this.f_92118_, net.minecraft.client.Options::m_292893_, f_92078_::toJson);
+      List var10003 = this.f_92117_;
+      Function var10004 = Options::m_292893_;
+      Gson var10005 = f_92078_;
+      Objects.requireNonNull(var10005);
+      this.f_92117_ = (List)fieldAccessIn.m_142634_("resourcePacks", var10003, var10004, var10005::toJson);
+      var10003 = this.f_92118_;
+      var10004 = Options::m_292893_;
+      var10005 = f_92078_;
+      Objects.requireNonNull(var10005);
+      this.f_92118_ = (List)fieldAccessIn.m_142634_("incompatibleResourcePacks", var10003, var10004, var10005::toJson);
       this.f_92066_ = fieldAccessIn.m_141943_("lastServer", this.f_92066_);
       this.f_92075_ = fieldAccessIn.m_141943_("lang", this.f_92075_);
       fieldAccessIn.m_232124_("chatVisibility", this.f_92119_);
@@ -1433,7 +1415,7 @@ public class Options {
       this.f_92028_ = fieldAccessIn.m_142682_("useNativeTransport", this.f_92028_);
       fieldAccessIn.m_232124_("mainHand", this.f_92127_);
       fieldAccessIn.m_232124_("attackIndicator", this.f_92029_);
-      this.f_92030_ = fieldAccessIn.m_142634_("tutorialStep", this.f_92030_, TutorialSteps::m_120642_, TutorialSteps::m_120639_);
+      this.f_92030_ = (TutorialSteps)fieldAccessIn.m_142634_("tutorialStep", this.f_92030_, TutorialSteps::m_120642_, TutorialSteps::m_120639_);
       fieldAccessIn.m_232124_("mouseWheelSensitivity", this.f_92033_);
       fieldAccessIn.m_232124_("rawMouseInput", this.f_92034_);
       this.f_92035_ = fieldAccessIn.m_142708_("glDebugVerbosity", this.f_92035_);
@@ -1452,13 +1434,20 @@ public class Options {
       this.processOptionsForge(fieldAccessIn);
    }
 
-   private void processOptionsForge(net.minecraft.client.Options.FieldAccess fieldAccessIn) {
-      for (KeyMapping keymapping : this.f_92059_) {
+   private void processOptionsForge(FieldAccess fieldAccessIn) {
+      KeyMapping[] var2 = this.f_92059_;
+      int var3 = var2.length;
+
+      int var4;
+      for(var4 = 0; var4 < var3; ++var4) {
+         KeyMapping keymapping = var2[var4];
          String s = keymapping.m_90865_();
+         Object keyModifierNone;
          if (Reflector.ForgeKeyBinding_getKeyModifier.exists()) {
             Object keyModifier = Reflector.call(keymapping, Reflector.ForgeKeyBinding_getKeyModifier);
-            Object keyModifierNone = Reflector.getFieldValue(Reflector.KeyModifier_NONE);
-            s = keymapping.m_90865_() + (keyModifier != keyModifierNone ? ":" + keyModifier : "");
+            keyModifierNone = Reflector.getFieldValue(Reflector.KeyModifier_NONE);
+            String var10000 = keymapping.m_90865_();
+            s = var10000 + (keyModifier != keyModifierNone ? ":" + String.valueOf(keyModifier) : "");
          }
 
          String s1 = fieldAccessIn.m_141943_("key_" + keymapping.m_90860_(), s);
@@ -1469,7 +1458,7 @@ public class Options {
                   Object keyModifier = Reflector.call(Reflector.KeyModifier_valueFromString, pts[1]);
                   Reflector.call(keymapping, Reflector.ForgeKeyBinding_setKeyModifierAndCode, keyModifier, InputConstants.m_84851_(pts[0]));
                } else {
-                  Object keyModifierNone = Reflector.getFieldValue(Reflector.KeyModifier_NONE);
+                  keyModifierNone = Reflector.getFieldValue(Reflector.KeyModifier_NONE);
                   Reflector.call(keymapping, Reflector.ForgeKeyBinding_setKeyModifierAndCode, keyModifierNone, InputConstants.m_84851_(s1));
                }
             } else {
@@ -1478,17 +1467,26 @@ public class Options {
          }
       }
 
-      for (SoundSource soundsource : SoundSource.values()) {
-         fieldAccessIn.m_232124_("soundCategory_" + soundsource.m_12676_(), (net.minecraft.client.OptionInstance)this.f_244498_.get(soundsource));
+      SoundSource[] var10 = SoundSource.values();
+      var3 = var10.length;
+
+      for(var4 = 0; var4 < var3; ++var4) {
+         SoundSource soundsource = var10[var4];
+         fieldAccessIn.m_232124_("soundCategory_" + soundsource.m_12676_(), (OptionInstance)this.f_244498_.get(soundsource));
       }
 
-      for (PlayerModelPart playermodelpart : PlayerModelPart.values()) {
+      PlayerModelPart[] var11 = PlayerModelPart.values();
+      var3 = var11.length;
+
+      for(var4 = 0; var4 < var3; ++var4) {
+         PlayerModelPart playermodelpart = var11[var4];
          boolean flag = this.f_92108_.contains(playermodelpart);
          boolean flag1 = fieldAccessIn.m_142682_("modelPart_" + playermodelpart.m_36446_(), flag);
          if (flag1 != flag) {
             this.m_92154_(playermodelpart, flag1);
          }
       }
+
    }
 
    public void m_92140_() {
@@ -1507,13 +1505,14 @@ public class Options {
          BufferedReader bufferedreader = Files.newReader(this.f_92110_, Charsets.UTF_8);
 
          try {
-            bufferedreader.lines().forEach(lineIn -> {
+            bufferedreader.lines().forEach((lineIn) -> {
                try {
-                  Iterator<String> iterator = f_92107_.split(lineIn).iterator();
+                  Iterator iterator = f_92107_.split(lineIn).iterator();
                   compoundtag.m_128359_((String)iterator.next(), (String)iterator.next());
-               } catch (Exception var3x) {
+               } catch (Exception var3) {
                   f_92077_.warn("Skipping bad option: {}", lineIn);
                }
+
             });
          } catch (Throwable var7) {
             if (bufferedreader != null) {
@@ -1540,87 +1539,79 @@ public class Options {
             }
          }
 
-         Consumer<net.minecraft.client.Options.FieldAccess> processor = limited ? this::processOptionsForge : this::m_168427_;
-         processor.accept(
-            new net.minecraft.client.Options.FieldAccess() {
-               @Nullable
-               private String m_168458_(String nameIn) {
-                  return compoundtag1.m_128441_(nameIn) ? compoundtag1.m_128423_(nameIn).m_7916_() : null;
+         Consumer processor = limited ? this::processOptionsForge : this::m_168427_;
+         processor.accept(new FieldAccess(this) {
+            @Nullable
+            private String m_168458_(String nameIn) {
+               return compoundtag1.m_128441_(nameIn) ? compoundtag1.m_128423_(nameIn).m_7916_() : null;
+            }
+
+            public void m_232124_(String keyIn, OptionInstance optionIn) {
+               String s = this.m_168458_(keyIn);
+               if (s != null) {
+                  JsonReader jsonreader = new JsonReader(new StringReader(s.isEmpty() ? "\"\"" : s));
+                  JsonElement jsonelement = JsonParser.parseReader(jsonreader);
+                  DataResult dataresult = optionIn.m_231554_().parse(JsonOps.INSTANCE, jsonelement);
+                  dataresult.error().ifPresent((errorIn) -> {
+                     Options.f_92077_.error("Error parsing option value " + s + " for option " + String.valueOf(optionIn) + ": " + errorIn.message());
+                  });
+                  Objects.requireNonNull(optionIn);
+                  dataresult.ifSuccess(optionIn::m_231514_);
                }
 
-               @Override
-               public <T> void m_232124_(String keyIn, net.minecraft.client.OptionInstance<T> optionIn) {
-                  String s = this.m_168458_(keyIn);
-                  if (s != null) {
-                     JsonReader jsonreader = new JsonReader(new StringReader(s.isEmpty() ? "\"\"" : s));
-                     JsonElement jsonelement = JsonParser.parseReader(jsonreader);
-                     DataResult<T> dataresult = optionIn.m_231554_().parse(JsonOps.INSTANCE, jsonelement);
-                     dataresult.error()
-                        .ifPresent(
-                           errorIn -> net.minecraft.client.Options.f_92077_
-                                 .error("Error parsing option value " + s + " for option " + optionIn + ": " + errorIn.message())
-                        );
-                     dataresult.ifSuccess(optionIn::m_231514_);
+            }
+
+            public int m_142708_(String keyIn, int valueIn) {
+               String s = this.m_168458_(keyIn);
+               if (s != null) {
+                  try {
+                     return Integer.parseInt(s);
+                  } catch (NumberFormatException var5) {
+                     Options.f_92077_.warn("Invalid integer value for option {} = {}", new Object[]{keyIn, s, var5});
                   }
                }
 
-               @Override
-               public int m_142708_(String keyIn, int valueIn) {
-                  String s = this.m_168458_(keyIn);
-                  if (s != null) {
-                     try {
-                        return Integer.parseInt(s);
-                     } catch (NumberFormatException var5) {
-                        net.minecraft.client.Options.f_92077_.warn("Invalid integer value for option {} = {}", new Object[]{keyIn, s, var5});
-                     }
-                  }
+               return valueIn;
+            }
 
+            public boolean m_142682_(String keyIn, boolean valueIn) {
+               String s = this.m_168458_(keyIn);
+               return s != null ? Options.m_168435_(s) : valueIn;
+            }
+
+            public String m_141943_(String keyIn, String valueIn) {
+               return (String)MoreObjects.firstNonNull(this.m_168458_(keyIn), valueIn);
+            }
+
+            public float m_142432_(String keyIn, float valueIn) {
+               String s = this.m_168458_(keyIn);
+               if (s == null) {
                   return valueIn;
-               }
-
-               @Override
-               public boolean m_142682_(String keyIn, boolean valueIn) {
-                  String s = this.m_168458_(keyIn);
-                  return s != null ? net.minecraft.client.Options.m_168435_(s) : valueIn;
-               }
-
-               @Override
-               public String m_141943_(String keyIn, String valueIn) {
-                  return (String)MoreObjects.firstNonNull(this.m_168458_(keyIn), valueIn);
-               }
-
-               @Override
-               public float m_142432_(String keyIn, float valueIn) {
-                  String s = this.m_168458_(keyIn);
-                  if (s == null) {
+               } else if (Options.m_168435_(s)) {
+                  return 1.0F;
+               } else if (Options.m_168440_(s)) {
+                  return 0.0F;
+               } else {
+                  try {
+                     return Float.parseFloat(s);
+                  } catch (NumberFormatException var5) {
+                     Options.f_92077_.warn("Invalid floating point value for option {} = {}", new Object[]{keyIn, s, var5});
                      return valueIn;
-                  } else if (net.minecraft.client.Options.m_168435_(s)) {
-                     return 1.0F;
-                  } else if (net.minecraft.client.Options.m_168440_(s)) {
-                     return 0.0F;
-                  } else {
-                     try {
-                        return Float.parseFloat(s);
-                     } catch (NumberFormatException var5) {
-                        net.minecraft.client.Options.f_92077_.warn("Invalid floating point value for option {} = {}", new Object[]{keyIn, s, var5});
-                        return valueIn;
-                     }
                   }
-               }
-
-               @Override
-               public <T> T m_142634_(String keyIn, T valueIn, Function<String, T> readerIn, Function<T, String> writerIn) {
-                  String s = this.m_168458_(keyIn);
-                  return (T)(s == null ? valueIn : readerIn.apply(s));
                }
             }
-         );
+
+            public Object m_142634_(String keyIn, Object valueIn, Function readerIn, Function writerIn) {
+               String s = this.m_168458_(keyIn);
+               return s == null ? valueIn : readerIn.apply(s);
+            }
+         });
          if (compoundtag1.m_128441_("fullscreenResolution")) {
             this.f_92123_ = compoundtag1.m_128461_("fullscreenResolution");
          }
 
          if (this.f_92060_.m_91268_() != null) {
-            this.f_92060_.m_91268_().m_85380_(this.f_92113_.m_231551_());
+            this.f_92060_.m_91268_().m_85380_((Integer)this.f_92113_.m_231551_());
          }
 
          KeyMapping.m_90854_();
@@ -1659,60 +1650,53 @@ public class Options {
 
             try {
                printwriter.println("version:" + SharedConstants.m_183709_().m_183476_().m_193006_());
-               this.m_168427_(
-                  new net.minecraft.client.Options.FieldAccess() {
-                     public void m_168490_(String prefixIn) {
-                        printwriter.print(prefixIn);
-                        printwriter.print(':');
-                     }
-
-                     @Override
-                     public <T> void m_232124_(String keyIn, net.minecraft.client.OptionInstance<T> optionIn) {
-                        optionIn.m_231554_()
-                           .encodeStart(JsonOps.INSTANCE, optionIn.m_231551_())
-                           .ifError(errorIn -> net.minecraft.client.Options.f_92077_.error("Error saving option " + optionIn + ": " + errorIn))
-                           .ifSuccess(jsonElemIn -> {
-                              this.m_168490_(keyIn);
-                              printwriter.println(net.minecraft.client.Options.f_92078_.toJson(jsonElemIn));
-                           });
-                     }
-
-                     @Override
-                     public int m_142708_(String keyIn, int valueIn) {
-                        this.m_168490_(keyIn);
-                        printwriter.println(valueIn);
-                        return valueIn;
-                     }
-
-                     @Override
-                     public boolean m_142682_(String keyIn, boolean valueIn) {
-                        this.m_168490_(keyIn);
-                        printwriter.println(valueIn);
-                        return valueIn;
-                     }
-
-                     @Override
-                     public String m_141943_(String keyIn, String valueIn) {
-                        this.m_168490_(keyIn);
-                        printwriter.println(valueIn);
-                        return valueIn;
-                     }
-
-                     @Override
-                     public float m_142432_(String keyIn, float valueIn) {
-                        this.m_168490_(keyIn);
-                        printwriter.println(valueIn);
-                        return valueIn;
-                     }
-
-                     @Override
-                     public <T> T m_142634_(String keyIn, T valueIn, Function<String, T> readerIn, Function<T, String> writerIn) {
-                        this.m_168490_(keyIn);
-                        printwriter.println((String)writerIn.apply(valueIn));
-                        return valueIn;
-                     }
+               this.m_168427_(new FieldAccess(this) {
+                  public void m_168490_(String prefixIn) {
+                     printwriter.print(prefixIn);
+                     printwriter.print(':');
                   }
-               );
+
+                  public void m_232124_(String keyIn, OptionInstance optionIn) {
+                     optionIn.m_231554_().encodeStart(JsonOps.INSTANCE, optionIn.m_231551_()).ifError((errorIn) -> {
+                        Logger var10000 = Options.f_92077_;
+                        String var10001 = String.valueOf(optionIn);
+                        var10000.error("Error saving option " + var10001 + ": " + String.valueOf(errorIn));
+                     }).ifSuccess((jsonElemIn) -> {
+                        this.m_168490_(keyIn);
+                        printwriter.println(Options.f_92078_.toJson(jsonElemIn));
+                     });
+                  }
+
+                  public int m_142708_(String keyIn, int valueIn) {
+                     this.m_168490_(keyIn);
+                     printwriter.println(valueIn);
+                     return valueIn;
+                  }
+
+                  public boolean m_142682_(String keyIn, boolean valueIn) {
+                     this.m_168490_(keyIn);
+                     printwriter.println(valueIn);
+                     return valueIn;
+                  }
+
+                  public String m_141943_(String keyIn, String valueIn) {
+                     this.m_168490_(keyIn);
+                     printwriter.println(valueIn);
+                     return valueIn;
+                  }
+
+                  public float m_142432_(String keyIn, float valueIn) {
+                     this.m_168490_(keyIn);
+                     printwriter.println(valueIn);
+                     return valueIn;
+                  }
+
+                  public Object m_142634_(String keyIn, Object valueIn, Function readerIn, Function writerIn) {
+                     this.m_168490_(keyIn);
+                     printwriter.println((String)writerIn.apply(valueIn));
+                     return valueIn;
+                  }
+               });
                if (this.f_92060_.m_91268_().m_85436_().isPresent()) {
                   printwriter.println("fullscreenResolution:" + ((VideoMode)this.f_92060_.m_91268_().m_85436_().get()).m_85342_());
                }
@@ -1740,26 +1724,19 @@ public class Options {
    public ClientInformation m_294596_() {
       int i = 0;
 
-      for (PlayerModelPart playermodelpart : this.f_92108_) {
-         i |= playermodelpart.m_36445_();
+      PlayerModelPart playermodelpart;
+      for(Iterator var2 = this.f_92108_.iterator(); var2.hasNext(); i |= playermodelpart.m_36445_()) {
+         playermodelpart = (PlayerModelPart)var2.next();
       }
 
-      return new ClientInformation(
-         this.f_92075_,
-         this.f_92106_.m_231551_(),
-         this.f_92119_.m_231551_(),
-         this.f_92038_.m_231551_(),
-         i,
-         this.f_92127_.m_231551_(),
-         this.f_92060_.m_167974_(),
-         this.f_193762_.m_231551_()
-      );
+      return new ClientInformation(this.f_92075_, (Integer)this.f_92106_.m_231551_(), (ChatVisiblity)this.f_92119_.m_231551_(), (Boolean)this.f_92038_.m_231551_(), i, (HumanoidArm)this.f_92127_.m_231551_(), this.f_92060_.m_167974_(), (Boolean)this.f_193762_.m_231551_());
    }
 
    public void m_92172_() {
       if (this.f_92060_.f_91074_ != null) {
          this.f_92060_.f_91074_.f_108617_.m_295327_(new ServerboundClientInformationPacket(this.m_294596_()));
       }
+
    }
 
    private void m_92154_(PlayerModelPart modelPart, boolean enable) {
@@ -1768,6 +1745,7 @@ public class Options {
       } else {
          this.f_92108_.remove(modelPart);
       }
+
    }
 
    public boolean m_168416_(PlayerModelPart partIn) {
@@ -1780,14 +1758,14 @@ public class Options {
    }
 
    public CloudStatus m_92174_() {
-      return this.m_193772_() >= 4 ? this.f_231792_.m_231551_() : CloudStatus.OFF;
+      return this.m_193772_() >= 4 ? (CloudStatus)this.f_231792_.m_231551_() : CloudStatus.OFF;
    }
 
    public boolean m_92175_() {
       return this.f_92028_;
    }
 
-   public void setOptionFloatValueOF(net.minecraft.client.OptionInstance option, double val) {
+   public void setOptionFloatValueOF(OptionInstance option, double val) {
       if (option == Option.CLOUD_HEIGHT) {
          this.ofCloudsHeight = val;
       }
@@ -1797,8 +1775,9 @@ public class Options {
          this.f_92060_.f_91060_.m_109818_();
       }
 
+      int valInt;
       if (option == Option.AA_LEVEL) {
-         int valInt = (int)val;
+         valInt = (int)val;
          if (valInt > 0 && Config.isShaders()) {
             Config.showGuiMessage(Lang.get("of.message.aa.shaders1"), Lang.get("of.message.aa.shaders2"));
             return;
@@ -1814,21 +1793,22 @@ public class Options {
       }
 
       if (option == Option.AF_LEVEL) {
-         int valIntx = (int)val;
-         this.ofAfLevel = valIntx;
+         valInt = (int)val;
+         this.ofAfLevel = valInt;
          this.ofAfLevel = Config.limit(this.ofAfLevel, 1, 16);
          this.f_92060_.m_91088_();
          Shaders.uninit();
       }
 
       if (option == Option.MIPMAP_TYPE) {
-         int valIntx = (int)val;
-         this.ofMipmapType = Config.limit(valIntx, 0, 3);
+         valInt = (int)val;
+         this.ofMipmapType = Config.limit(valInt, 0, 3);
          this.updateMipmaps();
       }
+
    }
 
-   public double getOptionFloatValueOF(net.minecraft.client.OptionInstance settingOption) {
+   public double getOptionFloatValueOF(OptionInstance settingOption) {
       if (settingOption == Option.CLOUD_HEIGHT) {
          return this.ofCloudsHeight;
       } else if (settingOption == Option.AO_LEVEL) {
@@ -1838,11 +1818,11 @@ public class Options {
       } else if (settingOption == Option.AF_LEVEL) {
          return (double)this.ofAfLevel;
       } else {
-         return settingOption == Option.MIPMAP_TYPE ? (double)this.ofMipmapType : Float.MAX_VALUE;
+         return settingOption == Option.MIPMAP_TYPE ? (double)this.ofMipmapType : 3.4028234663852886E38;
       }
    }
 
-   public void setOptionValueOF(net.minecraft.client.OptionInstance par1EnumOptions, int par2) {
+   public void setOptionValueOF(OptionInstance par1EnumOptions, int par2) {
       if (par1EnumOptions == Option.FOG_FANCY) {
          switch (this.ofFogType) {
             case 2:
@@ -1870,7 +1850,7 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.CLOUDS) {
-         this.ofClouds++;
+         ++this.ofClouds;
          if (this.ofClouds > 3) {
             this.ofClouds = 0;
          }
@@ -1884,16 +1864,16 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.RAIN) {
-         this.ofRain++;
+         ++this.ofRain;
          if (this.ofRain > 3) {
             this.ofRain = 0;
          }
       }
 
       if (par1EnumOptions == Option.ANIMATED_WATER) {
-         this.ofAnimatedWater++;
+         ++this.ofAnimatedWater;
          if (this.ofAnimatedWater == 1) {
-            this.ofAnimatedWater++;
+            ++this.ofAnimatedWater;
          }
 
          if (this.ofAnimatedWater > 2) {
@@ -1902,9 +1882,9 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.ANIMATED_LAVA) {
-         this.ofAnimatedLava++;
+         ++this.ofAnimatedLava;
          if (this.ofAnimatedLava == 1) {
-            this.ofAnimatedLava++;
+            ++this.ofAnimatedLava;
          }
 
          if (this.ofAnimatedLava > 2) {
@@ -1989,7 +1969,7 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.BETTER_GRASS) {
-         this.ofBetterGrass++;
+         ++this.ofBetterGrass;
          if (this.ofBetterGrass > 3) {
             this.ofBetterGrass = 1;
          }
@@ -1998,7 +1978,7 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.CONNECTED_TEXTURES) {
-         this.ofConnectedTextures++;
+         ++this.ofConnectedTextures;
          if (this.ofConnectedTextures > 3) {
             this.ofConnectedTextures = 1;
          }
@@ -2027,14 +2007,14 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.VIGNETTE) {
-         this.ofVignette++;
+         ++this.ofVignette;
          if (this.ofVignette > 2) {
             this.ofVignette = 0;
          }
       }
 
       if (par1EnumOptions == Option.CHUNK_UPDATES) {
-         this.ofChunkUpdates++;
+         ++this.ofChunkUpdates;
          if (this.ofChunkUpdates > 5) {
             this.ofChunkUpdates = 1;
          }
@@ -2045,7 +2025,7 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.TIME) {
-         this.ofTime++;
+         ++this.ofTime;
          if (this.ofTime > 2) {
             this.ofTime = 0;
          }
@@ -2111,7 +2091,7 @@ public class Options {
 
       if (par1EnumOptions == Option.FAST_MATH) {
          this.ofFastMath = !this.ofFastMath;
-         net.minecraft.util.Mth.fastMath = this.ofFastMath;
+         Mth.fastMath = this.ofFastMath;
       }
 
       if (par1EnumOptions == Option.FAST_RENDER) {
@@ -2147,7 +2127,7 @@ public class Options {
       }
 
       if (par1EnumOptions == Option.SCREENSHOT_SIZE) {
-         this.ofScreenshotSize++;
+         ++this.ofScreenshotSize;
          if (this.ofScreenshotSize > 4) {
             this.ofScreenshotSize = 1;
          }
@@ -2192,9 +2172,10 @@ public class Options {
       if (par1EnumOptions == Option.TELEMETRY) {
          this.ofTelemetry = nextValue(this.ofTelemetry, OF_TELEMETRY);
       }
+
    }
 
-   public Component getKeyComponentOF(net.minecraft.client.OptionInstance option) {
+   public Component getKeyComponentOF(OptionInstance option) {
       String str = this.getKeyBindingOF(option);
       if (str == null) {
          return null;
@@ -2204,53 +2185,55 @@ public class Options {
       }
    }
 
-   public String getKeyBindingOF(net.minecraft.client.OptionInstance par1EnumOptions) {
-      String var2 = I18n.m_118938_(par1EnumOptions.getResourceKey(), new Object[0]) + ": ";
+   public String getKeyBindingOF(OptionInstance par1EnumOptions) {
+      String var10000 = par1EnumOptions.getResourceKey();
+      String var2 = I18n.m_118938_(var10000, new Object[0]) + ": ";
       if (var2 == null) {
          var2 = par1EnumOptions.getResourceKey();
       }
 
+      int index;
       if (par1EnumOptions == this.RENDER_DISTANCE) {
-         int distChunks = this.m_231984_().m_231551_();
+         index = (Integer)this.m_231984_().m_231551_();
          String str = I18n.m_118938_("of.options.renderDistance.tiny", new Object[0]);
          int baseDist = 2;
-         if (distChunks >= 4) {
+         if (index >= 4) {
             str = I18n.m_118938_("of.options.renderDistance.short", new Object[0]);
             baseDist = 4;
          }
 
-         if (distChunks >= 8) {
+         if (index >= 8) {
             str = I18n.m_118938_("of.options.renderDistance.normal", new Object[0]);
             baseDist = 8;
          }
 
-         if (distChunks >= 16) {
+         if (index >= 16) {
             str = I18n.m_118938_("of.options.renderDistance.far", new Object[0]);
             baseDist = 16;
          }
 
-         if (distChunks >= 32) {
+         if (index >= 32) {
             str = Lang.get("of.options.renderDistance.extreme");
             baseDist = 32;
          }
 
-         if (distChunks >= 48) {
+         if (index >= 48) {
             str = Lang.get("of.options.renderDistance.insane");
             baseDist = 48;
          }
 
-         if (distChunks >= 64) {
+         if (index >= 64) {
             str = Lang.get("of.options.renderDistance.ludicrous");
             baseDist = 64;
          }
 
-         int diff = this.m_231984_().m_231551_() - baseDist;
+         int diff = (Integer)this.m_231984_().m_231551_() - baseDist;
          String descr = str;
          if (diff > 0) {
             descr = str + "+";
          }
 
-         return var2 + distChunks + " " + descr;
+         return var2 + index + " " + descr;
       } else if (par1EnumOptions == Option.FOG_FANCY) {
          switch (this.ofFogType) {
             case 1:
@@ -2453,7 +2436,7 @@ public class Options {
       } else if (par1EnumOptions == Option.ALTERNATE_BLOCKS) {
          return this.ofAlternateBlocks ? var2 + Lang.getOn() : var2 + Lang.getOff();
       } else if (par1EnumOptions == Option.DYNAMIC_LIGHTS) {
-         int index = indexOf(this.ofDynamicLights, OF_DYNAMIC_LIGHTS);
+         index = indexOf(this.ofDynamicLights, OF_DYNAMIC_LIGHTS);
          return var2 + getTranslation(KEYS_DYNAMIC_LIGHTS, index);
       } else if (par1EnumOptions == Option.SCREENSHOT_SIZE) {
          return this.ofScreenshotSize <= 1 ? var2 + Lang.getDefault() : var2 + this.ofScreenshotSize + "x";
@@ -2476,7 +2459,7 @@ public class Options {
       } else if (par1EnumOptions == Option.CHAT_SHADOW) {
          return this.ofChatShadow ? var2 + Lang.getOn() : var2 + Lang.getOff();
       } else if (par1EnumOptions == Option.TELEMETRY) {
-         int index = indexOf(this.ofTelemetry, OF_TELEMETRY);
+         index = indexOf(this.ofTelemetry, OF_TELEMETRY);
          return var2 + getTranslation(KEYS_TELEMETRY, index);
       } else if (par1EnumOptions.isProgressOption()) {
          double d0 = (Double)par1EnumOptions.m_231551_();
@@ -2497,16 +2480,16 @@ public class Options {
             return;
          }
 
-         List<IPersitentOption> persistentOptions = this.getPersistentOptions();
+         List persistentOptions = this.getPersistentOptions();
          BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(new FileInputStream(ofReadFile), StandardCharsets.UTF_8));
          String s = "";
 
-         while ((s = bufferedreader.readLine()) != null) {
+         while((s = bufferedreader.readLine()) != null) {
             try {
                String[] as = s.split(":");
                if (as[0].equals("ofRenderDistanceChunks") && as.length >= 2) {
                   this.f_92106_.m_231514_(Integer.valueOf(as[1]));
-                  this.f_92106_.m_231514_(Config.limit(this.f_92106_.m_231551_(), 2, 1024));
+                  this.f_92106_.m_231514_(Config.limit((Integer)this.f_92106_.m_231551_(), 2, 1024));
                }
 
                if (as[0].equals("ofFogType") && as.length >= 2) {
@@ -2543,7 +2526,7 @@ public class Options {
                }
 
                if (as[0].equals("ofAoLevel") && as.length >= 2) {
-                  this.ofAoLevel = (double)Float.valueOf(as[1]).floatValue();
+                  this.ofAoLevel = (double)Float.valueOf(as[1]);
                   this.ofAoLevel = Config.limit(this.ofAoLevel, 0.0, 1.0);
                }
 
@@ -2554,7 +2537,7 @@ public class Options {
                }
 
                if (as[0].equals("ofCloudsHeight") && as.length >= 2) {
-                  this.ofCloudsHeight = (double)Float.valueOf(as[1]).floatValue();
+                  this.ofCloudsHeight = (double)Float.valueOf(as[1]);
                   this.ofCloudsHeight = Config.limit(this.ofCloudsHeight, 0.0, 1.0);
                }
 
@@ -2790,7 +2773,7 @@ public class Options {
 
                if (as[0].equals("ofFastMath") && as.length >= 2) {
                   this.ofFastMath = Boolean.valueOf(as[1]);
-                  net.minecraft.util.Mth.fastMath = this.ofFastMath;
+                  Mth.fastMath = this.ofFastMath;
                }
 
                if (as[0].equals("ofFastRender") && as.length >= 2) {
@@ -2820,8 +2803,10 @@ public class Options {
 
                String key = as[0];
                String val = as[1];
+               Iterator var8 = persistentOptions.iterator();
 
-               for (IPersitentOption ipo : persistentOptions) {
+               while(var8.hasNext()) {
+                  IPersitentOption ipo = (IPersitentOption)var8.next();
                   if (Config.equals(key, ipo.getSaveKey())) {
                      ipo.loadValue(this, val);
                   }
@@ -2839,12 +2824,15 @@ public class Options {
          Config.warn("Failed to load options");
          var11.printStackTrace();
       }
+
    }
 
-   private List<IPersitentOption> getPersistentOptions() {
-      List<IPersitentOption> list = new ArrayList();
+   private List getPersistentOptions() {
+      List list = new ArrayList();
+      Iterator var2 = OptionInstance.OPTIONS_BY_KEY.values().iterator();
 
-      for (net.minecraft.client.OptionInstance opt : net.minecraft.client.OptionInstance.OPTIONS_BY_KEY.values()) {
+      while(var2.hasNext()) {
+         OptionInstance opt = (OptionInstance)var2.next();
          if (opt instanceof IPersitentOption po) {
             list.add(po);
          }
@@ -2925,10 +2913,15 @@ public class Options {
          printwriter.println("ofChatShadow:" + this.ofChatShadow);
          printwriter.println("ofTelemetry:" + this.ofTelemetry);
          printwriter.println("ofHeldItemTooltips:" + this.ofHeldItemTooltips);
-         printwriter.println("key_" + this.ofKeyBindZoom.m_90860_() + ":" + this.ofKeyBindZoom.m_90865_());
+         String var10001 = this.ofKeyBindZoom.m_90860_();
+         printwriter.println("key_" + var10001 + ":" + this.ofKeyBindZoom.m_90865_());
+         List persistentOptions = this.getPersistentOptions();
+         Iterator var3 = persistentOptions.iterator();
 
-         for (IPersitentOption ipo : this.getPersistentOptions()) {
-            printwriter.println(ipo.getSaveKey() + ":" + ipo.getSaveText(this));
+         while(var3.hasNext()) {
+            IPersitentOption ipo = (IPersitentOption)var3.next();
+            var10001 = ipo.getSaveKey();
+            printwriter.println(var10001 + ":" + ipo.getSaveText(this));
          }
 
          printwriter.close();
@@ -2936,6 +2929,7 @@ public class Options {
          Config.warn("Failed to save options");
          var5.printStackTrace();
       }
+
    }
 
    public void updateRenderClouds() {
@@ -2958,14 +2952,15 @@ public class Options {
       }
 
       if (this.m_232060_().m_231551_() == GraphicsStatus.FABULOUS) {
-         net.minecraft.client.renderer.LevelRenderer wr = Minecraft.m_91087_().f_91060_;
+         LevelRenderer wr = Minecraft.m_91087_().f_91060_;
          if (wr != null) {
-            com.mojang.blaze3d.pipeline.RenderTarget framebuffer = wr.m_109832_();
+            RenderTarget framebuffer = wr.m_109832_();
             if (framebuffer != null) {
                framebuffer.m_83954_(Minecraft.f_91002_);
             }
          }
       }
+
    }
 
    public void resetSettings() {
@@ -2973,7 +2968,7 @@ public class Options {
       this.f_193768_.m_231514_(8);
       this.f_92112_.m_231514_(1.0);
       this.f_92080_.m_231514_(true);
-      this.f_92113_.m_231514_(this.f_92113_.getMaxValue());
+      this.f_92113_.m_231514_((Integer)this.f_92113_.getMaxValue());
       this.f_92041_.m_231514_(false);
       this.updateVSync();
       this.f_92027_.m_231514_(4);
@@ -3085,12 +3080,13 @@ public class Options {
 
    public void updateVSync() {
       if (this.f_92060_.m_91268_() != null) {
-         this.f_92060_.m_91268_().m_85409_(this.f_92041_.m_231551_());
+         this.f_92060_.m_91268_().m_85409_((Boolean)this.f_92041_.m_231551_());
       }
+
    }
 
    public void updateMipmaps() {
-      this.f_92060_.m_91312_(this.f_92027_.m_231551_());
+      this.f_92060_.m_91312_((Integer)this.f_92027_.m_231551_());
       this.f_92060_.m_91088_();
    }
 
@@ -3150,6 +3146,7 @@ public class Options {
          this.ofQuickInfoTargetFluid = Option.OFF.getValue();
          this.ofQuickInfoTargetEntity = Option.OFF.getValue();
       }
+
    }
 
    private static int nextValue(int val, int[] vals) {
@@ -3157,7 +3154,8 @@ public class Options {
       if (index < 0) {
          return vals[0];
       } else {
-         if (++index >= vals.length) {
+         ++index;
+         if (index >= vals.length) {
             index = 0;
          }
 
@@ -3171,7 +3169,7 @@ public class Options {
    }
 
    public static int indexOf(int val, int[] vals) {
-      for (int i = 0; i < vals.length; i++) {
+      for(int i = 0; i < vals.length; ++i) {
          if (vals[i] == val) {
             return i;
          }
@@ -3181,7 +3179,7 @@ public class Options {
    }
 
    public static int indexOf(double val, double[] vals) {
-      for (int i = 0; i < vals.length; i++) {
+      for(int i = 0; i < vals.length; ++i) {
          if (vals[i] == val) {
             return i;
          }
@@ -3232,31 +3230,34 @@ public class Options {
    }
 
    public void m_92145_(PackRepository resourcePackListIn) {
-      Set<String> set = Sets.newLinkedHashSet();
-      Iterator<String> iterator = this.f_92117_.iterator();
+      Set set = Sets.newLinkedHashSet();
+      Iterator iterator = this.f_92117_.iterator();
 
-      while (iterator.hasNext()) {
-         String s = (String)iterator.next();
-         Pack pack = resourcePackListIn.m_10507_(s);
-         if (pack == null && !s.startsWith("file/")) {
-            pack = resourcePackListIn.m_10507_("file/" + s);
+      while(true) {
+         while(iterator.hasNext()) {
+            String s = (String)iterator.next();
+            Pack pack = resourcePackListIn.m_10507_(s);
+            if (pack == null && !s.startsWith("file/")) {
+               pack = resourcePackListIn.m_10507_("file/" + s);
+            }
+
+            if (pack == null) {
+               f_92077_.warn("Removed resource pack {} from options because it doesn't seem to exist anymore", s);
+               iterator.remove();
+            } else if (!pack.m_10443_().m_10489_() && !this.f_92118_.contains(s)) {
+               f_92077_.warn("Removed resource pack {} from options because it is no longer compatible", s);
+               iterator.remove();
+            } else if (pack.m_10443_().m_10489_() && this.f_92118_.contains(s)) {
+               f_92077_.info("Removed resource pack {} from incompatibility list because it's now compatible", s);
+               this.f_92118_.remove(s);
+            } else {
+               set.add(pack.m_10446_());
+            }
          }
 
-         if (pack == null) {
-            f_92077_.warn("Removed resource pack {} from options because it doesn't seem to exist anymore", s);
-            iterator.remove();
-         } else if (!pack.m_10443_().m_10489_() && !this.f_92118_.contains(s)) {
-            f_92077_.warn("Removed resource pack {} from options because it is no longer compatible", s);
-            iterator.remove();
-         } else if (pack.m_10443_().m_10489_() && this.f_92118_.contains(s)) {
-            f_92077_.info("Removed resource pack {} from incompatibility list because it's now compatible", s);
-            this.f_92118_.remove(s);
-         } else {
-            set.add(pack.m_10446_());
-         }
+         resourcePackListIn.m_10509_(set);
+         return;
       }
-
-      resourcePackListIn.m_10509_(set);
    }
 
    public CameraType m_92176_() {
@@ -3267,9 +3268,9 @@ public class Options {
       this.f_92111_ = pointOfViewIn;
    }
 
-   private static List<String> m_292893_(String stringIn) {
-      List<String> list = (List<String>)GsonHelper.m_13785_(f_92078_, stringIn, f_290931_);
-      return (List<String>)(list != null ? list : Lists.newArrayList());
+   private static List m_292893_(String stringIn) {
+      List list = (List)GsonHelper.m_13785_(f_92078_, stringIn, f_290931_);
+      return (List)(list != null ? list : Lists.newArrayList());
    }
 
    public File m_168450_() {
@@ -3277,10 +3278,9 @@ public class Options {
    }
 
    public String m_168451_() {
-      final List<Pair<String, Object>> list = new ArrayList();
-      this.m_323232_(new net.minecraft.client.Options.OptionAccess() {
-         @Override
-         public <T> void m_232124_(String keyIn, net.minecraft.client.OptionInstance<T> optionIn) {
+      final List list = new ArrayList();
+      this.m_323232_(new OptionAccess(this) {
+         public void m_232124_(String keyIn, OptionInstance optionIn) {
             list.add(Pair.of(keyIn, optionIn.m_231551_()));
          }
       });
@@ -3291,10 +3291,10 @@ public class Options {
       list.add(Pair.of("syncChunkWrites", this.f_92076_));
       list.add(Pair.of("useNativeTransport", this.f_92028_));
       list.add(Pair.of("resourcePacks", this.f_92117_));
-      return (String)list.stream()
-         .sorted(Comparator.comparing(Pair::getFirst))
-         .map(pairIn -> (String)pairIn.getFirst() + ": " + pairIn.getSecond())
-         .collect(Collectors.joining(System.lineSeparator()));
+      return (String)list.stream().sorted(Comparator.comparing(Pair::getFirst)).map((pairIn) -> {
+         String var10000 = (String)pairIn.getFirst();
+         return var10000 + ": " + String.valueOf(pairIn.getSecond());
+      }).collect(Collectors.joining(System.lineSeparator()));
    }
 
    public void m_193770_(int valueIn) {
@@ -3302,7 +3302,7 @@ public class Options {
    }
 
    public int m_193772_() {
-      return this.f_193765_ > 0 ? Math.min(this.f_92106_.m_231551_(), this.f_193765_) : this.f_92106_.m_231551_();
+      return this.f_193765_ > 0 ? Math.min((Integer)this.f_92106_.m_231551_(), this.f_193765_) : (Integer)this.f_92106_.m_231551_();
    }
 
    private static Component m_231952_(Component componentIn, int valueIn) {
@@ -3329,7 +3329,43 @@ public class Options {
       return valueIn == 0.0 ? m_231921_(componentIn, CommonComponents.f_130654_) : m_231897_(componentIn, valueIn);
    }
 
-   interface FieldAccess extends net.minecraft.client.Options.OptionAccess {
+   static {
+      f_231794_ = Component.m_237110_("options.graphics.fabulous.tooltip", new Object[]{Component.m_237115_("options.graphics.fabulous").m_130940_(ChatFormatting.ITALIC)});
+      f_231785_ = Component.m_237115_("options.graphics.fancy.tooltip");
+      f_231786_ = Component.m_237115_("options.prioritizeChunkUpdates.none.tooltip");
+      f_231787_ = Component.m_237115_("options.prioritizeChunkUpdates.byPlayer.tooltip");
+      f_231788_ = Component.m_237115_("options.prioritizeChunkUpdates.nearby.tooltip");
+      f_315005_ = Component.m_237115_("options.accessibility.menu_background_blurriness.tooltip");
+      f_273812_ = Component.m_237115_("options.accessibility.high_contrast.tooltip");
+      f_263815_ = Component.m_237115_("options.notifications.display_time.tooltip");
+      f_337252_ = Component.m_237115_("options.realmsNotifications.tooltip");
+      f_231804_ = Component.m_237115_("options.allowServerListing.tooltip");
+      f_231805_ = Component.m_237115_("options.directionalAudio.on.tooltip");
+      f_231806_ = Component.m_237115_("options.directionalAudio.off.tooltip");
+      f_231808_ = Component.m_237115_("options.key.toggle");
+      f_231809_ = Component.m_237115_("options.key.hold");
+      f_231810_ = Component.m_237115_("options.hideMatchedNames.tooltip");
+      f_231797_ = Component.m_237115_("options.onlyShowSecureChat.tooltip");
+      f_260656_ = Component.m_237110_("options.telemetry.button.tooltip", new Object[]{Component.m_237115_("options.telemetry.state.minimal"), Component.m_237115_("options.telemetry.state.all")});
+      f_231799_ = Component.m_237115_("options.screenEffectScale.tooltip");
+      f_231800_ = Component.m_237115_("options.fovEffectScale.tooltip");
+      f_231801_ = Component.m_237115_("options.darknessEffectScale.tooltip");
+      f_267409_ = Component.m_237115_("options.glintSpeed.tooltip");
+      f_267450_ = Component.m_237115_("options.glintStrength.tooltip");
+      f_268597_ = Component.m_237115_("options.damageTiltStrength.tooltip");
+      VALS_FAST_FANCY_OFF = new int[]{1, 2, 3};
+      OF_TREES_VALUES = new int[]{0, 1, 4, 2};
+      OF_DYNAMIC_LIGHTS = new int[]{3, 1, 2};
+      KEYS_DYNAMIC_LIGHTS = new String[]{"options.off", "options.graphics.fast", "options.graphics.fancy"};
+      OF_TELEMETRY = new int[]{0, 1, 2};
+      KEYS_TELEMETRY = new String[]{"options.on", "of.general.anonymous", "options.off"};
+   }
+
+   interface OptionAccess {
+      void m_232124_(String var1, OptionInstance var2);
+   }
+
+   interface FieldAccess extends OptionAccess {
       int m_142708_(String var1, int var2);
 
       boolean m_142682_(String var1, boolean var2);
@@ -3338,10 +3374,6 @@ public class Options {
 
       float m_142432_(String var1, float var2);
 
-      <T> T m_142634_(String var1, T var2, Function<String, T> var3, Function<T, String> var4);
-   }
-
-   interface OptionAccess {
-      <T> void m_232124_(String var1, net.minecraft.client.OptionInstance<T> var2);
+      Object m_142634_(String var1, Object var2, Function var3, Function var4);
    }
 }

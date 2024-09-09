@@ -11,12 +11,13 @@ public class TokenParser {
    public static Token[] parse(String str) throws IOException, ParseException {
       Reader r = new StringReader(str);
       PushbackReader pr = new PushbackReader(r);
-      List<Token> list = new ArrayList();
+      List list = new ArrayList();
 
-      while (true) {
+      while(true) {
          int i = pr.read();
          if (i < 0) {
-            return (Token[])list.toArray(new Token[list.size()]);
+            Token[] tokens = (Token[])list.toArray(new Token[list.size()]);
+            return tokens;
          }
 
          char ch = (char)i;
@@ -36,7 +37,7 @@ public class TokenParser {
       StringBuffer sb = new StringBuffer();
       sb.append(chFirst);
 
-      while (true) {
+      while(true) {
          int i = pr.read();
          if (i < 0) {
             break;

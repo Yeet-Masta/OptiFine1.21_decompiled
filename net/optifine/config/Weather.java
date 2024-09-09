@@ -16,4 +16,9 @@ public enum Weather {
          return rainStrength > 0.5F ? RAIN : CLEAR;
       }
    }
+
+   // $FF: synthetic method
+   private static Weather[] $values() {
+      return new Weather[]{CLEAR, RAIN, THUNDER};
+   }
 }

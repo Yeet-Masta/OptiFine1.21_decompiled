@@ -1,8 +1,8 @@
 package net.optifine;
 
-import java.lang.invoke.StringConcatFactory;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.CrashReport;
 import net.minecraft.ReportType;
 import net.minecraft.SystemReport;
 import net.optifine.http.FileUploadThread;
@@ -10,7 +10,7 @@ import net.optifine.http.IFileUploadListener;
 import net.optifine.shaders.Shaders;
 
 public class CrashReporter {
-   public static void onCrashReport(net.minecraft.CrashReport crashReport, SystemReport category) {
+   public static void onCrashReport(CrashReport crashReport, SystemReport category) {
       try {
          Throwable cause = crashReport.m_127524_();
          if (cause == null) {
@@ -38,7 +38,6 @@ public class CrashReporter {
          String reportStr = makeReport(crashReport);
          byte[] content = reportStr.getBytes("ASCII");
          IFileUploadListener listener = new IFileUploadListener() {
-            @Override
             public void fileUploadFinished(String url, byte[] content, Throwable exception) {
             }
          };
@@ -50,11 +49,13 @@ public class CrashReporter {
          fut.start();
          Thread.sleep(1000L);
       } catch (Exception var9) {
-         Config.dbg(var9.getClass().getName() + ": " + var9.getMessage());
+         String var10000 = var9.getClass().getName();
+         Config.dbg(var10000 + ": " + var9.getMessage());
       }
+
    }
 
-   private static String makeReport(net.minecraft.CrashReport crashReport) {
+   private static String makeReport(CrashReport crashReport) {
       StringBuffer sb = new StringBuffer();
       sb.append("OptiFineVersion: " + Config.getVersion() + "\n");
       sb.append("Summary: " + makeSummary(crashReport) + "\n");
@@ -64,7 +65,7 @@ public class CrashReporter {
       return sb.toString();
    }
 
-   private static String makeSummary(net.minecraft.CrashReport crashReport) {
+   private static String makeSummary(CrashReport crashReport) {
       Throwable t = crashReport.m_127524_();
       if (t == null) {
          return "Unknown";
@@ -75,7 +76,9 @@ public class CrashReporter {
             firstTrace = traces[0].toString().trim();
          }
 
-         return t.getClass().getName() + ": " + t.getMessage() + " (" + crashReport.m_127511_() + ") [" + firstTrace + "]";
+         String var10000 = t.getClass().getName();
+         String sum = var10000 + ": " + t.getMessage() + " (" + crashReport.m_127511_() + ") [" + firstTrace + "]";
+         return sum;
       }
    }
 
@@ -83,17 +86,17 @@ public class CrashReporter {
       cat.m_143519_("OptiFine Version", Config.getVersion());
       cat.m_143519_("OptiFine Build", Config.getBuild());
       if (Config.getGameSettings() != null) {
-         cat.m_143519_("Render Distance Chunks", Config.getChunkViewDistance() + "");
-         cat.m_143519_("Mipmaps", Config.getMipmapLevels() + "");
-         cat.m_143519_("Anisotropic Filtering", Config.getAnisotropicFilterLevel() + "");
-         cat.m_143519_("Antialiasing", Config.getAntialiasingLevel() + "");
-         cat.m_143519_("Multitexture", Config.isMultiTexture() + "");
+         cat.m_143519_("Render Distance Chunks", "" + Config.getChunkViewDistance());
+         cat.m_143519_("Mipmaps", "" + Config.getMipmapLevels());
+         cat.m_143519_("Anisotropic Filtering", "" + Config.getAnisotropicFilterLevel());
+         cat.m_143519_("Antialiasing", "" + Config.getAntialiasingLevel());
+         cat.m_143519_("Multitexture", "" + Config.isMultiTexture());
       }
 
-      cat.m_143519_("Shaders", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(Shaders.getShaderPackName()));
-      cat.m_143519_("OpenGlVersion", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(Config.openGlVersion));
-      cat.m_143519_("OpenGlRenderer", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(Config.openGlRenderer));
-      cat.m_143519_("OpenGlVendor", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(Config.openGlVendor));
-      cat.m_143519_("CpuCount", Config.getAvailableProcessors() + "");
+      cat.m_143519_("Shaders", "" + Shaders.getShaderPackName());
+      cat.m_143519_("OpenGlVersion", "" + Config.openGlVersion);
+      cat.m_143519_("OpenGlRenderer", "" + Config.openGlRenderer);
+      cat.m_143519_("OpenGlVendor", "" + Config.openGlVendor);
+      cat.m_143519_("CpuCount", "" + Config.getAvailableProcessors());
    }
 }

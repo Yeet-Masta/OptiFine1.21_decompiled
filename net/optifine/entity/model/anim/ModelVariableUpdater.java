@@ -33,7 +33,8 @@ public class ModelVariableUpdater {
             }
          } catch (ParseException var3) {
             Config.warn("Error parsing expression: " + this.expressionText);
-            Config.warn(var3.getClass().getName() + ": " + var3.getMessage());
+            String var10000 = var3.getClass().getName();
+            Config.warn(var10000 + ": " + var3.getMessage());
             return false;
          }
       }

@@ -6,4 +6,9 @@ public enum VanillaResourceType implements IResourceType {
    SOUNDS,
    LANGUAGES,
    SHADERS;
+
+   // $FF: synthetic method
+   private static VanillaResourceType[] $values() {
+      return new VanillaResourceType[]{MODELS, TEXTURES, SOUNDS, LANGUAGES, SHADERS};
+   }
 }

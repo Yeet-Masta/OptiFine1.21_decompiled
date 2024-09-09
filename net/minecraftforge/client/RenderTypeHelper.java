@@ -1,7 +1,9 @@
 package net.minecraftforge.client;
 
+import net.minecraft.src.C_4168_;
+
 public class RenderTypeHelper {
-   public static RenderType getEntityRenderType(RenderType rt, boolean cull) {
+   public static C_4168_ getEntityRenderType(C_4168_ rt, boolean cull) {
       return null;
    }
 }

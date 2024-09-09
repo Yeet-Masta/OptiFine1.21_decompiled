@@ -4,8 +4,15 @@ import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import java.nio.IntBuffer;
 import java.util.Objects;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.optifine.reflect.ReflectorForge;
 import net.optifine.render.GLConst;
 
@@ -22,7 +29,9 @@ public abstract class RenderTarget {
    public int f_83920_;
    protected int f_83923_;
    protected int f_83924_;
-   private final float[] f_83921_ = net.minecraft.Util.m_137537_(() -> new float[]{1.0F, 1.0F, 1.0F, 0.0F});
+   private final float[] f_83921_ = (float[])Util.m_137537_(() -> {
+      return new float[]{1.0F, 1.0F, 1.0F, 0.0F};
+   });
    public int f_83922_;
    private boolean stencilEnabled = false;
 
@@ -35,10 +44,13 @@ public abstract class RenderTarget {
 
    public void m_83941_(int widthIn, int heightIn, boolean onMacIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> this.m_83964_(widthIn, heightIn, onMacIn));
+         RenderSystem.recordRenderCall(() -> {
+            this.m_83964_(widthIn, heightIn, onMacIn);
+         });
       } else {
          this.m_83964_(widthIn, heightIn, onMacIn);
       }
+
    }
 
    private void m_83964_(int widthIn, int heightIn, boolean onMacIn) {
@@ -79,10 +91,11 @@ public abstract class RenderTarget {
             GlStateManager._glDeleteFramebuffers(this.f_83920_);
             this.f_83920_ = -1;
          }
+
       }
    }
 
-   public void m_83945_(com.mojang.blaze3d.pipeline.RenderTarget framebufferIn) {
+   public void m_83945_(RenderTarget framebufferIn) {
       if (GLX.isUsingFBOs()) {
          RenderSystem.assertOnRenderThreadOrInit();
          GlStateManager._glBindFramebuffer(36008, framebufferIn.f_83920_);
@@ -114,9 +127,9 @@ public abstract class RenderTarget {
                GlStateManager._texParameter(3553, 10242, 33071);
                GlStateManager._texParameter(3553, 10243, 33071);
                if (this.stencilEnabled) {
-                  GlStateManager._texImage2D(3553, 0, 36013, this.f_83915_, this.f_83916_, 0, 34041, 36269, null);
+                  GlStateManager._texImage2D(3553, 0, 36013, this.f_83915_, this.f_83916_, 0, 34041, 36269, (IntBuffer)null);
                } else {
-                  GlStateManager._texImage2D(3553, 0, 6402, this.f_83915_, this.f_83916_, 0, 6402, 5126, null);
+                  GlStateManager._texImage2D(3553, 0, 6402, this.f_83915_, this.f_83916_, 0, 6402, 5126, (IntBuffer)null);
                }
             }
 
@@ -124,7 +137,7 @@ public abstract class RenderTarget {
             GlStateManager._bindTexture(this.f_83923_);
             GlStateManager._texParameter(3553, 10242, 33071);
             GlStateManager._texParameter(3553, 10243, 33071);
-            GlStateManager._texImage2D(3553, 0, 32856, this.f_83915_, this.f_83916_, 0, 6408, 5121, null);
+            GlStateManager._texImage2D(3553, 0, 32856, this.f_83915_, this.f_83916_, 0, 6408, 5121, (IntBuffer)null);
             GlStateManager._glBindFramebuffer(36160, this.f_83920_);
             GlStateManager._glFramebufferTexture2D(36160, 36064, 3553, this.f_83923_, 0);
             if (this.f_83919_) {
@@ -163,6 +176,7 @@ public abstract class RenderTarget {
             GlStateManager._texParameter(3553, 10240, framebufferFilterIn);
             GlStateManager._bindTexture(0);
          }
+
       }
    }
 
@@ -202,10 +216,13 @@ public abstract class RenderTarget {
 
    public void m_83947_(boolean setViewportIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> this.m_83961_(setViewportIn));
+         RenderSystem.recordRenderCall(() -> {
+            this.m_83961_(setViewportIn);
+         });
       } else {
          this.m_83961_(setViewportIn);
       }
+
    }
 
    private void m_83961_(boolean setViewportIn) {
@@ -215,16 +232,20 @@ public abstract class RenderTarget {
          if (setViewportIn) {
             GlStateManager._viewport(0, 0, this.f_83917_, this.f_83918_);
          }
+
       }
    }
 
    public void m_83970_() {
       if (GLX.isUsingFBOs()) {
          if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(() -> GlStateManager._glBindFramebuffer(36160, 0));
+            RenderSystem.recordRenderCall(() -> {
+               GlStateManager._glBindFramebuffer(36160, 0);
+            });
          } else {
             GlStateManager._glBindFramebuffer(36160, 0);
          }
+
       }
    }
 
@@ -255,18 +276,15 @@ public abstract class RenderTarget {
          }
 
          Minecraft minecraft = Minecraft.m_91087_();
-         net.minecraft.client.renderer.ShaderInstance shaderinstance = (net.minecraft.client.renderer.ShaderInstance)Objects.requireNonNull(
-            minecraft.f_91063_.f_172635_, "Blit shader not loaded"
-         );
+         ShaderInstance shaderinstance = (ShaderInstance)Objects.requireNonNull(minecraft.f_91063_.f_172635_, "Blit shader not loaded");
          shaderinstance.m_173350_("DiffuseSampler", this.f_83923_);
          shaderinstance.m_173363_();
-         com.mojang.blaze3d.vertex.BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator()
-            .m_339075_(com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_166850_);
+         BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_166850_);
          bufferbuilder.m_167146_(0.0F, 0.0F, 0.0F);
          bufferbuilder.m_167146_(1.0F, 0.0F, 0.0F);
          bufferbuilder.m_167146_(1.0F, 1.0F, 0.0F);
          bufferbuilder.m_167146_(0.0F, 1.0F, 0.0F);
-         com.mojang.blaze3d.vertex.BufferUploader.m_231209_(bufferbuilder.m_339905_());
+         BufferUploader.m_231209_(bufferbuilder.m_339905_());
          shaderinstance.m_173362_();
          GlStateManager._depthMask(true);
          GlStateManager._colorMask(true, true, true, true);

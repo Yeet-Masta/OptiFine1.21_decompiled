@@ -4,6 +4,7 @@ import java.util.Optional;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.Potion;
@@ -11,7 +12,7 @@ import net.minecraft.world.item.alchemy.PotionContents;
 import net.optifine.reflect.Reflector;
 
 public class PotionUtils {
-   public static MobEffect getPotion(net.minecraft.resources.ResourceLocation loc) {
+   public static MobEffect getPotion(ResourceLocation loc) {
       return !BuiltInRegistries.f_256974_.m_7804_(loc) ? null : (MobEffect)BuiltInRegistries.f_256974_.m_7745_(loc);
    }
 
@@ -32,12 +33,17 @@ public class PotionUtils {
       if (pc == null) {
          return null;
       } else {
-         Optional<Holder<Potion>> opt = pc.f_317059_();
+         Optional opt = pc.f_317059_();
          if (opt.isEmpty()) {
             return null;
          } else {
-            Holder<Potion> holder = (Holder<Potion>)opt.get();
-            return !holder.m_203633_() ? null : (Potion)holder.m_203334_();
+            Holder holder = (Holder)opt.get();
+            if (!holder.m_203633_()) {
+               return null;
+            } else {
+               Potion p = (Potion)holder.m_203334_();
+               return p;
+            }
          }
       }
    }

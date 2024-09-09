@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 import net.optifine.util.ResUtils;
 import net.optifine.util.StrUtils;
 import net.optifine.util.WorldUtils;
@@ -21,7 +21,7 @@ public class CustomLoadingScreens {
       if (screens == null) {
          return null;
       } else {
-         ResourceKey<Level> dimensionType = net.minecraft.network.protocol.PacketUtils.lastDimensionType;
+         ResourceKey dimensionType = PacketUtils.lastDimensionType;
          if (dimensionType == null) {
             return null;
          } else {
@@ -40,43 +40,44 @@ public class CustomLoadingScreens {
    public static void update() {
       screens = null;
       screensMinDimensionId = 0;
-      Pair<CustomLoadingScreen[], Integer> pair = parseScreens();
+      Pair pair = parseScreens();
       screens = (CustomLoadingScreen[])pair.getLeft();
       screensMinDimensionId = (Integer)pair.getRight();
    }
 
-   private static Pair<CustomLoadingScreen[], Integer> parseScreens() {
+   private static Pair parseScreens() {
       String prefix = "optifine/gui/loading/background";
       String suffix = ".png";
       String[] paths = ResUtils.collectFiles(prefix, suffix);
-      Map<Integer, String> map = new HashMap();
+      Map map = new HashMap();
 
-      for (int i = 0; i < paths.length; i++) {
+      String pathProps;
+      for(int i = 0; i < paths.length; ++i) {
          String path = paths[i];
-         String dimIdStr = StrUtils.removePrefixSuffix(path, prefix, suffix);
-         int dimId = Config.parseInt(dimIdStr, Integer.MIN_VALUE);
+         pathProps = StrUtils.removePrefixSuffix(path, prefix, suffix);
+         int dimId = Config.parseInt(pathProps, Integer.MIN_VALUE);
          if (dimId == Integer.MIN_VALUE) {
-            warn("Invalid dimension ID: " + dimIdStr + ", path: " + path);
+            warn("Invalid dimension ID: " + pathProps + ", path: " + path);
          } else {
             map.put(dimId, path);
          }
       }
 
-      Set<Integer> setDimIds = map.keySet();
+      Set setDimIds = map.keySet();
       Integer[] dimIds = (Integer[])setDimIds.toArray(new Integer[setDimIds.size()]);
       Arrays.sort(dimIds);
       if (dimIds.length <= 0) {
-         return new ImmutablePair(null, 0);
+         return new ImmutablePair((Object)null, 0);
       } else {
-         String pathProps = "optifine/gui/loading/loading.properties";
+         pathProps = "optifine/gui/loading/loading.properties";
          Properties props = ResUtils.readProperties(pathProps, "CustomLoadingScreens");
          int minDimId = dimIds[0];
          int maxDimId = dimIds[dimIds.length - 1];
          int countDim = maxDimId - minDimId + 1;
          CustomLoadingScreen[] scrs = new CustomLoadingScreen[countDim];
 
-         for (int ix = 0; ix < dimIds.length; ix++) {
-            Integer dimId = dimIds[ix];
+         for(int i = 0; i < dimIds.length; ++i) {
+            Integer dimId = dimIds[i];
             String path = (String)map.get(dimId);
             scrs[dimId - minDimId] = CustomLoadingScreen.parseScreen(path, dimId, props);
          }

@@ -5,28 +5,33 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.FontManager;
-import net.minecraft.server.packs.resources.PreparableReloadListener.PreparationBarrier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.util.profiling.InactiveProfiler;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
 public class FontUtils {
-   public static Properties readFontProperties(net.minecraft.resources.ResourceLocation locationFontTexture) {
+   public static Properties readFontProperties(ResourceLocation locationFontTexture) {
       String fontFileName = locationFontTexture.m_135815_();
       Properties props = new PropertiesOrdered();
       String suffix = ".png";
       if (!fontFileName.endsWith(suffix)) {
          return props;
       } else {
-         String fileName = fontFileName.substring(0, fontFileName.length() - suffix.length()) + ".properties";
+         String var10000 = fontFileName.substring(0, fontFileName.length() - suffix.length());
+         String fileName = var10000 + ".properties";
 
          try {
-            net.minecraft.resources.ResourceLocation locProp = new net.minecraft.resources.ResourceLocation(locationFontTexture.m_135827_(), fileName);
+            ResourceLocation locProp = new ResourceLocation(locationFontTexture.m_135827_(), fileName);
             InputStream in = Config.getResourceStream(Config.getResourceManager(), locProp);
             if (in == null) {
                return props;
@@ -44,10 +49,13 @@ public class FontUtils {
       }
    }
 
-   public static Int2ObjectMap<Float> readCustomCharWidths(Properties props) {
-      Int2ObjectMap<Float> map = new Int2ObjectOpenHashMap();
+   public static Int2ObjectMap readCustomCharWidths(Properties props) {
+      Int2ObjectMap map = new Int2ObjectOpenHashMap();
+      Set keySet = props.keySet();
+      Iterator iter = keySet.iterator();
 
-      for (String key : props.keySet()) {
+      while(iter.hasNext()) {
+         String key = (String)iter.next();
          String prefix = "width.";
          if (key.startsWith(prefix)) {
             String numStr = key.substring(prefix.length());
@@ -87,18 +95,20 @@ public class FontUtils {
          return defVal;
       } else {
          String strLow = str.toLowerCase().trim();
-         if (strLow.equals("true") || strLow.equals("on")) {
-            return true;
-         } else if (!strLow.equals("false") && !strLow.equals("off")) {
-            Config.warn("Invalid value for " + key + ": " + str);
-            return defVal;
+         if (!strLow.equals("true") && !strLow.equals("on")) {
+            if (!strLow.equals("false") && !strLow.equals("off")) {
+               Config.warn("Invalid value for " + key + ": " + str);
+               return defVal;
+            } else {
+               return false;
+            }
          } else {
-            return false;
+            return true;
          }
       }
    }
 
-   public static net.minecraft.resources.ResourceLocation getHdFontLocation(net.minecraft.resources.ResourceLocation fontLoc) {
+   public static ResourceLocation getHdFontLocation(ResourceLocation fontLoc) {
       if (!Config.isCustomFonts()) {
          return fontLoc;
       } else if (fontLoc == null) {
@@ -114,19 +124,19 @@ public class FontUtils {
          } else {
             fontName = fontName.substring(texturesStr.length());
             fontName = optifineStr + fontName;
-            net.minecraft.resources.ResourceLocation fontLocHD = new net.minecraft.resources.ResourceLocation(fontLoc.m_135827_(), fontName);
+            ResourceLocation fontLocHD = new ResourceLocation(fontLoc.m_135827_(), fontName);
             return Config.hasResource(Config.getResourceManager(), fontLocHD) ? fontLocHD : fontLoc;
          }
       }
    }
 
    public static void reloadFonts() {
-      PreparationBarrier stage = new PreparationBarrier() {
-         public <T> CompletableFuture<T> m_6769_(T x) {
+      PreparableReloadListener.PreparationBarrier stage = new PreparableReloadListener.PreparationBarrier() {
+         public CompletableFuture m_6769_(Object x) {
             return CompletableFuture.completedFuture(x);
          }
       };
-      Executor ex = net.minecraft.Util.m_183991_();
+      Executor ex = Util.m_183991_();
       Minecraft mc = Minecraft.m_91087_();
       FontManager frm = (FontManager)Reflector.getFieldValue(mc, Reflector.Minecraft_fontResourceManager);
       if (frm != null) {

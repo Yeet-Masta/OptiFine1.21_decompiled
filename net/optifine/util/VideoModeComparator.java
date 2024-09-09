@@ -3,7 +3,7 @@ package net.optifine.util;
 import com.mojang.blaze3d.platform.VideoMode;
 import java.util.Comparator;
 
-public class VideoModeComparator implements Comparator<VideoMode> {
+public class VideoModeComparator implements Comparator {
    public int compare(VideoMode vm1, VideoMode vm2) {
       if (vm1.m_85332_() != vm2.m_85332_()) {
          return vm1.m_85332_() - vm2.m_85332_();

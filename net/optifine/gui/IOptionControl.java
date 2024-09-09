@@ -1,5 +1,7 @@
 package net.optifine.gui;
 
+import net.minecraft.client.OptionInstance;
+
 public interface IOptionControl {
-   net.minecraft.client.OptionInstance getControlOption();
+   OptionInstance getControlOption();
 }

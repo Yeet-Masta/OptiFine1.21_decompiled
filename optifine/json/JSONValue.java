@@ -19,7 +19,7 @@ public class JSONValue {
 
    public static Object parse(String s) {
       StringReader in = new StringReader(s);
-      return parse(in);
+      return parse((Reader)in);
    }
 
    public static Object parseWithException(Reader in) throws IOException, ParseException {
@@ -45,6 +45,7 @@ public class JSONValue {
          } else {
             out.write("null");
          }
+
       } else if (!(value instanceof Float)) {
          if (value instanceof Number) {
             out.write(value.toString());
@@ -67,6 +68,7 @@ public class JSONValue {
          } else {
             out.write("null");
          }
+
       }
    }
 
@@ -103,7 +105,7 @@ public class JSONValue {
    }
 
    static void escape(String s, StringBuffer sb) {
-      for (int i = 0; i < s.length(); i++) {
+      for(int i = 0; i < s.length(); ++i) {
          char ch = s.charAt(i);
          switch (ch) {
             case '\b':
@@ -133,7 +135,7 @@ public class JSONValue {
             String ss = Integer.toHexString(ch);
             sb.append("\\u");
 
-            for (int k = 0; k < 4 - ss.length(); k++) {
+            for(int k = 0; k < 4 - ss.length(); ++k) {
                sb.append('0');
             }
 
@@ -142,5 +144,6 @@ public class JSONValue {
             sb.append(ch);
          }
       }
+
    }
 }

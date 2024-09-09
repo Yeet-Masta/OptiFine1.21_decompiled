@@ -7,7 +7,7 @@ import java.util.Properties;
 import java.util.Set;
 
 public class PropertiesOrdered extends Properties {
-   private Set<Object> keysOrdered = new LinkedHashSet();
+   private Set keysOrdered = new LinkedHashSet();
 
    public synchronized Object put(Object key, Object value) {
       if (key instanceof String) {
@@ -22,13 +22,13 @@ public class PropertiesOrdered extends Properties {
       return super.put(key, value);
    }
 
-   public Set<Object> keySet() {
-      Set<Object> keysParent = super.keySet();
+   public Set keySet() {
+      Set keysParent = super.keySet();
       this.keysOrdered.retainAll(keysParent);
       return Collections.unmodifiableSet(this.keysOrdered);
    }
 
-   public synchronized Enumeration<Object> keys() {
+   public synchronized Enumeration keys() {
       return Collections.enumeration(this.keySet());
    }
 }

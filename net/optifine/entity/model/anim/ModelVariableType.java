@@ -1,5 +1,6 @@
 package net.optifine.entity.model.anim;
 
+import net.minecraft.client.model.geom.ModelPart;
 import net.optifine.Config;
 import net.optifine.expr.ExpressionType;
 
@@ -37,104 +38,104 @@ public enum ModelVariableType {
       return this.type;
    }
 
-   public float getFloat(net.minecraft.client.model.geom.ModelPart mr) {
-      switch (this) {
-         case POS_X:
+   public float getFloat(ModelPart mr) {
+      switch (this.ordinal()) {
+         case 0:
             return mr.f_104200_;
-         case POS_Y:
+         case 1:
             return mr.f_104201_;
-         case POS_Z:
+         case 2:
             return mr.f_104202_;
-         case ANGLE_X:
+         case 3:
             return mr.f_104203_;
-         case ANGLE_Y:
+         case 4:
             return mr.f_104204_;
-         case ANGLE_Z:
+         case 5:
             return mr.f_104205_;
-         case SCALE_X:
+         case 6:
             return mr.f_233553_;
-         case SCALE_Y:
+         case 7:
             return mr.f_233554_;
-         case SCALE_Z:
+         case 8:
             return mr.f_233555_;
          default:
-            Config.warn("GetFloat not supported for: " + this);
+            Config.warn("GetFloat not supported for: " + String.valueOf(this));
             return 0.0F;
       }
    }
 
-   public void setFloat(net.minecraft.client.model.geom.ModelPart mr, float val) {
-      switch (this) {
-         case POS_X:
+   public void setFloat(ModelPart mr, float val) {
+      switch (this.ordinal()) {
+         case 0:
             mr.f_104200_ = val;
             return;
-         case POS_Y:
+         case 1:
             mr.f_104201_ = val;
             return;
-         case POS_Z:
+         case 2:
             mr.f_104202_ = val;
             return;
-         case ANGLE_X:
+         case 3:
             mr.f_104203_ = val;
             return;
-         case ANGLE_Y:
+         case 4:
             mr.f_104204_ = val;
             return;
-         case ANGLE_Z:
+         case 5:
             mr.f_104205_ = val;
             return;
-         case SCALE_X:
+         case 6:
             mr.f_233553_ = val;
             return;
-         case SCALE_Y:
+         case 7:
             mr.f_233554_ = val;
             return;
-         case SCALE_Z:
+         case 8:
             mr.f_233555_ = val;
             return;
          default:
-            Config.warn("SetFloat not supported for: " + this);
+            Config.warn("SetFloat not supported for: " + String.valueOf(this));
       }
    }
 
-   public boolean getBool(net.minecraft.client.model.geom.ModelPart mr) {
-      switch (this) {
-         case VISIBLE:
+   public boolean getBool(ModelPart mr) {
+      switch (this.ordinal()) {
+         case 9:
             return mr.f_104207_;
-         case VISIBLE_BOXES:
+         case 10:
             return !mr.f_233556_;
          default:
-            Config.warn("GetBool not supported for: " + this);
+            Config.warn("GetBool not supported for: " + String.valueOf(this));
             return false;
       }
    }
 
-   public void setBool(net.minecraft.client.model.geom.ModelPart mr, boolean val) {
-      switch (this) {
-         case VISIBLE:
+   public void setBool(ModelPart mr, boolean val) {
+      switch (this.ordinal()) {
+         case 9:
             mr.f_104207_ = val;
             return;
-         case VISIBLE_BOXES:
+         case 10:
             mr.f_233556_ = !val;
             return;
          default:
-            Config.warn("SetBool not supported for: " + this);
+            Config.warn("SetBool not supported for: " + String.valueOf(this));
       }
    }
 
-   public IModelVariable makeModelVariable(String name, net.minecraft.client.model.geom.ModelPart mr) {
+   public IModelVariable makeModelVariable(String name, ModelPart mr) {
       if (this.type == ExpressionType.FLOAT) {
          return new ModelVariableFloat(name, mr, this);
       } else if (this.type == ExpressionType.BOOL) {
          return new ModelVariableBool(name, mr, this);
       } else {
-         Config.warn("Unknown model variable type: " + this.type);
+         Config.warn("Unknown model variable type: " + String.valueOf(this.type));
          return null;
       }
    }
 
    public static ModelVariableType parse(String str) {
-      for (int i = 0; i < VALUES.length; i++) {
+      for(int i = 0; i < VALUES.length; ++i) {
          ModelVariableType var = VALUES[i];
          if (var.getName().equals(str)) {
             return var;
@@ -142,5 +143,10 @@ public enum ModelVariableType {
       }
 
       return null;
+   }
+
+   // $FF: synthetic method
+   private static ModelVariableType[] $values() {
+      return new ModelVariableType[]{POS_X, POS_Y, POS_Z, ANGLE_X, ANGLE_Y, ANGLE_Z, SCALE_X, SCALE_Y, SCALE_Z, VISIBLE, VISIBLE_BOXES};
    }
 }

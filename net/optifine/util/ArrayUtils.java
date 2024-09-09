@@ -11,7 +11,7 @@ public class ArrayUtils {
       if (arr == null) {
          return false;
       } else {
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             Object obj = arr[i];
             if (obj == val) {
                return true;
@@ -26,7 +26,7 @@ public class ArrayUtils {
       if (arr == null) {
          return false;
       } else {
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             if (arr[i] == val) {
                return true;
             }
@@ -40,7 +40,7 @@ public class ArrayUtils {
       if (arr == null) {
          return -1;
       } else {
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             if (arr[i] == val) {
                return i;
             }
@@ -54,7 +54,7 @@ public class ArrayUtils {
       if (arr == null) {
          return -1;
       } else {
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             if (equals(arr[i], val)) {
                return i;
             }
@@ -71,7 +71,7 @@ public class ArrayUtils {
          int[] newArray = new int[newLen];
          System.arraycopy(intArray, 0, newArray, 0, arrLen);
 
-         for (int index = 0; index < copyFrom.length; index++) {
+         for(int index = 0; index < copyFrom.length; ++index) {
             newArray[index + arrLen] = copyFrom[index];
          }
 
@@ -139,7 +139,7 @@ public class ArrayUtils {
          StringBuffer buf = new StringBuffer(arr.length * 5);
          int len = Math.min(arr.length, maxLen);
 
-         for (int i = 0; i < len; i++) {
+         for(int i = 0; i < len; ++i) {
             boolean x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -162,7 +162,7 @@ public class ArrayUtils {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             float x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -181,7 +181,7 @@ public class ArrayUtils {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             float x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -204,7 +204,7 @@ public class ArrayUtils {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             int x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -223,7 +223,7 @@ public class ArrayUtils {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             int x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -247,7 +247,7 @@ public class ArrayUtils {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             Object obj = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -266,7 +266,7 @@ public class ArrayUtils {
       } else if (elementClass == null) {
          return null;
       } else if (elementClass.isPrimitive()) {
-         throw new IllegalArgumentException("Can not make arrays with primitive elements (int, double), element class: " + elementClass);
+         throw new IllegalArgumentException("Can not make arrays with primitive elements (int, double), element class: " + String.valueOf(elementClass));
       } else {
          Object[] array = (Object[])Array.newInstance(elementClass, coll.size());
          return coll.toArray(array);
@@ -274,7 +274,7 @@ public class ArrayUtils {
    }
 
    public static boolean equalsOne(int val, int[] vals) {
-      for (int i = 0; i < vals.length; i++) {
+      for(int i = 0; i < vals.length; ++i) {
          if (vals[i] == val) {
             return true;
          }
@@ -287,7 +287,7 @@ public class ArrayUtils {
       if (bs == null) {
          return false;
       } else {
-         for (int i = 0; i < bs.length; i++) {
+         for(int i = 0; i < bs.length; ++i) {
             Object b = bs[i];
             if (equals(a, b)) {
                return true;
@@ -310,7 +310,7 @@ public class ArrayUtils {
       if (bs == null) {
          return false;
       } else {
-         for (int i = 0; i < bs.length; i++) {
+         for(int i = 0; i < bs.length; ++i) {
             Object b = bs[i];
             if (a == b) {
                return true;
@@ -324,7 +324,8 @@ public class ArrayUtils {
    public static Object[] removeObjectFromArray(Object[] arr, Object obj) {
       List list = new ArrayList(Arrays.asList(arr));
       list.remove(obj);
-      return collectionToArray(list, arr.getClass().getComponentType());
+      Object[] newArr = collectionToArray(list, arr.getClass().getComponentType());
+      return newArr;
    }
 
    public static int[] toPrimitive(Integer[] arr) {
@@ -335,7 +336,7 @@ public class ArrayUtils {
       } else {
          int[] intArr = new int[arr.length];
 
-         for (int i = 0; i < intArr.length; i++) {
+         for(int i = 0; i < intArr.length; ++i) {
             intArr[i] = arr[i];
          }
 
@@ -351,7 +352,7 @@ public class ArrayUtils {
       } else {
          Integer[] intArr = new Integer[arr.length];
 
-         for (int i = 0; i < intArr.length; i++) {
+         for(int i = 0; i < intArr.length; ++i) {
             intArr[i] = arr[i];
          }
 

@@ -1,7 +1,15 @@
 package net.optifine.util;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import java.util.Collection;
+import java.util.Iterator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.FontTexture;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.optifine.Config;
 import net.optifine.shaders.SimpleShaderTexture;
 
@@ -32,24 +40,25 @@ public class GpuMemory {
    }
 
    private static long calculateTextureAllocated() {
-      net.minecraft.client.renderer.texture.TextureManager textureManager = Minecraft.m_91087_().m_91097_();
+      TextureManager textureManager = Minecraft.m_91087_().m_91097_();
       long sum = 0L;
+      Collection textures = textureManager.getTextures();
 
-      for (net.minecraft.client.renderer.texture.AbstractTexture texture : textureManager.getTextures()) {
-         long size = getTextureSize(texture);
+      long size;
+      for(Iterator var4 = textures.iterator(); var4.hasNext(); sum += size) {
+         AbstractTexture texture = (AbstractTexture)var4.next();
+         size = getTextureSize(texture);
          if (Config.isShaders()) {
             size *= 3L;
          }
-
-         sum += size;
       }
 
       return sum;
    }
 
-   public static long getTextureSize(net.minecraft.client.renderer.texture.AbstractTexture texture) {
-      if (texture instanceof net.minecraft.client.renderer.texture.DynamicTexture dt) {
-         com.mojang.blaze3d.platform.NativeImage img = dt.m_117991_();
+   public static long getTextureSize(AbstractTexture texture) {
+      if (texture instanceof DynamicTexture dt) {
+         NativeImage img = dt.m_117991_();
          if (img != null) {
             return img.getSize();
          }
@@ -59,10 +68,12 @@ public class GpuMemory {
          return 262144L;
       } else if (texture instanceof SimpleShaderTexture sst) {
          return sst.getSize();
-      } else if (texture instanceof net.minecraft.client.renderer.texture.SimpleTexture st) {
+      } else if (texture instanceof SimpleTexture st) {
          return st.size;
+      } else if (texture instanceof TextureAtlas ta) {
+         return (long)(ta.m_276092_() * ta.m_276095_() * 4);
       } else {
-         return texture instanceof net.minecraft.client.renderer.texture.TextureAtlas ta ? (long)(ta.m_276092_() * ta.m_276095_() * 4) : 0L;
+         return 0L;
       }
    }
 }

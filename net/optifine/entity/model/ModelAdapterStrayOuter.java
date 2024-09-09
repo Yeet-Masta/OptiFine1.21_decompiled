@@ -1,9 +1,16 @@
 package net.optifine.entity.model;
 
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.StrayRenderer;
+import net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
 
@@ -12,43 +19,38 @@ public class ModelAdapterStrayOuter extends ModelAdapterStray {
       super(EntityType.f_20481_, "stray_outer", 0.7F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new SkeletonModel(bakeModelLayer(ModelLayers.f_171250_));
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       StrayRenderer customRenderer = new StrayRenderer(renderManager.getContext());
       customRenderer.f_115290_ = new SkeletonModel(bakeModelLayer(ModelLayers.f_171250_));
       customRenderer.f_114477_ = 0.7F;
-      net.minecraft.client.renderer.entity.EntityRenderer render = rendererCache.get(EntityType.f_20481_, index, () -> customRenderer);
+      EntityRenderer render = rendererCache.get(EntityType.f_20481_, index, () -> {
+         return customRenderer;
+      });
       if (!(render instanceof StrayRenderer renderStray)) {
-         Config.warn("Not a SkeletonModelRenderer: " + render);
+         Config.warn("Not a SkeletonModelRenderer: " + String.valueOf(render));
          return null;
       } else {
-         net.minecraft.resources.ResourceLocation STRAY_CLOTHES_LOCATION = new net.minecraft.resources.ResourceLocation(
-            "textures/entity/skeleton/stray_overlay.png"
-         );
-         net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer layer = new net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer(
-            renderStray, renderManager.getContext().m_174027_(), ModelLayers.f_171250_, STRAY_CLOTHES_LOCATION
-         );
-         layer.f_314940_ = (SkeletonModel<T>)modelBase;
-         renderStray.removeLayers(net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer.class);
+         ResourceLocation STRAY_CLOTHES_LOCATION = new ResourceLocation("textures/entity/skeleton/stray_overlay.png");
+         SkeletonClothingLayer layer = new SkeletonClothingLayer(renderStray, renderManager.getContext().m_174027_(), ModelLayers.f_171250_, STRAY_CLOTHES_LOCATION);
+         layer.f_314940_ = (SkeletonModel)modelBase;
+         renderStray.removeLayers(SkeletonClothingLayer.class);
          renderStray.m_115326_(layer);
          return renderStray;
       }
    }
 
-   @Override
-   public boolean setTextureLocation(IEntityRenderer er, net.minecraft.resources.ResourceLocation textureLocation) {
+   public boolean setTextureLocation(IEntityRenderer er, ResourceLocation textureLocation) {
       StrayRenderer renderer = (StrayRenderer)er;
+      List layers = renderer.getLayers(SkeletonClothingLayer.class);
 
-      for (net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer layer : renderer.getLayers(
-         net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer.class
-      )) {
-         layer.f_316006_ = textureLocation;
+      SkeletonClothingLayer layer;
+      for(Iterator var5 = layers.iterator(); var5.hasNext(); layer.f_316006_ = textureLocation) {
+         layer = (SkeletonClothingLayer)var5.next();
       }
 
       return true;

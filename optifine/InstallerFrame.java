@@ -1,9 +1,12 @@
 package optifine;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -26,7 +29,7 @@ public class InstallerFrame extends JFrame {
    private JButton ivjButtonClose = null;
    private JPanel ivjPanelBottom = null;
    private JPanel ivjPanelContentPane = null;
-   InstallerFrame.IvjEventHandler ivjEventHandler = new InstallerFrame.IvjEventHandler();
+   IvjEventHandler ivjEventHandler = new IvjEventHandler();
    private JTextArea ivjTextArea = null;
    private JButton ivjButtonExtract = null;
    private JLabel ivjLabelFolder = null;
@@ -66,13 +69,14 @@ public class InstallerFrame extends JFrame {
       } catch (Exception var7) {
          var7.printStackTrace();
       }
+
    }
 
    public static void main(String[] args) {
       try {
          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
          InstallerFrame frm = new InstallerFrame();
-         Utils.centerWindow(frm, null);
+         Utils.centerWindow(frm, (Component)null);
          frm.show();
       } catch (Exception var8) {
          String msg = var8.getMessage();
@@ -85,13 +89,14 @@ public class InstallerFrame extends JFrame {
          str = str.replace("\t", "  ");
          JTextArea textArea = new JTextArea(str);
          textArea.setEditable(false);
-         java.awt.Font f = textArea.getFont();
-         java.awt.Font f2 = new java.awt.Font("Monospaced", f.getStyle(), f.getSize());
+         Font f = textArea.getFont();
+         Font f2 = new Font("Monospaced", f.getStyle(), f.getSize());
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
-         JOptionPane.showMessageDialog(null, scrollPane, "Error", 0);
+         JOptionPane.showMessageDialog((Component)null, scrollPane, "Error", 0);
       }
+
    }
 
    private void handleException(Throwable e) {
@@ -102,12 +107,12 @@ public class InstallerFrame extends JFrame {
          str = str.replace("\t", "  ");
          JTextArea textArea = new JTextArea(str);
          textArea.setEditable(false);
-         java.awt.Font f = textArea.getFont();
-         java.awt.Font f2 = new java.awt.Font("Monospaced", f.getStyle(), f.getSize());
+         Font f = textArea.getFont();
+         Font f2 = new Font("Monospaced", f.getStyle(), f.getSize());
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
-         JOptionPane.showMessageDialog(null, scrollPane, "Error", 0);
+         JOptionPane.showMessageDialog((Component)null, scrollPane, "Error", 0);
       }
    }
 
@@ -117,7 +122,7 @@ public class InstallerFrame extends JFrame {
             this.ivjLabelOfVersion = new JLabel();
             this.ivjLabelOfVersion.setName("LabelOfVersion");
             this.ivjLabelOfVersion.setBounds(2, 5, 385, 42);
-            this.ivjLabelOfVersion.setFont(new java.awt.Font("Dialog", 1, 18));
+            this.ivjLabelOfVersion.setFont(new Font("Dialog", 1, 18));
             this.ivjLabelOfVersion.setHorizontalAlignment(0);
             this.ivjLabelOfVersion.setPreferredSize(new Dimension(385, 42));
             this.ivjLabelOfVersion.setText("OptiFine ...");
@@ -135,7 +140,7 @@ public class InstallerFrame extends JFrame {
             this.ivjLabelMcVersion = new JLabel();
             this.ivjLabelMcVersion.setName("LabelMcVersion");
             this.ivjLabelMcVersion.setBounds(2, 38, 385, 25);
-            this.ivjLabelMcVersion.setFont(new java.awt.Font("Dialog", 1, 14));
+            this.ivjLabelMcVersion.setFont(new Font("Dialog", 1, 14));
             this.ivjLabelMcVersion.setHorizontalAlignment(0);
             this.ivjLabelMcVersion.setPreferredSize(new Dimension(385, 25));
             this.ivjLabelMcVersion.setText("for Minecraft ...");
@@ -152,7 +157,7 @@ public class InstallerFrame extends JFrame {
          try {
             this.ivjPanelCenter = new JPanel();
             this.ivjPanelCenter.setName("PanelCenter");
-            this.ivjPanelCenter.setLayout(null);
+            this.ivjPanelCenter.setLayout((LayoutManager)null);
             this.ivjPanelCenter.add(this.getLabelOfVersion(), this.getLabelOfVersion().getName());
             this.ivjPanelCenter.add(this.getLabelMcVersion(), this.getLabelMcVersion().getName());
             this.ivjPanelCenter.add(this.getTextArea(), this.getTextArea().getName());
@@ -267,6 +272,7 @@ public class InstallerFrame extends JFrame {
       } catch (Exception var2) {
          this.handleException(var2);
       }
+
    }
 
    public void onExtract() {
@@ -290,6 +296,7 @@ public class InstallerFrame extends JFrame {
       } catch (Exception var3) {
          this.handleException(var3);
       }
+
    }
 
    public void onClose() {
@@ -302,6 +309,7 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
+
    }
 
    private void connEtoC2(ActionEvent arg1) {
@@ -310,6 +318,7 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
+
    }
 
    private void initConnections() throws Exception {
@@ -327,12 +336,11 @@ public class InstallerFrame extends JFrame {
             this.ivjTextArea.setBounds(15, 66, 365, 44);
             this.ivjTextArea.setEditable(false);
             this.ivjTextArea.setEnabled(true);
-            this.ivjTextArea.setFont(new java.awt.Font("Dialog", 0, 12));
+            this.ivjTextArea.setFont(new Font("Dialog", 0, 12));
             this.ivjTextArea.setLineWrap(true);
             this.ivjTextArea.setOpaque(false);
             this.ivjTextArea.setPreferredSize(new Dimension(365, 44));
-            this.ivjTextArea
-               .setText("This installer will install OptiFine in the official Minecraft launcher and will create a new profile \"OptiFine\" for it.");
+            this.ivjTextArea.setText("This installer will install OptiFine in the official Minecraft launcher and will create a new profile \"OptiFine\" for it.");
             this.ivjTextArea.setWrapStyleWord(true);
          } catch (Throwable var2) {
             this.handleException(var2);
@@ -363,6 +371,7 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
+
    }
 
    private JLabel getLabelFolder() {
@@ -423,6 +432,7 @@ public class InstallerFrame extends JFrame {
          File dir = jfc.getSelectedFile();
          this.getFieldFolder().setText(dir.getPath());
       }
+
    }
 
    private void connEtoC4(ActionEvent arg1) {
@@ -431,6 +441,7 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
+
    }
 
    class IvjEventHandler implements ActionListener {
@@ -450,6 +461,7 @@ public class InstallerFrame extends JFrame {
          if (e.getSource() == InstallerFrame.this.getButtonInstall()) {
             InstallerFrame.this.connEtoC1(e);
          }
+
       }
    }
 }

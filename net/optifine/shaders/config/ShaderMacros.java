@@ -3,6 +3,8 @@ package net.optifine.shaders.config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.Util;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.optifine.Config;
 import net.optifine.shaders.ITextureFormat;
 import net.optifine.shaders.RenderStage;
@@ -45,7 +47,7 @@ public class ShaderMacros {
    private static ShaderMacro[] constantMacros;
 
    public static String getOs() {
-      net.minecraft.Util.OS os = net.minecraft.Util.m_137581_();
+      Util.class_0 os = Util.m_137581_();
       switch (os) {
          case WINDOWS:
             return "MC_OS_WINDOWS";
@@ -122,7 +124,7 @@ public class ShaderMacros {
          String[] exts = Config.getOpenGlExtensions();
          ShaderMacro[] extMacros = new ShaderMacro[exts.length];
 
-         for (int i = 0; i < exts.length; i++) {
+         for(int i = 0; i < exts.length; ++i) {
             extMacros[i] = new ShaderMacro(PREFIX_MACRO + exts[i], "");
          }
 
@@ -134,7 +136,7 @@ public class ShaderMacros {
 
    public static ShaderMacro[] getConstantMacros() {
       if (constantMacros == null) {
-         List<ShaderMacro> list = new ArrayList();
+         List list = new ArrayList();
          list.addAll(Arrays.asList(getRenderStages()));
          constantMacros = (ShaderMacro[])list.toArray(new ShaderMacro[list.size()]);
       }
@@ -146,9 +148,9 @@ public class ShaderMacros {
       RenderStage[] rss = RenderStage.values();
       ShaderMacro[] rsMacros = new ShaderMacro[rss.length];
 
-      for (int i = 0; i < rss.length; i++) {
+      for(int i = 0; i < rss.length; ++i) {
          RenderStage rs = rss[i];
-         rsMacros[i] = new ShaderMacro(PREFIX_MACRO + "RENDER_STAGE_" + rs.name(), rs.ordinal() + "");
+         rsMacros[i] = new ShaderMacro(PREFIX_MACRO + "RENDER_STAGE_" + rs.name(), "" + rs.ordinal());
       }
 
       return rsMacros;
@@ -198,7 +200,7 @@ public class ShaderMacros {
    }
 
    public static String getTextureMacroLines() {
-      net.minecraft.client.renderer.texture.TextureAtlas textureMap = Config.getTextureMap();
+      TextureAtlas textureMap = Config.getTextureMap();
       if (textureMap == null) {
          return "";
       } else {
@@ -222,8 +224,10 @@ public class ShaderMacros {
    }
 
    public static String[] getHeaderMacroLines() {
-      String str = getFixedMacroLines() + getOptionMacroLines() + getTextureMacroLines();
-      return Config.tokenize(str, "\n\r");
+      String var10000 = getFixedMacroLines();
+      String str = var10000 + getOptionMacroLines() + getTextureMacroLines();
+      String[] lines = Config.tokenize(str, "\n\r");
+      return lines;
    }
 
    private static void addMacroLine(StringBuilder sb, String name, int value) {

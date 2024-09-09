@@ -1,8 +1,11 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.SalmonModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.SalmonRenderer;
 import net.minecraft.world.entity.EntityType;
 
@@ -11,13 +14,11 @@ public class ModelAdapterSalmon extends ModelAdapter {
       super(EntityType.f_20519_, "salmon", 0.3F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new SalmonModel(bakeModelLayer(ModelLayers.f_171176_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SalmonModel modelSalmon)) {
          return null;
       } else if (modelPart.equals("body_front")) {
@@ -41,14 +42,12 @@ public class ModelAdapterSalmon extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body_front", "body_back", "head", "fin_back_1", "fin_back_2", "tail", "fin_right", "fin_left", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SalmonRenderer render = new SalmonRenderer(renderManager.getContext());
       render.f_115290_ = (SalmonModel)modelBase;
       render.f_114477_ = shadowSize;

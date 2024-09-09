@@ -28,6 +28,7 @@ public class Mipmaps {
       if (direct) {
          this.mipmapBuffers = makeMipmapBuffers(this.mipmapDimensions, this.mipmapDatas);
       }
+
    }
 
    public static Dimension[] makeMipmapDimensions(int width, int height, String iconName) {
@@ -38,11 +39,12 @@ public class Mipmaps {
          int mipWidth = texWidth;
          int mipHeight = texHeight;
 
-         while (true) {
+         while(true) {
             mipWidth /= 2;
             mipHeight /= 2;
             if (mipWidth <= 0 && mipHeight <= 0) {
-               return (Dimension[])listDims.toArray(new Dimension[listDims.size()]);
+               Dimension[] mipmapDimensions = (Dimension[])listDims.toArray(new Dimension[listDims.size()]);
+               return mipmapDimensions;
             }
 
             if (mipWidth <= 0) {
@@ -69,7 +71,7 @@ public class Mipmaps {
       boolean scale = true;
       int[][] mipmapDatas = new int[mipmapDimensions.length][];
 
-      for (int i = 0; i < mipmapDimensions.length; i++) {
+      for(int i = 0; i < mipmapDimensions.length; ++i) {
          Dimension dim = mipmapDimensions[i];
          int mipWidth = dim.width;
          int mipHeight = dim.height;
@@ -77,8 +79,8 @@ public class Mipmaps {
          mipmapDatas[i] = mipData;
          int level = i + 1;
          if (scale) {
-            for (int mipX = 0; mipX < mipWidth; mipX++) {
-               for (int mipY = 0; mipY < mipHeight; mipY++) {
+            for(int mipX = 0; mipX < mipWidth; ++mipX) {
+               for(int mipY = 0; mipY < mipHeight; ++mipY) {
                   int p1 = parMipData[mipX * 2 + 0 + (mipY * 2 + 0) * parWidth];
                   int p2 = parMipData[mipX * 2 + 1 + (mipY * 2 + 0) * parWidth];
                   int p3 = parMipData[mipX * 2 + 1 + (mipY * 2 + 1) * parWidth];
@@ -102,12 +104,13 @@ public class Mipmaps {
    public static int alphaBlend(int c1, int c2, int c3, int c4) {
       int cx1 = alphaBlend(c1, c2);
       int cx2 = alphaBlend(c3, c4);
-      return alphaBlend(cx1, cx2);
+      int cx = alphaBlend(cx1, cx2);
+      return cx;
    }
 
    private static int alphaBlend(int c1, int c2) {
-      int a1 = (c1 & 0xFF000000) >> 24 & 0xFF;
-      int a2 = (c2 & 0xFF000000) >> 24 & 0xFF;
+      int a1 = (c1 & -16777216) >> 24 & 255;
+      int a2 = (c2 & -16777216) >> 24 & 255;
       int ax = (a1 + a2) / 2;
       if (a1 == 0 && a2 == 0) {
          a1 = 1;
@@ -124,12 +127,12 @@ public class Mipmaps {
          }
       }
 
-      int r1 = (c1 >> 16 & 0xFF) * a1;
-      int g1 = (c1 >> 8 & 0xFF) * a1;
-      int b1 = (c1 & 0xFF) * a1;
-      int r2 = (c2 >> 16 & 0xFF) * a2;
-      int g2 = (c2 >> 8 & 0xFF) * a2;
-      int b2 = (c2 & 0xFF) * a2;
+      int r1 = (c1 >> 16 & 255) * a1;
+      int g1 = (c1 >> 8 & 255) * a1;
+      int b1 = (c1 & 255) * a1;
+      int r2 = (c2 >> 16 & 255) * a2;
+      int g2 = (c2 >> 8 & 255) * a2;
+      int b2 = (c2 & 255) * a2;
       int rx = (r1 + r2) / (a1 + a2);
       int gx = (g1 + g2) / (a1 + a2);
       int bx = (b1 + b2) / (a1 + a2);
@@ -137,8 +140,8 @@ public class Mipmaps {
    }
 
    private int averageColor(int i, int j) {
-      int k = (i & 0xFF000000) >> 24 & 0xFF;
-      int l = (j & 0xFF000000) >> 24 & 0xFF;
+      int k = (i & -16777216) >> 24 & 255;
+      int l = (j & -16777216) >> 24 & 255;
       return (k + l >> 1 << 24) + ((i & 16711422) + (j & 16711422) >> 1);
    }
 
@@ -148,7 +151,7 @@ public class Mipmaps {
       } else {
          IntBuffer[] mipmapBuffers = new IntBuffer[mipmapDimensions.length];
 
-         for (int i = 0; i < mipmapDimensions.length; i++) {
+         for(int i = 0; i < mipmapDimensions.length; ++i) {
             Dimension dim = mipmapDimensions[i];
             int bufLen = dim.width * dim.height;
             IntBuffer buf = Config.createDirectIntBuffer(bufLen);
@@ -166,12 +169,13 @@ public class Mipmaps {
    public static void allocateMipmapTextures(int width, int height, String name) {
       Dimension[] dims = makeMipmapDimensions(width, height, name);
 
-      for (int i = 0; i < dims.length; i++) {
+      for(int i = 0; i < dims.length; ++i) {
          Dimension dim = dims[i];
          int mipWidth = dim.width;
          int mipHeight = dim.height;
          int level = i + 1;
          GL11.glTexImage2D(3553, level, 6408, mipWidth, mipHeight, 0, 32993, 33639, (IntBuffer)null);
       }
+
    }
 }

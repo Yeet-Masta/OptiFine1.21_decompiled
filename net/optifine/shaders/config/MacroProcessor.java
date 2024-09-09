@@ -16,10 +16,11 @@ public class MacroProcessor {
    public static InputStream process(InputStream in, String path, boolean useShaderOptions) throws IOException {
       String str = Config.readInputStream(in, "ASCII");
       String strMacroHeader = getMacroHeader(str, useShaderOptions);
+      String filePath;
       if (!strMacroHeader.isEmpty()) {
          str = strMacroHeader + str;
          if (Shaders.saveFinalShaders) {
-            String filePath = path.replace(':', '/') + ".pre";
+            filePath = path.replace(':', '/') + ".pre";
             Shaders.saveShader(filePath, str);
          }
 
@@ -27,12 +28,13 @@ public class MacroProcessor {
       }
 
       if (Shaders.saveFinalShaders) {
-         String filePath = path.replace(':', '/');
+         filePath = path.replace(':', '/');
          Shaders.saveShader(filePath, str);
       }
 
       byte[] bytes = str.getBytes("ASCII");
-      return new ByteArrayInputStream(bytes);
+      ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+      return bais;
    }
 
    public static String process(String strIn) throws IOException {
@@ -41,10 +43,11 @@ public class MacroProcessor {
       MacroState macroState = new MacroState();
       StringBuilder sb = new StringBuilder();
 
-      while (true) {
+      while(true) {
          String line = br.readLine();
          if (line == null) {
-            return sb.toString();
+            line = sb.toString();
+            return line;
          }
 
          if (macroState.processLine(line) && !MacroState.isMacroLine(line)) {
@@ -56,62 +59,64 @@ public class MacroProcessor {
 
    private static String getMacroHeader(String str, boolean useShaderOptions) throws IOException {
       StringBuilder sb = new StringBuilder();
-      List<ShaderOption> sos = null;
-      List<ShaderMacro> sms = null;
+      List sos = null;
+      List sms = null;
       StringReader sr = new StringReader(str);
       BufferedReader br = new BufferedReader(sr);
 
-      while (true) {
-         String line = br.readLine();
-         if (line == null) {
-            return sb.toString();
+      while(true) {
+         String line;
+         do {
+            line = br.readLine();
+            if (line == null) {
+               return sb.toString();
+            }
+         } while(!MacroState.isMacroLine(line));
+
+         if (sb.length() == 0) {
+            sb.append(ShaderMacros.getFixedMacroLines());
          }
 
-         if (MacroState.isMacroLine(line)) {
-            if (sb.length() == 0) {
-               sb.append(ShaderMacros.getFixedMacroLines());
+         Iterator it;
+         if (useShaderOptions) {
+            if (sos == null) {
+               sos = getMacroOptions();
             }
 
-            if (useShaderOptions) {
-               if (sos == null) {
-                  sos = getMacroOptions();
-               }
+            it = sos.iterator();
 
-               Iterator it = sos.iterator();
-
-               while (it.hasNext()) {
-                  ShaderOption so = (ShaderOption)it.next();
-                  if (line.contains(so.getName())) {
-                     sb.append(so.getSourceLine());
-                     sb.append("\n");
-                     it.remove();
-                  }
-               }
-            }
-
-            if (sms == null) {
-               sms = new ArrayList(Arrays.asList(ShaderMacros.getExtensions()));
-            }
-
-            Iterator it = sms.iterator();
-
-            while (it.hasNext()) {
-               ShaderMacro sm = (ShaderMacro)it.next();
-               if (line.contains(sm.getName())) {
-                  sb.append(sm.getSourceLine());
+            while(it.hasNext()) {
+               ShaderOption so = (ShaderOption)it.next();
+               if (line.contains(so.getName())) {
+                  sb.append(so.getSourceLine());
                   sb.append("\n");
                   it.remove();
                }
             }
          }
+
+         if (sms == null) {
+            sms = new ArrayList(Arrays.asList(ShaderMacros.getExtensions()));
+         }
+
+         it = sms.iterator();
+
+         while(it.hasNext()) {
+            ShaderMacro sm = (ShaderMacro)it.next();
+            if (line.contains(sm.getName())) {
+               sb.append(sm.getSourceLine());
+               sb.append("\n");
+               it.remove();
+            }
+         }
       }
    }
 
-   private static List<ShaderOption> getMacroOptions() {
-      List<ShaderOption> list = new ArrayList();
+   private static List getMacroOptions() {
+      List list = new ArrayList();
       ShaderOption[] sos = Shaders.getShaderPackOptions();
 
-      for (int i = 0; i < sos.length; i++) {
+      for(int i = 0; i < sos.length; ++i) {
          ShaderOption so = sos[i];
          String sourceLine = so.getSourceLine();
          if (sourceLine != null && sourceLine.startsWith("#")) {

@@ -4,9 +4,11 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
+import net.minecraft.Util;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.optifine.util.MathUtils;
 import org.apache.commons.lang3.math.Fraction;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -18,26 +20,25 @@ public class Mth {
    private static final long f_144839_ = 16384L;
    private static final long f_144840_ = -4611686018427387904L;
    private static final long f_144841_ = Long.MIN_VALUE;
-   public static final float f_144830_ = (float) Math.PI;
-   public static final float f_144831_ = (float) (Math.PI / 2);
-   public static final float f_144832_ = (float) (Math.PI * 2);
-   public static final float f_144833_ = (float) (Math.PI / 180.0);
-   public static final float f_144834_ = 180.0F / (float)Math.PI;
+   public static final float f_144830_ = 3.1415927F;
+   public static final float f_144831_ = 1.5707964F;
+   public static final float f_144832_ = 6.2831855F;
+   public static final float f_144833_ = 0.017453292F;
+   public static final float f_144834_ = 57.295776F;
    public static final float f_144835_ = 1.0E-5F;
    public static final float f_13994_ = m_14116_(2.0F);
    private static final float f_144842_ = 10430.378F;
    public static final Vector3f f_303648_ = new Vector3f(0.0F, 1.0F, 0.0F);
    public static final Vector3f f_302939_ = new Vector3f(1.0F, 0.0F, 0.0F);
    public static final Vector3f f_302844_ = new Vector3f(0.0F, 0.0F, 1.0F);
-   private static final float[] f_13995_ = net.minecraft.Util.m_137469_(new float[65536], p_14076_0_ -> {
-      for (int i = 0; i < p_14076_0_.length; i++) {
+   private static final float[] f_13995_ = (float[])Util.m_137469_(new float[65536], (p_14076_0_) -> {
+      for(int i = 0; i < p_14076_0_.length; ++i) {
          p_14076_0_[i] = (float)Math.sin((double)i * Math.PI * 2.0 / 65536.0);
       }
+
    });
    private static final RandomSource f_13996_ = RandomSource.m_216337_();
-   private static final int[] f_13997_ = new int[]{
-      0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-   };
+   private static final int[] f_13997_ = new int[]{0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};
    private static final double f_144843_ = 0.16666666666666666;
    private static final int f_144844_ = 8;
    private static final int f_144845_ = 257;
@@ -48,19 +49,19 @@ public class Mth {
    private static final int SIN_MASK = 4095;
    private static final int SIN_COUNT = 4096;
    private static final int SIN_COUNT_D4 = 1024;
-   public static final float PI2 = MathUtils.roundToFloat(Math.PI * 2);
-   public static final float PId2 = MathUtils.roundToFloat(Math.PI / 2);
+   public static final float PI2 = MathUtils.roundToFloat(6.283185307179586);
+   public static final float PId2 = MathUtils.roundToFloat(1.5707963267948966);
    private static final float radToIndex = MathUtils.roundToFloat(651.8986469044033);
-   public static final float deg2Rad = MathUtils.roundToFloat(Math.PI / 180.0);
+   public static final float deg2Rad = MathUtils.roundToFloat(0.017453292519943295);
    private static final float[] SIN_TABLE_FAST = new float[4096];
    public static boolean fastMath = false;
 
    public static float m_14031_(float value) {
-      return fastMath ? SIN_TABLE_FAST[(int)(value * radToIndex) & 4095] : f_13995_[(int)(value * 10430.378F) & 65535];
+      return fastMath ? SIN_TABLE_FAST[(int)(value * radToIndex) & 4095] : f_13995_[(int)(value * 10430.378F) & '\uffff'];
    }
 
    public static float m_14089_(float value) {
-      return fastMath ? SIN_TABLE_FAST[(int)(value * radToIndex + 1024.0F) & 4095] : f_13995_[(int)(value * 10430.378F + 16384.0F) & 65535];
+      return fastMath ? SIN_TABLE_FAST[(int)(value * radToIndex + 1024.0F) & 4095] : f_13995_[(int)(value * 10430.378F + 16384.0F) & '\uffff'];
    }
 
    public static float m_14116_(float value) {
@@ -165,7 +166,7 @@ public class Mth {
    }
 
    public static boolean m_14082_(double x, double y) {
-      return Math.abs(y - x) < 1.0E-5F;
+      return Math.abs(y - x) < 9.999999747378752E-6;
    }
 
    public static int m_14100_(int x, int y) {
@@ -286,11 +287,13 @@ public class Mth {
       return number - (double)m_14134_(number);
    }
 
+   /** @deprecated */
    @Deprecated
    public static long m_14057_(Vec3i pos) {
       return m_14130_(pos.m_123341_(), pos.m_123342_(), pos.m_123343_());
    }
 
+   /** @deprecated */
    @Deprecated
    public static long m_14130_(int x, int y, int z) {
       long i = (long)(x * 3129871) ^ (long)z * 116129781L ^ (long)y;
@@ -316,7 +319,7 @@ public class Mth {
       return (p_184655_0_ - p_184655_1_) / (p_184655_2_ - p_184655_1_);
    }
 
-   public static boolean m_144888_(net.minecraft.world.phys.Vec3 p_144888_0_, net.minecraft.world.phys.Vec3 p_144888_1_, AABB p_144888_2_) {
+   public static boolean m_144888_(Vec3 p_144888_0_, Vec3 p_144888_1_, AABB p_144888_2_) {
       double d0 = (p_144888_2_.f_82288_ + p_144888_2_.f_82291_) * 0.5;
       double d1 = (p_144888_2_.f_82291_ - p_144888_2_.f_82288_) * 0.5;
       double d2 = p_144888_0_.f_82479_ - d0;
@@ -371,13 +374,14 @@ public class Mth {
          }
 
          boolean flag2 = p_14136_0_ > p_14136_2_;
+         double d9;
          if (flag2) {
-            double d1 = p_14136_2_;
+            d9 = p_14136_2_;
             p_14136_2_ = p_14136_0_;
-            p_14136_0_ = d1;
+            p_14136_0_ = d9;
          }
 
-         double d9 = m_14193_(d0);
+         d9 = m_14193_(d0);
          p_14136_2_ *= d9;
          p_14136_0_ *= d9;
          double d2 = f_13998_ + p_14136_0_;
@@ -389,7 +393,7 @@ public class Mth {
          double d7 = (6.0 + d6 * d6) * d6 * 0.16666666666666666;
          double d8 = d3 + d7;
          if (flag2) {
-            d8 = (Math.PI / 2) - d8;
+            d8 = 1.5707963267948966 - d8;
          }
 
          if (flag1) {
@@ -412,6 +416,7 @@ public class Mth {
       return org.joml.Math.invsqrt(p_264555_0_);
    }
 
+   /** @deprecated */
    @Deprecated
    public static double m_14193_(double number) {
       double d0 = 0.5 * number;
@@ -491,7 +496,7 @@ public class Mth {
    public static int m_14049_(int min, int max, IntPredicate isTargetBeforeOrAt) {
       int i = max - min;
 
-      while (i > 0) {
+      while(i > 0) {
          int j = i / 2;
          int k = min + j;
          if (isTargetBeforeOrAt.test(k)) {
@@ -526,34 +531,12 @@ public class Mth {
       return m_14139_(p_14012_2_, m_14139_(p_14012_0_, p_14012_4_, p_14012_6_), m_14139_(p_14012_0_, p_14012_8_, p_14012_10_));
    }
 
-   public static double m_14019_(
-      double p_14019_0_,
-      double p_14019_2_,
-      double p_14019_4_,
-      double p_14019_6_,
-      double p_14019_8_,
-      double p_14019_10_,
-      double p_14019_12_,
-      double p_14019_14_,
-      double p_14019_16_,
-      double p_14019_18_,
-      double p_14019_20_
-   ) {
-      return m_14139_(
-         p_14019_4_,
-         m_14012_(p_14019_0_, p_14019_2_, p_14019_6_, p_14019_8_, p_14019_10_, p_14019_12_),
-         m_14012_(p_14019_0_, p_14019_2_, p_14019_14_, p_14019_16_, p_14019_18_, p_14019_20_)
-      );
+   public static double m_14019_(double p_14019_0_, double p_14019_2_, double p_14019_4_, double p_14019_6_, double p_14019_8_, double p_14019_10_, double p_14019_12_, double p_14019_14_, double p_14019_16_, double p_14019_18_, double p_14019_20_) {
+      return m_14139_(p_14019_4_, m_14012_(p_14019_0_, p_14019_2_, p_14019_6_, p_14019_8_, p_14019_10_, p_14019_12_), m_14012_(p_14019_0_, p_14019_2_, p_14019_14_, p_14019_16_, p_14019_18_, p_14019_20_));
    }
 
    public static float m_216244_(float p_216244_0_, float p_216244_1_, float p_216244_2_, float p_216244_3_, float p_216244_4_) {
-      return 0.5F
-         * (
-            2.0F * p_216244_2_
-               + (p_216244_3_ - p_216244_1_) * p_216244_0_
-               + (2.0F * p_216244_1_ - 5.0F * p_216244_2_ + 4.0F * p_216244_3_ - p_216244_4_) * p_216244_0_ * p_216244_0_
-               + (3.0F * p_216244_2_ - p_216244_1_ - 3.0F * p_216244_3_ + p_216244_4_) * p_216244_0_ * p_216244_0_ * p_216244_0_
-         );
+      return 0.5F * (2.0F * p_216244_2_ + (p_216244_3_ - p_216244_1_) * p_216244_0_ + (2.0F * p_216244_1_ - 5.0F * p_216244_2_ + 4.0F * p_216244_3_ - p_216244_4_) * p_216244_0_ * p_216244_0_ + (3.0F * p_216244_2_ - p_216244_1_ - 3.0F * p_216244_3_ + p_216244_4_) * p_216244_0_ * p_216244_0_ * p_216244_0_);
    }
 
    public static double m_14197_(double p_14197_0_) {
@@ -674,10 +657,10 @@ public class Mth {
       } else if (p_216250_3_ < 1) {
          throw new IllegalArgumentException(String.format(Locale.ROOT, "steps expected to be >= 1, was %d", p_216250_3_));
       } else {
-         return p_216250_0_ >= p_216250_1_ && p_216250_0_ <= p_216250_2_ ? IntStream.iterate(p_216250_0_, p_216278_3_ -> {
+         return p_216250_0_ >= p_216250_1_ && p_216250_0_ <= p_216250_2_ ? IntStream.iterate(p_216250_0_, (p_216278_3_) -> {
             int i = Math.abs(p_216250_0_ - p_216278_3_);
             return p_216250_0_ - i >= p_216250_1_ || p_216250_0_ + i <= p_216250_2_;
-         }, p_216255_4_ -> {
+         }, (p_216255_4_) -> {
             boolean flag = p_216255_4_ <= p_216250_0_;
             int i = Math.abs(p_216250_0_ - p_216255_4_);
             boolean flag1 = p_216250_0_ + i + p_216250_3_ <= p_216250_2_;
@@ -703,15 +686,17 @@ public class Mth {
    }
 
    static {
-      for (int i = 0; i < 257; i++) {
-         double d0 = (double)i / 256.0;
+      int s;
+      for(s = 0; s < 257; ++s) {
+         double d0 = (double)s / 256.0;
          double d1 = Math.asin(d0);
-         f_14000_[i] = Math.cos(d1);
-         f_13999_[i] = d1;
+         f_14000_[s] = Math.cos(d1);
+         f_13999_[s] = d1;
       }
 
-      for (int s = 0; s < SIN_TABLE_FAST.length; s++) {
+      for(s = 0; s < SIN_TABLE_FAST.length; ++s) {
          SIN_TABLE_FAST[s] = MathUtils.roundToFloat(Math.sin((double)s * Math.PI * 2.0 / 4096.0));
       }
+
    }
 }

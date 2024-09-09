@@ -3,18 +3,27 @@ package net.optifine;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.ShoulderRidingEntity;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.optifine.reflect.ReflectorRaw;
 import net.optifine.util.ArrayUtils;
 import net.optifine.util.ResUtils;
@@ -22,12 +31,12 @@ import net.optifine.util.StrUtils;
 import net.optifine.util.TextureUtils;
 
 public class RandomEntities {
-   private static Map<String, RandomEntityProperties<net.minecraft.resources.ResourceLocation>> mapProperties = new HashMap();
-   private static Map<String, RandomEntityProperties<net.minecraft.resources.ResourceLocation>> mapSpriteProperties = new HashMap();
+   private static Map mapProperties = new HashMap();
+   private static Map mapSpriteProperties = new HashMap();
    private static boolean active = false;
-   private static net.minecraft.client.renderer.entity.EntityRenderDispatcher entityRenderDispatcher;
+   private static EntityRenderDispatcher entityRenderDispatcher;
    private static RandomEntity randomEntity = new RandomEntity();
-   private static net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher tileEntityRendererDispatcher;
+   private static BlockEntityRenderDispatcher tileEntityRendererDispatcher;
    private static RandomTileEntity randomTileEntity = new RandomTileEntity();
    private static boolean working = false;
    public static final String SUFFIX_PNG = ".png";
@@ -39,21 +48,21 @@ public class RandomEntities {
    public static final String PREFIX_OPTIFINE_RANDOM = "optifine/random/";
    public static final String PREFIX_OPTIFINE = "optifine/";
    public static final String PREFIX_OPTIFINE_MOB = "optifine/mob/";
-   private static final String[] DEPENDANT_SUFFIXES = new String[]{
-      "_armor", "_eyes", "_exploding", "_shooting", "_fur", "_eyes", "_invulnerable", "_angry", "_tame", "_collar"
-   };
+   private static final String[] DEPENDANT_SUFFIXES = new String[]{"_armor", "_eyes", "_exploding", "_shooting", "_fur", "_eyes", "_invulnerable", "_angry", "_tame", "_collar"};
    private static final String PREFIX_DYNAMIC_TEXTURE_HORSE = "horse/";
-   private static final String[] HORSE_TEXTURES = (String[])ReflectorRaw.getFieldValue(null, Horse.class, String[].class, 0);
-   private static final String[] HORSE_TEXTURES_ABBR = (String[])ReflectorRaw.getFieldValue(null, Horse.class, String[].class, 1);
+   private static final String[] HORSE_TEXTURES = (String[])ReflectorRaw.getFieldValue((Object)null, Horse.class, String[].class, 0);
+   private static final String[] HORSE_TEXTURES_ABBR = (String[])ReflectorRaw.getFieldValue((Object)null, Horse.class, String[].class, 1);
 
    public static void entityLoaded(Entity entity, Level world) {
       if (world != null) {
-         net.minecraft.network.syncher.SynchedEntityData edm = entity.m_20088_();
+         SynchedEntityData edm = entity.m_20088_();
          edm.spawnPosition = entity.m_20183_();
          edm.spawnBiome = (Biome)world.m_204166_(edm.spawnPosition).m_203334_();
-         if (entity instanceof ShoulderRidingEntity esr) {
+         if (entity instanceof ShoulderRidingEntity) {
+            ShoulderRidingEntity esr = (ShoulderRidingEntity)entity;
             checkEntityShoulder(esr, false);
          }
+
       }
    }
 
@@ -61,6 +70,7 @@ public class RandomEntities {
       if (entity instanceof ShoulderRidingEntity esr) {
          checkEntityShoulder(esr, true);
       }
+
    }
 
    public static void checkEntityShoulder(ShoulderRidingEntity entity, boolean attach) {
@@ -69,7 +79,7 @@ public class RandomEntities {
          owner = Config.getMinecraft().f_91074_;
       }
 
-      if (owner instanceof net.minecraft.client.player.AbstractClientPlayer player) {
+      if (owner instanceof AbstractClientPlayer player) {
          UUID entityUuid = entity.m_20148_();
          if (attach) {
             player.lastAttachedEntity = entity;
@@ -85,36 +95,42 @@ public class RandomEntities {
                player.lastAttachedEntity = null;
             }
          } else {
-            net.minecraft.network.syncher.SynchedEntityData edm = entity.m_20088_();
+            SynchedEntityData edm = entity.m_20088_();
+            SynchedEntityData edmShoulderRight;
             if (player.entityShoulderLeft != null && Config.equals(player.entityShoulderLeft.m_20148_(), entityUuid)) {
-               net.minecraft.network.syncher.SynchedEntityData edmShoulderLeft = player.entityShoulderLeft.m_20088_();
-               edm.spawnPosition = edmShoulderLeft.spawnPosition;
-               edm.spawnBiome = edmShoulderLeft.spawnBiome;
+               edmShoulderRight = player.entityShoulderLeft.m_20088_();
+               edm.spawnPosition = edmShoulderRight.spawnPosition;
+               edm.spawnBiome = edmShoulderRight.spawnBiome;
                player.entityShoulderLeft = null;
             }
 
             if (player.entityShoulderRight != null && Config.equals(player.entityShoulderRight.m_20148_(), entityUuid)) {
-               net.minecraft.network.syncher.SynchedEntityData edmShoulderRight = player.entityShoulderRight.m_20088_();
+               edmShoulderRight = player.entityShoulderRight.m_20088_();
                edm.spawnPosition = edmShoulderRight.spawnPosition;
                edm.spawnBiome = edmShoulderRight.spawnBiome;
                player.entityShoulderRight = null;
             }
          }
+
       }
    }
 
    public static void worldChanged(Level oldWorld, Level newWorld) {
-      if (newWorld instanceof net.minecraft.client.multiplayer.ClientLevel newWorldClient) {
-         for (Entity entity : newWorldClient.m_104735_()) {
+      if (newWorld instanceof ClientLevel newWorldClient) {
+         Iterable entities = newWorldClient.m_104735_();
+         Iterator var4 = entities.iterator();
+
+         while(var4.hasNext()) {
+            Entity entity = (Entity)var4.next();
             entityLoaded(entity, newWorld);
          }
       }
 
-      randomEntity.setEntity(null);
-      randomTileEntity.setTileEntity(null);
+      randomEntity.setEntity((Entity)null);
+      randomTileEntity.setTileEntity((BlockEntity)null);
    }
 
-   public static net.minecraft.resources.ResourceLocation getTextureLocation(net.minecraft.resources.ResourceLocation loc) {
+   public static ResourceLocation getTextureLocation(ResourceLocation loc) {
       if (!active) {
          return loc;
       } else {
@@ -124,7 +140,7 @@ public class RandomEntities {
          } else if (working) {
             return loc;
          } else {
-            net.minecraft.resources.ResourceLocation props;
+            ResourceLocation var4;
             try {
                working = true;
                String name = loc.m_135815_();
@@ -132,30 +148,30 @@ public class RandomEntities {
                   name = getHorseTexturePath(name, "horse/".length());
                }
 
-               if (name.startsWith("textures/entity/") || name.startsWith("textures/painting/")) {
-                  RandomEntityProperties<net.minecraft.resources.ResourceLocation> propsx = (RandomEntityProperties<net.minecraft.resources.ResourceLocation>)mapProperties.get(
-                     name
-                  );
-                  if (propsx != null) {
-                     return propsx.getResource(re, loc);
-                  }
-
-                  return loc;
+               if (!name.startsWith("textures/entity/") && !name.startsWith("textures/painting/")) {
+                  ResourceLocation var8 = loc;
+                  return var8;
                }
 
-               props = loc;
+               RandomEntityProperties props = (RandomEntityProperties)mapProperties.get(name);
+               if (props == null) {
+                  var4 = loc;
+                  return var4;
+               }
+
+               var4 = (ResourceLocation)props.getResource(re, loc);
             } finally {
                working = false;
             }
 
-            return props;
+            return var4;
          }
       }
    }
 
    private static String getHorseTexturePath(String path, int pos) {
       if (HORSE_TEXTURES != null && HORSE_TEXTURES_ABBR != null) {
-         for (int i = 0; i < HORSE_TEXTURES_ABBR.length; i++) {
+         for(int i = 0; i < HORSE_TEXTURES_ABBR.length; ++i) {
             String abbr = HORSE_TEXTURES_ABBR[i];
             if (path.startsWith(abbr, pos)) {
                return HORSE_TEXTURES[i];
@@ -173,8 +189,10 @@ public class RandomEntities {
          randomEntity.setEntity(entityRenderDispatcher.getRenderedEntity());
          return randomEntity;
       } else {
-         if (net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher.tileEntityRendered != null) {
-            net.minecraft.world.level.block.entity.BlockEntity te = net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher.tileEntityRendered;
+         BlockEntityRenderDispatcher var10000 = tileEntityRendererDispatcher;
+         if (BlockEntityRenderDispatcher.tileEntityRendered != null) {
+            var10000 = tileEntityRendererDispatcher;
+            BlockEntity te = BlockEntityRenderDispatcher.tileEntityRendered;
             if (te.m_58904_() != null) {
                randomTileEntity.setTileEntity(te);
                return randomTileEntity;
@@ -190,16 +208,14 @@ public class RandomEntities {
       return randomEntity;
    }
 
-   public static IRandomEntity getRandomBlockEntity(net.minecraft.world.level.block.entity.BlockEntity tileEntityIn) {
+   public static IRandomEntity getRandomBlockEntity(BlockEntity tileEntityIn) {
       randomTileEntity.setTileEntity(tileEntityIn);
       return randomTileEntity;
    }
 
-   private static RandomEntityProperties<net.minecraft.resources.ResourceLocation> makeProperties(
-      net.minecraft.resources.ResourceLocation loc, RandomEntityContext.Textures context
-   ) {
+   private static RandomEntityProperties makeProperties(ResourceLocation loc, RandomEntityContext.Textures context) {
       String path = loc.m_135815_();
-      net.minecraft.resources.ResourceLocation locProps = getLocationProperties(loc, context.isLegacy());
+      ResourceLocation locProps = getLocationProperties(loc, context.isLegacy());
       if (locProps != null) {
          RandomEntityProperties props = RandomEntityProperties.parse(locProps, loc, context);
          if (props != null) {
@@ -208,11 +224,11 @@ public class RandomEntities {
       }
 
       int[] variants = getLocationsVariants(loc, context.isLegacy(), context);
-      return variants == null ? null : new RandomEntityProperties<>(path, loc, variants, context);
+      return variants == null ? null : new RandomEntityProperties(path, loc, variants, context);
    }
 
-   private static net.minecraft.resources.ResourceLocation getLocationProperties(net.minecraft.resources.ResourceLocation loc, boolean legacy) {
-      net.minecraft.resources.ResourceLocation locMcp = getLocationRandom(loc, legacy);
+   private static ResourceLocation getLocationProperties(ResourceLocation loc, boolean legacy) {
+      ResourceLocation locMcp = getLocationRandom(loc, legacy);
       if (locMcp == null) {
          return null;
       } else {
@@ -220,7 +236,7 @@ public class RandomEntities {
          String path = locMcp.m_135815_();
          String pathBase = StrUtils.removeSuffix(path, ".png");
          String pathProps = pathBase + ".properties";
-         net.minecraft.resources.ResourceLocation locProps = new net.minecraft.resources.ResourceLocation(domain, pathProps);
+         ResourceLocation locProps = new ResourceLocation(domain, pathProps);
          if (Config.hasResource(locProps)) {
             return locProps;
          } else {
@@ -228,14 +244,14 @@ public class RandomEntities {
             if (pathParent == null) {
                return null;
             } else {
-               net.minecraft.resources.ResourceLocation locParentProps = new net.minecraft.resources.ResourceLocation(domain, pathParent + ".properties");
+               ResourceLocation locParentProps = new ResourceLocation(domain, pathParent + ".properties");
                return Config.hasResource(locParentProps) ? locParentProps : null;
             }
          }
       }
    }
 
-   protected static net.minecraft.resources.ResourceLocation getLocationRandom(net.minecraft.resources.ResourceLocation loc, boolean legacy) {
+   protected static ResourceLocation getLocationRandom(ResourceLocation loc, boolean legacy) {
       String domain = loc.m_135827_();
       String path = loc.m_135815_();
       if (path.startsWith("optifine/")) {
@@ -252,7 +268,7 @@ public class RandomEntities {
             return null;
          } else {
             String pathRandom = StrUtils.replacePrefix(path, prefixTextures, prefixRandom);
-            return new net.minecraft.resources.ResourceLocation(domain, pathRandom);
+            return new ResourceLocation(domain, pathRandom);
          }
       }
    }
@@ -265,7 +281,7 @@ public class RandomEntities {
       }
    }
 
-   protected static net.minecraft.resources.ResourceLocation getLocationIndexed(net.minecraft.resources.ResourceLocation loc, int index) {
+   protected static ResourceLocation getLocationIndexed(ResourceLocation loc, int index) {
       if (loc == null) {
          return null;
       } else {
@@ -278,32 +294,34 @@ public class RandomEntities {
             String suffix = path.substring(pos);
             String separator = StrUtils.endsWithDigit(prefix) ? "." : "";
             String pathNew = prefix + separator + index + suffix;
-            return new net.minecraft.resources.ResourceLocation(loc.m_135827_(), pathNew);
+            ResourceLocation locNew = new ResourceLocation(loc.m_135827_(), pathNew);
+            return locNew;
          }
       }
    }
 
    private static String getParentTexturePath(String path) {
-      for (int i = 0; i < DEPENDANT_SUFFIXES.length; i++) {
+      for(int i = 0; i < DEPENDANT_SUFFIXES.length; ++i) {
          String suffix = DEPENDANT_SUFFIXES[i];
          if (path.endsWith(suffix)) {
-            return StrUtils.removeSuffix(path, suffix);
+            String pathParent = StrUtils.removeSuffix(path, suffix);
+            return pathParent;
          }
       }
 
       return null;
    }
 
-   public static int[] getLocationsVariants(net.minecraft.resources.ResourceLocation loc, boolean legacy, RandomEntityContext context) {
-      List<Integer> list = new ArrayList();
+   public static int[] getLocationsVariants(ResourceLocation loc, boolean legacy, RandomEntityContext context) {
+      List list = new ArrayList();
       list.add(1);
-      net.minecraft.resources.ResourceLocation locRandom = getLocationRandom(loc, legacy);
+      ResourceLocation locRandom = getLocationRandom(loc, legacy);
       if (locRandom == null) {
          return null;
       } else {
-         for (int i = 1; i < list.size() + 10; i++) {
+         for(int i = 1; i < list.size() + 10; ++i) {
             int index = i + 1;
-            net.minecraft.resources.ResourceLocation locIndex = getLocationIndexed(locRandom, index);
+            ResourceLocation locIndex = getLocationIndexed(locRandom, index);
             if (Config.hasResource(locIndex)) {
                list.add(index);
             }
@@ -314,7 +332,8 @@ public class RandomEntities {
          } else {
             Integer[] arr = (Integer[])list.toArray(new Integer[list.size()]);
             int[] intArr = ArrayUtils.toPrimitive(arr);
-            Config.dbg(context.getName() + ": " + loc.m_135815_() + ", variants: " + intArr.length);
+            String var10000 = context.getName();
+            Config.dbg(var10000 + ": " + loc.m_135815_() + ", variants: " + intArr.length);
             return intArr;
          }
       }
@@ -337,7 +356,7 @@ public class RandomEntities {
       String[] pathsRandom = ResUtils.collectFiles(prefixes, suffixes);
       Set basePathsChecked = new HashSet();
 
-      for (int i = 0; i < pathsRandom.length; i++) {
+      for(int i = 0; i < pathsRandom.length; ++i) {
          String path = pathsRandom[i];
          path = StrUtils.removeSuffix(path, suffixes);
          path = StrUtils.trimTrailing(path, "0123456789");
@@ -346,11 +365,9 @@ public class RandomEntities {
          String pathBase = getPathBase(path);
          if (!basePathsChecked.contains(pathBase)) {
             basePathsChecked.add(pathBase);
-            net.minecraft.resources.ResourceLocation locBase = new net.minecraft.resources.ResourceLocation(pathBase);
+            ResourceLocation locBase = new ResourceLocation(pathBase);
             if (Config.hasResource(locBase)) {
-               RandomEntityProperties<net.minecraft.resources.ResourceLocation> props = (RandomEntityProperties<net.minecraft.resources.ResourceLocation>)mapProperties.get(
-                  pathBase
-               );
+               RandomEntityProperties props = (RandomEntityProperties)mapProperties.get(pathBase);
                if (props == null) {
                   props = makeProperties(locBase, new RandomEntityContext.Textures(false));
                   if (props == null) {
@@ -368,41 +385,47 @@ public class RandomEntities {
       active = !mapProperties.isEmpty();
    }
 
-   public static synchronized void registerSprites(
-      net.minecraft.resources.ResourceLocation atlasLocation, Set<net.minecraft.resources.ResourceLocation> spriteLocations
-   ) {
+   public static synchronized void registerSprites(ResourceLocation atlasLocation, Set spriteLocations) {
       if (!mapProperties.isEmpty()) {
          String prefix = getTexturePrefix(atlasLocation);
-         Set<net.minecraft.resources.ResourceLocation> newLocations = new HashSet();
+         Set newLocations = new HashSet();
+         Iterator var4 = spriteLocations.iterator();
 
-         for (net.minecraft.resources.ResourceLocation loc : spriteLocations) {
-            String pathFull = "textures/" + prefix + loc.m_135815_() + ".png";
-            RandomEntityProperties<net.minecraft.resources.ResourceLocation> props = (RandomEntityProperties<net.minecraft.resources.ResourceLocation>)mapProperties.get(
-               pathFull
-            );
-            if (props != null) {
-               mapSpriteProperties.put(loc.m_135815_(), props);
-               List<net.minecraft.resources.ResourceLocation> locs = props.getAllResources();
-               if (locs != null) {
-                  for (int i = 0; i < locs.size(); i++) {
-                     net.minecraft.resources.ResourceLocation propLoc = (net.minecraft.resources.ResourceLocation)locs.get(i);
-                     net.minecraft.resources.ResourceLocation locSprite = TextureUtils.getSpriteLocation(propLoc);
-                     newLocations.add(locSprite);
-                     mapSpriteProperties.put(locSprite.m_135815_(), props);
+         while(true) {
+            RandomEntityProperties props;
+            List locs;
+            do {
+               ResourceLocation loc;
+               do {
+                  if (!var4.hasNext()) {
+                     spriteLocations.addAll(newLocations);
+                     return;
                   }
-               }
+
+                  loc = (ResourceLocation)var4.next();
+                  String pathFull = "textures/" + prefix + loc.m_135815_() + ".png";
+                  props = (RandomEntityProperties)mapProperties.get(pathFull);
+               } while(props == null);
+
+               mapSpriteProperties.put(loc.m_135815_(), props);
+               locs = props.getAllResources();
+            } while(locs == null);
+
+            for(int i = 0; i < locs.size(); ++i) {
+               ResourceLocation propLoc = (ResourceLocation)locs.get(i);
+               ResourceLocation locSprite = TextureUtils.getSpriteLocation(propLoc);
+               newLocations.add(locSprite);
+               mapSpriteProperties.put(locSprite.m_135815_(), props);
             }
          }
-
-         spriteLocations.addAll(newLocations);
       }
    }
 
-   private static String getTexturePrefix(net.minecraft.resources.ResourceLocation atlasLocation) {
+   private static String getTexturePrefix(ResourceLocation atlasLocation) {
       return atlasLocation.m_135815_().endsWith("/paintings.png") ? "painting/" : "";
    }
 
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite getRandomSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite spriteIn) {
+   public static TextureAtlasSprite getRandomSprite(TextureAtlasSprite spriteIn) {
       if (!active) {
          return spriteIn;
       } else {
@@ -412,30 +435,31 @@ public class RandomEntities {
          } else if (working) {
             return spriteIn;
          } else {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite locSprite;
+            TextureAtlasSprite var6;
             try {
                working = true;
-               net.minecraft.resources.ResourceLocation locSpriteIn = spriteIn.getName();
+               ResourceLocation locSpriteIn = spriteIn.getName();
                String name = locSpriteIn.m_135815_();
-               RandomEntityProperties<net.minecraft.resources.ResourceLocation> props = (RandomEntityProperties<net.minecraft.resources.ResourceLocation>)mapSpriteProperties.get(
-                  name
-               );
+               RandomEntityProperties props = (RandomEntityProperties)mapSpriteProperties.get(name);
                if (props == null) {
-                  return spriteIn;
+                  TextureAtlasSprite var12 = spriteIn;
+                  return var12;
                }
 
-               net.minecraft.resources.ResourceLocation loc = props.getResource(re, locSpriteIn);
+               ResourceLocation loc = (ResourceLocation)props.getResource(re, locSpriteIn);
                if (loc != locSpriteIn) {
-                  net.minecraft.resources.ResourceLocation locSpritex = TextureUtils.getSpriteLocation(loc);
-                  return spriteIn.getTextureAtlas().m_118316_(locSpritex);
+                  ResourceLocation locSprite = TextureUtils.getSpriteLocation(loc);
+                  TextureAtlasSprite sprite = spriteIn.getTextureAtlas().m_118316_(locSprite);
+                  TextureAtlasSprite var8 = sprite;
+                  return var8;
                }
 
-               locSprite = spriteIn;
+               var6 = spriteIn;
             } finally {
                working = false;
             }
 
-            return locSprite;
+            return var6;
          }
       }
    }

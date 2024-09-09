@@ -12,14 +12,14 @@ public class FieldLocatorTypes implements IFieldLocator {
 
    public FieldLocatorTypes(Class cls, Class[] preTypes, Class type, Class[] postTypes, String errorName) {
       Field[] fs = cls.getDeclaredFields();
-      List<Class> types = new ArrayList();
+      List types = new ArrayList();
 
-      for (int i = 0; i < fs.length; i++) {
+      for(int i = 0; i < fs.length; ++i) {
          Field field = fs[i];
          types.add(field.getType());
       }
 
-      List<Class> typesMatch = new ArrayList();
+      List typesMatch = new ArrayList();
       typesMatch.addAll(Arrays.asList(preTypes));
       typesMatch.add(type);
       typesMatch.addAll(Arrays.asList(postTypes));
@@ -37,7 +37,6 @@ public class FieldLocatorTypes implements IFieldLocator {
       }
    }
 
-   @Override
    public Field getField() {
       return this.field;
    }

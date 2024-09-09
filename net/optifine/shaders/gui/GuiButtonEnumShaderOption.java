@@ -18,7 +18,8 @@ public class GuiButtonEnumShaderOption extends GuiButtonOF {
    }
 
    private static String getButtonText(EnumShaderOption eso) {
-      String nameText = I18n.m_118938_(eso.getResourceKey(), new Object[0]) + ": ";
+      String var10000 = eso.getResourceKey();
+      String nameText = I18n.m_118938_(var10000, new Object[0]) + ": ";
       switch (eso) {
          case ANTIALIASING:
             return nameText + GuiShaders.toStringAa(Shaders.configAntialiasingLevel);

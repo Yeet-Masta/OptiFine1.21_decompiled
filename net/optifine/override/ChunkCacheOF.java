@@ -1,12 +1,16 @@
 package net.optifine.override;
 
 import java.util.Arrays;
+import net.minecraft.client.renderer.chunk.RenderChunkRegion;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
@@ -16,7 +20,7 @@ import net.optifine.render.RenderEnv;
 import net.optifine.util.ArrayCache;
 
 public class ChunkCacheOF implements BlockAndTintGetter {
-   private final net.minecraft.client.renderer.chunk.RenderChunkRegion chunkCache;
+   private final RenderChunkRegion chunkCache;
    private final int posX;
    private final int posY;
    private final int posZ;
@@ -25,15 +29,15 @@ public class ChunkCacheOF implements BlockAndTintGetter {
    private final int sizeZ;
    private final int sizeXZ;
    private int[] combinedLights;
-   private net.minecraft.world.level.block.state.BlockState[] blockStates;
+   private BlockState[] blockStates;
    private Biome[] biomes;
    private final int arraySize;
    private RenderEnv renderEnv;
-   private static final ArrayCache cacheCombinedLights = new ArrayCache(int.class, 16);
-   private static final ArrayCache cacheBlockStates = new ArrayCache(net.minecraft.world.level.block.state.BlockState.class, 16);
-   private static final ArrayCache cacheBiomes = new ArrayCache(Biome.class, 16);
+   private static final ArrayCache cacheCombinedLights;
+   private static final ArrayCache cacheBlockStates;
+   private static final ArrayCache cacheBiomes;
 
-   public ChunkCacheOF(net.minecraft.client.renderer.chunk.RenderChunkRegion chunkCache, SectionPos sectionPos) {
+   public ChunkCacheOF(RenderChunkRegion chunkCache, SectionPos sectionPos) {
       this.chunkCache = chunkCache;
       int minChunkX = sectionPos.m_123341_() - 1;
       int minChunkY = sectionPos.m_123342_() - 1;
@@ -70,10 +74,10 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       return this.chunkCache.m_45517_(type, pos);
    }
 
-   public net.minecraft.world.level.block.state.BlockState m_8055_(BlockPos pos) {
+   public BlockState m_8055_(BlockPos pos) {
       int index = this.getPositionIndex(pos);
       if (index >= 0 && index < this.arraySize && this.blockStates != null) {
-         net.minecraft.world.level.block.state.BlockState iblockstate = this.blockStates[index];
+         BlockState iblockstate = this.blockStates[index];
          if (iblockstate == null) {
             iblockstate = this.chunkCache.m_8055_(pos);
             this.blockStates[index] = iblockstate;
@@ -91,7 +95,7 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       }
 
       if (this.blockStates == null) {
-         this.blockStates = (net.minecraft.world.level.block.state.BlockState[])cacheBlockStates.allocate(this.arraySize);
+         this.blockStates = (BlockState[])cacheBlockStates.allocate(this.arraySize);
       }
 
       if (this.biomes == null) {
@@ -99,8 +103,8 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       }
 
       Arrays.fill(this.combinedLights, -1);
-      Arrays.fill(this.blockStates, null);
-      Arrays.fill(this.biomes, null);
+      Arrays.fill(this.blockStates, (Object)null);
+      Arrays.fill(this.biomes, (Object)null);
       this.loadBlockStates();
    }
 
@@ -109,20 +113,21 @@ public class ChunkCacheOF implements BlockAndTintGetter {
          LevelChunk chunk = this.chunkCache.getLevelChunk(SectionPos.m_123171_(this.posX) + 1, SectionPos.m_123171_(this.posZ) + 1);
          BlockPosM pos = new BlockPosM();
 
-         for (int y = 16; y < 32; y++) {
+         for(int y = 16; y < 32; ++y) {
             int dy = y * this.sizeXZ;
 
-            for (int z = 16; z < 32; z++) {
+            for(int z = 16; z < 32; ++z) {
                int dz = z * this.sizeX;
 
-               for (int x = 16; x < 32; x++) {
+               for(int x = 16; x < 32; ++x) {
                   pos.setXyz(this.posX + x, this.posY + y, this.posZ + z);
                   int index = dy + dz + x;
-                  net.minecraft.world.level.block.state.BlockState bs = chunk.m_8055_(pos);
+                  BlockState bs = chunk.m_8055_(pos);
                   this.blockStates[index] = bs;
                }
             }
          }
+
       }
    }
 
@@ -136,7 +141,7 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       this.chunkCache.finish();
    }
 
-   public int getCombinedLight(net.minecraft.world.level.block.state.BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
+   public int getCombinedLight(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
       int index = this.getPositionIndex(blockPosIn);
       if (index >= 0 && index < this.combinedLights.length && this.combinedLights != null) {
          int light = this.combinedLights[index];
@@ -166,7 +171,7 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       }
    }
 
-   public net.minecraft.world.level.block.entity.BlockEntity m_7702_(BlockPos pos) {
+   public BlockEntity m_7702_(BlockPos pos) {
       return this.chunkCache.m_7702_(pos);
    }
 
@@ -194,7 +199,7 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       this.renderEnv = renderEnv;
    }
 
-   public float m_7717_(net.minecraft.core.Direction directionIn, boolean shadeIn) {
+   public float m_7717_(Direction directionIn, boolean shadeIn) {
       return this.chunkCache.m_7717_(directionIn, shadeIn);
    }
 
@@ -204,5 +209,11 @@ public class ChunkCacheOF implements BlockAndTintGetter {
 
    public int m_141937_() {
       return this.chunkCache.m_141937_();
+   }
+
+   static {
+      cacheCombinedLights = new ArrayCache(Integer.TYPE, 16);
+      cacheBlockStates = new ArrayCache(BlockState.class, 16);
+      cacheBiomes = new ArrayCache(Biome.class, 16);
    }
 }

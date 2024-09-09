@@ -11,14 +11,12 @@ public class SmartExecutorService extends ExecutorProxy {
       this.executor = executor;
    }
 
-   @Override
    protected ExecutorService delegate() {
       return this.executor;
    }
 
-   @Override
    public void execute(final Runnable command) {
-      Runnable smartCommand = new Runnable() {
+      Runnable smartCommand = new Runnable(this) {
          public void run() {
             long timeStartMs = System.currentTimeMillis();
             command.run();
@@ -28,6 +26,7 @@ public class SmartExecutorService extends ExecutorProxy {
             if (mc != null && (mc.m_91090_() || mc.f_91073_ != null)) {
                Config.sleep(10L * runMs);
             }
+
          }
       };
       super.execute(smartCommand);

@@ -15,26 +15,24 @@ public class ShaderOptionVariable extends ShaderOption {
       this.setVisible(this.getValues().length > 1);
    }
 
-   @Override
    public String getSourceLine() {
-      return "#define " + this.getName() + " " + this.getValue() + " // Shader option " + this.getValue();
+      String var10000 = this.getName();
+      return "#define " + var10000 + " " + this.getValue() + " // Shader option " + this.getValue();
    }
 
-   @Override
    public String getValueText(String val) {
       String prefix = Shaders.translate("prefix." + this.getName(), "");
       String text = super.getValueText(val);
       String suffix = Shaders.translate("suffix." + this.getName(), "");
-      return prefix + text + suffix;
+      String textFull = prefix + text + suffix;
+      return textFull;
    }
 
-   @Override
    public String getValueColor(String val) {
       String valLow = val.toLowerCase();
-      return !valLow.equals("false") && !valLow.equals("off") ? "\u00a7a" : "\u00a7c";
+      return !valLow.equals("false") && !valLow.equals("off") ? "§a" : "§c";
    }
 
-   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_VARIABLE.matcher(line);
       if (!m.matches()) {

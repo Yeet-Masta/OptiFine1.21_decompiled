@@ -9,7 +9,7 @@ public class ShaderUtils {
       if (opts == null) {
          return null;
       } else {
-         for (int i = 0; i < opts.length; i++) {
+         for(int i = 0; i < opts.length; ++i) {
             ShaderOption so = opts[i];
             if (so.getName().equals(name)) {
                return so;
@@ -24,7 +24,7 @@ public class ShaderUtils {
       if (profs == null) {
          return null;
       } else {
-         for (int i = 0; i < profs.length; i++) {
+         for(int i = 0; i < profs.length; ++i) {
             ShaderProfile prof = profs[i];
             if (matchProfile(prof, opts, def)) {
                return prof;
@@ -43,7 +43,7 @@ public class ShaderUtils {
       } else {
          String[] optsProf = prof.getOptions();
 
-         for (int p = 0; p < optsProf.length; p++) {
+         for(int p = 0; p < optsProf.length; ++p) {
             String opt = optsProf[p];
             ShaderOption so = getShaderOption(opt, opts);
             if (so != null) {

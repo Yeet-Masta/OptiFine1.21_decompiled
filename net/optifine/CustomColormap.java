@@ -10,9 +10,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.config.ConnectedParser;
 import net.optifine.config.MatchBlock;
 import net.optifine.config.Matches;
@@ -127,7 +130,7 @@ public class CustomColormap implements CustomColors.IColorizer {
    }
 
    private MatchBlock[] detectMatchBlocks() {
-      net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(this.name);
+      ResourceLocation loc = new ResourceLocation(this.name);
       if (BuiltInRegistries.f_256975_.m_7804_(loc)) {
          Block block = (Block)BuiltInRegistries.f_256975_.m_7745_(loc);
          return new MatchBlock[]{new MatchBlock(BlockUtils.getBlockId(block))};
@@ -156,7 +159,7 @@ public class CustomColormap implements CustomColors.IColorizer {
          }
 
          String imagePath = this.source + ".png";
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(imagePath);
+         ResourceLocation loc = new ResourceLocation(imagePath);
          InputStream is = Config.getResourceStream(loc);
          if (is == null) {
             return;
@@ -187,6 +190,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       } catch (IOException var9) {
          var9.printStackTrace();
       }
+
    }
 
    private static void dbg(String str) {
@@ -198,16 +202,18 @@ public class CustomColormap implements CustomColors.IColorizer {
    }
 
    private static String parseTexture(String texStr, String path, String basePath) {
+      String str;
       if (texStr != null) {
          texStr = texStr.trim();
-         String png = ".png";
-         if (texStr.endsWith(png)) {
-            texStr = texStr.substring(0, texStr.length() - png.length());
+         str = ".png";
+         if (texStr.endsWith(str)) {
+            texStr = texStr.substring(0, texStr.length() - str.length());
          }
 
-         return fixTextureName(texStr, basePath);
+         texStr = fixTextureName(texStr, basePath);
+         return texStr;
       } else {
-         String str = path;
+         str = path;
          int pos = path.lastIndexOf(47);
          if (pos >= 0) {
             str = path.substring(pos + 1);
@@ -218,7 +224,8 @@ public class CustomColormap implements CustomColors.IColorizer {
             str = str.substring(0, pos2);
          }
 
-         return fixTextureName(str, basePath);
+         str = fixTextureName(str, basePath);
+         return str;
       }
    }
 
@@ -244,7 +251,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       return iconName;
    }
 
-   public boolean matchesBlock(net.minecraft.world.level.block.state.BlockState blockState) {
+   public boolean matchesBlock(BlockState blockState) {
       return Matches.block(blockState, this.matchBlocks);
    }
 
@@ -276,8 +283,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       return this.colorsRgb;
    }
 
-   @Override
-   public int getColor(net.minecraft.world.level.block.state.BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+   public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
       return this.getColor(blockAccess, blockPos);
    }
 
@@ -286,7 +292,6 @@ public class CustomColormap implements CustomColors.IColorizer {
       return this.getColor(biome, blockPos);
    }
 
-   @Override
    public boolean isColorConstant() {
       return this.format == 2;
    }
@@ -303,36 +308,39 @@ public class CustomColormap implements CustomColors.IColorizer {
       if (this.format == 2) {
          return this.color;
       } else {
-         int x0 = net.minecraft.util.Mth.m_14107_(x);
-         int y0 = net.minecraft.util.Mth.m_14107_(y);
-         int z0 = net.minecraft.util.Mth.m_14107_(z);
+         int x0 = Mth.m_14107_(x);
+         int y0 = Mth.m_14107_(y);
+         int z0 = Mth.m_14107_(z);
          int sumRed = 0;
          int sumGreen = 0;
          int sumBlue = 0;
          int count = 0;
          BlockPosM blockPosM = new BlockPosM(0, 0, 0);
 
-         for (int ix = x0 - radius; ix <= x0 + radius; ix++) {
-            for (int iz = z0 - radius; iz <= z0 + radius; iz++) {
+         int ix;
+         int iz;
+         int col;
+         for(ix = x0 - radius; ix <= x0 + radius; ++ix) {
+            for(iz = z0 - radius; iz <= z0 + radius; ++iz) {
                blockPosM.setXyz(ix, y0, iz);
-               int col = this.getColor(blockAccess, blockPosM);
-               sumRed += col >> 16 & 0xFF;
-               sumGreen += col >> 8 & 0xFF;
-               sumBlue += col & 0xFF;
-               count++;
+               col = this.getColor((BlockAndTintGetter)blockAccess, blockPosM);
+               sumRed += col >> 16 & 255;
+               sumGreen += col >> 8 & 255;
+               sumBlue += col & 255;
+               ++count;
             }
          }
 
-         int r = sumRed / count;
-         int g = sumGreen / count;
-         int b = sumBlue / count;
-         return r << 16 | g << 8 | b;
+         ix = sumRed / count;
+         iz = sumGreen / count;
+         col = sumBlue / count;
+         return ix << 16 | iz << 8 | col;
       }
    }
 
    private int getColorVanilla(Biome biome, BlockPos blockPos) {
-      double temperature = (double)net.minecraft.util.Mth.m_14036_(biome.m_47554_(), 0.0F, 1.0F);
-      double rainfall = (double)net.minecraft.util.Mth.m_14036_(BiomeUtils.getDownfall(biome), 0.0F, 1.0F);
+      double temperature = (double)Mth.m_14036_(biome.m_47554_(), 0.0F, 1.0F);
+      double rainfall = (double)Mth.m_14036_(BiomeUtils.getDownfall(biome), 0.0F, 1.0F);
       rainfall *= temperature;
       int cx = (int)((1.0 - temperature) * (double)(this.width - 1));
       int cy = (int)((1.0 - rainfall) * (double)(this.height - 1));
@@ -346,7 +354,7 @@ public class CustomColormap implements CustomColors.IColorizer {
          int seed = blockPos.m_123341_() << 16 + blockPos.m_123343_();
          int rand = Config.intHash(seed);
          int range = this.yVariance * 2 + 1;
-         int diff = (rand & 0xFF) % range - this.yVariance;
+         int diff = (rand & 255) % range - this.yVariance;
          cy += diff;
       }
 
@@ -368,11 +376,11 @@ public class CustomColormap implements CustomColors.IColorizer {
    private static float[][] toRgb(int[] cols) {
       float[][] colsRgb = new float[cols.length][3];
 
-      for (int i = 0; i < cols.length; i++) {
+      for(int i = 0; i < cols.length; ++i) {
          int col = cols[i];
-         float rf = (float)(col >> 16 & 0xFF) / 255.0F;
-         float gf = (float)(col >> 8 & 0xFF) / 255.0F;
-         float bf = (float)(col & 0xFF) / 255.0F;
+         float rf = (float)(col >> 16 & 255) / 255.0F;
+         float gf = (float)(col >> 8 & 255) / 255.0F;
+         float bf = (float)(col & 255) / 255.0F;
          float[] colRgb = colsRgb[i];
          colRgb[0] = rf;
          colRgb[1] = gf;
@@ -396,6 +404,7 @@ public class CustomColormap implements CustomColors.IColorizer {
          if (metadata >= 0) {
             mb.addMetadata(metadata);
          }
+
       } else {
          this.addMatchBlock(new MatchBlock(blockId, metadata));
       }
@@ -405,7 +414,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       if (this.matchBlocks == null) {
          return null;
       } else {
-         for (int i = 0; i < this.matchBlocks.length; i++) {
+         for(int i = 0; i < this.matchBlocks.length; ++i) {
             MatchBlock mb = this.matchBlocks[i];
             if (mb.getBlockId() == blockId) {
                return mb;
@@ -422,7 +431,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       } else {
          Set setIds = new HashSet();
 
-         for (int i = 0; i < this.matchBlocks.length; i++) {
+         for(int i = 0; i < this.matchBlocks.length; ++i) {
             MatchBlock mb = this.matchBlocks[i];
             if (mb.getBlockId() >= 0) {
                setIds.add(mb.getBlockId());
@@ -432,8 +441,8 @@ public class CustomColormap implements CustomColors.IColorizer {
          Integer[] ints = (Integer[])setIds.toArray(new Integer[setIds.size()]);
          int[] ids = new int[ints.length];
 
-         for (int ix = 0; ix < ints.length; ix++) {
-            ids[ix] = ints[ix];
+         for(int i = 0; i < ints.length; ++i) {
+            ids[i] = ints[i];
          }
 
          return ids;
@@ -441,6 +450,7 @@ public class CustomColormap implements CustomColors.IColorizer {
    }
 
    public String toString() {
-      return this.basePath + "/" + this.name + ", blocks: " + Config.arrayToString((Object[])this.matchBlocks) + ", source: " + this.source;
+      String var10000 = this.basePath;
+      return var10000 + "/" + this.name + ", blocks: " + Config.arrayToString((Object[])this.matchBlocks) + ", source: " + this.source;
    }
 }

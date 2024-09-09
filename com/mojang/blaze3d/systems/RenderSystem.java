@@ -6,22 +6,33 @@ import com.mojang.blaze3d.pipeline.RenderCall;
 import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.FogShape;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.logging.LogUtils;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import net.minecraft.Util;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.TimeSource.NanoTimeSource;
+import net.minecraft.client.OptionInstance;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.util.TimeSource;
 import net.optifine.Config;
 import net.optifine.CustomGuis;
 import net.optifine.shaders.Shaders;
@@ -36,16 +47,16 @@ import org.slf4j.Logger;
 @DontObfuscate
 public class RenderSystem {
    static final Logger LOGGER = LogUtils.getLogger();
-   private static final ConcurrentLinkedQueue<RenderCall> recordingQueue = Queues.newConcurrentLinkedQueue();
-   private static final com.mojang.blaze3d.vertex.Tesselator RENDER_THREAD_TESSELATOR = new com.mojang.blaze3d.vertex.Tesselator(1536);
+   private static final ConcurrentLinkedQueue recordingQueue = Queues.newConcurrentLinkedQueue();
+   private static final Tesselator RENDER_THREAD_TESSELATOR = new Tesselator(1536);
    private static final int MINIMUM_ATLAS_TEXTURE_SIZE = 1024;
    @Nullable
    private static Thread renderThread;
    private static int MAX_SUPPORTED_TEXTURE_SIZE = -1;
    private static boolean isInInit;
    private static double lastDrawTime = Double.MIN_VALUE;
-   private static final RenderSystem.AutoStorageIndexBuffer sharedSequential = new RenderSystem.AutoStorageIndexBuffer(1, 1, IntConsumer::accept);
-   private static final RenderSystem.AutoStorageIndexBuffer sharedSequentialQuad = new RenderSystem.AutoStorageIndexBuffer(4, 6, (consumerIn, positionIn) -> {
+   private static final AutoStorageIndexBuffer sharedSequential = new AutoStorageIndexBuffer(1, 1, IntConsumer::accept);
+   private static final AutoStorageIndexBuffer sharedSequentialQuad = new AutoStorageIndexBuffer(4, 6, (consumerIn, positionIn) -> {
       consumerIn.accept(positionIn + 0);
       consumerIn.accept(positionIn + 1);
       consumerIn.accept(positionIn + 2);
@@ -53,7 +64,7 @@ public class RenderSystem {
       consumerIn.accept(positionIn + 3);
       consumerIn.accept(positionIn + 0);
    });
-   private static final RenderSystem.AutoStorageIndexBuffer sharedSequentialLines = new RenderSystem.AutoStorageIndexBuffer(4, 6, (consumerIn, positionIn) -> {
+   private static final AutoStorageIndexBuffer sharedSequentialLines = new AutoStorageIndexBuffer(4, 6, (consumerIn, positionIn) -> {
       consumerIn.accept(positionIn + 0);
       consumerIn.accept(positionIn + 1);
       consumerIn.accept(positionIn + 2);
@@ -63,28 +74,28 @@ public class RenderSystem {
    });
    private static Matrix4f projectionMatrix = new Matrix4f();
    private static Matrix4f savedProjectionMatrix = new Matrix4f();
-   private static VertexSorting vertexSorting = VertexSorting.f_276450_;
-   private static VertexSorting savedVertexSorting = VertexSorting.f_276450_;
-   private static final Matrix4fStack modelViewStack = new Matrix4fStack(16);
-   private static Matrix4f modelViewMatrix = new Matrix4f();
-   private static Matrix4f textureMatrix = new Matrix4f();
-   private static final int[] shaderTextures = new int[12];
-   private static final float[] shaderColor = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
-   private static float shaderGlintAlpha = 1.0F;
+   private static VertexSorting vertexSorting;
+   private static VertexSorting savedVertexSorting;
+   private static final Matrix4fStack modelViewStack;
+   private static Matrix4f modelViewMatrix;
+   private static Matrix4f textureMatrix;
+   private static final int[] shaderTextures;
+   private static final float[] shaderColor;
+   private static float shaderGlintAlpha;
    private static float shaderFogStart;
-   private static float shaderFogEnd = 1.0F;
-   private static final float[] shaderFogColor = new float[]{0.0F, 0.0F, 0.0F, 0.0F};
-   private static FogShape shaderFogShape = FogShape.SPHERE;
-   private static final Vector3f[] shaderLightDirections = new Vector3f[2];
+   private static float shaderFogEnd;
+   private static final float[] shaderFogColor;
+   private static FogShape shaderFogShape;
+   private static final Vector3f[] shaderLightDirections;
    private static float shaderGameTime;
-   private static float shaderLineWidth = 1.0F;
-   private static String apiDescription = "Unknown";
+   private static float shaderLineWidth;
+   private static String apiDescription;
    @Nullable
-   private static net.minecraft.client.renderer.ShaderInstance shader;
-   private static final AtomicLong pollEventsWaitStart = new AtomicLong();
-   private static final AtomicBoolean pollingEvents = new AtomicBoolean(false);
-   private static boolean fogAllowed = true;
-   private static boolean colorToAttribute = false;
+   private static ShaderInstance shader;
+   private static final AtomicLong pollEventsWaitStart;
+   private static final AtomicBoolean pollingEvents;
+   private static boolean fogAllowed;
+   private static boolean colorToAttribute;
 
    public static void initRenderThread() {
       if (renderThread != null) {
@@ -123,36 +134,37 @@ public class RenderSystem {
    }
 
    private static void pollEvents() {
-      pollEventsWaitStart.set(net.minecraft.Util.m_137550_());
+      pollEventsWaitStart.set(Util.m_137550_());
       pollingEvents.set(true);
       GLFW.glfwPollEvents();
       pollingEvents.set(false);
    }
 
    public static boolean isFrozenAtPollEvents() {
-      return pollingEvents.get() && net.minecraft.Util.m_137550_() - pollEventsWaitStart.get() > 200L;
+      return pollingEvents.get() && Util.m_137550_() - pollEventsWaitStart.get() > 200L;
    }
 
    public static void flipFrame(long handleIn) {
       pollEvents();
       replayQueue();
-      com.mojang.blaze3d.vertex.Tesselator.m_85913_().m_339098_();
+      Tesselator.m_85913_().m_339098_();
       GLFW.glfwSwapBuffers(handleIn);
       pollEvents();
    }
 
    public static void replayQueue() {
-      while (!recordingQueue.isEmpty()) {
+      while(!recordingQueue.isEmpty()) {
          RenderCall rendercall = (RenderCall)recordingQueue.poll();
          rendercall.m_83909_();
       }
+
    }
 
    public static void limitDisplayFPS(int fpsLimitIn) {
       double d0 = lastDrawTime + 1.0 / (double)fpsLimitIn;
 
       double d1;
-      for (d1 = GLFW.glfwGetTime(); d1 < d0; d1 = GLFW.glfwGetTime()) {
+      for(d1 = GLFW.glfwGetTime(); d1 < d0; d1 = GLFW.glfwGetTime()) {
          GLFW.glfwWaitEventsTimeout(d0 - d1);
       }
 
@@ -207,12 +219,7 @@ public class RenderSystem {
       GlStateManager._blendFunc(srcFactor, dstFactor);
    }
 
-   public static void blendFuncSeparate(
-      GlStateManager.SourceFactor srcFactor,
-      GlStateManager.DestFactor dstFactor,
-      GlStateManager.SourceFactor srcFactorAlpha,
-      GlStateManager.DestFactor dstFactorAlpha
-   ) {
+   public static void blendFuncSeparate(GlStateManager.SourceFactor srcFactor, GlStateManager.DestFactor dstFactor, GlStateManager.SourceFactor srcFactorAlpha, GlStateManager.DestFactor dstFactorAlpha) {
       assertOnRenderThread();
       GlStateManager._blendFuncSeparate(srcFactor.value, dstFactor.value, srcFactorAlpha.value, dstFactorAlpha.value);
    }
@@ -419,7 +426,7 @@ public class RenderSystem {
       shaderLightDirections[1] = dir2;
    }
 
-   public static void setupShaderLights(net.minecraft.client.renderer.ShaderInstance shaderInstanceIn) {
+   public static void setupShaderLights(ShaderInstance shaderInstanceIn) {
       assertOnRenderThread();
       if (shaderInstanceIn.f_173313_ != null) {
          shaderInstanceIn.f_173313_.m_142276_(shaderLightDirections[0]);
@@ -428,14 +435,18 @@ public class RenderSystem {
       if (shaderInstanceIn.f_173314_ != null) {
          shaderInstanceIn.f_173314_.m_142276_(shaderLightDirections[1]);
       }
+
    }
 
    public static void setShaderColor(float red, float green, float blue, float alpha) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> _setShaderColor(red, green, blue, alpha));
+         recordRenderCall(() -> {
+            _setShaderColor(red, green, blue, alpha);
+         });
       } else {
          _setShaderColor(red, green, blue, alpha);
       }
+
    }
 
    private static void _setShaderColor(float red, float green, float blue, float alpha) {
@@ -446,6 +457,7 @@ public class RenderSystem {
       if (colorToAttribute) {
          Shaders.setDefaultAttribColor(red, green, blue, alpha);
       }
+
    }
 
    public static float[] getShaderColor() {
@@ -460,10 +472,13 @@ public class RenderSystem {
 
    public static void lineWidth(float widthIn) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> shaderLineWidth = widthIn);
+         recordRenderCall(() -> {
+            shaderLineWidth = widthIn;
+         });
       } else {
          shaderLineWidth = widthIn;
       }
+
    }
 
    public static float getShaderLineWidth() {
@@ -480,7 +495,7 @@ public class RenderSystem {
       GlStateManager._readPixels(x, y, width, height, format, type, pixels);
    }
 
-   public static void getString(int nameIn, Consumer<String> consumerIn) {
+   public static void getString(int nameIn, Consumer consumerIn) {
       assertOnRenderThread();
       consumerIn.accept(GlStateManager._getString(nameIn));
    }
@@ -493,8 +508,10 @@ public class RenderSystem {
       return apiDescription;
    }
 
-   public static NanoTimeSource initBackendSystem() {
-      return GLX._initGlfw()::getAsLong;
+   public static TimeSource.NanoTimeSource initBackendSystem() {
+      LongSupplier var10000 = GLX._initGlfw();
+      Objects.requireNonNull(var10000);
+      return var10000::getAsLong;
    }
 
    public static void initRenderer(int debugVerbosityIn, boolean debugSyncIn) {
@@ -538,8 +555,8 @@ public class RenderSystem {
 
          int i = GlStateManager._getInteger(3379);
 
-         for (int j = Math.max(32768, i); j >= 1024; j >>= 1) {
-            GlStateManager._texImage2D(32868, 0, 6408, j, j, 0, 6408, 5121, null);
+         for(int j = Math.max(32768, i); j >= 1024; j >>= 1) {
+            GlStateManager._texImage2D(32868, 0, 6408, j, j, 0, 6408, 5121, (IntBuffer)null);
             int k = GlStateManager._getTexLevelParameter(32868, 0, 4096);
             if (k != 0) {
                MAX_SUPPORTED_TEXTURE_SIZE = j;
@@ -677,93 +694,110 @@ public class RenderSystem {
       }
    }
 
-   public static void glGenBuffers(Consumer<Integer> consumerIn) {
+   public static void glGenBuffers(Consumer consumerIn) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> consumerIn.accept(GlStateManager._glGenBuffers()));
+         recordRenderCall(() -> {
+            consumerIn.accept(GlStateManager._glGenBuffers());
+         });
       } else {
          consumerIn.accept(GlStateManager._glGenBuffers());
       }
+
    }
 
-   public static void glGenVertexArrays(Consumer<Integer> consumerIn) {
+   public static void glGenVertexArrays(Consumer consumerIn) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> consumerIn.accept(GlStateManager._glGenVertexArrays()));
+         recordRenderCall(() -> {
+            consumerIn.accept(GlStateManager._glGenVertexArrays());
+         });
       } else {
          consumerIn.accept(GlStateManager._glGenVertexArrays());
       }
+
    }
 
-   public static com.mojang.blaze3d.vertex.Tesselator renderThreadTesselator() {
+   public static Tesselator renderThreadTesselator() {
       assertOnRenderThread();
       return RENDER_THREAD_TESSELATOR;
    }
 
    public static void defaultBlendFunc() {
-      blendFuncSeparate(
-         GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
-      );
+      blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
    }
 
+   /** @deprecated */
    @Deprecated
    public static void runAsFancy(Runnable runnableIn) {
       boolean flag = Minecraft.m_91085_();
       if (!flag) {
          runnableIn.run();
       } else {
-         net.minecraft.client.OptionInstance<GraphicsStatus> optioninstance = Minecraft.m_91087_().f_91066_.m_232060_();
-         GraphicsStatus graphicsstatus = optioninstance.m_231551_();
+         OptionInstance optioninstance = Minecraft.m_91087_().f_91066_.m_232060_();
+         GraphicsStatus graphicsstatus = (GraphicsStatus)optioninstance.m_231551_();
          optioninstance.m_231514_(GraphicsStatus.FANCY);
          runnableIn.run();
          optioninstance.m_231514_(graphicsstatus);
       }
+
    }
 
-   public static void setShader(Supplier<net.minecraft.client.renderer.ShaderInstance> shaderIn) {
+   public static void setShader(Supplier shaderIn) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> shader = (net.minecraft.client.renderer.ShaderInstance)shaderIn.get());
+         recordRenderCall(() -> {
+            shader = (ShaderInstance)shaderIn.get();
+         });
       } else {
-         shader = (net.minecraft.client.renderer.ShaderInstance)shaderIn.get();
+         shader = (ShaderInstance)shaderIn.get();
       }
+
    }
 
    @Nullable
-   public static net.minecraft.client.renderer.ShaderInstance getShader() {
+   public static ShaderInstance getShader() {
       assertOnRenderThread();
       return shader;
    }
 
-   public static void setShaderTexture(int textureUnitIn, net.minecraft.resources.ResourceLocation locIn) {
+   public static void setShaderTexture(int textureUnitIn, ResourceLocation locIn) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> _setShaderTexture(textureUnitIn, locIn));
+         recordRenderCall(() -> {
+            _setShaderTexture(textureUnitIn, locIn);
+         });
       } else {
          _setShaderTexture(textureUnitIn, locIn);
       }
+
    }
 
-   public static void _setShaderTexture(int textureUnitIn, net.minecraft.resources.ResourceLocation locIn) {
+   public static void _setShaderTexture(int textureUnitIn, ResourceLocation locIn) {
       if (Config.isCustomGuis()) {
          locIn = CustomGuis.getTextureLocation(locIn);
       }
 
       if (textureUnitIn >= 0 && textureUnitIn < shaderTextures.length) {
-         net.minecraft.client.renderer.texture.TextureManager texturemanager = Minecraft.m_91087_().m_91097_();
-         net.minecraft.client.renderer.texture.AbstractTexture abstracttexture = texturemanager.m_118506_(locIn);
+         TextureManager texturemanager = Minecraft.m_91087_().m_91097_();
+         AbstractTexture abstracttexture = texturemanager.m_118506_(locIn);
          shaderTextures[textureUnitIn] = abstracttexture.m_117963_();
       }
+
    }
 
    public static void setShaderTexture(int textureUnitIn, int textureIn) {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> _setShaderTexture(textureUnitIn, textureIn));
+         recordRenderCall(() -> {
+            _setShaderTexture(textureUnitIn, textureIn);
+         });
       } else {
          _setShaderTexture(textureUnitIn, textureIn);
       }
+
    }
 
    public static void _setShaderTexture(int textureUnitIn, int textureIn) {
       if (textureUnitIn >= 0 && textureUnitIn < shaderTextures.length) {
          shaderTextures[textureUnitIn] = textureIn;
       }
+
    }
 
    public static int getShaderTexture(int textureUnitIn) {
@@ -782,40 +816,53 @@ public class RenderSystem {
          projectionMatrix = matrix4f;
          vertexSorting = sortingIn;
       }
+
    }
 
    public static void setTextureMatrix(Matrix4f matrixIn) {
       Matrix4f matrix4f = new Matrix4f(matrixIn);
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> textureMatrix = matrix4f);
+         recordRenderCall(() -> {
+            textureMatrix = matrix4f;
+         });
       } else {
          textureMatrix = matrix4f;
       }
+
    }
 
    public static void resetTextureMatrix() {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> textureMatrix.identity());
+         recordRenderCall(() -> {
+            textureMatrix.identity();
+         });
       } else {
          textureMatrix.identity();
       }
+
    }
 
    public static void applyModelViewMatrix() {
       Matrix4f matrix4f = modelViewStack;
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> modelViewMatrix.set(matrix4f));
+         recordRenderCall(() -> {
+            modelViewMatrix.set(matrix4f);
+         });
       } else {
          modelViewMatrix.set(matrix4f);
       }
+
    }
 
    public static void backupProjectionMatrix() {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> _backupProjectionMatrix());
+         recordRenderCall(() -> {
+            _backupProjectionMatrix();
+         });
       } else {
          _backupProjectionMatrix();
       }
+
    }
 
    private static void _backupProjectionMatrix() {
@@ -825,10 +872,13 @@ public class RenderSystem {
 
    public static void restoreProjectionMatrix() {
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> _restoreProjectionMatrix());
+         recordRenderCall(() -> {
+            _restoreProjectionMatrix();
+         });
       } else {
          _restoreProjectionMatrix();
       }
+
    }
 
    private static void _restoreProjectionMatrix() {
@@ -855,23 +905,33 @@ public class RenderSystem {
       return textureMatrix;
    }
 
-   public static RenderSystem.AutoStorageIndexBuffer getSequentialBuffer(com.mojang.blaze3d.vertex.VertexFormat.Mode modeIn) {
+   public static AutoStorageIndexBuffer getSequentialBuffer(VertexFormat.Mode modeIn) {
       assertOnRenderThread();
+      AutoStorageIndexBuffer var10000;
+      switch (modeIn) {
+         case QUADS:
+            var10000 = sharedSequentialQuad;
+            break;
+         case LINES:
+            var10000 = sharedSequentialLines;
+            break;
+         default:
+            var10000 = sharedSequential;
+      }
 
-      return switch (modeIn) {
-         case QUADS -> sharedSequentialQuad;
-         case LINES -> sharedSequentialLines;
-         default -> sharedSequential;
-      };
+      return var10000;
    }
 
    public static void setShaderGameTime(long gameTimeIn, float partialTicks) {
       float f = ((float)(gameTimeIn % 24000L) + partialTicks) / 24000.0F;
       if (!isOnRenderThread()) {
-         recordRenderCall(() -> shaderGameTime = f);
+         recordRenderCall(() -> {
+            shaderGameTime = f;
+         });
       } else {
          shaderGameTime = f;
       }
+
    }
 
    public static float getShaderGameTime() {
@@ -889,6 +949,7 @@ public class RenderSystem {
       if (Config.isShaders()) {
          Shaders.setFogAllowed(fogAllowed);
       }
+
    }
 
    public static boolean isFogAllowed() {
@@ -904,19 +965,42 @@ public class RenderSystem {
             } else {
                Shaders.setDefaultAttribColor();
             }
+
          }
       }
+   }
+
+   static {
+      vertexSorting = VertexSorting.f_276450_;
+      savedVertexSorting = VertexSorting.f_276450_;
+      modelViewStack = new Matrix4fStack(16);
+      modelViewMatrix = new Matrix4f();
+      textureMatrix = new Matrix4f();
+      shaderTextures = new int[12];
+      shaderColor = new float[]{1.0F, 1.0F, 1.0F, 1.0F};
+      shaderGlintAlpha = 1.0F;
+      shaderFogEnd = 1.0F;
+      shaderFogColor = new float[]{0.0F, 0.0F, 0.0F, 0.0F};
+      shaderFogShape = FogShape.SPHERE;
+      shaderLightDirections = new Vector3f[2];
+      shaderLineWidth = 1.0F;
+      apiDescription = "Unknown";
+      pollEventsWaitStart = new AtomicLong();
+      pollingEvents = new AtomicBoolean(false);
+      fogAllowed = true;
+      colorToAttribute = false;
    }
 
    public static final class AutoStorageIndexBuffer {
       private final int f_157465_;
       private final int f_157466_;
-      private final RenderSystem.AutoStorageIndexBuffer.IndexGenerator f_157467_;
+      private final IndexGenerator f_157467_;
       private int f_157468_;
-      private com.mojang.blaze3d.vertex.VertexFormat.IndexType f_157469_ = com.mojang.blaze3d.vertex.VertexFormat.IndexType.SHORT;
+      private VertexFormat.IndexType f_157469_;
       private int f_157470_;
 
-      AutoStorageIndexBuffer(int vertexStrideIn, int indexStrideIn, RenderSystem.AutoStorageIndexBuffer.IndexGenerator generatorIn) {
+      AutoStorageIndexBuffer(int vertexStrideIn, int indexStrideIn, IndexGenerator generatorIn) {
+         this.f_157469_ = VertexFormat.IndexType.SHORT;
          this.f_157465_ = vertexStrideIn;
          this.f_157466_ = indexStrideIn;
          this.f_157467_ = generatorIn;
@@ -937,12 +1021,12 @@ public class RenderSystem {
 
       public void m_157476_(int indexCountIn) {
          if (!this.m_221944_(indexCountIn)) {
-            indexCountIn = net.minecraft.util.Mth.m_144941_(indexCountIn * 2, this.f_157466_);
+            indexCountIn = Mth.m_144941_(indexCountIn * 2, this.f_157466_);
             RenderSystem.LOGGER.debug("Growing IndexBuffer: Old limit {}, new limit {}.", this.f_157470_, indexCountIn);
             int i = indexCountIn / this.f_157466_;
             int j = i * this.f_157465_;
-            com.mojang.blaze3d.vertex.VertexFormat.IndexType vertexformat$indextype = com.mojang.blaze3d.vertex.VertexFormat.IndexType.m_166933_(j);
-            int k = net.minecraft.util.Mth.m_144941_(indexCountIn * vertexformat$indextype.f_166924_, 4);
+            VertexFormat.IndexType vertexformat$indextype = VertexFormat.IndexType.m_166933_(j);
+            int k = Mth.m_144941_(indexCountIn * vertexformat$indextype.f_166924_, 4);
             GlStateManager._glBufferData(34963, (long)k, 35048);
             ByteBuffer bytebuffer = GlStateManager._glMapBuffer(34963, 35001);
             if (bytebuffer == null) {
@@ -952,26 +1036,30 @@ public class RenderSystem {
             this.f_157469_ = vertexformat$indextype;
             it.unimi.dsi.fastutil.ints.IntConsumer intconsumer = this.m_157478_(bytebuffer);
 
-            for (int l = 0; l < indexCountIn; l += this.f_157466_) {
+            for(int l = 0; l < indexCountIn; l += this.f_157466_) {
                this.f_157467_.m_157487_(intconsumer, l * this.f_157465_ / this.f_157466_);
             }
 
             GlStateManager._glUnmapBuffer(34963);
             this.f_157470_ = indexCountIn;
          }
+
       }
 
       private it.unimi.dsi.fastutil.ints.IntConsumer m_157478_(ByteBuffer byteBufferIn) {
          switch (this.f_157469_) {
             case SHORT:
-               return valueIn -> byteBufferIn.putShort((short)valueIn);
+               return (valueIn) -> {
+                  byteBufferIn.putShort((short)valueIn);
+               };
             case INT:
             default:
+               Objects.requireNonNull(byteBufferIn);
                return byteBufferIn::putInt;
          }
       }
 
-      public com.mojang.blaze3d.vertex.VertexFormat.IndexType m_157483_() {
+      public VertexFormat.IndexType m_157483_() {
          return this.f_157469_;
       }
 

@@ -1,7 +1,6 @@
 package net.optifine;
 
 import java.io.InputStream;
-import java.lang.invoke.StringConcatFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import net.minecraft.client.ClientBrandRetriever;
@@ -21,17 +20,13 @@ public class VersionCheckThread extends Thread {
          boolean snooper = true;
          if (snooper) {
             conn.setRequestProperty("OF-MC-Version", "1.21");
-            conn.setRequestProperty(
-               "OF-MC-Brand", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(ClientBrandRetriever.getClientModName())
-            );
+            conn.setRequestProperty("OF-MC-Brand", "" + ClientBrandRetriever.getClientModName());
             conn.setRequestProperty("OF-Edition", "HD_U");
             conn.setRequestProperty("OF-Release", "J1_pre9");
-            conn.setRequestProperty(
-               "OF-Java-Version", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(System.getProperty("java.version"))
-            );
-            conn.setRequestProperty("OF-CpuCount", Config.getAvailableProcessors() + "");
-            conn.setRequestProperty("OF-OpenGL-Version", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(Config.openGlVersion));
-            conn.setRequestProperty("OF-OpenGL-Vendor", StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(Config.openGlVendor));
+            conn.setRequestProperty("OF-Java-Version", "" + System.getProperty("java.version"));
+            conn.setRequestProperty("OF-CpuCount", "" + Config.getAvailableProcessors());
+            conn.setRequestProperty("OF-OpenGL-Version", "" + Config.openGlVersion);
+            conn.setRequestProperty("OF-OpenGL-Vendor", "" + Config.openGlVendor);
          }
 
          conn.setDoInput(true);
@@ -57,9 +52,12 @@ public class VersionCheckThread extends Thread {
             if (conn != null) {
                conn.disconnect();
             }
+
          }
+
       } catch (Exception var12) {
-         Config.dbg(var12.getClass().getName() + ": " + var12.getMessage());
+         String var10000 = var12.getClass().getName();
+         Config.dbg(var10000 + ": " + var12.getMessage());
       }
    }
 }

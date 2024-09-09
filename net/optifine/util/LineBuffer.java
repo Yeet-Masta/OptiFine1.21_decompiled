@@ -9,8 +9,8 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LineBuffer implements Iterable<String> {
-   private ArrayList<String> lines = new ArrayList();
+public class LineBuffer implements Iterable {
+   private ArrayList lines = new ArrayList();
 
    public LineBuffer() {
    }
@@ -24,7 +24,8 @@ public class LineBuffer implements Iterable<String> {
    }
 
    public String get(int index) {
-      return (String)this.lines.get(index);
+      String line = (String)this.lines.get(index);
+      return line;
    }
 
    public String set(int index, String line) {
@@ -37,10 +38,11 @@ public class LineBuffer implements Iterable<String> {
    }
 
    public void add(String[] ls) {
-      for (int i = 0; i < ls.length; i++) {
+      for(int i = 0; i < ls.length; ++i) {
          String line = ls[i];
          this.add(line);
       }
+
    }
 
    public void insert(int index, String line) {
@@ -49,7 +51,7 @@ public class LineBuffer implements Iterable<String> {
    }
 
    public void insert(int index, String[] ls) {
-      for (int i = 0; i < ls.length; i++) {
+      for(int i = 0; i < ls.length; ++i) {
          String line = ls[i];
          this.checkLine(line);
       }
@@ -83,7 +85,7 @@ public class LineBuffer implements Iterable<String> {
       if (startIndex < 0) {
          return -1;
       } else {
-         for (int i = startIndex; i < this.lines.size(); i++) {
+         for(int i = startIndex; i < this.lines.size(); ++i) {
             String line = (String)this.lines.get(i);
             Matcher matcher = regexp.matcher(line);
             if (matcher.matches() == match) {
@@ -107,7 +109,7 @@ public class LineBuffer implements Iterable<String> {
       if (startIndex > this.lines.size()) {
          return -1;
       } else {
-         for (int i = startIndex - 1; i >= 0; i--) {
+         for(int i = startIndex - 1; i >= 0; --i) {
             String line = (String)this.lines.get(i);
             Matcher matcher = regexp.matcher(line);
             if (matcher.matches() == match) {
@@ -123,7 +125,7 @@ public class LineBuffer implements Iterable<String> {
       LineBuffer lb = new LineBuffer();
       BufferedReader br = new BufferedReader(reader);
 
-      while (true) {
+      while(true) {
          String line = br.readLine();
          if (line == null) {
             br.close();
@@ -135,11 +137,12 @@ public class LineBuffer implements Iterable<String> {
    }
 
    public String[] getLines() {
-      return (String[])this.lines.toArray(new String[this.lines.size()]);
+      String[] ls = (String[])this.lines.toArray(new String[this.lines.size()]);
+      return ls;
    }
 
-   public Iterator<String> iterator() {
-      return new LineBuffer.Itr();
+   public Iterator iterator() {
+      return new Itr();
    }
 
    public boolean contains(String line) {
@@ -147,7 +150,7 @@ public class LineBuffer implements Iterable<String> {
    }
 
    private int indexOf(String lineFind) {
-      for (int i = 0; i < this.lines.size(); i++) {
+      for(int i = 0; i < this.lines.size(); ++i) {
          String line = (String)this.lines.get(i);
          if (line.equals(lineFind)) {
             return i;
@@ -168,7 +171,7 @@ public class LineBuffer implements Iterable<String> {
    public String toString() {
       StringBuilder sb = new StringBuilder();
 
-      for (int i = 0; i < this.lines.size(); i++) {
+      for(int i = 0; i < this.lines.size(); ++i) {
          String line = (String)this.lines.get(i);
          sb.append(line);
          sb.append("\n");
@@ -177,7 +180,7 @@ public class LineBuffer implements Iterable<String> {
       return sb.toString();
    }
 
-   public class Itr implements Iterator<String> {
+   public class Itr implements Iterator {
       private int position;
 
       public boolean hasNext() {
@@ -186,7 +189,7 @@ public class LineBuffer implements Iterable<String> {
 
       public String next() {
          String line = (String)LineBuffer.this.lines.get(this.position);
-         this.position++;
+         ++this.position;
          return line;
       }
    }

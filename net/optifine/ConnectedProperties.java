@@ -3,12 +3,21 @@ package net.optifine;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.optifine.config.BiomeId;
 import net.optifine.config.ConnectedParser;
 import net.optifine.config.MatchBlock;
@@ -45,14 +54,14 @@ public class ConnectedProperties {
    public NbtTagValue nbtName = null;
    public int[] sumWeights = null;
    public int sumAllWeights = 1;
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite[] matchTileIcons = null;
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite[] tileIcons = null;
+   public TextureAtlasSprite[] matchTileIcons = null;
+   public TextureAtlasSprite[] tileIcons = null;
    public MatchBlock[] connectBlocks = null;
    public String[] connectTiles = null;
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite[] connectTileIcons = null;
+   public TextureAtlasSprite[] connectTileIcons = null;
    public int tintIndex = -1;
-   public net.minecraft.world.level.block.state.BlockState tintBlockState = Blocks.f_50016_.m_49966_();
-   public net.minecraft.client.renderer.RenderType layer = null;
+   public BlockState tintBlockState;
+   public RenderType layer;
    public static final int METHOD_NONE = 0;
    public static final int METHOD_CTM = 1;
    public static final int METHOD_HORIZONTAL = 2;
@@ -91,6 +100,8 @@ public class ConnectedProperties {
    public static final String TILE_DEFAULT_PNG = "<default>.png";
 
    public ConnectedProperties(Properties props, String path) {
+      this.tintBlockState = Blocks.f_50016_.m_49966_();
+      this.layer = null;
       ConnectedParser cp = new ConnectedParser("ConnectedTextures");
       this.name = cp.parseName(path);
       this.basePath = cp.parseBasePath(path);
@@ -132,46 +143,63 @@ public class ConnectedProperties {
       if (this.tiles == null) {
          return null;
       } else {
-         Map<Integer, Integer> mapTileIndexes = new HashMap();
+         Map mapTileIndexes = new HashMap();
+         Set keys = props.keySet();
+         Iterator it = keys.iterator();
 
-         for (Object key : props.keySet()) {
-            if (key instanceof String) {
-               String keyStr = (String)key;
-               String PREFIX = "ctm.";
-               if (keyStr.startsWith(PREFIX)) {
-                  String ctmIndexStr = keyStr.substring(PREFIX.length());
-                  String ctmTileIndexStr = props.getProperty(keyStr);
-                  if (ctmTileIndexStr != null) {
-                     ctmTileIndexStr = ctmTileIndexStr.trim();
-                     int ctmIndex = Config.parseInt(ctmIndexStr, -1);
-                     if (ctmIndex >= 0 && ctmIndex <= 46) {
-                        int ctmTileIndex = Config.parseInt(ctmTileIndexStr, -1);
-                        if (ctmTileIndex >= 0 && ctmTileIndex < this.tiles.length) {
-                           mapTileIndexes.put(ctmIndex, ctmTileIndex);
-                        } else {
-                           Config.warn("Invalid CTM tile index: " + ctmTileIndexStr);
-                        }
+         while(true) {
+            while(true) {
+               while(true) {
+                  String ctmIndexStr;
+                  String ctmTileIndexStr;
+                  do {
+                     String keyStr;
+                     String PREFIX;
+                     do {
+                        Object key;
+                        do {
+                           if (!it.hasNext()) {
+                              if (mapTileIndexes.isEmpty()) {
+                                 return null;
+                              }
+
+                              int[] tileIndexes = new int[47];
+
+                              for(int i = 0; i < tileIndexes.length; ++i) {
+                                 tileIndexes[i] = -1;
+                                 if (mapTileIndexes.containsKey(i)) {
+                                    tileIndexes[i] = (Integer)mapTileIndexes.get(i);
+                                 }
+                              }
+
+                              return tileIndexes;
+                           }
+
+                           key = it.next();
+                        } while(!(key instanceof String));
+
+                        keyStr = (String)key;
+                        PREFIX = "ctm.";
+                     } while(!keyStr.startsWith(PREFIX));
+
+                     ctmIndexStr = keyStr.substring(PREFIX.length());
+                     ctmTileIndexStr = props.getProperty(keyStr);
+                  } while(ctmTileIndexStr == null);
+
+                  ctmTileIndexStr = ctmTileIndexStr.trim();
+                  int ctmIndex = Config.parseInt(ctmIndexStr, -1);
+                  if (ctmIndex >= 0 && ctmIndex <= 46) {
+                     int ctmTileIndex = Config.parseInt(ctmTileIndexStr, -1);
+                     if (ctmTileIndex >= 0 && ctmTileIndex < this.tiles.length) {
+                        mapTileIndexes.put(ctmIndex, ctmTileIndex);
                      } else {
-                        Config.warn("Invalid CTM index: " + ctmIndexStr);
+                        Config.warn("Invalid CTM tile index: " + ctmTileIndexStr);
                      }
+                  } else {
+                     Config.warn("Invalid CTM index: " + ctmIndexStr);
                   }
                }
             }
-         }
-
-         if (mapTileIndexes.isEmpty()) {
-            return null;
-         } else {
-            int[] tileIndexes = new int[47];
-
-            for (int i = 0; i < tileIndexes.length; i++) {
-               tileIndexes[i] = -1;
-               if (mapTileIndexes.containsKey(i)) {
-                  tileIndexes[i] = (Integer)mapTileIndexes.get(i);
-               }
-            }
-
-            return tileIndexes;
          }
       }
    }
@@ -182,7 +210,7 @@ public class ConnectedProperties {
       } else {
          String[] names = Config.tokenize(str, " ");
 
-         for (int i = 0; i < names.length; i++) {
+         for(int i = 0; i < names.length; ++i) {
             String iconName = names[i];
             if (iconName.endsWith(".png")) {
                iconName = iconName.substring(0, iconName.length() - 4);
@@ -223,7 +251,8 @@ public class ConnectedProperties {
          List list = new ArrayList();
          String[] iconStrs = Config.tokenize(str, " ,");
 
-         for (int i = 0; i < iconStrs.length; i++) {
+         label61:
+         for(int i = 0; i < iconStrs.length; ++i) {
             String iconStr = iconStrs[i];
             if (iconStr.contains("-")) {
                String[] subStrs = Config.tokenize(iconStr, "-");
@@ -236,10 +265,16 @@ public class ConnectedProperties {
                         continue;
                      }
 
-                     for (int n = min; n <= max; n++) {
+                     int n = min;
+
+                     while(true) {
+                        if (n > max) {
+                           continue label61;
+                        }
+
                         list.add(String.valueOf(n));
+                        ++n;
                      }
-                     continue;
                   }
                }
             }
@@ -249,7 +284,7 @@ public class ConnectedProperties {
 
          String[] names = (String[])list.toArray(new String[list.size()]);
 
-         for (int i = 0; i < names.length; i++) {
+         for(int i = 0; i < names.length; ++i) {
             String iconName = names[i];
             iconName = TextureUtils.fixResourcePath(iconName, this.basePath);
             if (!iconName.startsWith(this.basePath) && !iconName.startsWith("textures/") && !iconName.startsWith("optifine/")) {
@@ -294,7 +329,7 @@ public class ConnectedProperties {
          String[] faceStrs = Config.tokenize(str, " ,");
          int facesMask = 0;
 
-         for (int i = 0; i < faceStrs.length; i++) {
+         for(int i = 0; i < faceStrs.length; ++i) {
             String faceStr = faceStrs[i];
             int faceMask = parseFace(faceStr);
             facesMask |= faceMask;
@@ -306,25 +341,29 @@ public class ConnectedProperties {
 
    private static int parseFace(String str) {
       str = str.toLowerCase();
-      if (str.equals("bottom") || str.equals("down")) {
-         return 1;
-      } else if (str.equals("top") || str.equals("up")) {
-         return 2;
-      } else if (str.equals("north")) {
-         return 4;
-      } else if (str.equals("south")) {
-         return 8;
-      } else if (str.equals("east")) {
-         return 32;
-      } else if (str.equals("west")) {
-         return 16;
-      } else if (str.equals("sides")) {
-         return 60;
-      } else if (str.equals("all")) {
-         return 63;
+      if (!str.equals("bottom") && !str.equals("down")) {
+         if (!str.equals("top") && !str.equals("up")) {
+            if (str.equals("north")) {
+               return 4;
+            } else if (str.equals("south")) {
+               return 8;
+            } else if (str.equals("east")) {
+               return 32;
+            } else if (str.equals("west")) {
+               return 16;
+            } else if (str.equals("sides")) {
+               return 60;
+            } else if (str.equals("all")) {
+               return 63;
+            } else {
+               Config.warn("Unknown face: " + str);
+               return 128;
+            }
+         } else {
+            return 2;
+         }
       } else {
-         Config.warn("Unknown face: " + str);
-         return 128;
+         return 1;
       }
    }
 
@@ -346,14 +385,19 @@ public class ConnectedProperties {
       }
    }
 
-   public static net.minecraft.world.level.block.state.properties.Property getProperty(String key, Collection properties) {
-      for (net.minecraft.world.level.block.state.properties.Property prop : properties) {
-         if (key.equals(prop.m_61708_())) {
-            return prop;
-         }
-      }
+   public static Property getProperty(String key, Collection properties) {
+      Iterator it = properties.iterator();
 
-      return null;
+      Property prop;
+      do {
+         if (!it.hasNext()) {
+            return null;
+         }
+
+         prop = (Property)it.next();
+      } while(!key.equals(prop.m_61708_()));
+
+      return prop;
    }
 
    private static int parseMethod(String str) {
@@ -361,126 +405,136 @@ public class ConnectedProperties {
          return 1;
       } else {
          str = str.trim();
-         if (str.equals("ctm") || str.equals("glass")) {
-            return 1;
-         } else if (str.equals("ctm_compact")) {
-            return 10;
-         } else if (str.equals("horizontal") || str.equals("bookshelf")) {
-            return 2;
-         } else if (str.equals("vertical")) {
-            return 6;
-         } else if (str.equals("top")) {
-            return 3;
-         } else if (str.equals("random")) {
-            return 4;
-         } else if (str.equals("repeat")) {
-            return 5;
-         } else if (str.equals("fixed")) {
-            return 7;
-         } else if (str.equals("horizontal+vertical") || str.equals("h+v")) {
-            return 8;
-         } else if (str.equals("vertical+horizontal") || str.equals("v+h")) {
-            return 9;
-         } else if (str.equals("overlay")) {
-            return 11;
-         } else if (str.equals("overlay_fixed")) {
-            return 12;
-         } else if (str.equals("overlay_random")) {
-            return 13;
-         } else if (str.equals("overlay_repeat")) {
-            return 14;
-         } else if (str.equals("overlay_ctm")) {
-            return 15;
+         if (!str.equals("ctm") && !str.equals("glass")) {
+            if (str.equals("ctm_compact")) {
+               return 10;
+            } else if (!str.equals("horizontal") && !str.equals("bookshelf")) {
+               if (str.equals("vertical")) {
+                  return 6;
+               } else if (str.equals("top")) {
+                  return 3;
+               } else if (str.equals("random")) {
+                  return 4;
+               } else if (str.equals("repeat")) {
+                  return 5;
+               } else if (str.equals("fixed")) {
+                  return 7;
+               } else if (!str.equals("horizontal+vertical") && !str.equals("h+v")) {
+                  if (!str.equals("vertical+horizontal") && !str.equals("v+h")) {
+                     if (str.equals("overlay")) {
+                        return 11;
+                     } else if (str.equals("overlay_fixed")) {
+                        return 12;
+                     } else if (str.equals("overlay_random")) {
+                        return 13;
+                     } else if (str.equals("overlay_repeat")) {
+                        return 14;
+                     } else if (str.equals("overlay_ctm")) {
+                        return 15;
+                     } else {
+                        Config.warn("Unknown method: " + str);
+                        return 0;
+                     }
+                  } else {
+                     return 9;
+                  }
+               } else {
+                  return 8;
+               }
+            } else {
+               return 2;
+            }
          } else {
-            Config.warn("Unknown method: " + str);
-            return 0;
+            return 1;
          }
       }
    }
 
    public boolean isValid(String path) {
-      if (this.name == null || this.name.length() <= 0) {
+      if (this.name != null && this.name.length() > 0) {
+         if (this.basePath == null) {
+            Config.warn("No base path found: " + path);
+            return false;
+         } else {
+            if (this.matchBlocks == null) {
+               this.matchBlocks = this.detectMatchBlocks();
+            }
+
+            if (this.matchTiles == null && this.matchBlocks == null) {
+               this.matchTiles = this.detectMatchTiles();
+            }
+
+            if (this.matchBlocks == null && this.matchTiles == null) {
+               Config.warn("No matchBlocks or matchTiles specified: " + path);
+               return false;
+            } else if (this.metadatas != null) {
+               Config.warn("Metadata is not supported: " + Config.arrayToString(this.metadatas));
+               return false;
+            } else if (this.method == 0) {
+               Config.warn("No method: " + path);
+               return false;
+            } else if (this.tiles != null && this.tiles.length > 0) {
+               if (this.connect == 0) {
+                  this.connect = this.detectConnect();
+               }
+
+               if (this.connect == 128) {
+                  Config.warn("Invalid connect in: " + path);
+                  return false;
+               } else if (this.renderPass > 0) {
+                  Config.warn("Render pass not supported: " + this.renderPass);
+                  return false;
+               } else if ((this.faces & 128) != 0) {
+                  Config.warn("Invalid faces in: " + path);
+                  return false;
+               } else if ((this.symmetry & 128) != 0) {
+                  Config.warn("Invalid symmetry in: " + path);
+                  return false;
+               } else {
+                  switch (this.method) {
+                     case 1:
+                        return this.isValidCtm(path);
+                     case 2:
+                        return this.isValidHorizontal(path);
+                     case 3:
+                        return this.isValidTop(path);
+                     case 4:
+                        return this.isValidRandom(path);
+                     case 5:
+                        return this.isValidRepeat(path);
+                     case 6:
+                        return this.isValidVertical(path);
+                     case 7:
+                        return this.isValidFixed(path);
+                     case 8:
+                        return this.isValidHorizontalVertical(path);
+                     case 9:
+                        return this.isValidVerticalHorizontal(path);
+                     case 10:
+                        return this.isValidCtmCompact(path);
+                     case 11:
+                        return this.isValidOverlay(path);
+                     case 12:
+                        return this.isValidOverlayFixed(path);
+                     case 13:
+                        return this.isValidOverlayRandom(path);
+                     case 14:
+                        return this.isValidOverlayRepeat(path);
+                     case 15:
+                        return this.isValidOverlayCtm(path);
+                     default:
+                        Config.warn("Unknown method: " + path);
+                        return false;
+                  }
+               }
+            } else {
+               Config.warn("No tiles specified: " + path);
+               return false;
+            }
+         }
+      } else {
          Config.warn("No name found: " + path);
          return false;
-      } else if (this.basePath == null) {
-         Config.warn("No base path found: " + path);
-         return false;
-      } else {
-         if (this.matchBlocks == null) {
-            this.matchBlocks = this.detectMatchBlocks();
-         }
-
-         if (this.matchTiles == null && this.matchBlocks == null) {
-            this.matchTiles = this.detectMatchTiles();
-         }
-
-         if (this.matchBlocks == null && this.matchTiles == null) {
-            Config.warn("No matchBlocks or matchTiles specified: " + path);
-            return false;
-         } else if (this.metadatas != null) {
-            Config.warn("Metadata is not supported: " + Config.arrayToString(this.metadatas));
-            return false;
-         } else if (this.method == 0) {
-            Config.warn("No method: " + path);
-            return false;
-         } else if (this.tiles != null && this.tiles.length > 0) {
-            if (this.connect == 0) {
-               this.connect = this.detectConnect();
-            }
-
-            if (this.connect == 128) {
-               Config.warn("Invalid connect in: " + path);
-               return false;
-            } else if (this.renderPass > 0) {
-               Config.warn("Render pass not supported: " + this.renderPass);
-               return false;
-            } else if ((this.faces & 128) != 0) {
-               Config.warn("Invalid faces in: " + path);
-               return false;
-            } else if ((this.symmetry & 128) != 0) {
-               Config.warn("Invalid symmetry in: " + path);
-               return false;
-            } else {
-               switch (this.method) {
-                  case 1:
-                     return this.isValidCtm(path);
-                  case 2:
-                     return this.isValidHorizontal(path);
-                  case 3:
-                     return this.isValidTop(path);
-                  case 4:
-                     return this.isValidRandom(path);
-                  case 5:
-                     return this.isValidRepeat(path);
-                  case 6:
-                     return this.isValidVertical(path);
-                  case 7:
-                     return this.isValidFixed(path);
-                  case 8:
-                     return this.isValidHorizontalVertical(path);
-                  case 9:
-                     return this.isValidVerticalHorizontal(path);
-                  case 10:
-                     return this.isValidCtmCompact(path);
-                  case 11:
-                     return this.isValidOverlay(path);
-                  case 12:
-                     return this.isValidOverlayFixed(path);
-                  case 13:
-                     return this.isValidOverlayRandom(path);
-                  case 14:
-                     return this.isValidOverlayRepeat(path);
-                  case 15:
-                     return this.isValidOverlayCtm(path);
-                  default:
-                     Config.warn("Unknown method: " + path);
-                     return false;
-               }
-            }
-         } else {
-            Config.warn("No tiles specified: " + path);
-            return false;
-         }
       }
    }
 
@@ -499,7 +553,7 @@ public class ConnectedProperties {
       } else {
          MatchBlock[] mbs = new MatchBlock[ids.length];
 
-         for (int i = 0; i < mbs.length; i++) {
+         for(int i = 0; i < mbs.length; ++i) {
             mbs[i] = new MatchBlock(ids[i]);
          }
 
@@ -513,7 +567,7 @@ public class ConnectedProperties {
          return null;
       } else {
          String blockName = this.name.substring(prefixBlock.length());
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(blockName);
+         ResourceLocation loc = new ResourceLocation(blockName);
          Block block = BlockUtils.getBlock(loc);
          if (block == null) {
             return null;
@@ -525,14 +579,19 @@ public class ConnectedProperties {
    }
 
    private String[] detectMatchTiles() {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon = getIcon(this.name);
+      TextureAtlasSprite icon = getIcon(this.name);
       return icon == null ? null : new String[]{this.name};
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getIcon(String iconName) {
-      net.minecraft.client.renderer.texture.TextureAtlas textureMapBlocks = Config.getTextureMap();
-      net.minecraft.client.renderer.texture.TextureAtlasSprite icon = textureMapBlocks.getRegisteredSprite(iconName);
-      return icon != null ? icon : textureMapBlocks.getRegisteredSprite("block/" + iconName);
+   private static TextureAtlasSprite getIcon(String iconName) {
+      TextureAtlas textureMapBlocks = Config.getTextureMap();
+      TextureAtlasSprite icon = textureMapBlocks.getRegisteredSprite(iconName);
+      if (icon != null) {
+         return icon;
+      } else {
+         icon = textureMapBlocks.getRegisteredSprite("block/" + iconName);
+         return icon;
+      }
    }
 
    private boolean isValidCtm(String path) {
@@ -572,7 +631,7 @@ public class ConnectedProperties {
       } else if (this.layer != null && this.layer != RenderTypes.SOLID) {
          return true;
       } else {
-         Config.warn("Invalid overlay layer: " + this.layer);
+         Config.warn("Invalid overlay layer: " + String.valueOf(this.layer));
          return false;
       }
    }
@@ -583,7 +642,7 @@ public class ConnectedProperties {
       } else if (this.layer != null && this.layer != RenderTypes.SOLID) {
          return true;
       } else {
-         Config.warn("Invalid overlay layer: " + this.layer);
+         Config.warn("Invalid overlay layer: " + String.valueOf(this.layer));
          return false;
       }
    }
@@ -594,7 +653,7 @@ public class ConnectedProperties {
       } else if (this.layer != null && this.layer != RenderTypes.SOLID) {
          return true;
       } else {
-         Config.warn("Invalid overlay layer: " + this.layer);
+         Config.warn("Invalid overlay layer: " + String.valueOf(this.layer));
          return false;
       }
    }
@@ -605,7 +664,7 @@ public class ConnectedProperties {
       } else if (this.layer != null && this.layer != RenderTypes.SOLID) {
          return true;
       } else {
-         Config.warn("Invalid overlay layer: " + this.layer);
+         Config.warn("Invalid overlay layer: " + String.valueOf(this.layer));
          return false;
       }
    }
@@ -616,7 +675,7 @@ public class ConnectedProperties {
       } else if (this.layer != null && this.layer != RenderTypes.SOLID) {
          return true;
       } else {
-         Config.warn("Invalid overlay layer: " + this.layer);
+         Config.warn("Invalid overlay layer: " + String.valueOf(this.layer));
          return false;
       }
    }
@@ -673,21 +732,23 @@ public class ConnectedProperties {
    private boolean isValidRandom(String path) {
       if (this.tiles != null && this.tiles.length > 0) {
          if (this.weights != null) {
+            int[] weights2;
             if (this.weights.length > this.tiles.length) {
                Config.warn("More weights defined than tiles, trimming weights: " + path);
-               int[] weights2 = new int[this.tiles.length];
+               weights2 = new int[this.tiles.length];
                System.arraycopy(this.weights, 0, weights2, 0, weights2.length);
                this.weights = weights2;
             }
 
+            int i;
             if (this.weights.length < this.tiles.length) {
                Config.warn("Less weights defined than tiles, expanding weights: " + path);
-               int[] weights2 = new int[this.tiles.length];
+               weights2 = new int[this.tiles.length];
                System.arraycopy(this.weights, 0, weights2, 0, this.weights.length);
-               int avgWeight = MathUtils.getAverage(this.weights);
+               i = MathUtils.getAverage(this.weights);
 
-               for (int i = this.weights.length; i < weights2.length; i++) {
-                  weights2[i] = avgWeight;
+               for(int i = this.weights.length; i < weights2.length; ++i) {
+                  weights2[i] = i;
                }
 
                this.weights = weights2;
@@ -696,7 +757,7 @@ public class ConnectedProperties {
             this.sumWeights = new int[this.weights.length];
             int sum = 0;
 
-            for (int i = 0; i < this.weights.length; i++) {
+            for(i = 0; i < this.weights.length; ++i) {
                sum += this.weights[i];
                this.sumWeights[i] = sum;
             }
@@ -763,7 +824,7 @@ public class ConnectedProperties {
       }
    }
 
-   public void updateIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   public void updateIcons(TextureAtlas textureMap) {
       if (this.matchTiles != null) {
          this.matchTileIcons = registerIcons(this.matchTiles, textureMap, false, false);
       }
@@ -775,28 +836,31 @@ public class ConnectedProperties {
       if (this.tiles != null) {
          this.tileIcons = registerIcons(this.tiles, textureMap, true, !isMethodOverlay(this.method));
       }
+
    }
 
-   public void refreshIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   public void refreshIcons(TextureAtlas textureMap) {
       this.refreshIcons(this.matchTileIcons, textureMap);
       this.refreshIcons(this.connectTileIcons, textureMap);
       this.refreshIcons(this.tileIcons, textureMap);
    }
 
-   private void refreshIcons(net.minecraft.client.renderer.texture.TextureAtlasSprite[] sprites, net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   private void refreshIcons(TextureAtlasSprite[] sprites, TextureAtlas textureMap) {
       if (sprites != null) {
-         for (int i = 0; i < sprites.length; i++) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = sprites[i];
+         for(int i = 0; i < sprites.length; ++i) {
+            TextureAtlasSprite sprite = sprites[i];
             if (sprite != null && sprite != ConnectedTextures.SPRITE_DEFAULT) {
-               net.minecraft.resources.ResourceLocation loc = sprite.getName();
-               net.minecraft.client.renderer.texture.TextureAtlasSprite spriteNew = textureMap.m_118316_(loc);
-               if (spriteNew == null || net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.isMisingSprite(spriteNew)) {
-                  Config.warn("Missing CTM sprite: " + loc + ", properties: " + this.basePath);
+               ResourceLocation loc = sprite.getName();
+               TextureAtlasSprite spriteNew = textureMap.m_118316_(loc);
+               if (spriteNew == null || MissingTextureAtlasSprite.isMisingSprite(spriteNew)) {
+                  String var10000 = String.valueOf(loc);
+                  Config.warn("Missing CTM sprite: " + var10000 + ", properties: " + this.basePath);
                }
 
                sprites[i] = spriteNew;
             }
          }
+
       }
    }
 
@@ -813,17 +877,15 @@ public class ConnectedProperties {
       }
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite[] registerIcons(
-      String[] tileNames, net.minecraft.client.renderer.texture.TextureAtlas textureMap, boolean skipTiles, boolean defaultTiles
-   ) {
+   private static TextureAtlasSprite[] registerIcons(String[] tileNames, TextureAtlas textureMap, boolean skipTiles, boolean defaultTiles) {
       if (tileNames == null) {
          return null;
       } else {
          List iconList = new ArrayList();
 
-         for (int i = 0; i < tileNames.length; i++) {
+         for(int i = 0; i < tileNames.length; ++i) {
             String iconName = tileNames[i];
-            net.minecraft.resources.ResourceLocation resLoc = new net.minecraft.resources.ResourceLocation(iconName);
+            ResourceLocation resLoc = new ResourceLocation(iconName);
             String domain = resLoc.m_135827_();
             String path = resLoc.m_135815_();
             if (!path.contains("/")) {
@@ -832,11 +894,11 @@ public class ConnectedProperties {
 
             String filePath = path + ".png";
             if (skipTiles && filePath.endsWith("<skip>.png")) {
-               iconList.add(null);
+               iconList.add((Object)null);
             } else if (defaultTiles && filePath.endsWith("<default>.png")) {
                iconList.add(ConnectedTextures.SPRITE_DEFAULT);
             } else {
-               net.minecraft.resources.ResourceLocation locFile = new net.minecraft.resources.ResourceLocation(domain, filePath);
+               ResourceLocation locFile = new ResourceLocation(domain, filePath);
                boolean exists = Config.hasResource(locFile);
                if (!exists) {
                   Config.warn("File not found: " + filePath);
@@ -848,15 +910,14 @@ public class ConnectedProperties {
                   pathSprite = path.substring(prefixTextures.length());
                }
 
-               net.minecraft.resources.ResourceLocation locSprite = new net.minecraft.resources.ResourceLocation(domain, pathSprite);
-               net.minecraft.client.renderer.texture.TextureAtlasSprite icon = textureMap.registerSprite(locSprite);
+               ResourceLocation locSprite = new ResourceLocation(domain, pathSprite);
+               TextureAtlasSprite icon = textureMap.registerSprite(locSprite);
                iconList.add(icon);
             }
          }
 
-         return (net.minecraft.client.renderer.texture.TextureAtlasSprite[])iconList.toArray(
-            new net.minecraft.client.renderer.texture.TextureAtlasSprite[iconList.size()]
-         );
+         TextureAtlasSprite[] icons = (TextureAtlasSprite[])iconList.toArray(new TextureAtlasSprite[iconList.size()]);
+         return icons;
       }
    }
 
@@ -868,19 +929,13 @@ public class ConnectedProperties {
       return Matches.block(blockId, metadata, this.matchBlocks);
    }
 
-   public boolean matchesIcon(net.minecraft.client.renderer.texture.TextureAtlasSprite icon) {
+   public boolean matchesIcon(TextureAtlasSprite icon) {
       return Matches.sprite(icon, this.matchTileIcons);
    }
 
    public String toString() {
-      return "CTM name: "
-         + this.name
-         + ", basePath: "
-         + this.basePath
-         + ", matchBlocks: "
-         + Config.arrayToString((Object[])this.matchBlocks)
-         + ", matchTiles: "
-         + Config.arrayToString((Object[])this.matchTiles);
+      String var10000 = this.name;
+      return "CTM name: " + var10000 + ", basePath: " + this.basePath + ", matchBlocks: " + Config.arrayToString((Object[])this.matchBlocks) + ", matchTiles: " + Config.arrayToString((Object[])this.matchTiles);
    }
 
    public boolean matchesBiome(Biome biome) {
@@ -891,7 +946,7 @@ public class ConnectedProperties {
       if (mds == null) {
          return max;
       } else {
-         for (int i = 0; i < mds.length; i++) {
+         for(int i = 0; i < mds.length; ++i) {
             int md = mds[i];
             if (md > max) {
                max = md;

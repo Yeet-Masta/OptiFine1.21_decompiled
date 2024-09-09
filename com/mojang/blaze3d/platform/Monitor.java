@@ -2,17 +2,17 @@ package com.mojang.blaze3d.platform;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import net.optifine.util.VideoModeComparator;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.glfw.GLFWVidMode.Buffer;
 
 public final class Monitor {
    private final long f_84936_;
-   private final List<VideoMode> f_84937_;
+   private final List f_84937_;
    private VideoMode f_84938_;
    private int f_84939_;
    private int f_84940_;
@@ -25,26 +25,29 @@ public final class Monitor {
 
    public void m_84943_() {
       this.f_84937_.clear();
-      Buffer buffer = GLFW.glfwGetVideoModes(this.f_84936_);
+      GLFWVidMode.Buffer buffer = GLFW.glfwGetVideoModes(this.f_84936_);
       GLFWVidMode glCurrentMode = GLFW.glfwGetVideoMode(this.f_84936_);
       VideoMode currentMode = new VideoMode(glCurrentMode);
-      List<VideoMode> removedModes = new ArrayList();
+      List removedModes = new ArrayList();
 
-      for (int i = buffer.limit() - 1; i >= 0; i--) {
+      VideoMode vm;
+      for(int i = buffer.limit() - 1; i >= 0; --i) {
          buffer.position(i);
-         VideoMode videomode = new VideoMode(buffer);
-         if (videomode.m_85336_() >= 8 && videomode.m_85337_() >= 8 && videomode.m_85338_() >= 8) {
-            if (videomode.m_85341_() < currentMode.m_85341_()) {
-               removedModes.add(videomode);
+         vm = new VideoMode(buffer);
+         if (vm.m_85336_() >= 8 && vm.m_85337_() >= 8 && vm.m_85338_() >= 8) {
+            if (vm.m_85341_() < currentMode.m_85341_()) {
+               removedModes.add(vm);
             } else {
-               this.f_84937_.add(videomode);
+               this.f_84937_.add(vm);
             }
          }
       }
 
-      removedModes.sort(new VideoModeComparator().reversed());
+      removedModes.sort((new VideoModeComparator()).reversed());
+      Iterator var8 = removedModes.iterator();
 
-      for (VideoMode vm : removedModes) {
+      while(var8.hasNext()) {
+         vm = (VideoMode)var8.next();
          if (getVideoMode(this.f_84937_, vm.m_85332_(), vm.m_85335_()) == null) {
             this.f_84937_.add(vm);
          }
@@ -60,11 +63,13 @@ public final class Monitor {
       this.f_84938_ = new VideoMode(glfwvidmode);
    }
 
-   public VideoMode m_84948_(Optional<VideoMode> optionalVideoMode) {
+   public VideoMode m_84948_(Optional optionalVideoMode) {
       if (optionalVideoMode.isPresent()) {
          VideoMode videomode = (VideoMode)optionalVideoMode.get();
+         Iterator var3 = this.f_84937_.iterator();
 
-         for (VideoMode videomode1 : this.f_84937_) {
+         while(var3.hasNext()) {
+            VideoMode videomode1 = (VideoMode)var3.next();
             if (videomode1.equals(videomode)) {
                return videomode1;
             }
@@ -106,13 +111,18 @@ public final class Monitor {
       return String.format(Locale.ROOT, "Monitor[%s %sx%s %s]", this.f_84936_, this.f_84939_, this.f_84940_, this.f_84938_);
    }
 
-   public static VideoMode getVideoMode(List<VideoMode> list, int width, int height) {
-      for (VideoMode vm : list) {
-         if (vm.m_85332_() == width && vm.m_85335_() == height) {
-            return vm;
-         }
-      }
+   public static VideoMode getVideoMode(List list, int width, int height) {
+      Iterator var3 = list.iterator();
 
-      return null;
+      VideoMode vm;
+      do {
+         if (!var3.hasNext()) {
+            return null;
+         }
+
+         vm = (VideoMode)var3.next();
+      } while(vm.m_85332_() != width || vm.m_85335_() != height);
+
+      return vm;
    }
 }

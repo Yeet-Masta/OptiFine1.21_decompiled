@@ -1,11 +1,17 @@
 package net.optifine.entity.model;
 
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.CreeperModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.CreeperRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.layers.CreeperPowerLayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.monster.Creeper;
 import net.optifine.Config;
 
 public class ModelAdapterCreeperCharge extends ModelAdapterCreeper {
@@ -13,40 +19,37 @@ public class ModelAdapterCreeperCharge extends ModelAdapterCreeper {
       super(EntityType.f_20558_, "creeper_charge", 0.25F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new CreeperModel(bakeModelLayer(ModelLayers.f_171129_));
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       CreeperRenderer customRenderer = new CreeperRenderer(renderManager.getContext());
       customRenderer.f_115290_ = new CreeperModel(bakeModelLayer(ModelLayers.f_171129_));
       customRenderer.f_114477_ = 0.25F;
-      net.minecraft.client.renderer.entity.EntityRenderer render = rendererCache.get(EntityType.f_20558_, index, () -> customRenderer);
+      EntityRenderer render = rendererCache.get(EntityType.f_20558_, index, () -> {
+         return customRenderer;
+      });
       if (!(render instanceof CreeperRenderer renderCreeper)) {
-         Config.warn("Not a CreeperRenderer: " + render);
+         Config.warn("Not a CreeperRenderer: " + String.valueOf(render));
          return null;
       } else {
-         net.minecraft.client.renderer.entity.layers.CreeperPowerLayer layer = new net.minecraft.client.renderer.entity.layers.CreeperPowerLayer(
-            renderCreeper, renderManager.getContext().m_174027_()
-         );
-         layer.f_116677_ = (CreeperModel<Creeper>)modelBase;
-         renderCreeper.removeLayers(net.minecraft.client.renderer.entity.layers.CreeperPowerLayer.class);
+         CreeperPowerLayer layer = new CreeperPowerLayer(renderCreeper, renderManager.getContext().m_174027_());
+         layer.f_116677_ = (CreeperModel)modelBase;
+         renderCreeper.removeLayers(CreeperPowerLayer.class);
          renderCreeper.m_115326_(layer);
          return renderCreeper;
       }
    }
 
-   @Override
-   public boolean setTextureLocation(IEntityRenderer er, net.minecraft.resources.ResourceLocation textureLocation) {
+   public boolean setTextureLocation(IEntityRenderer er, ResourceLocation textureLocation) {
       CreeperRenderer renderer = (CreeperRenderer)er;
+      List layers = renderer.getLayers(CreeperPowerLayer.class);
 
-      for (net.minecraft.client.renderer.entity.layers.CreeperPowerLayer layer : renderer.getLayers(
-         net.minecraft.client.renderer.entity.layers.CreeperPowerLayer.class
-      )) {
-         layer.customTextureLocation = textureLocation;
+      CreeperPowerLayer layer;
+      for(Iterator var5 = layers.iterator(); var5.hasNext(); layer.customTextureLocation = textureLocation) {
+         layer = (CreeperPowerLayer)var5.next();
       }
 
       return true;

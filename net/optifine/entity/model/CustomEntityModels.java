@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,18 +17,30 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;
 import net.minecraft.client.model.BookModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.ShieldModel;
-import net.minecraft.client.model.SkullModelBase;
 import net.minecraft.client.model.TridentModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.EnchantTableRenderer;
+import net.minecraft.client.renderer.blockentity.SkullBlockRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.entity.ThrownTridentRenderer;
+import net.minecraft.client.renderer.entity.layers.ParrotOnShoulderLayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.block.SkullBlock.Type;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 import net.optifine.IRandomEntity;
 import net.optifine.Log;
@@ -35,6 +48,7 @@ import net.optifine.RandomEntities;
 import net.optifine.RandomEntityContext;
 import net.optifine.RandomEntityProperties;
 import net.optifine.entity.model.anim.IModelRendererVariable;
+import net.optifine.entity.model.anim.IModelVariable;
 import net.optifine.entity.model.anim.ModelResolver;
 import net.optifine.entity.model.anim.ModelUpdater;
 import net.optifine.entity.model.anim.ModelVariableUpdater;
@@ -44,13 +58,13 @@ import net.optifine.util.StrUtils;
 
 public class CustomEntityModels {
    private static boolean active = false;
-   private static Map<EntityType, RandomEntityProperties<IEntityRenderer>> mapEntityProperties = new HashMap();
-   private static Map<BlockEntityType, RandomEntityProperties<IEntityRenderer>> mapBlockEntityProperties = new HashMap();
+   private static Map mapEntityProperties = new HashMap();
+   private static Map mapBlockEntityProperties = new HashMap();
    private static int matchingRuleIndex;
-   private static Map<EntityType, net.minecraft.client.renderer.entity.EntityRenderer> originalEntityRenderMap = null;
-   private static Map<BlockEntityType, net.minecraft.client.renderer.blockentity.BlockEntityRenderer> originalTileEntityRenderMap = null;
-   private static Map<Type, SkullModelBase> originalSkullModelMap = null;
-   private static List<BlockEntityType> customTileEntityTypes = new ArrayList();
+   private static Map originalEntityRenderMap = null;
+   private static Map originalTileEntityRenderMap = null;
+   private static Map originalSkullModelMap = null;
+   private static List customTileEntityTypes = new ArrayList();
    private static BookModel customBookModel;
    private static boolean debugModels = Boolean.getBoolean("cem.debug.models");
    public static final String PREFIX_OPTIFINE_CEM = "optifine/cem/";
@@ -58,9 +72,9 @@ public class CustomEntityModels {
    public static final String SUFFIX_PROPERTIES = ".properties";
 
    public static void update() {
-      Map<EntityType, net.minecraft.client.renderer.entity.EntityRenderer> entityRenderMap = getEntityRenderMap();
-      Map<BlockEntityType, net.minecraft.client.renderer.blockentity.BlockEntityRenderer> tileEntityRenderMap = getTileEntityRenderMap();
-      Map<Type, SkullModelBase> skullModelMap = getSkullModelMap();
+      Map entityRenderMap = getEntityRenderMap();
+      Map tileEntityRenderMap = getTileEntityRenderMap();
+      Map skullModelMap = getSkullModelMap();
       if (entityRenderMap == null) {
          Config.warn("Entity render map not found, custom entity models are DISABLED.");
       } else if (tileEntityRenderMap == null) {
@@ -74,14 +88,18 @@ public class CustomEntityModels {
          entityRenderMap.putAll(originalEntityRenderMap);
          tileEntityRenderMap.putAll(originalTileEntityRenderMap);
          skullModelMap.putAll(originalSkullModelMap);
-         net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer blockEntityRenderer = Minecraft.m_91087_().m_91291_().getBlockEntityRenderer();
+         BlockEntityWithoutLevelRenderer blockEntityRenderer = Minecraft.m_91087_().m_91291_().getBlockEntityRenderer();
          blockEntityRenderer.f_108824_ = new TridentModel(ModelAdapter.bakeModelLayer(ModelLayers.f_171255_));
          blockEntityRenderer.f_108823_ = new ShieldModel(ModelAdapter.bakeModelLayer(ModelLayers.f_171179_));
-         net.minecraft.client.renderer.entity.layers.ParrotOnShoulderLayer.customParrotModel = null;
+         ParrotOnShoulderLayer.customParrotModel = null;
          customBookModel = null;
-         net.minecraft.client.renderer.blockentity.BlockEntityRenderer.CACHED_TYPES.clear();
+         BlockEntityRenderer.CACHED_TYPES.clear();
          if (Minecraft.m_91087_().f_91073_ != null) {
-            for (Entity entity : Minecraft.m_91087_().f_91073_.m_104735_()) {
+            Iterable entities = Minecraft.m_91087_().f_91073_.m_104735_();
+            Iterator var5 = entities.iterator();
+
+            while(var5.hasNext()) {
+               Entity entity = (Entity)var5.next();
                Map modelVariables = entity.m_20088_().modelVariables;
                if (modelVariables != null) {
                   modelVariables.clear();
@@ -94,17 +112,17 @@ public class CustomEntityModels {
          if (Config.isCustomEntityModels()) {
             RandomEntityContext.Models context = new RandomEntityContext.Models();
             RendererCache rendererCache = context.getRendererCache();
-            net.minecraft.resources.ResourceLocation[] locs = getModelLocations();
+            ResourceLocation[] locs = getModelLocations();
 
-            for (int i = 0; i < locs.length; i++) {
-               net.minecraft.resources.ResourceLocation loc = locs[i];
+            for(int i = 0; i < locs.length; ++i) {
+               ResourceLocation loc = locs[i];
                Config.dbg("CustomEntityModel: " + loc.m_135815_());
                IEntityRenderer rc = parseEntityRender(loc, rendererCache, 0);
                if (rc != null) {
-                  Either<EntityType, BlockEntityType> type = rc.getType();
-                  if (rc instanceof net.minecraft.client.renderer.entity.EntityRenderer) {
-                     entityRenderMap.put((EntityType)type.getLeft().get(), (net.minecraft.client.renderer.entity.EntityRenderer)rc);
-                     rendererCache.put((EntityType)type.getLeft().get(), 0, (net.minecraft.client.renderer.entity.EntityRenderer)rc);
+                  Either type = rc.getType();
+                  if (rc instanceof EntityRenderer) {
+                     entityRenderMap.put((EntityType)type.getLeft().get(), (EntityRenderer)rc);
+                     rendererCache.put((EntityType)((EntityType)type.getLeft().get()), 0, (EntityRenderer)((EntityRenderer)rc));
                      if (rc instanceof ThrownTridentRenderer) {
                         ThrownTridentRenderer tr = (ThrownTridentRenderer)rc;
                         TridentModel tm = (TridentModel)Reflector.getFieldValue(tr, Reflector.RenderTrident_modelTrident);
@@ -117,13 +135,14 @@ public class CustomEntityModels {
                         ParrotRenderer pr = (ParrotRenderer)rc;
                         ParrotModel pm = (ParrotModel)pr.m_7200_();
                         if (pm != null) {
-                           net.minecraft.client.renderer.entity.layers.ParrotOnShoulderLayer.customParrotModel = pm;
+                           ParrotOnShoulderLayer.customParrotModel = pm;
                         }
                      }
-                  } else if (rc instanceof net.minecraft.client.renderer.blockentity.BlockEntityRenderer) {
-                     tileEntityRenderMap.put((BlockEntityType)type.getRight().get(), (net.minecraft.client.renderer.blockentity.BlockEntityRenderer)rc);
-                     rendererCache.put((BlockEntityType)type.getRight().get(), 0, (net.minecraft.client.renderer.blockentity.BlockEntityRenderer)rc);
-                     if (rc instanceof EnchantTableRenderer etr) {
+                  } else if (rc instanceof BlockEntityRenderer) {
+                     tileEntityRenderMap.put((BlockEntityType)type.getRight().get(), (BlockEntityRenderer)rc);
+                     rendererCache.put((BlockEntityType)((BlockEntityType)type.getRight().get()), 0, (BlockEntityRenderer)((BlockEntityRenderer)rc));
+                     if (rc instanceof EnchantTableRenderer) {
+                        EnchantTableRenderer etr = (EnchantTableRenderer)rc;
                         BookModel bm = (BookModel)Reflector.getFieldValue(etr, Reflector.TileEntityEnchantmentTableRenderer_modelBook);
                         setEnchantmentScreenBookModel(bm);
                      }
@@ -156,10 +175,10 @@ public class CustomEntityModels {
       var10000 = new String[]{".jem", ".properties"};
       String[] names = CustomModelRegistry.getModelNames();
 
-      for (int i = 0; i < names.length; i++) {
+      for(int i = 0; i < names.length; ++i) {
          String name = names[i];
          ModelAdapter modelAdapter = CustomModelRegistry.getModelAdapter(name);
-         Either<EntityType, BlockEntityType> type = modelAdapter.getType();
+         Either type = modelAdapter.getType();
          RandomEntityProperties props = makeProperties(name, context);
          if (props == null) {
             props = makeProperties(name + "/" + name, context);
@@ -175,11 +194,12 @@ public class CustomEntityModels {
             }
          }
       }
+
    }
 
    private static RandomEntityProperties makeProperties(String name, RandomEntityContext.Models context) {
-      net.minecraft.resources.ResourceLocation locJem = new net.minecraft.resources.ResourceLocation("optifine/cem/" + name + ".jem");
-      net.minecraft.resources.ResourceLocation locProps = new net.minecraft.resources.ResourceLocation("optifine/cem/" + name + ".properties");
+      ResourceLocation locJem = new ResourceLocation("optifine/cem/" + name + ".jem");
+      ResourceLocation locProps = new ResourceLocation("optifine/cem/" + name + ".properties");
       if (Config.hasResource(locProps)) {
          RandomEntityProperties props = RandomEntityProperties.parse(locProps, locJem, context);
          if (props != null) {
@@ -194,7 +214,7 @@ public class CustomEntityModels {
          if (variants == null) {
             return null;
          } else {
-            RandomEntityProperties<IEntityRenderer> props = new RandomEntityProperties<>(locJem.m_135815_(), locJem, variants, context);
+            RandomEntityProperties props = new RandomEntityProperties(locJem.m_135815_(), locJem, variants, context);
             return !props.isValid(locJem.m_135815_()) ? null : props;
          }
       }
@@ -204,9 +224,9 @@ public class CustomEntityModels {
       customBookModel = bookModel;
    }
 
-   private static Map<EntityType, net.minecraft.client.renderer.entity.EntityRenderer> getEntityRenderMap() {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher rm = Minecraft.m_91087_().m_91290_();
-      Map<EntityType, net.minecraft.client.renderer.entity.EntityRenderer> entityRenderMap = rm.getEntityRenderMap();
+   private static Map getEntityRenderMap() {
+      EntityRenderDispatcher rm = Minecraft.m_91087_().m_91290_();
+      Map entityRenderMap = rm.getEntityRenderMap();
       if (entityRenderMap == null) {
          return null;
       } else {
@@ -218,9 +238,9 @@ public class CustomEntityModels {
       }
    }
 
-   private static Map<BlockEntityType, net.minecraft.client.renderer.blockentity.BlockEntityRenderer> getTileEntityRenderMap() {
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher blockEntityRenderDispatcher = Minecraft.m_91087_().m_167982_();
-      Map<BlockEntityType, net.minecraft.client.renderer.blockentity.BlockEntityRenderer> tileEntityRenderMap = blockEntityRenderDispatcher.getBlockEntityRenderMap();
+   private static Map getTileEntityRenderMap() {
+      BlockEntityRenderDispatcher blockEntityRenderDispatcher = Minecraft.m_91087_().m_167982_();
+      Map tileEntityRenderMap = blockEntityRenderDispatcher.getBlockEntityRenderMap();
       if (originalTileEntityRenderMap == null) {
          originalTileEntityRenderMap = new HashMap(tileEntityRenderMap);
       }
@@ -228,76 +248,79 @@ public class CustomEntityModels {
       return tileEntityRenderMap;
    }
 
-   private static Map<Type, SkullModelBase> getSkullModelMap() {
-      Map<Type, SkullModelBase> skullModelMap = net.minecraft.client.renderer.blockentity.SkullBlockRenderer.models;
+   private static Map getSkullModelMap() {
+      Map skullModelMap = SkullBlockRenderer.models;
       if (skullModelMap == null) {
          Config.warn("Field not found: SkullBlockRenderer.MODELS");
          skullModelMap = new HashMap();
       }
 
       if (originalSkullModelMap == null) {
-         originalSkullModelMap = new HashMap(skullModelMap);
+         originalSkullModelMap = new HashMap((Map)skullModelMap);
       }
 
-      return skullModelMap;
+      return (Map)skullModelMap;
    }
 
-   private static net.minecraft.resources.ResourceLocation[] getModelLocations() {
+   private static ResourceLocation[] getModelLocations() {
       String prefix = "optifine/cem/";
       String suffix = ".jem";
-      List<net.minecraft.resources.ResourceLocation> resourceLocations = new ArrayList();
+      List resourceLocations = new ArrayList();
       String[] names = CustomModelRegistry.getModelNames();
 
-      for (int i = 0; i < names.length; i++) {
+      for(int i = 0; i < names.length; ++i) {
          String name = names[i];
          String path = prefix + name + suffix;
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(path);
+         ResourceLocation loc = new ResourceLocation(path);
          if (Config.hasResource(loc) || debugModels) {
             resourceLocations.add(loc);
          }
       }
 
-      return (net.minecraft.resources.ResourceLocation[])resourceLocations.toArray(new net.minecraft.resources.ResourceLocation[resourceLocations.size()]);
+      ResourceLocation[] locs = (ResourceLocation[])resourceLocations.toArray(new ResourceLocation[resourceLocations.size()]);
+      return locs;
    }
 
-   public static IEntityRenderer parseEntityRender(net.minecraft.resources.ResourceLocation location, RendererCache rendererCache, int index) {
+   public static IEntityRenderer parseEntityRender(ResourceLocation location, RendererCache rendererCache, int index) {
+      String var10000;
       try {
          if (debugModels && index == 0) {
             return makeDebugEntityRenderer(location, rendererCache, index);
          } else {
             JsonObject jo = CustomEntityModelParser.loadJson(location);
-            return parseEntityRender(jo, location.m_135815_(), rendererCache, index);
+            IEntityRenderer render = parseEntityRender(jo, location.m_135815_(), rendererCache, index);
+            return render;
          }
       } catch (IOException var5) {
-         Config.error(var5.getClass().getName() + ": " + var5.getMessage());
+         var10000 = var5.getClass().getName();
+         Config.error(var10000 + ": " + var5.getMessage());
          return null;
       } catch (JsonParseException var6) {
-         Config.error(var6.getClass().getName() + ": " + var6.getMessage());
+         var10000 = var6.getClass().getName();
+         Config.error(var10000 + ": " + var6.getMessage());
          return null;
       } catch (Exception var7) {
-         Log.warn("Error loading CEM: " + location, var7);
+         Log.warn("Error loading CEM: " + String.valueOf(location), var7);
          return null;
       }
    }
 
-   private static IEntityRenderer makeDebugEntityRenderer(net.minecraft.resources.ResourceLocation loc, RendererCache rendererCache, int index) {
+   private static IEntityRenderer makeDebugEntityRenderer(ResourceLocation loc, RendererCache rendererCache, int index) {
       String path = loc.m_135815_();
       String nameJem = StrUtils.removePrefix(path, "optifine/cem/");
       String name = StrUtils.removeSuffix(nameJem, ".jem");
       ModelAdapter ma = CustomModelRegistry.getModelAdapter(name);
-      net.minecraft.client.model.Model model = ma.makeModel();
-      net.minecraft.world.item.DyeColor[] colors = net.minecraft.world.item.DyeColor.values();
+      Model model = ma.makeModel();
+      DyeColor[] colors = DyeColor.values();
       int offset = Math.abs(loc.hashCode()) % 256;
       String[] partNames = ma.getModelRendererNames();
 
-      for (int i = 0; i < partNames.length; i++) {
+      for(int i = 0; i < partNames.length; ++i) {
          String partName = partNames[i];
-         net.minecraft.client.model.geom.ModelPart part = ma.getModelRenderer(model, partName);
+         ModelPart part = ma.getModelRenderer(model, partName);
          if (part != null) {
-            net.minecraft.world.item.DyeColor col = colors[(i + offset) % colors.length];
-            net.minecraft.resources.ResourceLocation locTexture = new net.minecraft.resources.ResourceLocation(
-               "textures/block/" + col.m_7912_() + "_stained_glass.png"
-            );
+            DyeColor col = colors[(i + offset) % colors.length];
+            ResourceLocation locTexture = new ResourceLocation("textures/block/" + col.m_7912_() + "_stained_glass.png");
             part.setTextureLocation(locTexture);
             Config.dbg("  " + partName + ": " + col.m_7912_());
          }
@@ -318,7 +341,7 @@ public class CustomEntityModels {
       name = StrUtils.trimTrailing(name, "0123456789");
       ModelAdapter modelAdapter = CustomModelRegistry.getModelAdapter(name);
       checkNull(modelAdapter, "Entity not found: " + name);
-      Either<EntityType, BlockEntityType> type = modelAdapter.getType();
+      Either type = modelAdapter.getType();
       IEntityRenderer render = makeEntityRender(modelAdapter, cer, rendererCache, index);
       if (render == null) {
          return null;
@@ -329,14 +352,14 @@ public class CustomEntityModels {
    }
 
    private static IEntityRenderer makeEntityRender(ModelAdapter modelAdapter, CustomEntityRenderer cer, RendererCache rendererCache, int index) {
-      net.minecraft.resources.ResourceLocation textureLocation = cer.getTextureLocation();
+      ResourceLocation textureLocation = cer.getTextureLocation();
       CustomModelRenderer[] modelRenderers = cer.getCustomModelRenderers();
       float shadowSize = cer.getShadowSize();
       if (shadowSize < 0.0F) {
          shadowSize = modelAdapter.getShadowSize();
       }
 
-      net.minecraft.client.model.Model model = modelAdapter.makeModel();
+      Model model = modelAdapter.makeModel();
       if (model == null) {
          return null;
       } else {
@@ -346,7 +369,8 @@ public class CustomEntityModels {
          } else {
             IEntityRenderer r = modelAdapter.makeEntityRender(model, shadowSize, rendererCache, index);
             if (r == null) {
-               throw new JsonParseException("Entity renderer is null, model: " + modelAdapter.getName() + ", adapter: " + modelAdapter.getClass().getName());
+               String var10002 = modelAdapter.getName();
+               throw new JsonParseException("Entity renderer is null, model: " + var10002 + ", adapter: " + modelAdapter.getClass().getName());
             } else {
                if (textureLocation != null) {
                   setTextureLocation(modelAdapter, model, r, textureLocation);
@@ -358,11 +382,9 @@ public class CustomEntityModels {
       }
    }
 
-   private static void setTextureLocation(
-      ModelAdapter modelAdapter, net.minecraft.client.model.Model model, IEntityRenderer er, net.minecraft.resources.ResourceLocation textureLocation
-   ) {
+   private static void setTextureLocation(ModelAdapter modelAdapter, Model model, IEntityRenderer er, ResourceLocation textureLocation) {
       if (!modelAdapter.setTextureLocation(er, textureLocation)) {
-         if (er instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer) {
+         if (er instanceof LivingEntityRenderer) {
             er.setLocationTextureCustom(textureLocation);
          } else {
             setTextureTopModelRenderers(modelAdapter, model, textureLocation);
@@ -370,24 +392,23 @@ public class CustomEntityModels {
       }
    }
 
-   public static void setTextureTopModelRenderers(
-      ModelAdapter modelAdapter, net.minecraft.client.model.Model model, net.minecraft.resources.ResourceLocation textureLocation
-   ) {
+   public static void setTextureTopModelRenderers(ModelAdapter modelAdapter, Model model, ResourceLocation textureLocation) {
       String[] parts = modelAdapter.getModelRendererNames();
 
-      for (int i = 0; i < parts.length; i++) {
+      for(int i = 0; i < parts.length; ++i) {
          String part = parts[i];
-         net.minecraft.client.model.geom.ModelPart modelRenderer = modelAdapter.getModelRenderer(model, part);
+         ModelPart modelRenderer = modelAdapter.getModelRenderer(model, part);
          if (modelRenderer != null && modelRenderer.getTextureLocation() == null) {
             modelRenderer.setTextureLocation(textureLocation);
          }
       }
+
    }
 
-   private static boolean modifyModel(ModelAdapter modelAdapter, net.minecraft.client.model.Model model, CustomModelRenderer[] modelRenderers, ModelResolver mr) {
-      List<ModelVariableUpdater> listVariableUpdaters = new ArrayList();
+   private static boolean modifyModel(ModelAdapter modelAdapter, Model model, CustomModelRenderer[] modelRenderers, ModelResolver mr) {
+      List listVariableUpdaters = new ArrayList();
 
-      for (int i = 0; i < modelRenderers.length; i++) {
+      for(int i = 0; i < modelRenderers.length; ++i) {
          CustomModelRenderer cmr = modelRenderers[i];
          if (!modifyModel(modelAdapter, model, cmr, mr)) {
             return false;
@@ -401,16 +422,18 @@ public class CustomEntityModels {
       ModelVariableUpdater[] mvus = (ModelVariableUpdater[])listVariableUpdaters.toArray(new ModelVariableUpdater[listVariableUpdaters.size()]);
       ModelUpdater globvalUpdater = new ModelUpdater(mvus);
 
-      for (int i = 0; i < modelRenderers.length; i++) {
-         CustomModelRenderer cmrx = modelRenderers[i];
-         if (cmrx.getModelRenderer().getModelUpdater() != null) {
-            cmrx.getModelRenderer().setModelUpdater(globvalUpdater);
+      int i;
+      for(i = 0; i < modelRenderers.length; ++i) {
+         CustomModelRenderer cmr = modelRenderers[i];
+         if (cmr.getModelRenderer().getModelUpdater() != null) {
+            cmr.getModelRenderer().setModelUpdater(globvalUpdater);
          }
       }
 
-      for (int ix = 0; ix < mvus.length; ix++) {
-         ModelVariableUpdater mvu = mvus[ix];
-         if (mvu.getModelVariable() instanceof IModelRendererVariable mrv) {
+      for(i = 0; i < mvus.length; ++i) {
+         ModelVariableUpdater mvu = mvus[i];
+         IModelVariable mv = mvu.getModelVariable();
+         if (mv instanceof IModelRendererVariable mrv) {
             mrv.getModelRenderer().setModelUpdater(globvalUpdater);
          }
       }
@@ -418,13 +441,11 @@ public class CustomEntityModels {
       return true;
    }
 
-   private static boolean modifyModel(
-      ModelAdapter modelAdapter, net.minecraft.client.model.Model model, CustomModelRenderer customModelRenderer, ModelResolver modelResolver
-   ) {
+   private static boolean modifyModel(ModelAdapter modelAdapter, Model model, CustomModelRenderer customModelRenderer, ModelResolver modelResolver) {
       String modelPart = customModelRenderer.getModelPart();
-      net.minecraft.client.model.geom.ModelPart parent = modelAdapter.getModelRenderer(model, modelPart);
+      ModelPart parent = modelAdapter.getModelRenderer(model, modelPart);
       if (parent == null) {
-         Config.warn("Model part not found: " + modelPart + ", model: " + model);
+         Config.warn("Model part not found: " + modelPart + ", model: " + String.valueOf(model));
          return false;
       } else {
          if (!customModelRenderer.isAttach()) {
@@ -437,12 +458,15 @@ public class CustomEntityModels {
             }
 
             if (parent.f_104213_ != null) {
-               net.minecraft.client.model.geom.ModelPart[] mrs = modelAdapter.getModelRenderers(model);
-               Set<net.minecraft.client.model.geom.ModelPart> setMrs = Collections.newSetFromMap(new IdentityHashMap());
+               ModelPart[] mrs = modelAdapter.getModelRenderers(model);
+               Set setMrs = Collections.newSetFromMap(new IdentityHashMap());
                setMrs.addAll(Arrays.asList(mrs));
+               Set childModelKeys = new HashSet(parent.f_104213_.keySet());
+               Iterator var9 = childModelKeys.iterator();
 
-               for (String key : new HashSet(parent.f_104213_.keySet())) {
-                  net.minecraft.client.model.geom.ModelPart mr = (net.minecraft.client.model.geom.ModelPart)parent.f_104213_.get(key);
+               while(var9.hasNext()) {
+                  String key = (String)var9.next();
+                  ModelPart mr = (ModelPart)parent.f_104213_.get(key);
                   if (!setMrs.contains(mr)) {
                      parent.f_104213_.remove(key);
                   }
@@ -477,8 +501,8 @@ public class CustomEntityModels {
       return active;
    }
 
-   public static boolean isCustomModel(net.minecraft.world.level.block.state.BlockState blockStateIn) {
-      for (int i = 0; i < customTileEntityTypes.size(); i++) {
+   public static boolean isCustomModel(BlockState blockStateIn) {
+      for(int i = 0; i < customTileEntityTypes.size(); ++i) {
          BlockEntityType type = (BlockEntityType)customTileEntityTypes.get(i);
          if (type.m_155262_(blockStateIn)) {
             return true;
@@ -492,11 +516,10 @@ public class CustomEntityModels {
       if (customBookModel != null && screen instanceof EnchantmentScreen es) {
          Reflector.GuiEnchantment_bookModel.setValue(es, customBookModel);
       }
+
    }
 
-   public static net.minecraft.client.renderer.entity.EntityRenderer getEntityRenderer(
-      Entity entityIn, net.minecraft.client.renderer.entity.EntityRenderer renderer
-   ) {
+   public static EntityRenderer getEntityRenderer(Entity entityIn, EntityRenderer renderer) {
       if (mapEntityProperties.isEmpty()) {
          return renderer;
       } else {
@@ -504,25 +527,24 @@ public class CustomEntityModels {
          if (randomEntity == null) {
             return renderer;
          } else {
-            RandomEntityProperties<IEntityRenderer> props = (RandomEntityProperties<IEntityRenderer>)mapEntityProperties.get(entityIn.m_6095_());
+            RandomEntityProperties props = (RandomEntityProperties)mapEntityProperties.get(entityIn.m_6095_());
             if (props == null) {
                return renderer;
             } else {
-               IEntityRenderer ier = props.getResource(randomEntity, renderer);
-               if (!(ier instanceof net.minecraft.client.renderer.entity.EntityRenderer)) {
+               IEntityRenderer ier = (IEntityRenderer)props.getResource(randomEntity, renderer);
+               if (!(ier instanceof EntityRenderer)) {
                   return null;
                } else {
                   matchingRuleIndex = props.getMatchingRuleIndex();
-                  return (net.minecraft.client.renderer.entity.EntityRenderer)ier;
+                  EntityRenderer er = (EntityRenderer)ier;
+                  return er;
                }
             }
          }
       }
    }
 
-   public static net.minecraft.client.renderer.blockentity.BlockEntityRenderer getBlockEntityRenderer(
-      net.minecraft.world.level.block.entity.BlockEntity entityIn, net.minecraft.client.renderer.blockentity.BlockEntityRenderer renderer
-   ) {
+   public static BlockEntityRenderer getBlockEntityRenderer(BlockEntity entityIn, BlockEntityRenderer renderer) {
       if (mapBlockEntityProperties.isEmpty()) {
          return renderer;
       } else {
@@ -530,16 +552,17 @@ public class CustomEntityModels {
          if (randomEntity == null) {
             return renderer;
          } else {
-            RandomEntityProperties<IEntityRenderer> props = (RandomEntityProperties<IEntityRenderer>)mapBlockEntityProperties.get(entityIn.m_58903_());
+            RandomEntityProperties props = (RandomEntityProperties)mapBlockEntityProperties.get(entityIn.m_58903_());
             if (props == null) {
                return renderer;
             } else {
-               IEntityRenderer ier = props.getResource(randomEntity, renderer);
-               if (!(ier instanceof net.minecraft.client.renderer.blockentity.BlockEntityRenderer)) {
+               IEntityRenderer ier = (IEntityRenderer)props.getResource(randomEntity, renderer);
+               if (!(ier instanceof BlockEntityRenderer)) {
                   return null;
                } else {
                   matchingRuleIndex = props.getMatchingRuleIndex();
-                  return (net.minecraft.client.renderer.blockentity.BlockEntityRenderer)ier;
+                  BlockEntityRenderer ber = (BlockEntityRenderer)ier;
+                  return ber;
                }
             }
          }

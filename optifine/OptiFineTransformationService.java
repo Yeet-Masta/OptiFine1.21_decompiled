@@ -4,10 +4,8 @@ import cpw.mods.jarhandling.SecureJar;
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.ITransformationService;
-import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.IncompatibleEnvironmentException;
 import cpw.mods.modlauncher.api.IModuleLayerManager.Layer;
-import cpw.mods.modlauncher.api.ITransformationService.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -41,21 +39,21 @@ public class OptiFineTransformationService implements ITransformationService {
       LOGGER.info("OptiFineTransformationService.initialize");
    }
 
-   public List<Resource> beginScanning(IEnvironment environment) {
+   public List beginScanning(IEnvironment environment) {
       return List.of();
    }
 
-   public List<Resource> completeScan(IModuleLayerManager layerManager) {
-      List<Resource> list = new ArrayList();
+   public List completeScan(IModuleLayerManager layerManager) {
+      List list = new ArrayList();
       new ArrayList();
       URL urlSrg = this.getClass().getResource("/srg");
       Path pathSrg = Paths.get(URI.create(urlSrg.toString()));
-      Resource resSrg = new Resource(Layer.GAME, List.of(SecureJar.from(new Path[]{pathSrg})));
+      ITransformationService.Resource resSrg = new ITransformationService.Resource(Layer.GAME, List.of(SecureJar.from(new Path[]{pathSrg})));
       list.add(resSrg);
       return list;
    }
 
-   public void onLoad(IEnvironment env, Set<String> otherServices) throws IncompatibleEnvironmentException {
+   public void onLoad(IEnvironment env, Set otherServices) throws IncompatibleEnvironmentException {
       LOGGER.info("OptiFineTransformationService.onLoad");
       ofZipFileUrl = OptiFineTransformer.class.getProtectionDomain().getCodeSource().getLocation();
       LOGGER.info("OptiFine ZIP file URL: " + ofZipFileUrl);
@@ -90,7 +88,7 @@ public class OptiFineTransformationService implements ITransformationService {
 
             File file = new File(path);
             ofZipFileUrl = file.toURI().toURL();
-            Map<String, String> map = new HashMap();
+            Map map = new HashMap();
             map.put("create", "true");
             FileSystems.newFileSystem(URI.create("jar:" + ofZipFileUrl + "!/"), map);
             return file;
@@ -101,7 +99,7 @@ public class OptiFineTransformationService implements ITransformationService {
       }
    }
 
-   public static Optional<URL> getResourceUrl(String name) {
+   public static Optional getResourceUrl(String name) {
       if (name.endsWith(".class") && !name.startsWith("optifine/")) {
          name = "srg/" + name;
       }
@@ -125,9 +123,9 @@ public class OptiFineTransformationService implements ITransformationService {
       }
    }
 
-   public List<? extends ITransformer<?>> transformers() {
+   public List transformers() {
       LOGGER.info("OptiFineTransformationService.transformers");
-      List<OptiFineTransformer> list = new ArrayList();
+      List list = new ArrayList();
       if (transformer != null) {
          list.add(transformer);
       }

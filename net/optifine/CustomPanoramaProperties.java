@@ -1,11 +1,12 @@
 package net.optifine;
 
 import java.util.Properties;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.config.ConnectedParser;
 
 public class CustomPanoramaProperties {
    private String path;
-   private net.minecraft.resources.ResourceLocation[] panoramaLocations;
+   private ResourceLocation[] panoramaLocations;
    private int weight = 1;
    private int blur1 = 64;
    private int blur2 = 3;
@@ -18,10 +19,10 @@ public class CustomPanoramaProperties {
    public CustomPanoramaProperties(String path, Properties props) {
       ConnectedParser cp = new ConnectedParser("CustomPanorama");
       this.path = path;
-      this.panoramaLocations = new net.minecraft.resources.ResourceLocation[6];
+      this.panoramaLocations = new ResourceLocation[6];
 
-      for (int i = 0; i < this.panoramaLocations.length; i++) {
-         this.panoramaLocations[i] = new net.minecraft.resources.ResourceLocation(path + "/panorama_" + i + ".png");
+      for(int i = 0; i < this.panoramaLocations.length; ++i) {
+         this.panoramaLocations[i] = new ResourceLocation(path + "/panorama_" + i + ".png");
       }
 
       this.weight = cp.parseInt(props.getProperty("weight"), 1);
@@ -34,7 +35,7 @@ public class CustomPanoramaProperties {
       this.overlay2Bottom = ConnectedParser.parseColor4(props.getProperty("overlay2.bottom"), Integer.MIN_VALUE);
    }
 
-   public net.minecraft.resources.ResourceLocation[] getPanoramaLocations() {
+   public ResourceLocation[] getPanoramaLocations() {
       return this.panoramaLocations;
    }
 
@@ -71,22 +72,6 @@ public class CustomPanoramaProperties {
    }
 
    public String toString() {
-      return this.path
-         + ", weight: "
-         + this.weight
-         + ", blur: "
-         + this.blur1
-         + " "
-         + this.blur2
-         + " "
-         + this.blur3
-         + ", overlay: "
-         + this.overlay1Top
-         + " "
-         + this.overlay1Bottom
-         + " "
-         + this.overlay2Top
-         + " "
-         + this.overlay2Bottom;
+      return this.path + ", weight: " + this.weight + ", blur: " + this.blur1 + " " + this.blur2 + " " + this.blur3 + ", overlay: " + this.overlay1Top + " " + this.overlay1Bottom + " " + this.overlay2Top + " " + this.overlay2Bottom;
    }
 }

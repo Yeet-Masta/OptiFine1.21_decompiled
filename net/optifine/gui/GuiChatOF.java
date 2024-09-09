@@ -1,6 +1,7 @@
 package net.optifine.gui;
 
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.optifine.Config;
 import net.optifine.shaders.Shaders;
 
@@ -9,7 +10,7 @@ public class GuiChatOF extends ChatScreen {
    private static final String CMD_RELOAD_CHUNKS = "/reloadChunks";
 
    public GuiChatOF(ChatScreen guiChat) {
-      super(net.minecraft.client.gui.screens.LoadingOverlay.getGuiChatText(guiChat));
+      super(LoadingOverlay.getGuiChatText(guiChat));
    }
 
    public void m_241797_(String msg, boolean add) {

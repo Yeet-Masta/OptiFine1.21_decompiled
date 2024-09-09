@@ -1,30 +1,37 @@
 package net.optifine.entity.model;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.ChestRenderer;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
-public class ChestLargeModel extends net.minecraft.client.model.Model {
-   public net.minecraft.client.model.geom.ModelPart lid_left;
-   public net.minecraft.client.model.geom.ModelPart base_left;
-   public net.minecraft.client.model.geom.ModelPart knob_left;
-   public net.minecraft.client.model.geom.ModelPart lid_right;
-   public net.minecraft.client.model.geom.ModelPart base_right;
-   public net.minecraft.client.model.geom.ModelPart knob_right;
+public class ChestLargeModel extends Model {
+   public ModelPart lid_left;
+   public ModelPart base_left;
+   public ModelPart knob_left;
+   public ModelPart lid_right;
+   public ModelPart base_right;
+   public ModelPart knob_right;
 
    public ChestLargeModel() {
-      super(net.minecraft.client.renderer.RenderType::m_110452_);
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
+      super(RenderType::m_110452_);
+      BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
       ChestRenderer renderer = new ChestRenderer(dispatcher.getContext());
-      this.lid_right = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 3);
-      this.base_right = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 4);
-      this.knob_right = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 5);
-      this.lid_left = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 6);
-      this.base_left = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 7);
-      this.knob_left = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 8);
+      this.lid_right = (ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 3);
+      this.base_right = (ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 4);
+      this.knob_right = (ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 5);
+      this.lid_left = (ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 6);
+      this.base_left = (ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 7);
+      this.knob_left = (ModelPart)Reflector.TileEntityChestRenderer_modelRenderers.getValue(renderer, 8);
    }
 
-   public net.minecraft.client.renderer.blockentity.BlockEntityRenderer updateRenderer(net.minecraft.client.renderer.blockentity.BlockEntityRenderer renderer) {
+   public BlockEntityRenderer updateRenderer(BlockEntityRenderer renderer) {
       if (!Reflector.TileEntityChestRenderer_modelRenderers.exists()) {
          Config.warn("Field not found: TileEntityChestRenderer.modelRenderers");
          return null;
@@ -39,9 +46,6 @@ public class ChestLargeModel extends net.minecraft.client.model.Model {
       }
    }
 
-   @Override
-   public void m_7695_(
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn, com.mojang.blaze3d.vertex.VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn
-   ) {
+   public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 }

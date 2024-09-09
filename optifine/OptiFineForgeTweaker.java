@@ -6,7 +6,7 @@ import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 public class OptiFineForgeTweaker implements ITweaker {
-   public void acceptOptions(List<String> args, File gameDir, File assetsDir, String profile) {
+   public void acceptOptions(List args, File gameDir, File assetsDir, String profile) {
       dbg("OptiFineForgeTweaker: acceptOptions");
    }
 

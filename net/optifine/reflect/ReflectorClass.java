@@ -61,9 +61,7 @@ public class ReflectorClass implements IResolvable {
    }
 
    public ReflectorField makeFieldTypes(Class preType, Class type, Class postTypes, String errorName) {
-      return this.getTargetClass() == null
-         ? null
-         : new ReflectorField(new FieldLocatorTypes(this.getTargetClass(), new Class[]{preType}, type, new Class[]{postTypes}, errorName));
+      return this.getTargetClass() == null ? null : new ReflectorField(new FieldLocatorTypes(this.getTargetClass(), new Class[]{preType}, type, new Class[]{postTypes}, errorName));
    }
 
    public ReflectorMethod makeMethod(String name) {
@@ -78,7 +76,6 @@ public class ReflectorClass implements IResolvable {
       return new ReflectorConstructor(this, paramTypes);
    }
 
-   @Override
    public void resolve() {
       Class cls = this.getTargetClass();
    }

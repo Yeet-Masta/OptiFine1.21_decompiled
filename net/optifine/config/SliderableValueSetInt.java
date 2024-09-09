@@ -1,5 +1,7 @@
 package net.optifine.config;
 
-public interface SliderableValueSetInt<T> extends net.minecraft.client.OptionInstance.SliderableValueSet<T> {
-   net.minecraft.client.OptionInstance.IntRangeBase getIntRange();
+import net.minecraft.client.OptionInstance;
+
+public interface SliderableValueSetInt extends OptionInstance.SliderableValueSet {
+   OptionInstance.IntRangeBase getIntRange();
 }

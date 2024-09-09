@@ -1,20 +1,27 @@
 package net.optifine.entity.model;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BellRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
-public class BellModel extends net.minecraft.client.model.Model {
-   public net.minecraft.client.model.geom.ModelPart bellBody;
+public class BellModel extends Model {
+   public ModelPart bellBody;
 
    public BellModel() {
-      super(net.minecraft.client.renderer.RenderType::m_110458_);
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
+      super(RenderType::m_110458_);
+      BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
       BellRenderer renderer = new BellRenderer(dispatcher.getContext());
-      this.bellBody = (net.minecraft.client.model.geom.ModelPart)Reflector.TileEntityBellRenderer_modelRenderer.getValue(renderer);
+      this.bellBody = (ModelPart)Reflector.TileEntityBellRenderer_modelRenderer.getValue(renderer);
    }
 
-   public net.minecraft.client.renderer.blockentity.BlockEntityRenderer updateRenderer(net.minecraft.client.renderer.blockentity.BlockEntityRenderer renderer) {
+   public BlockEntityRenderer updateRenderer(BlockEntityRenderer renderer) {
       if (!Reflector.TileEntityBellRenderer_modelRenderer.exists()) {
          Config.warn("Field not found: TileEntityBellRenderer.modelRenderer");
          return null;
@@ -24,9 +31,6 @@ public class BellModel extends net.minecraft.client.model.Model {
       }
    }
 
-   @Override
-   public void m_7695_(
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn, com.mojang.blaze3d.vertex.VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn
-   ) {
+   public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 }

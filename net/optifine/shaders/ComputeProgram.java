@@ -6,7 +6,8 @@ import net.minecraft.world.phys.Vec2;
 public class ComputeProgram {
    private final String name;
    private final ProgramStage programStage;
-   private int id;
+   // $FF: renamed from: id int
+   private int field_47;
    private int ref;
    private Vec3i localSize;
    private Vec3i workGroups;
@@ -22,7 +23,7 @@ public class ComputeProgram {
    }
 
    public void resetId() {
-      this.id = 0;
+      this.field_47 = 0;
       this.ref = 0;
    }
 
@@ -41,11 +42,11 @@ public class ComputeProgram {
    }
 
    public int getId() {
-      return this.id;
+      return this.field_47;
    }
 
    public void setId(int id) {
-      this.id = id;
+      this.field_47 = id;
    }
 
    public int getRef() {
@@ -93,6 +94,6 @@ public class ComputeProgram {
    }
 
    public String toString() {
-      return "name: " + this.name + ", id: " + this.id;
+      return "name: " + this.name + ", id: " + this.field_47;
    }
 }

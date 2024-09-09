@@ -11,9 +11,9 @@ public class ShaderOptionSwitchConst extends ShaderOptionSwitch {
       super(name, description, value, path);
    }
 
-   @Override
    public String getSourceLine() {
-      return "const bool " + this.getName() + " = " + this.getValue() + "; // Shader option " + this.getValue();
+      String var10000 = this.getName();
+      return "const bool " + var10000 + " = " + this.getValue() + "; // Shader option " + this.getValue();
    }
 
    public static ShaderOption parseOption(String line, String path) {
@@ -35,7 +35,6 @@ public class ShaderOptionSwitchConst extends ShaderOptionSwitch {
       }
    }
 
-   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_CONST.matcher(line);
       if (!m.matches()) {
@@ -46,7 +45,6 @@ public class ShaderOptionSwitchConst extends ShaderOptionSwitch {
       }
    }
 
-   @Override
    public boolean checkUsed() {
       return false;
    }

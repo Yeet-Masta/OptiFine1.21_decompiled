@@ -1,10 +1,16 @@
 package net.optifine.shaders.gui;
 
+import java.util.Iterator;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.optifine.Config;
 import net.optifine.Lang;
 import net.optifine.gui.GuiButtonOF;
@@ -18,32 +24,37 @@ import net.optifine.shaders.config.ShaderOptionScreen;
 
 public class GuiShaderOptions extends GuiScreenOF {
    private Screen prevScreen;
-   private net.minecraft.client.Options settings;
-   private TooltipManager tooltipManager = new TooltipManager(this, new TooltipProviderShaderOptions());
-   private String screenName = null;
-   private String screenText = null;
-   private boolean changed = false;
+   private Options settings;
+   private TooltipManager tooltipManager;
+   private String screenName;
+   private String screenText;
+   private boolean changed;
    public static final String OPTION_PROFILE = "<profile>";
    public static final String OPTION_EMPTY = "<empty>";
    public static final String OPTION_REST = "*";
 
-   public GuiShaderOptions(Screen guiscreen, net.minecraft.client.Options gamesettings) {
+   public GuiShaderOptions(Screen guiscreen, Options gamesettings) {
       super(Component.m_237113_(I18n.m_118938_("of.options.shaderOptionsTitle", new Object[0])));
+      this.tooltipManager = new TooltipManager(this, new TooltipProviderShaderOptions());
+      this.screenName = null;
+      this.screenText = null;
+      this.changed = false;
       this.prevScreen = guiscreen;
       this.settings = gamesettings;
    }
 
-   public GuiShaderOptions(Screen guiscreen, net.minecraft.client.Options gamesettings, String screenName) {
+   public GuiShaderOptions(Screen guiscreen, Options gamesettings, String screenName) {
       this(guiscreen, gamesettings);
       this.screenName = screenName;
       if (screenName != null) {
          this.screenText = Shaders.translate("screen." + screenName, screenName);
       }
+
    }
 
    public void m_7856_() {
       int baseId = 100;
-      int baseX = 0;
+      int baseX = false;
       int baseY = 30;
       int stepY = 20;
       int btnWidth = 120;
@@ -51,40 +62,36 @@ public class GuiShaderOptions extends GuiScreenOF {
       int columns = Shaders.getShaderPackColumns(this.screenName, 2);
       ShaderOption[] ops = Shaders.getShaderPackOptions(this.screenName);
       if (ops != null) {
-         int colsMin = net.minecraft.util.Mth.m_14165_((double)ops.length / 9.0);
+         int colsMin = Mth.m_14165_((double)ops.length / 9.0);
          if (columns < colsMin) {
             columns = colsMin;
          }
 
-         for (int i = 0; i < ops.length; i++) {
+         for(int i = 0; i < ops.length; ++i) {
             ShaderOption so = ops[i];
             if (so != null && so.isVisible()) {
                int col = i % columns;
                int row = i / columns;
                int colWidth = Math.min(this.f_96543_ / columns, 200);
-               baseX = (this.f_96543_ - colWidth * columns) / 2;
+               int baseX = (this.f_96543_ - colWidth * columns) / 2;
                int x = col * colWidth + 5 + baseX;
                int y = baseY + row * stepY;
                int w = colWidth - 10;
                String text = getButtonText(so, w);
-               GuiButtonShaderOption btn;
+               Object btn;
                if (Shaders.isShaderPackOptionSlider(so.getName())) {
                   btn = new GuiSliderShaderOption(baseId + i, x, y, w, btnHeight, so, text);
                } else {
                   btn = new GuiButtonShaderOption(baseId + i, x, y, w, btnHeight, so, text);
                }
 
-               btn.f_93623_ = so.isEnabled();
-               this.m_142416_(btn);
+               ((GuiButtonShaderOption)btn).f_93623_ = so.isEnabled();
+               this.m_142416_((GuiEventListener)btn);
             }
          }
       }
 
-      this.m_142416_(
-         new GuiButtonOF(
-            201, this.f_96543_ / 2 - btnWidth - 20, this.f_96544_ / 6 + 168 + 11, btnWidth, btnHeight, I18n.m_118938_("controls.reset", new Object[0])
-         )
-      );
+      this.m_142416_(new GuiButtonOF(201, this.f_96543_ / 2 - btnWidth - 20, this.f_96544_ / 6 + 168 + 11, btnWidth, btnHeight, I18n.m_118938_("controls.reset", new Object[0])));
       this.m_142416_(new GuiButtonOF(200, this.f_96543_ / 2 + 20, this.f_96544_ / 6 + 168 + 11, btnWidth, btnHeight, I18n.m_118938_("gui.done", new Object[0])));
    }
 
@@ -93,11 +100,9 @@ public class GuiShaderOptions extends GuiScreenOF {
       if (so instanceof ShaderOptionScreen soScr) {
          return labelName + "...";
       } else {
-         net.minecraft.client.gui.Font fr = Config.getMinecraft().f_91062_;
-         int lenSuffix = fr.m_92895_(": " + Lang.getOff()) + 5;
+         Font fr = Config.getMinecraft().f_91062_;
 
-         while (fr.m_92895_(labelName) + lenSuffix >= btnWidth && labelName.length() > 0) {
-            labelName = labelName.substring(0, labelName.length() - 1);
+         for(int lenSuffix = fr.m_92895_(": " + Lang.getOff()) + 5; fr.m_92895_(labelName) + lenSuffix >= btnWidth && labelName.length() > 0; labelName = labelName.substring(0, labelName.length() - 1)) {
          }
 
          String col = so.isChanged() ? so.getValueColor(so.getValue()) : "";
@@ -106,11 +111,11 @@ public class GuiShaderOptions extends GuiScreenOF {
       }
    }
 
-   @Override
    protected void actionPerformed(AbstractWidget guiElement) {
       if (guiElement instanceof GuiButtonOF guibutton) {
          if (guibutton.f_93623_) {
-            if (guibutton.id < 200 && guibutton instanceof GuiButtonShaderOption btnSo) {
+            if (guibutton.field_45 < 200 && guibutton instanceof GuiButtonShaderOption) {
+               GuiButtonShaderOption btnSo = (GuiButtonShaderOption)guibutton;
                ShaderOption so = btnSo.getShaderOption();
                if (so instanceof ShaderOptionScreen) {
                   String screenName = so.getName();
@@ -129,10 +134,10 @@ public class GuiShaderOptions extends GuiScreenOF {
                this.changed = true;
             }
 
-            if (guibutton.id == 201) {
+            if (guibutton.field_45 == 201) {
                ShaderOption[] opts = Shaders.getChangedOptions(Shaders.getShaderPackOptions());
 
-               for (int i = 0; i < opts.length; i++) {
+               for(int i = 0; i < opts.length; ++i) {
                   ShaderOption opt = opts[i];
                   opt.resetValue();
                   this.changed = true;
@@ -141,7 +146,7 @@ public class GuiShaderOptions extends GuiScreenOF {
                this.updateAllButtons();
             }
 
-            if (guibutton.id == 200) {
+            if (guibutton.field_45 == 200) {
                if (this.changed) {
                   Shaders.saveShaderPackOptions();
                   this.changed = false;
@@ -150,6 +155,7 @@ public class GuiShaderOptions extends GuiScreenOF {
 
                this.f_96541_.m_91152_(this.prevScreen);
             }
+
          }
       }
    }
@@ -164,7 +170,6 @@ public class GuiShaderOptions extends GuiScreenOF {
       super.m_7861_();
    }
 
-   @Override
    protected void actionPerformedRightClick(AbstractWidget guiElement) {
       if (guiElement instanceof GuiButtonShaderOption btnSo) {
          ShaderOption so = btnSo.getShaderOption();
@@ -177,12 +182,15 @@ public class GuiShaderOptions extends GuiScreenOF {
          this.updateAllButtons();
          this.changed = true;
       }
+
    }
 
    private void updateAllButtons() {
-      for (Button btn : this.getButtonList()) {
-         if (btn instanceof GuiButtonShaderOption) {
-            GuiButtonShaderOption gbso = (GuiButtonShaderOption)btn;
+      Iterator it = this.getButtonList().iterator();
+
+      while(it.hasNext()) {
+         Button btn = (Button)it.next();
+         if (btn instanceof GuiButtonShaderOption gbso) {
             ShaderOption opt = gbso.getShaderOption();
             if (opt instanceof ShaderOptionProfile optProf) {
                optProf.updateProfile();
@@ -192,9 +200,10 @@ public class GuiShaderOptions extends GuiScreenOF {
             gbso.valueChanged();
          }
       }
+
    }
 
-   public void m_88315_(net.minecraft.client.gui.GuiGraphics graphicsIn, int x, int y, float partialTicks) {
+   public void m_88315_(GuiGraphics graphicsIn, int x, int y, float partialTicks) {
       super.m_88315_(graphicsIn, x, y, partialTicks);
       if (this.screenText != null) {
          drawCenteredString(graphicsIn, this.fontRenderer, this.screenText, this.f_96543_ / 2, 15, 16777215);

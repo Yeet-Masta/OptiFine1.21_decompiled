@@ -1,17 +1,16 @@
 package net.optifine.config;
 
+import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
 import net.optifine.Lang;
 
 public class IterableOptionBool extends IteratableOptionOF implements IPersitentOption {
    private String resourceKey;
-   private ToBooleanFunction<net.minecraft.client.Options> getter;
-   private ObjBooleanConsumer<net.minecraft.client.Options> setter;
+   private ToBooleanFunction getter;
+   private ObjBooleanConsumer setter;
    private String saveKey;
 
-   public IterableOptionBool(
-      String resourceKey, ToBooleanFunction<net.minecraft.client.Options> getter, ObjBooleanConsumer<net.minecraft.client.Options> setter, String saveKey
-   ) {
+   public IterableOptionBool(String resourceKey, ToBooleanFunction getter, ObjBooleanConsumer setter, String saveKey) {
       super(resourceKey);
       this.resourceKey = resourceKey;
       this.getter = getter;
@@ -19,18 +18,17 @@ public class IterableOptionBool extends IteratableOptionOF implements IPersitent
       this.saveKey = saveKey;
    }
 
-   @Override
    public void nextOptionValue(int dirIn) {
-      net.minecraft.client.Options opts = this.getOptions();
+      Options opts = this.getOptions();
       boolean val = this.getter.applyAsBool(opts);
       val = !val;
       this.setter.accept(opts, val);
    }
 
-   @Override
    public Component getOptionText() {
-      net.minecraft.client.Options opts = this.getOptions();
-      String optionLabel = Lang.get(this.resourceKey) + ": ";
+      Options opts = this.getOptions();
+      String var10000 = Lang.get(this.resourceKey);
+      String optionLabel = var10000 + ": ";
       boolean val = this.getter.applyAsBool(opts);
       String valueLabel = val ? Lang.getOn() : Lang.getOff();
       String label = optionLabel + valueLabel;
@@ -38,19 +36,16 @@ public class IterableOptionBool extends IteratableOptionOF implements IPersitent
       return comp;
    }
 
-   @Override
    public String getSaveKey() {
       return this.saveKey;
    }
 
-   @Override
-   public void loadValue(net.minecraft.client.Options opts, String s) {
+   public void loadValue(Options opts, String s) {
       boolean val = Boolean.valueOf(s);
       this.setter.accept(opts, val);
    }
 
-   @Override
-   public String getSaveText(net.minecraft.client.Options opts) {
+   public String getSaveText(Options opts) {
       boolean val = this.getter.applyAsBool(opts);
       return Boolean.toString(val);
    }

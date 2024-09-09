@@ -5,10 +5,10 @@ public interface SpriteTicker extends AutoCloseable {
 
    void close();
 
-   default net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite() {
+   default TextureAtlasSprite getSprite() {
       return null;
    }
 
-   default void setSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   default void setSprite(TextureAtlasSprite sprite) {
    }
 }

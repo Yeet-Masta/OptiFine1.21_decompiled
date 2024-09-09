@@ -5,9 +5,9 @@ import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.TargetType;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
+import cpw.mods.modlauncher.api.TypesafeMap;
 import cpw.mods.modlauncher.api.IEnvironment.Keys;
 import cpw.mods.modlauncher.api.ITransformer.Target;
-import cpw.mods.modlauncher.api.TypesafeMap.Key;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +27,11 @@ import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
-public class OptiFineTransformer implements ITransformer<ClassNode>, IResourceProvider, IOptiFineResourceLocator {
+public class OptiFineTransformer implements ITransformer, IResourceProvider, IOptiFineResourceLocator {
    private static final Logger LOGGER = LogManager.getLogger();
    private ZipFile ofZipFile;
    private String forgeJarUrlStr;
-   private Map<String, String> patchMap = null;
+   private Map patchMap = null;
    private Pattern[] patterns = null;
    public static final String PREFIX_SRG = "srg/";
    public static final String SUFFIX_CLASS = ".class";
@@ -64,28 +64,29 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
       } catch (Exception var5) {
          LOGGER.info("Forge JAR not available");
       }
+
    }
 
    public TransformerVoteResult castVote(ITransformerVotingContext context) {
       return TransformerVoteResult.YES;
    }
 
-   public TargetType<ClassNode> getTargetType() {
+   public TargetType getTargetType() {
       return TargetType.PRE_CLASS;
    }
 
-   public Set<Target<ClassNode>> targets() {
-      Set<Target<ClassNode>> set = new HashSet();
+   public Set targets() {
+      Set set = new HashSet();
       String[] names = this.getResourceNames("srg/", ".class");
       String[] namesPatch = this.getResourceNames("patch/srg/", ".class.xdelta");
       names = (String[])Utils.addObjectsToArray(names, namesPatch);
 
-      for (int i = 0; i < names.length; i++) {
+      for(int i = 0; i < names.length; ++i) {
          String name = names[i];
          name = Utils.removePrefix(name, new String[]{"srg/", "patch/srg/"});
          name = Utils.removeSuffix(name, new String[]{".class", ".class.xdelta"});
          if (!name.startsWith("net/optifine/")) {
-            Target itt = this.getTargetClass(name);
+            ITransformer.Target itt = this.getTargetClass(name);
             set.add(itt);
          }
       }
@@ -94,16 +95,16 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
       return set;
    }
 
-   private Target getTargetClass(String name) {
+   private ITransformer.Target getTargetClass(String name) {
       return this.hasTargetPreClass ? this.getTargetPreClass(name) : Target.targetClass(name);
    }
 
-   private Target getTargetPreClass(String name) {
+   private ITransformer.Target getTargetPreClass(String name) {
       return Target.targetPreClass(name);
    }
 
    private static boolean hasTargetPreClass(IEnvironment env) {
-      Optional<String> mlVer = env.getProperty((Key)Keys.MLSPEC_VERSION.get());
+      Optional mlVer = env.getProperty((TypesafeMap.Key)Keys.MLSPEC_VERSION.get());
       if (!mlVer.isPresent()) {
          return false;
       } else {
@@ -152,10 +153,10 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
    }
 
    private String[] getResourceNames(String prefix, String suffix) {
-      List<String> list = new ArrayList();
-      Enumeration<? extends ZipEntry> entries = this.ofZipFile.entries();
+      List list = new ArrayList();
+      Enumeration entries = this.ofZipFile.entries();
 
-      while (entries.hasMoreElements()) {
+      while(entries.hasMoreElements()) {
          ZipEntry zipEntry = (ZipEntry)entries.nextElement();
          String name = zipEntry.getName();
          if (name.startsWith(prefix) && name.endsWith(suffix)) {
@@ -163,7 +164,8 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
          }
       }
 
-      return (String[])list.toArray(new String[list.size()]);
+      String[] names = (String[])list.toArray(new String[list.size()]);
+      return names;
    }
 
    private byte[] getOptiFineResource(String name) {
@@ -182,7 +184,6 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
       }
    }
 
-   @Override
    public synchronized InputStream getOptiFineResourceStream(String name) {
       name = Utils.removePrefix(name, "/");
       InputStream in = this.getOptiFineResourceStreamZip(name);
@@ -194,21 +195,22 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
       }
    }
 
-   @Override
    public InputStream getResourceStream(String path) {
       path = Utils.removePrefix(path, "/");
 
       try {
-         Enumeration<URL> urlsEnum = ClassLoader.getSystemClassLoader().getResources(path);
+         Enumeration urlsEnum = ClassLoader.getSystemClassLoader().getResources(path);
 
-         while (urlsEnum.hasMoreElements()) {
-            URL url = (URL)urlsEnum.nextElement();
-            if (this.forgeJarUrlStr == null || !url.getPath().startsWith(this.forgeJarUrlStr)) {
-               return url.openStream();
+         URL url;
+         do {
+            if (!urlsEnum.hasMoreElements()) {
+               return null;
             }
-         }
 
-         return null;
+            url = (URL)urlsEnum.nextElement();
+         } while(this.forgeJarUrlStr != null && url.getPath().startsWith(this.forgeJarUrlStr));
+
+         return url.openStream();
       } catch (IOException var4) {
          return null;
       }
@@ -224,7 +226,8 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
             return null;
          } else {
             try {
-               return this.ofZipFile.getInputStream(ze);
+               InputStream in = this.ofZipFile.getInputStream(ze);
+               return in;
             } catch (IOException var4) {
                var4.printStackTrace();
                return null;
@@ -239,7 +242,8 @@ public class OptiFineTransformer implements ITransformer<ClassNode>, IResourcePr
          return null;
       } else {
          try {
-            return Utils.readAll(in);
+            byte[] bytes = Utils.readAll(in);
+            return bytes;
          } catch (IOException var4) {
             return null;
          }

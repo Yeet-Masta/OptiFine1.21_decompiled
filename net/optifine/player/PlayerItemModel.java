@@ -1,17 +1,26 @@
 package net.optifine.player;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.awt.Dimension;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.ResourceLocation;
 
 public class PlayerItemModel {
    private Dimension textureSize = null;
    private boolean usePlayerTexture = false;
    private PlayerItemRenderer[] modelRenderers = new PlayerItemRenderer[0];
-   private net.minecraft.resources.ResourceLocation textureLocation = null;
-   private com.mojang.blaze3d.platform.NativeImage textureImage = null;
-   private net.minecraft.client.renderer.texture.DynamicTexture texture = null;
-   private net.minecraft.resources.ResourceLocation locationMissing = new net.minecraft.resources.ResourceLocation("textures/block/red_wool.png");
+   private ResourceLocation textureLocation = null;
+   private NativeImage textureImage = null;
+   private DynamicTexture texture = null;
+   private ResourceLocation locationMissing = new ResourceLocation("textures/block/red_wool.png");
    public static final int ATTACH_BODY = 0;
    public static final int ATTACH_HEAD = 1;
    public static final int ATTACH_LEFT_ARM = 2;
@@ -26,20 +35,13 @@ public class PlayerItemModel {
       this.modelRenderers = modelRenderers;
    }
 
-   public void render(
-      HumanoidModel modelBiped,
-      net.minecraft.client.player.AbstractClientPlayer player,
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      int packedLightIn,
-      int packedOverlayIn
-   ) {
-      net.minecraft.resources.ResourceLocation locTex = this.locationMissing;
+   public void render(HumanoidModel modelBiped, AbstractClientPlayer player, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn) {
+      ResourceLocation locTex = this.locationMissing;
       if (this.usePlayerTexture) {
          locTex = player.getSkinTextureLocation();
       } else if (this.textureLocation != null) {
          if (this.texture == null && this.textureImage != null) {
-            this.texture = new net.minecraft.client.renderer.texture.DynamicTexture(this.textureImage);
+            this.texture = new DynamicTexture(this.textureImage);
             Minecraft.m_91087_().m_91097_().m_118495_(this.textureLocation, this.texture);
          }
 
@@ -48,17 +50,18 @@ public class PlayerItemModel {
          locTex = this.locationMissing;
       }
 
-      for (int i = 0; i < this.modelRenderers.length; i++) {
+      for(int i = 0; i < this.modelRenderers.length; ++i) {
          PlayerItemRenderer pir = this.modelRenderers[i];
          matrixStackIn.m_85836_();
-         net.minecraft.client.renderer.RenderType renderType = net.minecraft.client.renderer.RenderType.m_110458_(locTex);
-         com.mojang.blaze3d.vertex.VertexConsumer buffer = bufferIn.m_6299_(renderType);
+         RenderType renderType = RenderType.m_110458_(locTex);
+         VertexConsumer buffer = bufferIn.m_6299_(renderType);
          pir.render(modelBiped, matrixStackIn, buffer, packedLightIn, packedOverlayIn);
          matrixStackIn.m_85849_();
       }
+
    }
 
-   public static net.minecraft.client.model.geom.ModelPart getAttachModel(HumanoidModel modelBiped, int attachTo) {
+   public static ModelPart getAttachModel(HumanoidModel modelBiped, int attachTo) {
       switch (attachTo) {
          case 0:
             return modelBiped.f_102810_;
@@ -77,23 +80,23 @@ public class PlayerItemModel {
       }
    }
 
-   public com.mojang.blaze3d.platform.NativeImage getTextureImage() {
+   public NativeImage getTextureImage() {
       return this.textureImage;
    }
 
-   public void setTextureImage(com.mojang.blaze3d.platform.NativeImage textureImage) {
+   public void setTextureImage(NativeImage textureImage) {
       this.textureImage = textureImage;
    }
 
-   public net.minecraft.client.renderer.texture.DynamicTexture getTexture() {
+   public DynamicTexture getTexture() {
       return this.texture;
    }
 
-   public net.minecraft.resources.ResourceLocation getTextureLocation() {
+   public ResourceLocation getTextureLocation() {
       return this.textureLocation;
    }
 
-   public void setTextureLocation(net.minecraft.resources.ResourceLocation textureLocation) {
+   public void setTextureLocation(ResourceLocation textureLocation) {
       this.textureLocation = textureLocation;
    }
 

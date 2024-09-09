@@ -4,11 +4,12 @@ import java.util.function.Predicate;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeResolver;
-import net.minecraft.world.level.biome.Climate.Sampler;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 
 public class LevelChunkSection {
@@ -19,34 +20,26 @@ public class LevelChunkSection {
    private short f_62969_;
    private short f_62970_;
    private short f_62971_;
-   private final net.minecraft.world.level.chunk.PalettedContainer<net.minecraft.world.level.block.state.BlockState> f_62972_;
-   private PalettedContainerRO<Holder<Biome>> f_187995_;
+   private final PalettedContainer f_62972_;
+   private PalettedContainerRO f_187995_;
 
-   public LevelChunkSection(
-      net.minecraft.world.level.chunk.PalettedContainer<net.minecraft.world.level.block.state.BlockState> dataIn, PalettedContainerRO<Holder<Biome>> biomesIn
-   ) {
+   public LevelChunkSection(PalettedContainer dataIn, PalettedContainerRO biomesIn) {
       this.f_62972_ = dataIn;
       this.f_187995_ = biomesIn;
       this.m_63018_();
    }
 
-   public LevelChunkSection(Registry<Biome> registryIn) {
-      this.f_62972_ = new net.minecraft.world.level.chunk.PalettedContainer<>(
-         Block.f_49791_, Blocks.f_50016_.m_49966_(), net.minecraft.world.level.chunk.PalettedContainer.Strategy.f_188137_
-      );
-      this.f_187995_ = new net.minecraft.world.level.chunk.PalettedContainer<>(
-         registryIn.m_206115_(),
-         registryIn.m_246971_(net.minecraft.world.level.biome.Biomes.f_48202_),
-         net.minecraft.world.level.chunk.PalettedContainer.Strategy.f_188138_
-      );
+   public LevelChunkSection(Registry registryIn) {
+      this.f_62972_ = new PalettedContainer(Block.f_49791_, Blocks.f_50016_.m_49966_(), PalettedContainer.Strategy.f_188137_);
+      this.f_187995_ = new PalettedContainer(registryIn.m_206115_(), registryIn.m_246971_(Biomes.f_48202_), PalettedContainer.Strategy.f_188138_);
    }
 
-   public net.minecraft.world.level.block.state.BlockState m_62982_(int x, int y, int z) {
-      return this.f_62972_.m_63087_(x, y, z);
+   public BlockState m_62982_(int x, int y, int z) {
+      return (BlockState)this.f_62972_.m_63087_(x, y, z);
    }
 
    public FluidState m_63007_(int x, int y, int z) {
-      return this.f_62972_.m_63087_(x, y, z).m_60819_();
+      return ((BlockState)this.f_62972_.m_63087_(x, y, z)).m_60819_();
    }
 
    public void m_62981_() {
@@ -57,42 +50,40 @@ public class LevelChunkSection {
       this.f_62972_.m_63120_();
    }
 
-   public net.minecraft.world.level.block.state.BlockState m_62986_(int x, int y, int z, net.minecraft.world.level.block.state.BlockState blockStateIn) {
+   public BlockState m_62986_(int x, int y, int z, BlockState blockStateIn) {
       return this.m_62991_(x, y, z, blockStateIn, true);
    }
 
-   public net.minecraft.world.level.block.state.BlockState m_62991_(
-      int x, int y, int z, net.minecraft.world.level.block.state.BlockState state, boolean useLocks
-   ) {
-      net.minecraft.world.level.block.state.BlockState blockstate;
+   public BlockState m_62991_(int x, int y, int z, BlockState state, boolean useLocks) {
+      BlockState blockstate;
       if (useLocks) {
-         blockstate = this.f_62972_.m_63091_(x, y, z, state);
+         blockstate = (BlockState)this.f_62972_.m_63091_(x, y, z, state);
       } else {
-         blockstate = this.f_62972_.m_63127_(x, y, z, state);
+         blockstate = (BlockState)this.f_62972_.m_63127_(x, y, z, state);
       }
 
       FluidState fluidstate = blockstate.m_60819_();
       FluidState fluidstate1 = state.m_60819_();
       if (!blockstate.m_60795_()) {
-         this.f_62969_--;
+         --this.f_62969_;
          if (blockstate.m_60823_()) {
-            this.f_62970_--;
+            --this.f_62970_;
          }
       }
 
       if (!fluidstate.m_76178_()) {
-         this.f_62971_--;
+         --this.f_62971_;
       }
 
       if (!state.m_60795_()) {
-         this.f_62969_++;
+         ++this.f_62969_;
          if (state.m_60823_()) {
-            this.f_62970_++;
+            ++this.f_62970_;
          }
       }
 
       if (!fluidstate1.m_76178_()) {
-         this.f_62971_++;
+         ++this.f_62971_;
       }
 
       return blockstate;
@@ -115,33 +106,31 @@ public class LevelChunkSection {
    }
 
    public void m_63018_() {
-      net.minecraft.world.level.chunk.LevelChunkSection.BlockCounter levelchunksection$blockcounter = new net.minecraft.world.level.chunk.LevelChunkSection.BlockCounter(
-         
-      );
+      BlockCounter levelchunksection$blockcounter = new BlockCounter(this);
       this.f_62972_.m_63099_(levelchunksection$blockcounter);
       this.f_62969_ = (short)levelchunksection$blockcounter.f_204437_;
       this.f_62970_ = (short)levelchunksection$blockcounter.f_204438_;
       this.f_62971_ = (short)levelchunksection$blockcounter.f_204439_;
    }
 
-   public net.minecraft.world.level.chunk.PalettedContainer<net.minecraft.world.level.block.state.BlockState> m_63019_() {
+   public PalettedContainer m_63019_() {
       return this.f_62972_;
    }
 
-   public PalettedContainerRO<Holder<Biome>> m_187996_() {
+   public PalettedContainerRO m_187996_() {
       return this.f_187995_;
    }
 
    public void m_63004_(FriendlyByteBuf packetBufferIn) {
       this.f_62969_ = packetBufferIn.readShort();
       this.f_62972_.m_63118_(packetBufferIn);
-      net.minecraft.world.level.chunk.PalettedContainer<Holder<Biome>> palettedcontainer = this.f_187995_.m_238334_();
+      PalettedContainer palettedcontainer = this.f_187995_.m_238334_();
       palettedcontainer.m_63118_(packetBufferIn);
       this.f_187995_ = palettedcontainer;
    }
 
    public void m_274599_(FriendlyByteBuf packetBufferIn) {
-      net.minecraft.world.level.chunk.PalettedContainer<Holder<Biome>> palettedcontainer = this.f_187995_.m_238334_();
+      PalettedContainer palettedcontainer = this.f_187995_.m_238334_();
       palettedcontainer.m_63118_(packetBufferIn);
       this.f_187995_ = palettedcontainer;
    }
@@ -156,21 +145,21 @@ public class LevelChunkSection {
       return 2 + this.f_62972_.m_63137_() + this.f_187995_.m_63137_();
    }
 
-   public boolean m_63002_(Predicate<net.minecraft.world.level.block.state.BlockState> state) {
+   public boolean m_63002_(Predicate state) {
       return this.f_62972_.m_63109_(state);
    }
 
-   public Holder<Biome> m_204433_(int x, int y, int z) {
-      return (Holder<Biome>)this.f_187995_.m_63087_(x, y, z);
+   public Holder m_204433_(int x, int y, int z) {
+      return (Holder)this.f_187995_.m_63087_(x, y, z);
    }
 
-   public void m_280631_(BiomeResolver resolverIn, Sampler samplerIn, int x, int y, int z) {
-      net.minecraft.world.level.chunk.PalettedContainer<Holder<Biome>> palettedcontainer = this.f_187995_.m_238334_();
-      int i = 4;
+   public void m_280631_(BiomeResolver resolverIn, Climate.Sampler samplerIn, int x, int y, int z) {
+      PalettedContainer palettedcontainer = this.f_187995_.m_238334_();
+      int i = true;
 
-      for (int j = 0; j < 4; j++) {
-         for (int k = 0; k < 4; k++) {
-            for (int l = 0; l < 4; l++) {
+      for(int j = 0; j < 4; ++j) {
+         for(int k = 0; k < 4; ++k) {
+            for(int l = 0; l < 4; ++l) {
                palettedcontainer.m_63127_(j, k, l, resolverIn.m_203407_(x + j, y + k, z + l, samplerIn));
             }
          }
@@ -183,12 +172,15 @@ public class LevelChunkSection {
       return this.f_62969_;
    }
 
-   class BlockCounter implements net.minecraft.world.level.chunk.PalettedContainer.CountConsumer<net.minecraft.world.level.block.state.BlockState> {
+   class BlockCounter implements PalettedContainer.CountConsumer {
       public int f_204437_;
       public int f_204438_;
       public int f_204439_;
 
-      public void m_63144_(net.minecraft.world.level.block.state.BlockState blockStateIn, int countIn) {
+      BlockCounter(final LevelChunkSection this$0) {
+      }
+
+      public void m_63144_(BlockState blockStateIn, int countIn) {
          FluidState fluidstate = blockStateIn.m_60819_();
          if (!blockStateIn.m_60795_()) {
             this.f_204437_ += countIn;
@@ -203,6 +195,7 @@ public class LevelChunkSection {
                this.f_204439_ += countIn;
             }
          }
+
       }
    }
 }

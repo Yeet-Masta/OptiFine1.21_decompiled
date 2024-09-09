@@ -1,8 +1,12 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.PufferfishSmallModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.PufferfishRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -13,13 +17,11 @@ public class ModelAdapterPufferFishSmall extends ModelAdapter {
       super(EntityType.f_20516_, "puffer_fish_small", 0.2F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new PufferfishSmallModel(bakeModelLayer(ModelLayers.f_171173_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PufferfishSmallModel modelPufferFishSmall)) {
          return null;
       } else if (modelPart.equals("body")) {
@@ -39,19 +41,19 @@ public class ModelAdapterPufferFishSmall extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "eye_right", "eye_left", "tail", "fin_right", "fin_left", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PufferfishRenderer customRenderer = new PufferfishRenderer(renderManager.getContext());
       customRenderer.f_114477_ = shadowSize;
-      net.minecraft.client.renderer.entity.EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> customRenderer);
+      EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> {
+         return customRenderer;
+      });
       if (!(render instanceof PufferfishRenderer renderFish)) {
-         Config.warn("Not a PufferfishRenderer: " + render);
+         Config.warn("Not a PufferfishRenderer: " + String.valueOf(render));
          return null;
       } else if (!Reflector.RenderPufferfish_modelSmall.exists()) {
          Config.warn("Model field not found: RenderPufferfish.modelSmall");

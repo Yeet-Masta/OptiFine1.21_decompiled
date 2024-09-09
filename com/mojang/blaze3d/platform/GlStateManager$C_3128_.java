@@ -12,7 +12,8 @@ public enum GlStateManager$C_3128_ {
    NAND(5390),
    NOOP(5381),
    NOR(5384),
-   OR(5383),
+   // $FF: renamed from: OR com.mojang.blaze3d.platform.GlStateManager$C_3128_
+   field_65(5383),
    OR_INVERTED(5389),
    OR_REVERSE(5387),
    SET(5391),
@@ -22,5 +23,10 @@ public enum GlStateManager$C_3128_ {
 
    private GlStateManager$C_3128_(final int opcodeIn) {
       this.f_84715_ = opcodeIn;
+   }
+
+   // $FF: synthetic method
+   private static GlStateManager$C_3128_[] $values() {
+      return new GlStateManager$C_3128_[]{AND, AND_INVERTED, AND_REVERSE, CLEAR, COPY, COPY_INVERTED, EQUIV, INVERT, NAND, NOOP, NOR, field_65, OR_INVERTED, OR_REVERSE, SET, XOR};
    }
 }

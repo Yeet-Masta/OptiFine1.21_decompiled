@@ -1,37 +1,38 @@
 package net.optifine.model;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import net.minecraft.client.model.geom.ModelPart;
 
 public class AttachmentPaths {
-   private List<List<AttachmentPath>> pathsByType = new ArrayList();
+   private List pathsByType = new ArrayList();
 
    public void addPath(AttachmentPath ap) {
       AttachmentType type = ap.getAttachment().getType();
 
-      while (this.pathsByType.size() <= type.ordinal()) {
-         this.pathsByType.add(null);
+      while(this.pathsByType.size() <= type.ordinal()) {
+         this.pathsByType.add((Object)null);
       }
 
-      List<AttachmentPath> paths = (List<AttachmentPath>)this.pathsByType.get(type.ordinal());
+      List paths = (List)this.pathsByType.get(type.ordinal());
       if (paths == null) {
          paths = new ArrayList();
          this.pathsByType.set(type.ordinal(), paths);
       }
 
-      paths.add(ap);
+      ((List)paths).add(ap);
    }
 
-   public void addPaths(List<net.minecraft.client.model.geom.ModelPart> parents, Attachment[] attachments) {
-      net.minecraft.client.model.geom.ModelPart[] parentArr = (net.minecraft.client.model.geom.ModelPart[])parents.toArray(
-         new net.minecraft.client.model.geom.ModelPart[parents.size()]
-      );
+   public void addPaths(List parents, Attachment[] attachments) {
+      ModelPart[] parentArr = (ModelPart[])parents.toArray(new ModelPart[parents.size()]);
 
-      for (int i = 0; i < attachments.length; i++) {
+      for(int i = 0; i < attachments.length; ++i) {
          Attachment at = attachments[i];
          AttachmentPath path = new AttachmentPath(at, parentArr);
          this.addPath(path);
       }
+
    }
 
    public boolean isEmpty() {
@@ -42,22 +43,30 @@ public class AttachmentPaths {
       if (this.pathsByType.size() <= typeIn.ordinal()) {
          return null;
       } else {
-         for (AttachmentPath path : (List)this.pathsByType.get(typeIn.ordinal())) {
-            if (path.isVisible()) {
-               return path;
-            }
-         }
+         List paths = (List)this.pathsByType.get(typeIn.ordinal());
+         Iterator var3 = paths.iterator();
 
-         return null;
+         AttachmentPath path;
+         do {
+            if (!var3.hasNext()) {
+               return null;
+            }
+
+            path = (AttachmentPath)var3.next();
+         } while(!path.isVisible());
+
+         return path;
       }
    }
 
    public String toString() {
       int count = 0;
+      Iterator var2 = this.pathsByType.iterator();
 
-      for (List paths : this.pathsByType) {
+      while(var2.hasNext()) {
+         List paths = (List)var2.next();
          if (paths != null) {
-            count++;
+            ++count;
          }
       }
 

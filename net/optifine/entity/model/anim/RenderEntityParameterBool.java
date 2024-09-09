@@ -1,11 +1,19 @@
 package net.optifine.entity.model.anim;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.ItemFrameRenderer;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Fox;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.optifine.expr.IExpressionBool;
 import net.optifine.reflect.Reflector;
@@ -38,8 +46,9 @@ public enum RenderEntityParameterBool implements IExpressionBool {
 
    private String name;
    private boolean blockEntity;
-   private net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager;
-   private Minecraft mc;
+   private EntityRenderDispatcher renderManager;
+   // $FF: renamed from: mc net.minecraft.client.Minecraft
+   private Minecraft field_70;
    private static final RenderEntityParameterBool[] VALUES = values();
 
    private RenderEntityParameterBool(String name) {
@@ -50,7 +59,7 @@ public enum RenderEntityParameterBool implements IExpressionBool {
       this.name = name;
       this.blockEntity = blockEntity;
       this.renderManager = Minecraft.m_91087_().m_91290_();
-      this.mc = Minecraft.m_91087_();
+      this.field_70 = Minecraft.m_91087_();
    }
 
    public String getName() {
@@ -61,24 +70,22 @@ public enum RenderEntityParameterBool implements IExpressionBool {
       return this.blockEntity;
    }
 
-   @Override
    public boolean eval() {
-      switch (this) {
-         case IS_IN_HAND:
-            return net.minecraft.client.renderer.ItemInHandRenderer.isRenderItemHand()
-               && !net.minecraft.client.renderer.entity.LivingEntityRenderer.isRenderItemHead();
-         case IS_IN_ITEM_FRAME:
-            return net.minecraft.client.renderer.entity.ItemFrameRenderer.isRenderItemFrame();
-         case IS_IN_GROUND:
-         case IS_IN_LAVA:
-         case IS_IN_WATER:
-         case IS_INVISIBLE:
-         case IS_ON_GROUND:
+      switch (this.ordinal()) {
+         case 6:
+            return ItemInHandRenderer.isRenderItemHand() && !LivingEntityRenderer.isRenderItemHead();
+         case 7:
+            return ItemFrameRenderer.isRenderItemFrame();
+         case 8:
+         case 10:
+         case 11:
+         case 12:
+         case 13:
          default:
-            net.minecraft.world.level.block.entity.BlockEntity blockEntity = net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher.tileEntityRendered;
+            BlockEntity blockEntity = BlockEntityRenderDispatcher.tileEntityRendered;
             if (blockEntity != null) {
-               switch (this) {
-                  case IS_IN_WATER:
+               switch (this.ordinal()) {
+                  case 11:
                      return BlockUtils.isPropertyTrue(blockEntity.m_58900_(), BlockStateProperties.f_61362_);
                }
             }
@@ -87,43 +94,48 @@ public enum RenderEntityParameterBool implements IExpressionBool {
             if (entity == null) {
                return false;
             } else {
-               if (entity instanceof LivingEntity livingEntity) {
-                  switch (this) {
-                     case IS_CHILD:
+               if (entity instanceof LivingEntity) {
+                  LivingEntity livingEntity = (LivingEntity)entity;
+                  switch (this.ordinal()) {
+                     case 3:
                         return livingEntity.m_6162_();
-                     case IS_HURT:
+                     case 5:
                         return livingEntity.f_20916_ > 0;
-                     case IS_ON_SHOULDER:
-                        return entity == this.mc.f_91074_.entityShoulderLeft || entity == this.mc.f_91074_.entityShoulderRight;
+                     case 15:
+                        return entity == this.field_70.f_91074_.entityShoulderLeft || entity == this.field_70.f_91074_.entityShoulderRight;
                   }
                }
 
-               if (entity instanceof net.minecraft.world.entity.Mob mob) {
-                  switch (this) {
-                     case IS_AGGRESSIVE:
+               if (entity instanceof Mob) {
+                  Mob mob = (Mob)entity;
+                  switch (this.ordinal()) {
+                     case 1:
                         return mob.m_5912_();
                   }
                }
 
-               if (entity instanceof TamableAnimal tamable) {
-                  switch (this) {
-                     case IS_SITTING:
+               if (entity instanceof TamableAnimal) {
+                  TamableAnimal tamable = (TamableAnimal)entity;
+                  switch (this.ordinal()) {
+                     case 18:
                         return tamable.m_21825_();
-                     case IS_TAMED:
+                     case 21:
                         return tamable.m_21824_();
                   }
                }
 
-               if (entity instanceof Fox fox) {
-                  switch (this) {
-                     case IS_SITTING:
+               if (entity instanceof Fox) {
+                  Fox fox = (Fox)entity;
+                  switch (this.ordinal()) {
+                     case 18:
                         return fox.m_28555_();
                   }
                }
 
-               if (entity instanceof AbstractArrow arrowEntity) {
-                  switch (this) {
-                     case IS_IN_GROUND:
+               if (entity instanceof AbstractArrow) {
+                  AbstractArrow arrowEntity = (AbstractArrow)entity;
+                  switch (this.ordinal()) {
+                     case 8:
                         if (arrowEntity.f_19797_ == 0 && arrowEntity.f_19854_ == 0.0 && arrowEntity.f_19855_ == 0.0 && arrowEntity.f_19856_ == 0.0) {
                            return true;
                         }
@@ -132,50 +144,50 @@ public enum RenderEntityParameterBool implements IExpressionBool {
                   }
                }
 
-               switch (this) {
-                  case IS_ALIVE:
+               switch (this.ordinal()) {
+                  case 0:
                      return entity.m_6084_();
-                  case IS_AGGRESSIVE:
-                  case IS_CHILD:
-                  case IS_HURT:
-                  case IS_IN_HAND:
-                  case IS_IN_ITEM_FRAME:
-                  case IS_IN_GROUND:
-                  case IS_IN_GUI:
-                  case IS_ON_HEAD:
-                  case IS_ON_SHOULDER:
-                  case IS_SITTING:
-                  case IS_TAMED:
+                  case 1:
+                  case 3:
+                  case 5:
+                  case 6:
+                  case 7:
+                  case 8:
+                  case 9:
+                  case 14:
+                  case 15:
+                  case 18:
+                  case 21:
                   default:
                      return false;
-                  case IS_BURNING:
+                  case 2:
                      return entity.m_6060_();
-                  case IS_GLOWING:
+                  case 4:
                      return entity.m_142038_();
-                  case IS_IN_LAVA:
+                  case 10:
                      return entity.m_20077_();
-                  case IS_IN_WATER:
+                  case 11:
                      return entity.m_20069_();
-                  case IS_INVISIBLE:
+                  case 12:
                      return entity.m_20145_();
-                  case IS_ON_GROUND:
+                  case 13:
                      return entity.m_20096_();
-                  case IS_RIDDEN:
+                  case 16:
                      return entity.m_20160_();
-                  case IS_RIDING:
+                  case 17:
                      return entity.m_20159_();
-                  case IS_SNEAKING:
+                  case 19:
                      return entity.m_6047_();
-                  case IS_SPRINTING:
+                  case 20:
                      return entity.m_20142_();
-                  case IS_WET:
+                  case 22:
                      return entity.m_20070_();
                }
             }
-         case IS_IN_GUI:
-            return net.minecraft.client.renderer.entity.ItemRenderer.isRenderItemGui();
-         case IS_ON_HEAD:
-            return net.minecraft.client.renderer.entity.LivingEntityRenderer.isRenderItemHead();
+         case 9:
+            return ItemRenderer.isRenderItemGui();
+         case 14:
+            return LivingEntityRenderer.isRenderItemHead();
       }
    }
 
@@ -183,7 +195,7 @@ public enum RenderEntityParameterBool implements IExpressionBool {
       if (str == null) {
          return null;
       } else {
-         for (int i = 0; i < VALUES.length; i++) {
+         for(int i = 0; i < VALUES.length; ++i) {
             RenderEntityParameterBool type = VALUES[i];
             if (type.getName().equals(str)) {
                return type;
@@ -192,5 +204,10 @@ public enum RenderEntityParameterBool implements IExpressionBool {
 
          return null;
       }
+   }
+
+   // $FF: synthetic method
+   private static RenderEntityParameterBool[] $values() {
+      return new RenderEntityParameterBool[]{IS_ALIVE, IS_AGGRESSIVE, IS_BURNING, IS_CHILD, IS_GLOWING, IS_HURT, IS_IN_HAND, IS_IN_ITEM_FRAME, IS_IN_GROUND, IS_IN_GUI, IS_IN_LAVA, IS_IN_WATER, IS_INVISIBLE, IS_ON_GROUND, IS_ON_HEAD, IS_ON_SHOULDER, IS_RIDDEN, IS_RIDING, IS_SITTING, IS_SNEAKING, IS_SPRINTING, IS_TAMED, IS_WET};
    }
 }

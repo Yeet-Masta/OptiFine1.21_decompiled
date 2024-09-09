@@ -12,13 +12,14 @@ public class ArrayCaches {
       this.elementClass = elementClass;
       this.caches = new ArrayCache[sizes.length];
 
-      for (int i = 0; i < this.caches.length; i++) {
+      for(int i = 0; i < this.caches.length; ++i) {
          this.caches[i] = new ArrayCache(elementClass, maxCacheSize);
       }
+
    }
 
    public Object allocate(int size) {
-      for (int i = 0; i < this.sizes.length; i++) {
+      for(int i = 0; i < this.sizes.length; ++i) {
          if (size == this.sizes[i]) {
             return this.caches[i].allocate(size);
          }
@@ -31,12 +32,13 @@ public class ArrayCaches {
       if (arr != null) {
          int size = Array.getLength(arr);
 
-         for (int i = 0; i < this.sizes.length; i++) {
+         for(int i = 0; i < this.sizes.length; ++i) {
             if (size == this.sizes[i]) {
                this.caches[i].free(arr);
                return;
             }
          }
+
       }
    }
 }

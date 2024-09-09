@@ -13,11 +13,15 @@ public class BitArray {
    public void set(int pos, boolean value) {
       int implPos = pos / 32;
       int bitMask = 1 << (pos & 31);
+      int[] var10000;
       if (value) {
-         this.implArray[implPos] = this.implArray[implPos] | bitMask;
+         var10000 = this.implArray;
+         var10000[implPos] |= bitMask;
       } else {
-         this.implArray[implPos] = this.implArray[implPos] & ~bitMask;
+         var10000 = this.implArray;
+         var10000[implPos] &= ~bitMask;
       }
+
    }
 
    public boolean get(int pos) {

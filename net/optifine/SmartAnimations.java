@@ -1,6 +1,8 @@
 package net.optifine;
 
 import java.util.BitSet;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.optifine.shaders.Shaders;
 
 public class SmartAnimations {
@@ -16,7 +18,7 @@ public class SmartAnimations {
       active = Config.getGameSettings().ofSmartAnimations;
    }
 
-   public static void spriteRendered(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public static void spriteRendered(TextureAtlasSprite sprite) {
       if (sprite.isTerrain()) {
          int animationIndex = sprite.getAnimationIndex();
          if (animationIndex >= 0) {
@@ -31,7 +33,7 @@ public class SmartAnimations {
       }
    }
 
-   public static boolean isSpriteRendered(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public static boolean isSpriteRendered(TextureAtlasSprite sprite) {
       if (!sprite.isTerrain()) {
          return true;
       } else {
@@ -40,7 +42,7 @@ public class SmartAnimations {
       }
    }
 
-   public static void resetSpritesRendered(net.minecraft.client.renderer.texture.TextureAtlas atlasTexture) {
+   public static void resetSpritesRendered(TextureAtlas atlasTexture) {
       if (atlasTexture.isTerrain()) {
          spritesRendered.clear();
       }

@@ -4,14 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -28,12 +35,12 @@ import net.optifine.util.NumUtils;
 public class QuickInfo {
    private static RenderCache renderCache = new RenderCache(100L);
    private static Minecraft minecraft = Config.getMinecraft();
-   private static net.minecraft.client.gui.Font font = minecraft.f_91062_;
-   private static double gpuLoadSmooth = 0.0;
-   private static McDebugInfo gpuDebugInfo = new McDebugInfo();
+   private static Font font;
+   private static double gpuLoadSmooth;
+   private static McDebugInfo gpuDebugInfo;
    private static int gpuPercCached;
 
-   public static void render(net.minecraft.client.gui.GuiGraphics graphicsIn) {
+   public static void render(GuiGraphics graphicsIn) {
       if (!renderCache.drawCached(graphicsIn)) {
          renderCache.startRender(graphicsIn);
          renderLeft(graphicsIn);
@@ -42,10 +49,10 @@ public class QuickInfo {
       }
    }
 
-   private static void renderLeft(net.minecraft.client.gui.GuiGraphics graphicsIn) {
-      List<String> lines = new ArrayList();
+   private static void renderLeft(GuiGraphics graphicsIn) {
+      List lines = new ArrayList();
       StringBuilder sb = new StringBuilder();
-      net.minecraft.client.Options opts = Config.getGameSettings();
+      Options opts = Config.getGameSettings();
       boolean fullLabel = !Option.isCompact(opts.ofQuickInfoLabels);
       boolean detailedCoords = Option.isDetailed(opts.ofQuickInfoLabels);
       boolean fps = !Option.isOff(opts.ofQuickInfoFps);
@@ -112,10 +119,10 @@ public class QuickInfo {
       render(graphicsIn, lines, false);
    }
 
-   private static void renderRight(net.minecraft.client.gui.GuiGraphics graphicsIn) {
-      List<String> lines = new ArrayList();
+   private static void renderRight(GuiGraphics graphicsIn) {
+      List lines = new ArrayList();
       StringBuilder sb = new StringBuilder();
-      net.minecraft.client.Options opts = Config.getGameSettings();
+      Options opts = Config.getGameSettings();
       boolean fullLabel = !Option.isCompact(opts.ofQuickInfoLabels);
       boolean detailedCoords = Option.isDetailed(opts.ofQuickInfoLabels);
       boolean mem = !Option.isOff(opts.ofQuickInfoMemory);
@@ -172,16 +179,16 @@ public class QuickInfo {
       return sb;
    }
 
-   private static void newLine(List<String> lines, StringBuilder sb) {
+   private static void newLine(List lines, StringBuilder sb) {
       if (!sb.isEmpty()) {
          lines.add(sb.toString());
          sb.setLength(0);
       }
    }
 
-   private static void render(net.minecraft.client.gui.GuiGraphics graphicsIn, List<String> linesIn, boolean rightIn) {
+   private static void render(GuiGraphics graphicsIn, List linesIn, boolean rightIn) {
       if (!linesIn.isEmpty()) {
-         net.minecraft.client.Options opts = Config.getGameSettings();
+         Options opts = Config.getGameSettings();
          boolean background = opts.ofQuickInfoBackground;
          boolean shadow = false;
          if (rightIn) {
@@ -190,27 +197,32 @@ public class QuickInfo {
          }
 
          int lineHeight = 9;
+         int lineY;
+         int i;
+         String s;
+         int lineWidth;
+         int x;
          if (background) {
-            int lineY = 2;
+            lineY = 2;
 
-            for (int i = 0; i < linesIn.size(); i++) {
-               String s = (String)linesIn.get(i);
+            for(i = 0; i < linesIn.size(); ++i) {
+               s = (String)linesIn.get(i);
                if (!StringUtil.m_14408_(s)) {
-                  int lineWidth = font.m_92895_(s);
-                  int x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
+                  lineWidth = font.m_92895_(s);
+                  x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
                   graphicsIn.m_280509_(x - 1, lineY - 1, x + lineWidth + 1, lineY + lineHeight - 1, -1873784752);
                   lineY += lineHeight;
                }
             }
          }
 
-         int lineY = 2;
+         lineY = 2;
 
-         for (int ix = 0; ix < linesIn.size(); ix++) {
-            String s = (String)linesIn.get(ix);
+         for(i = 0; i < linesIn.size(); ++i) {
+            s = (String)linesIn.get(i);
             if (!StringUtil.m_14408_(s)) {
-               int lineWidth = font.m_92895_(s);
-               int x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
+               lineWidth = font.m_92895_(s);
+               x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
                graphicsIn.m_280056_(font, s, x, lineY, -2039584, shadow);
                lineY += lineHeight;
             }
@@ -219,10 +231,11 @@ public class QuickInfo {
          if (rightIn) {
             graphicsIn.m_280168_().m_85849_();
          }
+
       }
    }
 
-   private static String getName(net.minecraft.resources.ResourceLocation loc) {
+   private static String getName(ResourceLocation loc) {
       if (loc == null) {
          return "";
       } else {
@@ -231,21 +244,23 @@ public class QuickInfo {
    }
 
    private static void addFps(StringBuilder sb, boolean fullLabel, boolean addFpsMin) {
+      int fpsAvg;
+      int fpsMin;
       if (Config.isShowFrameTime()) {
-         int fpsAvg = Config.getFpsAverage();
+         fpsAvg = Config.getFpsAverage();
          appendDouble1(sb, 1000.0 / (double)Config.limit(fpsAvg, 1, Integer.MAX_VALUE));
          if (addFpsMin) {
-            int fpsMin = Config.getFpsMin();
+            fpsMin = Config.getFpsMin();
             sb.append('/');
             appendDouble1(sb, 1000.0 / (double)Config.limit(fpsMin, 1, Integer.MAX_VALUE));
          }
 
          sb.append(" ms");
       } else {
-         int fpsAvg = Config.getFpsAverage();
+         fpsAvg = Config.getFpsAverage();
          sb.append(Integer.toString(fpsAvg));
          if (addFpsMin) {
-            int fpsMin = Config.getFpsMin();
+            fpsMin = Config.getFpsMin();
             sb.append('/');
             sb.append(Integer.toString(fpsMin));
          }
@@ -324,11 +339,12 @@ public class QuickInfo {
          sb.append(Integer.toString(pos.m_123343_() & 15));
          sb.append("]");
       }
+
    }
 
    private static void addFacing(StringBuilder sb, boolean fullLabel, boolean detailedCoords, boolean facingXyz, boolean yawPitch) {
       Entity entity = minecraft.m_91288_();
-      net.minecraft.core.Direction dir = entity.m_6350_();
+      Direction dir = entity.m_6350_();
       sb.append(fullLabel ? "Facing: " : "F: ");
       sb.append(dir.toString());
       if (facingXyz) {
@@ -339,8 +355,8 @@ public class QuickInfo {
       }
 
       if (yawPitch) {
-         float yaw = net.minecraft.util.Mth.m_14177_(entity.m_146908_());
-         float pitch = net.minecraft.util.Mth.m_14177_(entity.m_146909_());
+         float yaw = Mth.m_14177_(entity.m_146908_());
+         float pitch = Mth.m_14177_(entity.m_146909_());
          if (detailedCoords) {
             sb.append(" (");
             appendDouble1(sb, (double)yaw);
@@ -355,9 +371,10 @@ public class QuickInfo {
             sb.append(')');
          }
       }
+
    }
 
-   private static String getXyz(net.minecraft.core.Direction dir) {
+   private static String getXyz(Direction dir) {
       switch (dir) {
          case NORTH:
             return "Z-";
@@ -367,7 +384,7 @@ public class QuickInfo {
             return "X-";
          case EAST:
             return "X+";
-         case UP:
+         case field_61:
             return "Y+";
          case DOWN:
             return "Y-";
@@ -379,18 +396,18 @@ public class QuickInfo {
    private static void addBiome(StringBuilder sb, boolean fullLabel) {
       Entity entity = minecraft.m_91288_();
       BlockPos pos = entity.m_20183_();
-      Holder<Biome> biome = minecraft.f_91073_.m_204166_(pos);
-      Optional<ResourceKey<Biome>> key = biome.m_203543_();
+      Holder biome = minecraft.f_91073_.m_204166_(pos);
+      Optional key = biome.m_203543_();
       String name = getBiomeName(key);
       sb.append(fullLabel ? "Biome: " : "B: ");
       sb.append(name);
    }
 
-   private static String getBiomeName(Optional<ResourceKey<Biome>> key) {
+   private static String getBiomeName(Optional key) {
       if (!key.isPresent()) {
          return "[unregistered]";
       } else {
-         net.minecraft.resources.ResourceLocation loc = ((ResourceKey)key.get()).m_135782_();
+         ResourceLocation loc = ((ResourceKey)key.get()).m_135782_();
          return loc.isDefaultNamespace() ? loc.m_135815_() : loc.toString();
       }
    }
@@ -398,7 +415,7 @@ public class QuickInfo {
    private static void addLight(StringBuilder sb, boolean fullLabel) {
       Entity entity = minecraft.m_91288_();
       BlockPos pos = entity.m_20183_();
-      net.minecraft.client.multiplayer.ClientLevel world = minecraft.f_91073_;
+      ClientLevel world = minecraft.f_91073_;
       int lightSky = world.m_45517_(LightLayer.SKY, pos);
       int lightBlock = world.m_45517_(LightLayer.BLOCK, pos);
       if (fullLabel) {
@@ -413,6 +430,7 @@ public class QuickInfo {
          sb.append("/");
          sb.append(Integer.toString(lightBlock));
       }
+
    }
 
    private static void addMem(StringBuilder sb, boolean fullLabel) {
@@ -427,6 +445,7 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB");
       }
+
    }
 
    private static void addMemAlloc(StringBuilder sb, boolean fullLabel) {
@@ -436,6 +455,7 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB/s");
       }
+
    }
 
    private static void addMemNative(StringBuilder sb, boolean fullLabel) {
@@ -451,6 +471,7 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB");
       }
+
    }
 
    private static void addMemGpu(StringBuilder sb, boolean fullLabel) {
@@ -463,6 +484,7 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB");
       }
+
    }
 
    private static int bytesToMb(long bytes) {
@@ -475,7 +497,7 @@ public class QuickInfo {
       HitResult rayTrace = entity.m_19907_(reachDist, 0.0F, false);
       if (rayTrace.m_6662_() == Type.BLOCK) {
          BlockPos pos = ((BlockHitResult)rayTrace).m_82425_();
-         net.minecraft.world.level.block.state.BlockState state = minecraft.f_91073_.m_8055_(pos);
+         BlockState state = minecraft.f_91073_.m_8055_(pos);
          sb.append(fullLabel ? "Target Block: " : "TB: ");
          sb.append(getName(state.getBlockLocation()));
          if (showPos) {
@@ -488,6 +510,7 @@ public class QuickInfo {
             sb.append(")");
          }
       }
+
    }
 
    private static void addTargetFluid(StringBuilder sb, boolean fullLabel, boolean showPos) {
@@ -496,13 +519,13 @@ public class QuickInfo {
       HitResult rayTrace = entity.m_19907_(reachDist, 0.0F, true);
       if (rayTrace.m_6662_() == Type.BLOCK) {
          BlockPos pos = ((BlockHitResult)rayTrace).m_82425_();
-         net.minecraft.world.level.block.state.BlockState state = minecraft.f_91073_.m_8055_(pos);
+         BlockState state = minecraft.f_91073_.m_8055_(pos);
          Fluid fluid = state.m_60819_().m_76152_();
          if (fluid == Fluids.f_76191_) {
             return;
          }
 
-         net.minecraft.resources.ResourceLocation loc = BuiltInRegistries.f_257020_.m_7981_(fluid);
+         ResourceLocation loc = BuiltInRegistries.f_257020_.m_7981_(fluid);
          String name = getName(loc);
          sb.append(fullLabel ? "Target Fluid: " : "TF: ");
          sb.append(name);
@@ -516,13 +539,14 @@ public class QuickInfo {
             sb.append(")");
          }
       }
+
    }
 
    private static void addTargetEntity(StringBuilder sb, boolean fullLabel, boolean detailedCoords, boolean showPos) {
       Entity entity = minecraft.f_91076_;
       if (entity != null) {
          BlockPos pos = entity.m_20183_();
-         net.minecraft.resources.ResourceLocation loc = BuiltInRegistries.f_256780_.m_7981_(entity.m_6095_());
+         ResourceLocation loc = BuiltInRegistries.f_256780_.m_7981_(entity.m_6095_());
          String name = getName(loc);
          if (loc != null) {
             sb.append(fullLabel ? "Target Entity: " : "TE: ");
@@ -546,6 +570,7 @@ public class QuickInfo {
                   sb.append(")");
                }
             }
+
          }
       }
    }
@@ -565,5 +590,12 @@ public class QuickInfo {
       if (sb.charAt(sb.length() - 3) == '.') {
          sb.append('0');
       }
+
+   }
+
+   static {
+      font = minecraft.f_91062_;
+      gpuLoadSmooth = 0.0;
+      gpuDebugInfo = new McDebugInfo();
    }
 }

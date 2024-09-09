@@ -12,10 +12,14 @@ public class ZipResourceProvider implements IResourceProvider {
       this.zipFile = zipFile;
    }
 
-   @Override
    public InputStream getResourceStream(String path) throws IOException {
       path = Utils.removePrefix(path, "/");
       ZipEntry zipEntry = this.zipFile.getEntry(path);
-      return zipEntry == null ? null : this.zipFile.getInputStream(zipEntry);
+      if (zipEntry == null) {
+         return null;
+      } else {
+         InputStream in = this.zipFile.getInputStream(zipEntry);
+         return in;
+      }
    }
 }

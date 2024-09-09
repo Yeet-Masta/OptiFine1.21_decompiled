@@ -20,7 +20,7 @@ public abstract class ExecutorProxy implements ExecutorService {
       this.delegate().shutdown();
    }
 
-   public List<Runnable> shutdownNow() {
+   public List shutdownNow() {
       return this.delegate().shutdownNow();
    }
 
@@ -36,31 +36,31 @@ public abstract class ExecutorProxy implements ExecutorService {
       return this.delegate().awaitTermination(timeout, unit);
    }
 
-   public <T> Future<T> submit(Callable<T> task) {
+   public Future submit(Callable task) {
       return this.delegate().submit(task);
    }
 
-   public <T> Future<T> submit(Runnable task, T result) {
+   public Future submit(Runnable task, Object result) {
       return this.delegate().submit(task, result);
    }
 
-   public Future<?> submit(Runnable task) {
+   public Future submit(Runnable task) {
       return this.delegate().submit(task);
    }
 
-   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+   public List invokeAll(Collection tasks) throws InterruptedException {
       return this.delegate().invokeAll(tasks);
    }
 
-   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+   public List invokeAll(Collection tasks, long timeout, TimeUnit unit) throws InterruptedException {
       return this.delegate().invokeAll(tasks, timeout, unit);
    }
 
-   public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-      return (T)this.delegate().invokeAny(tasks);
+   public Object invokeAny(Collection tasks) throws InterruptedException, ExecutionException {
+      return this.delegate().invokeAny(tasks);
    }
 
-   public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-      return (T)this.delegate().invokeAny(tasks, timeout, unit);
+   public Object invokeAny(Collection tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      return this.delegate().invokeAny(tasks, timeout, unit);
    }
 }

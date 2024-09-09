@@ -1,5 +1,5 @@
 package net.optifine.config;
 
-public interface ToBooleanFunction<T> {
-   boolean applyAsBool(T var1);
+public interface ToBooleanFunction {
+   boolean applyAsBool(Object var1);
 }

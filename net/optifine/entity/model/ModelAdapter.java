@@ -3,19 +3,22 @@ package net.optifine.entity.model;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.util.Either;
 
 public abstract class ModelAdapter {
-   private Either<EntityType, BlockEntityType> type;
+   private Either type;
    private String name;
    private float shadowSize;
    private String[] aliases;
 
    public ModelAdapter(EntityType entityType, String name, float shadowSize) {
-      this(Either.makeLeft(entityType), name, shadowSize, null);
+      this((Either)Either.makeLeft(entityType), name, shadowSize, (String[])null);
    }
 
    public ModelAdapter(EntityType entityType, String name, float shadowSize, String[] aliases) {
@@ -23,21 +26,21 @@ public abstract class ModelAdapter {
    }
 
    public ModelAdapter(BlockEntityType tileEntityType, String name, float shadowSize) {
-      this(Either.makeRight(tileEntityType), name, shadowSize, null);
+      this((Either)Either.makeRight(tileEntityType), name, shadowSize, (String[])null);
    }
 
    public ModelAdapter(BlockEntityType tileEntityType, String name, float shadowSize, String[] aliases) {
       this(Either.makeRight(tileEntityType), name, shadowSize, aliases);
    }
 
-   public ModelAdapter(Either<EntityType, BlockEntityType> type, String name, float shadowSize, String[] aliases) {
+   public ModelAdapter(Either type, String name, float shadowSize, String[] aliases) {
       this.type = type;
       this.name = name;
       this.shadowSize = shadowSize;
       this.aliases = aliases;
    }
 
-   public Either<EntityType, BlockEntityType> getType() {
+   public Either getType() {
       return this.type;
    }
 
@@ -53,34 +56,35 @@ public abstract class ModelAdapter {
       return this.shadowSize;
    }
 
-   public abstract net.minecraft.client.model.Model makeModel();
+   public abstract Model makeModel();
 
-   public abstract net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model var1, String var2);
+   public abstract ModelPart getModelRenderer(Model var1, String var2);
 
    public abstract String[] getModelRendererNames();
 
-   public abstract IEntityRenderer makeEntityRender(net.minecraft.client.model.Model var1, float var2, RendererCache var3, int var4);
+   public abstract IEntityRenderer makeEntityRender(Model var1, float var2, RendererCache var3, int var4);
 
-   public boolean setTextureLocation(IEntityRenderer er, net.minecraft.resources.ResourceLocation textureLocation) {
+   public boolean setTextureLocation(IEntityRenderer er, ResourceLocation textureLocation) {
       return false;
    }
 
-   public net.minecraft.client.model.geom.ModelPart[] getModelRenderers(net.minecraft.client.model.Model model) {
+   public ModelPart[] getModelRenderers(Model model) {
       String[] names = this.getModelRendererNames();
-      List<net.minecraft.client.model.geom.ModelPart> list = new ArrayList();
+      List list = new ArrayList();
 
-      for (int i = 0; i < names.length; i++) {
+      for(int i = 0; i < names.length; ++i) {
          String name = names[i];
-         net.minecraft.client.model.geom.ModelPart mr = this.getModelRenderer(model, name);
+         ModelPart mr = this.getModelRenderer(model, name);
          if (mr != null) {
             list.add(mr);
          }
       }
 
-      return (net.minecraft.client.model.geom.ModelPart[])list.toArray(new net.minecraft.client.model.geom.ModelPart[list.size()]);
+      ModelPart[] mrs = (ModelPart[])list.toArray(new ModelPart[list.size()]);
+      return mrs;
    }
 
-   public static net.minecraft.client.model.geom.ModelPart bakeModelLayer(ModelLayerLocation loc) {
+   public static ModelPart bakeModelLayer(ModelLayerLocation loc) {
       return Minecraft.m_91087_().m_91290_().getContext().m_174023_(loc);
    }
 }

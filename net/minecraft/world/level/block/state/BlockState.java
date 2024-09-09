@@ -6,21 +6,20 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase;
 import net.minecraftforge.common.extensions.IForgeBlockState;
 import net.optifine.Config;
 import net.optifine.util.BlockUtils;
 
-public class BlockState extends BlockStateBase implements IForgeBlockState {
-   public static final Codec<net.minecraft.world.level.block.state.BlockState> f_61039_ = m_61127_(BuiltInRegistries.f_256975_.m_194605_(), Block::m_49966_)
-      .stable();
+public class BlockState extends BlockBehaviour.BlockStateBase implements IForgeBlockState {
+   public static final Codec f_61039_;
    private int blockId = -1;
    private int metadata = -1;
-   private net.minecraft.resources.ResourceLocation blockLocation;
+   private ResourceLocation blockLocation;
    private int blockStateId = -1;
-   private static final AtomicInteger blockStateIdCounter = new AtomicInteger(0);
+   private static final AtomicInteger blockStateIdCounter;
 
    public int getBlockId() {
       if (this.blockId < 0) {
@@ -34,7 +33,7 @@ public class BlockState extends BlockStateBase implements IForgeBlockState {
       if (this.metadata < 0) {
          this.metadata = BlockUtils.getMetadata(this);
          if (this.metadata < 0) {
-            Config.warn("Metadata not found, block: " + this.getBlockLocation());
+            Config.warn("Metadata not found, block: " + String.valueOf(this.getBlockLocation()));
             this.metadata = 0;
          }
       }
@@ -42,7 +41,7 @@ public class BlockState extends BlockStateBase implements IForgeBlockState {
       return this.metadata;
    }
 
-   public net.minecraft.resources.ResourceLocation getBlockLocation() {
+   public ResourceLocation getBlockLocation() {
       if (this.blockLocation == null) {
          this.blockLocation = BuiltInRegistries.f_256975_.m_7981_(this.m_60734_());
       }
@@ -70,15 +69,16 @@ public class BlockState extends BlockStateBase implements IForgeBlockState {
       return this.f_60593_ != null && this.f_60593_.f_60844_;
    }
 
-   public BlockState(
-      Block blockIn,
-      Reference2ObjectArrayMap<net.minecraft.world.level.block.state.properties.Property<?>, Comparable<?>> propertiesIn,
-      MapCodec<net.minecraft.world.level.block.state.BlockState> codecIn
-   ) {
+   public BlockState(Block blockIn, Reference2ObjectArrayMap propertiesIn, MapCodec codecIn) {
       super(blockIn, propertiesIn, codecIn);
    }
 
-   protected net.minecraft.world.level.block.state.BlockState m_7160_() {
+   protected BlockState m_7160_() {
       return this;
+   }
+
+   static {
+      f_61039_ = m_61127_(BuiltInRegistries.f_256975_.m_194605_(), Block::m_49966_).stable();
+      blockStateIdCounter = new AtomicInteger(0);
    }
 }

@@ -23,4 +23,9 @@ public enum GlStateManager$C_3138_ {
    public static int m_157129_() {
       return INSTANCE.f_84809_;
    }
+
+   // $FF: synthetic method
+   private static GlStateManager$C_3138_[] $values() {
+      return new GlStateManager$C_3138_[]{INSTANCE};
+   }
 }

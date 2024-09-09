@@ -1,5 +1,6 @@
 package net.optifine;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,12 +18,18 @@ import javax.imageio.ImageIO;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -38,7 +46,10 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.TallGrassBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.phys.Vec3;
 import net.optifine.config.ConnectedParser;
 import net.optifine.config.MatchBlock;
 import net.optifine.render.RenderEnv;
@@ -88,9 +99,9 @@ public class CustomColors {
    private static int expBarTextColor = -1;
    private static int bossTextColor = -1;
    private static int signTextColor = -1;
-   private static net.minecraft.world.phys.Vec3 fogColorNether = null;
-   private static net.minecraft.world.phys.Vec3 fogColorEnd = null;
-   private static net.minecraft.world.phys.Vec3 skyColorEnd = null;
+   private static Vec3 fogColorNether = null;
+   private static Vec3 fogColorEnd = null;
+   private static Vec3 skyColorEnd = null;
    private static int[] spawnEggPrimaryColors = null;
    private static int[] spawnEggSecondaryColors = null;
    private static int[] wolfCollarColors = null;
@@ -99,71 +110,14 @@ public class CustomColors {
    private static int[] mapColorsOriginal = null;
    private static int[] dyeColorsOriginal = null;
    private static int[] potionColors = null;
-   private static final net.minecraft.world.level.block.state.BlockState BLOCK_STATE_DIRT = Blocks.f_50493_.m_49966_();
-   private static final net.minecraft.world.level.block.state.BlockState BLOCK_STATE_WATER = Blocks.f_49990_.m_49966_();
-   public static Random random = new Random();
-   private static final CustomColors.IColorizer COLORIZER_GRASS = new CustomColors.IColorizer() {
-      @Override
-      public int getColor(net.minecraft.world.level.block.state.BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
-         Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
-         return CustomColors.swampGrassColors != null && biome == BiomeUtils.SWAMP
-            ? CustomColors.swampGrassColors.getColor(biome, blockPos)
-            : biome.m_47464_((double)blockPos.m_123341_(), (double)blockPos.m_123343_());
-      }
-
-      @Override
-      public boolean isColorConstant() {
-         return false;
-      }
-   };
-   private static final CustomColors.IColorizer COLORIZER_FOLIAGE = new CustomColors.IColorizer() {
-      @Override
-      public int getColor(net.minecraft.world.level.block.state.BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
-         Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
-         return CustomColors.swampFoliageColors != null && biome == BiomeUtils.SWAMP
-            ? CustomColors.swampFoliageColors.getColor(biome, blockPos)
-            : biome.m_47542_();
-      }
-
-      @Override
-      public boolean isColorConstant() {
-         return false;
-      }
-   };
-   private static final CustomColors.IColorizer COLORIZER_FOLIAGE_PINE = new CustomColors.IColorizer() {
-      @Override
-      public int getColor(net.minecraft.world.level.block.state.BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
-         return CustomColors.foliagePineColors != null ? CustomColors.foliagePineColors.getColor(blockAccess, blockPos) : FoliageColor.m_46106_();
-      }
-
-      @Override
-      public boolean isColorConstant() {
-         return CustomColors.foliagePineColors == null;
-      }
-   };
-   private static final CustomColors.IColorizer COLORIZER_FOLIAGE_BIRCH = new CustomColors.IColorizer() {
-      @Override
-      public int getColor(net.minecraft.world.level.block.state.BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
-         return CustomColors.foliageBirchColors != null ? CustomColors.foliageBirchColors.getColor(blockAccess, blockPos) : FoliageColor.m_46112_();
-      }
-
-      @Override
-      public boolean isColorConstant() {
-         return CustomColors.foliageBirchColors == null;
-      }
-   };
-   private static final CustomColors.IColorizer COLORIZER_WATER = new CustomColors.IColorizer() {
-      @Override
-      public int getColor(net.minecraft.world.level.block.state.BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
-         Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
-         return CustomColors.waterColors != null ? CustomColors.waterColors.getColor(biome, blockPos) : biome.m_47560_();
-      }
-
-      @Override
-      public boolean isColorConstant() {
-         return false;
-      }
-   };
+   private static final BlockState BLOCK_STATE_DIRT;
+   private static final BlockState BLOCK_STATE_WATER;
+   public static Random random;
+   private static final IColorizer COLORIZER_GRASS;
+   private static final IColorizer COLORIZER_FOLIAGE;
+   private static final IColorizer COLORIZER_FOLIAGE_PINE;
+   private static final IColorizer COLORIZER_FOLIAGE_BIRCH;
+   private static final IColorizer COLORIZER_WATER;
 
    public static void update() {
       paletteFormatDefault = "vanilla";
@@ -237,7 +191,7 @@ public class CustomColors {
          lavaDropColors = getCustomColors(mcpColormap + "lavadrop.png", -1, 1);
          String[] myceliumPaths = new String[]{"myceliumparticle.png", "myceliumparticlecolor.png"};
          myceliumParticleColors = getCustomColors(mcpColormap, myceliumPaths, -1, -1);
-         Pair<LightMapPack[], Integer> lightMaps = parseLightMapPacks();
+         Pair lightMaps = parseLightMapPacks();
          lightMapPacks = (LightMapPack[])lightMaps.getLeft();
          lightmapMinDimensionId = (Integer)lightMaps.getRight();
          readColorProperties("optifine/color.properties");
@@ -248,7 +202,7 @@ public class CustomColors {
 
    private static String getValidProperty(String fileName, String key, String[] validValues, String valDef) {
       try {
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(fileName);
+         ResourceLocation loc = new ResourceLocation(fileName);
          InputStream in = Config.getResourceStream(loc);
          if (in == null) {
             return valDef;
@@ -260,7 +214,7 @@ public class CustomColors {
             if (val == null) {
                return valDef;
             } else {
-               List<String> listValidValues = Arrays.asList(validValues);
+               List listValidValues = Arrays.asList(validValues);
                if (!listValidValues.contains(val)) {
                   warn("Invalid value: " + key + "=" + val);
                   warn("Expected values: " + Config.arrayToString((Object[])validValues));
@@ -279,39 +233,41 @@ public class CustomColors {
       }
    }
 
-   private static Pair<LightMapPack[], Integer> parseLightMapPacks() {
+   private static Pair parseLightMapPacks() {
       String lightmapPrefix = "optifine/lightmap/world";
       String lightmapSuffix = ".png";
       String[] pathsLightmap = ResUtils.collectFiles(lightmapPrefix, lightmapSuffix);
-      Map<Integer, String> mapLightmaps = new HashMap();
+      Map mapLightmaps = new HashMap();
 
-      for (int i = 0; i < pathsLightmap.length; i++) {
+      int maxDimId;
+      for(int i = 0; i < pathsLightmap.length; ++i) {
          String path = pathsLightmap[i];
          String dimIdStr = StrUtils.removePrefixSuffix(path, lightmapPrefix, lightmapSuffix);
-         int dimId = Config.parseInt(dimIdStr, Integer.MIN_VALUE);
-         if (dimId != Integer.MIN_VALUE) {
-            mapLightmaps.put(dimId, path);
+         maxDimId = Config.parseInt(dimIdStr, Integer.MIN_VALUE);
+         if (maxDimId != Integer.MIN_VALUE) {
+            mapLightmaps.put(maxDimId, path);
          }
       }
 
-      Set<Integer> setDimIds = mapLightmaps.keySet();
+      Set setDimIds = mapLightmaps.keySet();
       Integer[] dimIds = (Integer[])setDimIds.toArray(new Integer[setDimIds.size()]);
       Arrays.sort(dimIds);
       if (dimIds.length <= 0) {
-         return new ImmutablePair(null, 0);
+         return new ImmutablePair((Object)null, 0);
       } else {
          int minDimId = dimIds[0];
-         int maxDimId = dimIds[dimIds.length - 1];
+         maxDimId = dimIds[dimIds.length - 1];
          int countDim = maxDimId - minDimId + 1;
          CustomColormap[] colormaps = new CustomColormap[countDim];
 
-         for (int ix = 0; ix < dimIds.length; ix++) {
-            Integer dimId = dimIds[ix];
+         for(int i = 0; i < dimIds.length; ++i) {
+            Integer dimId = dimIds[i];
             String path = (String)mapLightmaps.get(dimId);
             CustomColormap colors = getCustomColors(path, -1, -1);
             if (colors != null) {
                if (colors.getWidth() < 16) {
-                  warn("Invalid lightmap width: " + colors.getWidth() + ", path: " + path);
+                  int var10000 = colors.getWidth();
+                  warn("Invalid lightmap width: " + var10000 + ", path: " + path);
                } else {
                   int lightmapIndex = dimId - minDimId;
                   colormaps[lightmapIndex] = colors;
@@ -321,8 +277,8 @@ public class CustomColors {
 
          LightMapPack[] lmps = new LightMapPack[colormaps.length];
 
-         for (int ixx = 0; ixx < colormaps.length; ixx++) {
-            CustomColormap cm = colormaps[ixx];
+         for(int i = 0; i < colormaps.length; ++i) {
+            CustomColormap cm = colormaps[i];
             if (cm != null) {
                String name = cm.name;
                String basePath = cm.basePath;
@@ -332,7 +288,7 @@ public class CustomColors {
                LightMap lmRain = cmRain != null ? new LightMap(cmRain) : null;
                LightMap lmThunder = cmThunder != null ? new LightMap(cmThunder) : null;
                LightMapPack lmp = new LightMapPack(lm, lmRain, lmThunder);
-               lmps[ixx] = lmp;
+               lmps[i] = lmp;
             }
          }
 
@@ -342,7 +298,7 @@ public class CustomColors {
 
    private static int getTextureHeight(String path, int defHeight) {
       try {
-         InputStream in = Config.getResourceStream(new net.minecraft.resources.ResourceLocation(path));
+         InputStream in = Config.getResourceStream(new ResourceLocation(path));
          if (in == null) {
             return defHeight;
          } else {
@@ -357,7 +313,7 @@ public class CustomColors {
 
    private static void readColorProperties(String fileName) {
       try {
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(fileName);
+         ResourceLocation loc = new ResourceLocation(fileName);
          InputStream in = Config.getResourceStream(loc);
          if (in == null) {
             return;
@@ -367,12 +323,12 @@ public class CustomColors {
          Properties props = new PropertiesOrdered();
          props.load(in);
          in.close();
-         particleWaterColor = readColor(props, new String[]{"particle.water", "drop.water"});
-         particlePortalColor = readColor(props, "particle.portal");
-         lilyPadColor = readColor(props, "lilypad");
-         expBarTextColor = readColor(props, "text.xpbar");
-         bossTextColor = readColor(props, "text.boss");
-         signTextColor = readColor(props, "text.sign");
+         particleWaterColor = readColor(props, (String[])(new String[]{"particle.water", "drop.water"}));
+         particlePortalColor = readColor(props, (String)"particle.portal");
+         lilyPadColor = readColor(props, (String)"lilypad");
+         expBarTextColor = readColor(props, (String)"text.xpbar");
+         bossTextColor = readColor(props, (String)"text.boss");
+         signTextColor = readColor(props, (String)"text.sign");
          fogColorNether = readColorVec3(props, "fog.nether");
          fogColorEnd = readColorVec3(props, "fog.end");
          skyColorEnd = readColorVec3(props, "sky.end");
@@ -406,26 +362,32 @@ public class CustomColors {
          return;
       } catch (IOException var7) {
          Config.warn("Error parsing: " + fileName);
-         Config.warn(var7.getClass().getName() + ": " + var7.getMessage());
+         String var10000 = var7.getClass().getName();
+         Config.warn(var10000 + ": " + var7.getMessage());
       }
+
    }
 
    private static CustomColormap[] readCustomColormaps(Properties props, String fileName) {
       List list = new ArrayList();
       String palettePrefix = "palette.block.";
       Map map = new HashMap();
+      Set keys = props.keySet();
+      Iterator iter = keys.iterator();
 
-      for (String key : props.keySet()) {
-         String value = props.getProperty(key);
+      String name;
+      while(iter.hasNext()) {
+         String key = (String)iter.next();
+         name = props.getProperty(key);
          if (key.startsWith(palettePrefix)) {
-            map.put(key, value);
+            map.put(key, name);
          }
       }
 
       String[] propNames = (String[])map.keySet().toArray(new String[map.size()]);
 
-      for (int i = 0; i < propNames.length; i++) {
-         String name = propNames[i];
+      for(int i = 0; i < propNames.length; ++i) {
+         name = propNames[i];
          String value = props.getProperty(name);
          dbg("Block palette: " + name + " = " + value);
          String path = name.substring(palettePrefix.length());
@@ -438,7 +400,7 @@ public class CustomColors {
             ConnectedParser cp = new ConnectedParser("CustomColors");
             MatchBlock[] mbs = cp.parseMatchBlocks(value);
             if (mbs != null && mbs.length > 0) {
-               for (int m = 0; m < mbs.length; m++) {
+               for(int m = 0; m < mbs.length; ++m) {
                   MatchBlock mb = mbs[m];
                   colors.addMatchBlock(mb);
                }
@@ -450,7 +412,12 @@ public class CustomColors {
          }
       }
 
-      return list.size() <= 0 ? null : (CustomColormap[])list.toArray(new CustomColormap[list.size()]);
+      if (list.size() <= 0) {
+         return null;
+      } else {
+         CustomColormap[] cms = (CustomColormap[])list.toArray(new CustomColormap[list.size()]);
+         return cms;
+      }
    }
 
    private static CustomColormap[][] readBlockColormaps(String[] basePaths, CustomColormap[] basePalettes, int width, int height) {
@@ -458,12 +425,13 @@ public class CustomColors {
       Arrays.sort(paths);
       List blockList = new ArrayList();
 
-      for (int i = 0; i < paths.length; i++) {
+      int i;
+      for(i = 0; i < paths.length; ++i) {
          String path = paths[i];
          dbg("Block colormap: " + path);
 
          try {
-            net.minecraft.resources.ResourceLocation locFile = new net.minecraft.resources.ResourceLocation("minecraft", path);
+            ResourceLocation locFile = new ResourceLocation("minecraft", path);
             InputStream in = Config.getResourceStream(locFile);
             if (in == null) {
                warn("File not found: " + path);
@@ -484,19 +452,24 @@ public class CustomColors {
       }
 
       if (basePalettes != null) {
-         for (int i = 0; i < basePalettes.length; i++) {
+         for(i = 0; i < basePalettes.length; ++i) {
             CustomColormap cm = basePalettes[i];
             addToBlockList(cm, blockList);
          }
       }
 
-      return blockList.size() <= 0 ? null : blockListToArray(blockList);
+      if (blockList.size() <= 0) {
+         return null;
+      } else {
+         CustomColormap[][] cmArr = blockListToArray(blockList);
+         return cmArr;
+      }
    }
 
    private static void addToBlockList(CustomColormap cm, List blockList) {
       int[] ids = cm.getMatchBlockIds();
       if (ids != null && ids.length > 0) {
-         for (int i = 0; i < ids.length; i++) {
+         for(int i = 0; i < ids.length; ++i) {
             int blockId = ids[i];
             if (blockId < 0) {
                warn("Invalid block ID: " + blockId);
@@ -504,14 +477,15 @@ public class CustomColors {
                addToList(cm, blockList, blockId);
             }
          }
+
       } else {
          warn("No match blocks: " + Config.arrayToString(ids));
       }
    }
 
    private static void addToList(CustomColormap cm, List list, int id) {
-      while (id >= list.size()) {
-         list.add(null);
+      while(id >= list.size()) {
+         list.add((Object)null);
       }
 
       List subList = (List)list.get(id);
@@ -520,13 +494,13 @@ public class CustomColors {
          list.set(id, subList);
       }
 
-      subList.add(cm);
+      ((List)subList).add(cm);
    }
 
    private static CustomColormap[][] blockListToArray(List list) {
       CustomColormap[][] colArr = new CustomColormap[list.size()][];
 
-      for (int i = 0; i < list.size(); i++) {
+      for(int i = 0; i < list.size(); ++i) {
          List subList = (List)list.get(i);
          if (subList != null) {
             CustomColormap[] subArr = (CustomColormap[])subList.toArray(new CustomColormap[subList.size()]);
@@ -538,7 +512,7 @@ public class CustomColors {
    }
 
    private static int readColor(Properties props, String[] names) {
-      for (int i = 0; i < names.length; i++) {
+      for(int i = 0; i < names.length; ++i) {
          String name = names[i];
          int col = readColor(props, name);
          if (col >= 0) {
@@ -573,30 +547,31 @@ public class CustomColors {
          str = str.trim();
 
          try {
-            return Integer.parseInt(str, 16) & 16777215;
+            int val = Integer.parseInt(str, 16) & 16777215;
+            return val;
          } catch (NumberFormatException var2) {
             return -1;
          }
       }
    }
 
-   private static net.minecraft.world.phys.Vec3 readColorVec3(Properties props, String name) {
+   private static Vec3 readColorVec3(Properties props, String name) {
       int col = readColor(props, name);
       if (col < 0) {
          return null;
       } else {
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
-         return new net.minecraft.world.phys.Vec3((double)redF, (double)greenF, (double)blueF);
+         return new Vec3((double)redF, (double)greenF, (double)blueF);
       }
    }
 
    private static CustomColormap getCustomColors(String basePath, String[] paths, int width, int height) {
-      for (int i = 0; i < paths.length; i++) {
+      for(int i = 0; i < paths.length; ++i) {
          String path = paths[i];
          path = basePath + path;
          CustomColormap cols = getCustomColors(path, width, height);
@@ -610,14 +585,14 @@ public class CustomColors {
 
    public static CustomColormap getCustomColors(String pathImage, int width, int height) {
       try {
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(pathImage);
+         ResourceLocation loc = new ResourceLocation(pathImage);
          if (!Config.hasResource(loc)) {
             return null;
          } else {
             dbg("Colormap " + pathImage);
             Properties props = new PropertiesOrdered();
             String pathProps = StrUtils.replaceSuffix(pathImage, ".png", ".properties");
-            net.minecraft.resources.ResourceLocation locProps = new net.minecraft.resources.ResourceLocation(pathProps);
+            ResourceLocation locProps = new ResourceLocation(pathProps);
             if (Config.hasResource(locProps)) {
                InputStream in = Config.getResourceStream(locProps);
                props.load(in);
@@ -642,25 +617,13 @@ public class CustomColors {
       useDefaultGrassFoliageColors = foliageBirchColors == null && foliagePineColors == null && swampGrassColors == null && swampFoliageColors == null;
    }
 
-   public static int getColorMultiplier(
-      net.minecraft.client.renderer.block.model.BakedQuad quad,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockAndTintGetter blockAccess,
-      BlockPos blockPos,
-      RenderEnv renderEnv
-   ) {
+   public static int getColorMultiplier(BakedQuad quad, BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos, RenderEnv renderEnv) {
       return getColorMultiplier(quad.m_111304_(), blockState, blockAccess, blockPos, renderEnv);
    }
 
-   public static int getColorMultiplier(
-      boolean quadHasTintIndex,
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockAndTintGetter blockAccess,
-      BlockPos blockPos,
-      RenderEnv renderEnv
-   ) {
+   public static int getColorMultiplier(boolean quadHasTintIndex, BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos, RenderEnv renderEnv) {
       Block block = blockState.m_60734_();
-      net.minecraft.world.level.block.state.BlockState blockStateColormap = blockState;
+      BlockState blockStateColormap = blockState;
       if (blockColormaps != null) {
          if (!quadHasTintIndex) {
             if (block == Blocks.f_50440_) {
@@ -698,67 +661,68 @@ public class CustomColors {
       } else if (useDefaultGrassFoliageColors) {
          return -1;
       } else {
-         CustomColors.IColorizer colorizer;
-         if (block == Blocks.f_50440_ || block instanceof TallGrassBlock || block instanceof DoublePlantBlock || block == Blocks.f_50130_) {
-            colorizer = COLORIZER_GRASS;
-         } else if (block instanceof DoublePlantBlock) {
-            colorizer = COLORIZER_GRASS;
-            if (blockState.m_61143_(DoublePlantBlock.f_52858_) == DoubleBlockHalf.UPPER) {
-               blockPos = blockPos.m_7495_();
-            }
-         } else if (block instanceof LeavesBlock) {
-            if (block == Blocks.f_50051_) {
-               colorizer = COLORIZER_FOLIAGE_PINE;
-            } else if (block == Blocks.f_50052_) {
-               colorizer = COLORIZER_FOLIAGE_BIRCH;
-            } else {
-               if (block == Blocks.f_271115_) {
-                  return -1;
+         IColorizer colorizer;
+         if (block != Blocks.f_50440_ && !(block instanceof TallGrassBlock) && !(block instanceof DoublePlantBlock) && block != Blocks.f_50130_) {
+            if (block instanceof DoublePlantBlock) {
+               colorizer = COLORIZER_GRASS;
+               if (blockState.m_61143_(DoublePlantBlock.f_52858_) == DoubleBlockHalf.UPPER) {
+                  blockPos = blockPos.m_7495_();
                }
+            } else if (block instanceof LeavesBlock) {
+               if (block == Blocks.f_50051_) {
+                  colorizer = COLORIZER_FOLIAGE_PINE;
+               } else if (block == Blocks.f_50052_) {
+                  colorizer = COLORIZER_FOLIAGE_BIRCH;
+               } else {
+                  if (block == Blocks.f_271115_) {
+                     return -1;
+                  }
 
-               if (!blockState.getBlockLocation().isDefaultNamespace()) {
+                  if (!blockState.getBlockLocation().isDefaultNamespace()) {
+                     return -1;
+                  }
+
+                  colorizer = COLORIZER_FOLIAGE;
+               }
+            } else {
+               if (block != Blocks.f_50191_) {
                   return -1;
                }
 
                colorizer = COLORIZER_FOLIAGE;
             }
          } else {
-            if (block != Blocks.f_50191_) {
-               return -1;
-            }
-
-            colorizer = COLORIZER_FOLIAGE;
+            colorizer = COLORIZER_GRASS;
          }
 
-         return Config.isSmoothBiomes() && !colorizer.isColorConstant()
-            ? getSmoothColorMultiplier(blockState, blockAccess, blockPos, colorizer, renderEnv.getColorizerBlockPosM())
-            : colorizer.getColor(blockStateColormap, blockAccess, blockPos);
+         return Config.isSmoothBiomes() && !colorizer.isColorConstant() ? getSmoothColorMultiplier(blockState, blockAccess, blockPos, colorizer, renderEnv.getColorizerBlockPosM()) : colorizer.getColor(blockStateColormap, blockAccess, blockPos);
       }
    }
 
    protected static Biome getColorBiome(BlockAndTintGetter blockAccess, BlockPos blockPos) {
       Biome biome = BiomeUtils.getBiome(blockAccess, blockPos);
-      return fixBiome(biome);
+      biome = fixBiome(biome);
+      return biome;
    }
 
    public static Biome fixBiome(Biome biome) {
       return (biome == BiomeUtils.SWAMP || biome == BiomeUtils.MANGROVE_SWAMP) && !Config.isSwampColors() ? BiomeUtils.PLAINS : biome;
    }
 
-   private static CustomColormap getBlockColormap(net.minecraft.world.level.block.state.BlockState blockState) {
+   private static CustomColormap getBlockColormap(BlockState blockState) {
       if (blockColormaps == null) {
          return null;
-      } else if (!(blockState instanceof net.minecraft.world.level.block.state.BlockState)) {
+      } else if (!(blockState instanceof BlockState)) {
          return null;
       } else {
-         net.minecraft.world.level.block.state.BlockState bs = blockState;
+         BlockState bs = blockState;
          int blockId = blockState.getBlockId();
          if (blockId >= 0 && blockId < blockColormaps.length) {
             CustomColormap[] cms = blockColormaps[blockId];
             if (cms == null) {
                return null;
             } else {
-               for (int i = 0; i < cms.length; i++) {
+               for(int i = 0; i < cms.length; ++i) {
                   CustomColormap cm = cms[i];
                   if (cm.matchesBlock(bs)) {
                      return cm;
@@ -773,13 +737,7 @@ public class CustomColors {
       }
    }
 
-   private static int getSmoothColorMultiplier(
-      net.minecraft.world.level.block.state.BlockState blockState,
-      BlockAndTintGetter blockAccess,
-      BlockPos blockPos,
-      CustomColors.IColorizer colorizer,
-      BlockPosM blockPosM
-   ) {
+   private static int getSmoothColorMultiplier(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos, IColorizer colorizer, BlockPosM blockPosM) {
       int sumRed = 0;
       int sumGreen = 0;
       int sumBlue = 0;
@@ -791,27 +749,28 @@ public class CustomColors {
       int width = radius * 2 + 1;
       int count = width * width;
 
-      for (int ix = x - radius; ix <= x + radius; ix++) {
-         for (int iz = z - radius; iz <= z + radius; iz++) {
+      int ix;
+      int iz;
+      int col;
+      for(ix = x - radius; ix <= x + radius; ++ix) {
+         for(iz = z - radius; iz <= z + radius; ++iz) {
             posM.setXyz(ix, y, iz);
-            int col = colorizer.getColor(blockState, blockAccess, posM);
-            sumRed += col >> 16 & 0xFF;
-            sumGreen += col >> 8 & 0xFF;
-            sumBlue += col & 0xFF;
+            col = colorizer.getColor(blockState, blockAccess, posM);
+            sumRed += col >> 16 & 255;
+            sumGreen += col >> 8 & 255;
+            sumBlue += col & 255;
          }
       }
 
-      int r = sumRed / count;
-      int g = sumGreen / count;
-      int b = sumBlue / count;
-      return r << 16 | g << 8 | b;
+      ix = sumRed / count;
+      iz = sumGreen / count;
+      col = sumBlue / count;
+      return ix << 16 | iz << 8 | col;
    }
 
-   public static int getFluidColor(
-      BlockAndTintGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, RenderEnv renderEnv
-   ) {
+   public static int getFluidColor(BlockAndTintGetter blockAccess, BlockState blockState, BlockPos blockPos, RenderEnv renderEnv) {
       Block block = blockState.m_60734_();
-      CustomColors.IColorizer colorizer = getBlockColormap(blockState);
+      IColorizer colorizer = getBlockColormap(blockState);
       if (colorizer == null && blockState.m_60734_() == Blocks.f_49990_) {
          colorizer = COLORIZER_WATER;
       }
@@ -819,9 +778,7 @@ public class CustomColors {
       if (colorizer == null) {
          return getBlockColors().m_92577_(blockState, blockAccess, blockPos, 0);
       } else {
-         return Config.isSmoothBiomes() && !colorizer.isColorConstant()
-            ? getSmoothColorMultiplier(blockState, blockAccess, blockPos, colorizer, renderEnv.getColorizerBlockPosM())
-            : colorizer.getColor(blockState, blockAccess, blockPos);
+         return Config.isSmoothBiomes() && !((IColorizer)colorizer).isColorConstant() ? getSmoothColorMultiplier(blockState, blockAccess, blockPos, (IColorizer)colorizer, renderEnv.getColorizerBlockPosM()) : ((IColorizer)colorizer).getColor(blockState, blockAccess, blockPos);
       }
    }
 
@@ -829,12 +786,12 @@ public class CustomColors {
       return Minecraft.m_91087_().m_91298_();
    }
 
-   public static void updatePortalFX(net.minecraft.client.particle.Particle fx) {
+   public static void updatePortalFX(Particle fx) {
       if (particlePortalColor >= 0) {
          int col = particlePortalColor;
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
@@ -842,13 +799,13 @@ public class CustomColors {
       }
    }
 
-   public static void updateLavaFX(net.minecraft.client.particle.Particle fx) {
+   public static void updateLavaFX(Particle fx) {
       if (lavaDropColors != null) {
          int age = fx.getAge();
          int col = lavaDropColors.getColor(age);
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
@@ -856,12 +813,12 @@ public class CustomColors {
       }
    }
 
-   public static void updateMyceliumFX(net.minecraft.client.particle.Particle fx) {
+   public static void updateMyceliumFX(Particle fx) {
       if (myceliumParticleColors != null) {
          int col = myceliumParticleColors.getColorRandom();
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
@@ -869,23 +826,24 @@ public class CustomColors {
       }
    }
 
-   private static int getRedstoneColor(net.minecraft.world.level.block.state.BlockState blockState) {
+   private static int getRedstoneColor(BlockState blockState) {
       if (redstoneColors == null) {
          return -1;
       } else {
          int level = getRedstoneLevel(blockState, 15);
-         return redstoneColors.getColor(level);
+         int col = redstoneColors.getColor(level);
+         return col;
       }
    }
 
-   public static void updateReddustFX(net.minecraft.client.particle.Particle fx, BlockAndTintGetter blockAccess, double x, double y, double z) {
+   public static void updateReddustFX(Particle fx, BlockAndTintGetter blockAccess, double x, double y, double z) {
       if (redstoneColors != null) {
-         net.minecraft.world.level.block.state.BlockState state = blockAccess.m_8055_(BlockPos.m_274561_(x, y, z));
+         BlockState state = blockAccess.m_8055_(BlockPos.m_274561_(x, y, z));
          int level = getRedstoneLevel(state, 15);
          int col = redstoneColors.getColor(level);
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
@@ -893,12 +851,18 @@ public class CustomColors {
       }
    }
 
-   private static int getRedstoneLevel(net.minecraft.world.level.block.state.BlockState state, int def) {
+   private static int getRedstoneLevel(BlockState state, int def) {
       Block block = state.m_60734_();
       if (!(block instanceof RedStoneWireBlock)) {
          return def;
       } else {
-         return !(state.m_61143_(RedStoneWireBlock.f_55500_) instanceof Integer valInt) ? def : valInt;
+         Object val = state.m_61143_(RedStoneWireBlock.f_55500_);
+         if (!(val instanceof Integer)) {
+            return def;
+         } else {
+            Integer valInt = (Integer)val;
+            return valInt;
+         }
       }
    }
 
@@ -915,8 +879,9 @@ public class CustomColors {
       if (xpOrbColors == null) {
          return -1;
       } else {
-         int index = (int)Math.round((double)((net.minecraft.util.Mth.m_14031_(timer) + 1.0F) * (float)(xpOrbColors.getLength() - 1)) / 2.0);
-         return xpOrbColors.getColor(index);
+         int index = (int)Math.round((double)((Mth.m_14031_(timer) + 1.0F) * (float)(xpOrbColors.getLength() - 1)) / 2.0);
+         int col = xpOrbColors.getColor(index);
+         return col;
       }
    }
 
@@ -925,27 +890,26 @@ public class CustomColors {
          return color;
       } else {
          int index = (int)(dur * (float)durabilityColors.getLength());
-         return durabilityColors.getColor(index);
+         int col = durabilityColors.getColor(index);
+         return col;
       }
    }
 
-   public static void updateWaterFX(
-      net.minecraft.client.particle.Particle fx, BlockAndTintGetter blockAccess, double x, double y, double z, RenderEnv renderEnv
-   ) {
+   public static void updateWaterFX(Particle fx, BlockAndTintGetter blockAccess, double x, double y, double z, RenderEnv renderEnv) {
       if (waterColors != null || blockColormaps != null || particleWaterColor >= 0) {
          BlockPos blockPos = BlockPos.m_274561_(x, y, z);
          renderEnv.reset(BLOCK_STATE_WATER, blockPos);
          int col = getFluidColor(blockAccess, BLOCK_STATE_WATER, blockPos, renderEnv);
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
          if (particleWaterColor >= 0) {
-            int redDrop = particleWaterColor >> 16 & 0xFF;
-            int greenDrop = particleWaterColor >> 8 & 0xFF;
-            int blueDrop = particleWaterColor & 0xFF;
+            int redDrop = particleWaterColor >> 16 & 255;
+            int greenDrop = particleWaterColor >> 8 & 255;
+            int blueDrop = particleWaterColor & 255;
             redF = (float)redDrop / 255.0F;
             greenF = (float)greenDrop / 255.0F;
             blueF = (float)blueDrop / 255.0F;
@@ -962,28 +926,26 @@ public class CustomColors {
       return lilyPadColor < 0 ? getBlockColors().m_92577_(Blocks.f_50196_.m_49966_(), blockAccess, blockPos, 0) : lilyPadColor;
    }
 
-   private static net.minecraft.world.phys.Vec3 getFogColorNether(net.minecraft.world.phys.Vec3 col) {
+   private static Vec3 getFogColorNether(Vec3 col) {
       return fogColorNether == null ? col : fogColorNether;
    }
 
-   private static net.minecraft.world.phys.Vec3 getFogColorEnd(net.minecraft.world.phys.Vec3 col) {
+   private static Vec3 getFogColorEnd(Vec3 col) {
       return fogColorEnd == null ? col : fogColorEnd;
    }
 
-   private static net.minecraft.world.phys.Vec3 getSkyColorEnd(net.minecraft.world.phys.Vec3 col) {
+   private static Vec3 getSkyColorEnd(Vec3 col) {
       return skyColorEnd == null ? col : skyColorEnd;
    }
 
-   public static net.minecraft.world.phys.Vec3 getSkyColor(
-      net.minecraft.world.phys.Vec3 skyColor3d, BlockAndTintGetter blockAccess, double x, double y, double z
-   ) {
+   public static Vec3 getSkyColor(Vec3 skyColor3d, BlockAndTintGetter blockAccess, double x, double y, double z) {
       if (skyColors == null) {
          return skyColor3d;
       } else {
          int col = skyColors.getColorSmooth(blockAccess, x, y, z, 3);
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
@@ -993,20 +955,19 @@ public class CustomColors {
          redF *= cRed;
          greenF *= cGreen;
          blueF *= cBlue;
-         return skyColorFader.getColor((double)redF, (double)greenF, (double)blueF);
+         Vec3 newCol = skyColorFader.getColor((double)redF, (double)greenF, (double)blueF);
+         return newCol;
       }
    }
 
-   private static net.minecraft.world.phys.Vec3 getFogColor(
-      net.minecraft.world.phys.Vec3 fogColor3d, BlockAndTintGetter blockAccess, double x, double y, double z
-   ) {
+   private static Vec3 getFogColor(Vec3 fogColor3d, BlockAndTintGetter blockAccess, double x, double y, double z) {
       if (fogColors == null) {
          return fogColor3d;
       } else {
          int col = fogColors.getColorSmooth(blockAccess, x, y, z, 3);
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
@@ -1016,38 +977,36 @@ public class CustomColors {
          redF *= cRed;
          greenF *= cGreen;
          blueF *= cBlue;
-         return fogColorFader.getColor((double)redF, (double)greenF, (double)blueF);
+         Vec3 newCol = fogColorFader.getColor((double)redF, (double)greenF, (double)blueF);
+         return newCol;
       }
    }
 
-   public static net.minecraft.world.phys.Vec3 getUnderwaterColor(BlockAndTintGetter blockAccess, double x, double y, double z) {
+   public static Vec3 getUnderwaterColor(BlockAndTintGetter blockAccess, double x, double y, double z) {
       return getUnderFluidColor(blockAccess, x, y, z, underwaterColors, underwaterColorFader);
    }
 
-   public static net.minecraft.world.phys.Vec3 getUnderlavaColor(BlockAndTintGetter blockAccess, double x, double y, double z) {
+   public static Vec3 getUnderlavaColor(BlockAndTintGetter blockAccess, double x, double y, double z) {
       return getUnderFluidColor(blockAccess, x, y, z, underlavaColors, underlavaColorFader);
    }
 
-   public static net.minecraft.world.phys.Vec3 getUnderFluidColor(
-      BlockAndTintGetter blockAccess, double x, double y, double z, CustomColormap underFluidColors, CustomColorFader underFluidColorFader
-   ) {
+   public static Vec3 getUnderFluidColor(BlockAndTintGetter blockAccess, double x, double y, double z, CustomColormap underFluidColors, CustomColorFader underFluidColorFader) {
       if (underFluidColors == null) {
          return null;
       } else {
          int col = underFluidColors.getColorSmooth(blockAccess, x, y, z, 3);
-         int red = col >> 16 & 0xFF;
-         int green = col >> 8 & 0xFF;
-         int blue = col & 0xFF;
+         int red = col >> 16 & 255;
+         int green = col >> 8 & 255;
+         int blue = col & 255;
          float redF = (float)red / 255.0F;
          float greenF = (float)green / 255.0F;
          float blueF = (float)blue / 255.0F;
-         return underFluidColorFader.getColor((double)redF, (double)greenF, (double)blueF);
+         Vec3 newCol = underFluidColorFader.getColor((double)redF, (double)greenF, (double)blueF);
+         return newCol;
       }
    }
 
-   private static int getStemColorMultiplier(
-      net.minecraft.world.level.block.state.BlockState blockState, BlockGetter blockAccess, BlockPos blockPos, RenderEnv renderEnv
-   ) {
+   private static int getStemColorMultiplier(BlockState blockState, BlockGetter blockAccess, BlockPos blockPos, RenderEnv renderEnv) {
       CustomColormap colors = stemColors;
       Block blockStem = blockState.m_60734_();
       if (blockStem == Blocks.f_50189_ && stemPumpkinColors != null) {
@@ -1068,20 +1027,13 @@ public class CustomColors {
       }
    }
 
-   public static boolean updateLightmap(
-      net.minecraft.client.multiplayer.ClientLevel world,
-      float torchFlickerX,
-      com.mojang.blaze3d.platform.NativeImage lmColors,
-      boolean nightvision,
-      float darkLight,
-      float partialTicks
-   ) {
+   public static boolean updateLightmap(ClientLevel world, float torchFlickerX, NativeImage lmColors, boolean nightvision, float darkLight, float partialTicks) {
       if (world == null) {
          return false;
       } else if (lightMapPacks == null) {
          return false;
       } else {
-         int dimensionId = WorldUtils.getDimensionId(world);
+         int dimensionId = WorldUtils.getDimensionId((Level)world);
          int lightMapIndex = dimensionId - lightmapMinDimensionId;
          if (lightMapIndex >= 0 && lightMapIndex < lightMapPacks.length) {
             LightMapPack lightMapPack = lightMapPacks[lightMapIndex];
@@ -1092,7 +1044,7 @@ public class CustomColors {
       }
    }
 
-   public static net.minecraft.world.phys.Vec3 getWorldFogColor(net.minecraft.world.phys.Vec3 fogVec, Level world, Entity renderViewEntity, float partialTicks) {
+   public static Vec3 getWorldFogColor(Vec3 fogVec, Level world, Entity renderViewEntity, float partialTicks) {
       Minecraft mc = Minecraft.m_91087_();
       if (WorldUtils.isNether(world)) {
          return getFogColorNether(fogVec);
@@ -1103,7 +1055,7 @@ public class CustomColors {
       }
    }
 
-   public static net.minecraft.world.phys.Vec3 getWorldSkyColor(net.minecraft.world.phys.Vec3 skyVec, Level world, Entity renderViewEntity, float partialTicks) {
+   public static Vec3 getWorldSkyColor(Vec3 skyVec, Level world, Entity renderViewEntity, float partialTicks) {
       Minecraft mc = Minecraft.m_91087_();
       if (WorldUtils.isOverworld(world) && renderViewEntity != null) {
          return getSkyColor(skyVec, mc.f_91073_, renderViewEntity.m_20185_(), renderViewEntity.m_20186_() + 1.0, renderViewEntity.m_20189_());
@@ -1113,19 +1065,41 @@ public class CustomColors {
    }
 
    private static int[] readSpawnEggColors(Properties props, String fileName, String prefix, String logName) {
-      List<Integer> list = new ArrayList();
+      List list = new ArrayList();
       Set keys = props.keySet();
       int countColors = 0;
+      Iterator iter = keys.iterator();
 
-      for (String key : keys) {
-         String value = props.getProperty(key);
-         if (key.startsWith(prefix)) {
+      while(true) {
+         while(true) {
+            String key;
+            String value;
+            do {
+               if (!iter.hasNext()) {
+                  if (countColors <= 0) {
+                     return null;
+                  }
+
+                  dbg(logName + " colors: " + countColors);
+                  int[] colors = new int[list.size()];
+
+                  for(int i = 0; i < colors.length; ++i) {
+                     colors[i] = (Integer)list.get(i);
+                  }
+
+                  return colors;
+               }
+
+               key = (String)iter.next();
+               value = props.getProperty(key);
+            } while(!key.startsWith(prefix));
+
             String name = StrUtils.removePrefix(key, prefix);
             int id = EntityUtils.getEntityIdByName(name);
 
             try {
                if (id < 0) {
-                  id = EntityUtils.getEntityIdByLocation(new net.minecraft.resources.ResourceLocation(name).toString());
+                  id = EntityUtils.getEntityIdByLocation((new ResourceLocation(name)).toString());
                }
             } catch (ResourceLocationException var13) {
                Config.warn("ResourceLocationException: " + var13.getMessage());
@@ -1138,28 +1112,15 @@ public class CustomColors {
                if (color < 0) {
                   warn("Invalid spawn egg color: " + key + " = " + value);
                } else {
-                  while (list.size() <= id) {
+                  while(list.size() <= id) {
                      list.add(-1);
                   }
 
                   list.set(id, color);
-                  countColors++;
+                  ++countColors;
                }
             }
          }
-      }
-
-      if (countColors <= 0) {
-         return null;
-      } else {
-         dbg(logName + " colors: " + countColors);
-         int[] colors = new int[list.size()];
-
-         for (int i = 0; i < colors.length; i++) {
-            colors[i] = (Integer)list.get(i);
-         }
-
-         return colors;
       }
    }
 
@@ -1205,44 +1166,54 @@ public class CustomColors {
    }
 
    private static int[] readDyeColors(Properties props, String fileName, String prefix, String logName) {
-      net.minecraft.world.item.DyeColor[] dyeValues = net.minecraft.world.item.DyeColor.values();
-      Map<String, net.minecraft.world.item.DyeColor> mapDyes = new HashMap();
+      DyeColor[] dyeValues = DyeColor.values();
+      Map mapDyes = new HashMap();
 
-      for (int i = 0; i < dyeValues.length; i++) {
-         net.minecraft.world.item.DyeColor dye = dyeValues[i];
+      for(int i = 0; i < dyeValues.length; ++i) {
+         DyeColor dye = dyeValues[i];
          mapDyes.put(dye.m_7912_(), dye);
       }
 
-      mapDyes.put("lightBlue", net.minecraft.world.item.DyeColor.LIGHT_BLUE);
-      mapDyes.put("silver", net.minecraft.world.item.DyeColor.LIGHT_GRAY);
+      mapDyes.put("lightBlue", DyeColor.LIGHT_BLUE);
+      mapDyes.put("silver", DyeColor.LIGHT_GRAY);
       int[] colors = new int[dyeValues.length];
       int countColors = 0;
+      Set keys = props.keySet();
+      Iterator iter = keys.iterator();
 
-      for (String key : props.keySet()) {
-         String value = props.getProperty(key);
-         if (key.startsWith(prefix)) {
+      while(true) {
+         while(true) {
+            String key;
+            String value;
+            do {
+               if (!iter.hasNext()) {
+                  if (countColors <= 0) {
+                     return null;
+                  }
+
+                  dbg(logName + " colors: " + countColors);
+                  return colors;
+               }
+
+               key = (String)iter.next();
+               value = props.getProperty(key);
+            } while(!key.startsWith(prefix));
+
             String name = StrUtils.removePrefix(key, prefix);
-            net.minecraft.world.item.DyeColor dye = (net.minecraft.world.item.DyeColor)mapDyes.get(name);
+            DyeColor dye = (DyeColor)mapDyes.get(name);
             int color = parseColor(value);
             if (dye != null && color >= 0) {
                int argb = ARGB32.m_321570_(color);
                colors[dye.ordinal()] = argb;
-               countColors++;
+               ++countColors;
             } else {
                warn("Invalid color: " + key + " = " + value);
             }
          }
       }
-
-      if (countColors <= 0) {
-         return null;
-      } else {
-         dbg(logName + " colors: " + countColors);
-         return colors;
-      }
    }
 
-   private static int getDyeColors(net.minecraft.world.item.DyeColor dye, int[] dyeColors, int color) {
+   private static int getDyeColors(DyeColor dye, int[] dyeColors, int color) {
       if (dyeColors == null) {
          return color;
       } else if (dye == null) {
@@ -1253,11 +1224,11 @@ public class CustomColors {
       }
    }
 
-   public static int getWolfCollarColors(net.minecraft.world.item.DyeColor dye, int color) {
+   public static int getWolfCollarColors(DyeColor dye, int color) {
       return getDyeColors(dye, wolfCollarColors, color);
    }
 
-   public static int getSheepColors(net.minecraft.world.item.DyeColor dye, int color) {
+   public static int getSheepColors(DyeColor dye, int color) {
       return getDyeColors(dye, sheepColors, color);
    }
 
@@ -1265,27 +1236,37 @@ public class CustomColors {
       int[] colors = new int[32];
       Arrays.fill(colors, -1);
       int countColors = 0;
+      Set keys = props.keySet();
+      Iterator iter = keys.iterator();
 
-      for (String key : props.keySet()) {
-         String value = props.getProperty(key);
-         if (key.startsWith(prefix)) {
+      while(true) {
+         while(true) {
+            String key;
+            String value;
+            do {
+               if (!iter.hasNext()) {
+                  if (countColors <= 0) {
+                     return null;
+                  }
+
+                  dbg(logName + " colors: " + countColors);
+                  return colors;
+               }
+
+               key = (String)iter.next();
+               value = props.getProperty(key);
+            } while(!key.startsWith(prefix));
+
             String name = StrUtils.removePrefix(key, prefix);
             int code = Config.parseInt(name, -1);
             int color = parseColor(value);
             if (code >= 0 && code < colors.length && color >= 0) {
                colors[code] = color;
-               countColors++;
+               ++countColors;
             } else {
                warn("Invalid color: " + key + " = " + value);
             }
          }
-      }
-
-      if (countColors <= 0) {
-         return null;
-      } else {
-         dbg(logName + " colors: " + countColors);
-         return colors;
       }
    }
 
@@ -1301,30 +1282,40 @@ public class CustomColors {
    }
 
    private static int[] readMapColors(Properties props, String fileName, String prefix, String logName) {
-      int[] colors = new int[net.minecraft.world.level.material.MapColor.f_283862_.length];
+      int[] colors = new int[MapColor.f_283862_.length];
       Arrays.fill(colors, -1);
       int countColors = 0;
+      Set keys = props.keySet();
+      Iterator iter = keys.iterator();
 
-      for (String key : props.keySet()) {
-         String value = props.getProperty(key);
-         if (key.startsWith(prefix)) {
+      while(true) {
+         while(true) {
+            String key;
+            String value;
+            do {
+               if (!iter.hasNext()) {
+                  if (countColors <= 0) {
+                     return null;
+                  }
+
+                  dbg(logName + " colors: " + countColors);
+                  return colors;
+               }
+
+               key = (String)iter.next();
+               value = props.getProperty(key);
+            } while(!key.startsWith(prefix));
+
             String name = StrUtils.removePrefix(key, prefix);
             int index = getMapColorIndex(name);
             int color = parseColor(value);
             if (index >= 0 && index < colors.length && color >= 0) {
                colors[index] = color;
-               countColors++;
+               ++countColors;
             } else {
                warn("Invalid color: " + key + " = " + value);
             }
          }
-      }
-
-      if (countColors <= 0) {
-         return null;
-      } else {
-         dbg(logName + " colors: " + countColors);
-         return colors;
       }
    }
 
@@ -1332,33 +1323,46 @@ public class CustomColors {
       int[] colors = new int[getMaxPotionId()];
       Arrays.fill(colors, -1);
       int countColors = 0;
+      Set keys = props.keySet();
+      Iterator iter = keys.iterator();
 
-      for (String key : props.keySet()) {
-         String value = props.getProperty(key);
-         if (key.startsWith(prefix)) {
+      while(true) {
+         while(true) {
+            String key;
+            String value;
+            do {
+               if (!iter.hasNext()) {
+                  if (countColors <= 0) {
+                     return null;
+                  }
+
+                  dbg(logName + " colors: " + countColors);
+                  return colors;
+               }
+
+               key = (String)iter.next();
+               value = props.getProperty(key);
+            } while(!key.startsWith(prefix));
+
             int index = getPotionId(key);
             int color = parseColor(value);
             if (index >= 0 && index < colors.length && color >= 0) {
                colors[index] = color;
-               countColors++;
+               ++countColors;
             } else {
                warn("Invalid color: " + key + " = " + value);
             }
          }
       }
-
-      if (countColors <= 0) {
-         return null;
-      } else {
-         dbg(logName + " colors: " + countColors);
-         return colors;
-      }
    }
 
    private static int getMaxPotionId() {
       int maxId = 0;
+      Set keys = BuiltInRegistries.f_256974_.m_6566_();
+      Iterator it = keys.iterator();
 
-      for (net.minecraft.resources.ResourceLocation rl : BuiltInRegistries.f_256974_.m_6566_()) {
+      while(it.hasNext()) {
+         ResourceLocation rl = (ResourceLocation)it.next();
          MobEffect potion = PotionUtils.getPotion(rl);
          int id = PotionUtils.getId(potion);
          if (id > maxId) {
@@ -1375,19 +1379,23 @@ public class CustomColors {
       } else {
          name = StrUtils.replacePrefix(name, "potion.", "effect.");
          String nameMc = StrUtils.replacePrefix(name, "effect.", "effect.minecraft.");
+         Set keys = BuiltInRegistries.f_256974_.m_6566_();
+         Iterator it = keys.iterator();
 
-         for (net.minecraft.resources.ResourceLocation rl : BuiltInRegistries.f_256974_.m_6566_()) {
-            MobEffect potion = PotionUtils.getPotion(rl);
+         MobEffect potion;
+         do {
+            if (!it.hasNext()) {
+               return -1;
+            }
+
+            ResourceLocation rl = (ResourceLocation)it.next();
+            potion = PotionUtils.getPotion(rl);
             if (potion.m_19481_().equals(name)) {
                return PotionUtils.getId(potion);
             }
+         } while(!potion.m_19481_().equals(nameMc));
 
-            if (potion.m_19481_().equals(nameMc)) {
-               return PotionUtils.getId(potion);
-            }
-         }
-
-         return -1;
+         return PotionUtils.getId(potion);
       }
    }
 
@@ -1415,139 +1423,147 @@ public class CustomColors {
       if (name == null) {
          return -1;
       } else if (name.equals("air")) {
-         return net.minecraft.world.level.material.MapColor.f_283808_.f_283805_;
+         return MapColor.f_283808_.f_283805_;
       } else if (name.equals("grass")) {
-         return net.minecraft.world.level.material.MapColor.f_283824_.f_283805_;
+         return MapColor.f_283824_.f_283805_;
       } else if (name.equals("sand")) {
-         return net.minecraft.world.level.material.MapColor.f_283761_.f_283805_;
+         return MapColor.f_283761_.f_283805_;
       } else if (name.equals("cloth")) {
-         return net.minecraft.world.level.material.MapColor.f_283930_.f_283805_;
+         return MapColor.f_283930_.f_283805_;
       } else if (name.equals("tnt")) {
-         return net.minecraft.world.level.material.MapColor.f_283816_.f_283805_;
+         return MapColor.f_283816_.f_283805_;
       } else if (name.equals("ice")) {
-         return net.minecraft.world.level.material.MapColor.f_283828_.f_283805_;
+         return MapColor.f_283828_.f_283805_;
       } else if (name.equals("iron")) {
-         return net.minecraft.world.level.material.MapColor.f_283906_.f_283805_;
+         return MapColor.f_283906_.f_283805_;
       } else if (name.equals("foliage")) {
-         return net.minecraft.world.level.material.MapColor.f_283915_.f_283805_;
+         return MapColor.f_283915_.f_283805_;
       } else if (name.equals("clay")) {
-         return net.minecraft.world.level.material.MapColor.f_283744_.f_283805_;
+         return MapColor.f_283744_.f_283805_;
       } else if (name.equals("dirt")) {
-         return net.minecraft.world.level.material.MapColor.f_283762_.f_283805_;
+         return MapColor.f_283762_.f_283805_;
       } else if (name.equals("stone")) {
-         return net.minecraft.world.level.material.MapColor.f_283947_.f_283805_;
+         return MapColor.f_283947_.f_283805_;
       } else if (name.equals("water")) {
-         return net.minecraft.world.level.material.MapColor.f_283864_.f_283805_;
+         return MapColor.f_283864_.f_283805_;
       } else if (name.equals("wood")) {
-         return net.minecraft.world.level.material.MapColor.f_283825_.f_283805_;
+         return MapColor.f_283825_.f_283805_;
       } else if (name.equals("quartz")) {
-         return net.minecraft.world.level.material.MapColor.f_283942_.f_283805_;
+         return MapColor.f_283942_.f_283805_;
       } else if (name.equals("gold")) {
-         return net.minecraft.world.level.material.MapColor.f_283757_.f_283805_;
+         return MapColor.f_283757_.f_283805_;
       } else if (name.equals("diamond")) {
-         return net.minecraft.world.level.material.MapColor.f_283821_.f_283805_;
+         return MapColor.f_283821_.f_283805_;
       } else if (name.equals("lapis")) {
-         return net.minecraft.world.level.material.MapColor.f_283933_.f_283805_;
+         return MapColor.f_283933_.f_283805_;
       } else if (name.equals("emerald")) {
-         return net.minecraft.world.level.material.MapColor.f_283812_.f_283805_;
+         return MapColor.f_283812_.f_283805_;
       } else if (name.equals("podzol")) {
-         return net.minecraft.world.level.material.MapColor.f_283819_.f_283805_;
+         return MapColor.f_283819_.f_283805_;
       } else if (name.equals("netherrack")) {
-         return net.minecraft.world.level.material.MapColor.f_283820_.f_283805_;
-      } else if (name.equals("snow") || name.equals("white")) {
-         return net.minecraft.world.level.material.MapColor.f_283811_.f_283805_;
-      } else if (name.equals("adobe") || name.equals("orange")) {
-         return net.minecraft.world.level.material.MapColor.f_283750_.f_283805_;
-      } else if (name.equals("magenta")) {
-         return net.minecraft.world.level.material.MapColor.f_283931_.f_283805_;
-      } else if (name.equals("light_blue") || name.equals("lightBlue")) {
-         return net.minecraft.world.level.material.MapColor.f_283869_.f_283805_;
-      } else if (name.equals("yellow")) {
-         return net.minecraft.world.level.material.MapColor.f_283832_.f_283805_;
-      } else if (name.equals("lime")) {
-         return net.minecraft.world.level.material.MapColor.f_283916_.f_283805_;
-      } else if (name.equals("pink")) {
-         return net.minecraft.world.level.material.MapColor.f_283765_.f_283805_;
-      } else if (name.equals("gray")) {
-         return net.minecraft.world.level.material.MapColor.f_283818_.f_283805_;
-      } else if (name.equals("silver") || name.equals("light_gray")) {
-         return net.minecraft.world.level.material.MapColor.f_283779_.f_283805_;
-      } else if (name.equals("cyan")) {
-         return net.minecraft.world.level.material.MapColor.f_283772_.f_283805_;
-      } else if (name.equals("purple")) {
-         return net.minecraft.world.level.material.MapColor.f_283889_.f_283805_;
-      } else if (name.equals("blue")) {
-         return net.minecraft.world.level.material.MapColor.f_283743_.f_283805_;
-      } else if (name.equals("brown")) {
-         return net.minecraft.world.level.material.MapColor.f_283748_.f_283805_;
-      } else if (name.equals("green")) {
-         return net.minecraft.world.level.material.MapColor.f_283784_.f_283805_;
-      } else if (name.equals("red")) {
-         return net.minecraft.world.level.material.MapColor.f_283913_.f_283805_;
-      } else if (name.equals("black")) {
-         return net.minecraft.world.level.material.MapColor.f_283927_.f_283805_;
-      } else if (name.equals("white_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283919_.f_283805_;
-      } else if (name.equals("orange_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283895_.f_283805_;
-      } else if (name.equals("magenta_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283850_.f_283805_;
-      } else if (name.equals("light_blue_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283791_.f_283805_;
-      } else if (name.equals("yellow_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283843_.f_283805_;
-      } else if (name.equals("lime_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283778_.f_283805_;
-      } else if (name.equals("pink_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283870_.f_283805_;
-      } else if (name.equals("gray_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283861_.f_283805_;
-      } else if (name.equals("light_gray_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283907_.f_283805_;
-      } else if (name.equals("cyan_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283846_.f_283805_;
-      } else if (name.equals("purple_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283892_.f_283805_;
-      } else if (name.equals("blue_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283908_.f_283805_;
-      } else if (name.equals("brown_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283774_.f_283805_;
-      } else if (name.equals("green_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283856_.f_283805_;
-      } else if (name.equals("red_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283798_.f_283805_;
-      } else if (name.equals("black_terracotta")) {
-         return net.minecraft.world.level.material.MapColor.f_283771_.f_283805_;
-      } else if (name.equals("crimson_nylium")) {
-         return net.minecraft.world.level.material.MapColor.f_283909_.f_283805_;
-      } else if (name.equals("crimson_stem")) {
-         return net.minecraft.world.level.material.MapColor.f_283804_.f_283805_;
-      } else if (name.equals("crimson_hyphae")) {
-         return net.minecraft.world.level.material.MapColor.f_283883_.f_283805_;
-      } else if (name.equals("warped_nylium")) {
-         return net.minecraft.world.level.material.MapColor.f_283745_.f_283805_;
-      } else if (name.equals("warped_stem")) {
-         return net.minecraft.world.level.material.MapColor.f_283749_.f_283805_;
-      } else if (name.equals("warped_hyphae")) {
-         return net.minecraft.world.level.material.MapColor.f_283807_.f_283805_;
-      } else if (name.equals("warped_wart_block")) {
-         return net.minecraft.world.level.material.MapColor.f_283898_.f_283805_;
-      } else if (name.equals("deepslate")) {
-         return net.minecraft.world.level.material.MapColor.f_283875_.f_283805_;
-      } else if (name.equals("raw_iron")) {
-         return net.minecraft.world.level.material.MapColor.f_283877_.f_283805_;
+         return MapColor.f_283820_.f_283805_;
+      } else if (!name.equals("snow") && !name.equals("white")) {
+         if (!name.equals("adobe") && !name.equals("orange")) {
+            if (name.equals("magenta")) {
+               return MapColor.f_283931_.f_283805_;
+            } else if (!name.equals("light_blue") && !name.equals("lightBlue")) {
+               if (name.equals("yellow")) {
+                  return MapColor.f_283832_.f_283805_;
+               } else if (name.equals("lime")) {
+                  return MapColor.f_283916_.f_283805_;
+               } else if (name.equals("pink")) {
+                  return MapColor.f_283765_.f_283805_;
+               } else if (name.equals("gray")) {
+                  return MapColor.f_283818_.f_283805_;
+               } else if (!name.equals("silver") && !name.equals("light_gray")) {
+                  if (name.equals("cyan")) {
+                     return MapColor.f_283772_.f_283805_;
+                  } else if (name.equals("purple")) {
+                     return MapColor.f_283889_.f_283805_;
+                  } else if (name.equals("blue")) {
+                     return MapColor.f_283743_.f_283805_;
+                  } else if (name.equals("brown")) {
+                     return MapColor.f_283748_.f_283805_;
+                  } else if (name.equals("green")) {
+                     return MapColor.f_283784_.f_283805_;
+                  } else if (name.equals("red")) {
+                     return MapColor.f_283913_.f_283805_;
+                  } else if (name.equals("black")) {
+                     return MapColor.f_283927_.f_283805_;
+                  } else if (name.equals("white_terracotta")) {
+                     return MapColor.f_283919_.f_283805_;
+                  } else if (name.equals("orange_terracotta")) {
+                     return MapColor.f_283895_.f_283805_;
+                  } else if (name.equals("magenta_terracotta")) {
+                     return MapColor.f_283850_.f_283805_;
+                  } else if (name.equals("light_blue_terracotta")) {
+                     return MapColor.f_283791_.f_283805_;
+                  } else if (name.equals("yellow_terracotta")) {
+                     return MapColor.f_283843_.f_283805_;
+                  } else if (name.equals("lime_terracotta")) {
+                     return MapColor.f_283778_.f_283805_;
+                  } else if (name.equals("pink_terracotta")) {
+                     return MapColor.f_283870_.f_283805_;
+                  } else if (name.equals("gray_terracotta")) {
+                     return MapColor.f_283861_.f_283805_;
+                  } else if (name.equals("light_gray_terracotta")) {
+                     return MapColor.f_283907_.f_283805_;
+                  } else if (name.equals("cyan_terracotta")) {
+                     return MapColor.f_283846_.f_283805_;
+                  } else if (name.equals("purple_terracotta")) {
+                     return MapColor.f_283892_.f_283805_;
+                  } else if (name.equals("blue_terracotta")) {
+                     return MapColor.f_283908_.f_283805_;
+                  } else if (name.equals("brown_terracotta")) {
+                     return MapColor.f_283774_.f_283805_;
+                  } else if (name.equals("green_terracotta")) {
+                     return MapColor.f_283856_.f_283805_;
+                  } else if (name.equals("red_terracotta")) {
+                     return MapColor.f_283798_.f_283805_;
+                  } else if (name.equals("black_terracotta")) {
+                     return MapColor.f_283771_.f_283805_;
+                  } else if (name.equals("crimson_nylium")) {
+                     return MapColor.f_283909_.f_283805_;
+                  } else if (name.equals("crimson_stem")) {
+                     return MapColor.f_283804_.f_283805_;
+                  } else if (name.equals("crimson_hyphae")) {
+                     return MapColor.f_283883_.f_283805_;
+                  } else if (name.equals("warped_nylium")) {
+                     return MapColor.f_283745_.f_283805_;
+                  } else if (name.equals("warped_stem")) {
+                     return MapColor.f_283749_.f_283805_;
+                  } else if (name.equals("warped_hyphae")) {
+                     return MapColor.f_283807_.f_283805_;
+                  } else if (name.equals("warped_wart_block")) {
+                     return MapColor.f_283898_.f_283805_;
+                  } else if (name.equals("deepslate")) {
+                     return MapColor.f_283875_.f_283805_;
+                  } else if (name.equals("raw_iron")) {
+                     return MapColor.f_283877_.f_283805_;
+                  } else {
+                     return name.equals("glow_lichen") ? MapColor.f_283769_.f_283805_ : -1;
+                  }
+               } else {
+                  return MapColor.f_283779_.f_283805_;
+               }
+            } else {
+               return MapColor.f_283869_.f_283805_;
+            }
+         } else {
+            return MapColor.f_283750_.f_283805_;
+         }
       } else {
-         return name.equals("glow_lichen") ? net.minecraft.world.level.material.MapColor.f_283769_.f_283805_ : -1;
+         return MapColor.f_283811_.f_283805_;
       }
    }
 
    private static int[] getMapColors() {
-      net.minecraft.world.level.material.MapColor[] mapColors = net.minecraft.world.level.material.MapColor.f_283862_;
+      MapColor[] mapColors = MapColor.f_283862_;
       int[] colors = new int[mapColors.length];
       Arrays.fill(colors, -1);
 
-      for (int i = 0; i < mapColors.length && i < colors.length; i++) {
-         net.minecraft.world.level.material.MapColor mapColor = mapColors[i];
+      for(int i = 0; i < mapColors.length && i < colors.length; ++i) {
+         MapColor mapColor = mapColors[i];
          if (mapColor != null) {
             colors[i] = mapColor.f_283871_;
          }
@@ -1558,10 +1574,10 @@ public class CustomColors {
 
    private static void setMapColors(int[] colors) {
       if (colors != null) {
-         net.minecraft.world.level.material.MapColor[] mapColors = net.minecraft.world.level.material.MapColor.f_283862_;
+         MapColor[] mapColors = MapColor.f_283862_;
 
-         for (int i = 0; i < mapColors.length && i < colors.length; i++) {
-            net.minecraft.world.level.material.MapColor mapColor = mapColors[i];
+         for(int i = 0; i < mapColors.length && i < colors.length; ++i) {
+            MapColor mapColor = mapColors[i];
             if (mapColor != null) {
                int color = colors[i];
                if (color >= 0 && mapColor.f_283871_ != color) {
@@ -1569,15 +1585,16 @@ public class CustomColors {
                }
             }
          }
+
       }
    }
 
    private static int[] getDyeColors() {
-      net.minecraft.world.item.DyeColor[] dyeColors = net.minecraft.world.item.DyeColor.values();
+      DyeColor[] dyeColors = DyeColor.values();
       int[] colors = new int[dyeColors.length];
 
-      for (int i = 0; i < dyeColors.length && i < colors.length; i++) {
-         net.minecraft.world.item.DyeColor dyeColor = dyeColors[i];
+      for(int i = 0; i < dyeColors.length && i < colors.length; ++i) {
+         DyeColor dyeColor = dyeColors[i];
          if (dyeColor != null) {
             colors[i] = dyeColor.m_340318_();
          }
@@ -1588,10 +1605,10 @@ public class CustomColors {
 
    private static void setDyeColors(int[] colors) {
       if (colors != null) {
-         net.minecraft.world.item.DyeColor[] dyeColors = net.minecraft.world.item.DyeColor.values();
+         DyeColor[] dyeColors = DyeColor.values();
 
-         for (int i = 0; i < dyeColors.length && i < colors.length; i++) {
-            net.minecraft.world.item.DyeColor dyeColor = dyeColors[i];
+         for(int i = 0; i < dyeColors.length && i < colors.length; ++i) {
+            DyeColor dyeColor = dyeColors[i];
             if (dyeColor != null) {
                int color = colors[i];
                if (color != 0 && dyeColor.m_340318_() != color) {
@@ -1599,6 +1616,7 @@ public class CustomColors {
                }
             }
          }
+
       }
    }
 
@@ -1626,8 +1644,62 @@ public class CustomColors {
       }
    }
 
+   static {
+      BLOCK_STATE_DIRT = Blocks.f_50493_.m_49966_();
+      BLOCK_STATE_WATER = Blocks.f_49990_.m_49966_();
+      random = new Random();
+      COLORIZER_GRASS = new IColorizer() {
+         public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+            Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
+            return CustomColors.swampGrassColors != null && biome == BiomeUtils.SWAMP ? CustomColors.swampGrassColors.getColor(biome, blockPos) : biome.m_47464_((double)blockPos.m_123341_(), (double)blockPos.m_123343_());
+         }
+
+         public boolean isColorConstant() {
+            return false;
+         }
+      };
+      COLORIZER_FOLIAGE = new IColorizer() {
+         public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+            Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
+            return CustomColors.swampFoliageColors != null && biome == BiomeUtils.SWAMP ? CustomColors.swampFoliageColors.getColor(biome, blockPos) : biome.m_47542_();
+         }
+
+         public boolean isColorConstant() {
+            return false;
+         }
+      };
+      COLORIZER_FOLIAGE_PINE = new IColorizer() {
+         public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+            return CustomColors.foliagePineColors != null ? CustomColors.foliagePineColors.getColor(blockAccess, blockPos) : FoliageColor.m_46106_();
+         }
+
+         public boolean isColorConstant() {
+            return CustomColors.foliagePineColors == null;
+         }
+      };
+      COLORIZER_FOLIAGE_BIRCH = new IColorizer() {
+         public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+            return CustomColors.foliageBirchColors != null ? CustomColors.foliageBirchColors.getColor(blockAccess, blockPos) : FoliageColor.m_46112_();
+         }
+
+         public boolean isColorConstant() {
+            return CustomColors.foliageBirchColors == null;
+         }
+      };
+      COLORIZER_WATER = new IColorizer() {
+         public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+            Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
+            return CustomColors.waterColors != null ? CustomColors.waterColors.getColor(biome, blockPos) : biome.m_47560_();
+         }
+
+         public boolean isColorConstant() {
+            return false;
+         }
+      };
+   }
+
    public interface IColorizer {
-      int getColor(net.minecraft.world.level.block.state.BlockState var1, BlockAndTintGetter var2, BlockPos var3);
+      int getColor(BlockState var1, BlockAndTintGetter var2, BlockPos var3);
 
       boolean isColorConstant();
    }

@@ -2,11 +2,13 @@ package optifine;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Spliterators;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,11 +22,13 @@ public class AccessFixer {
    private static final Logger LOGGER = LogManager.getLogger();
 
    public static void fixMemberAccess(ClassNode classOld, ClassNode classNew) {
-      List<FieldNode> fieldsOld = classOld.fields;
-      List<FieldNode> fieldsNew = classNew.fields;
-      Map<String, FieldNode> mapFieldsOld = getMapFields(fieldsOld);
+      List fieldsOld = classOld.fields;
+      List fieldsNew = classNew.fields;
+      Map mapFieldsOld = getMapFields(fieldsOld);
+      Iterator it = fieldsNew.iterator();
 
-      for (FieldNode fieldNew : fieldsNew) {
+      while(it.hasNext()) {
+         FieldNode fieldNew = (FieldNode)it.next();
          String idNew = fieldNew.name;
          FieldNode fieldOld = (FieldNode)mapFieldsOld.get(idNew);
          if (fieldOld != null && fieldNew.access != fieldOld.access) {
@@ -32,12 +36,14 @@ public class AccessFixer {
          }
       }
 
-      List<MethodNode> methodsOld = classOld.methods;
-      List<MethodNode> methodsNew = classNew.methods;
-      Map<String, MethodNode> mapMethodsOld = getMapMethods(methodsOld);
-      Set<String> privateChanged = new HashSet();
+      List methodsOld = classOld.methods;
+      List methodsNew = classNew.methods;
+      Map mapMethodsOld = getMapMethods(methodsOld);
+      Set privateChanged = new HashSet();
+      Iterator it = methodsNew.iterator();
 
-      for (MethodNode methodNew : methodsNew) {
+      while(it.hasNext()) {
+         MethodNode methodNew = (MethodNode)it.next();
          String idNew = methodNew.name + methodNew.desc;
          MethodNode methodOld = (MethodNode)mapMethodsOld.get(idNew);
          if (methodOld != null && methodNew.access != methodOld.access) {
@@ -50,25 +56,28 @@ public class AccessFixer {
       }
 
       if (!privateChanged.isEmpty()) {
-         List<MethodInsnNode> changed = new ArrayList();
-         classNew.methods
-            .forEach(
-               mn -> StreamSupport.stream(Spliterators.spliteratorUnknownSize(mn.instructions.iterator(), 16), false)
-                     .filter(i -> i.getOpcode() == 183)
-                     .map(MethodInsnNode.class::cast)
-                     .filter(m -> privateChanged.contains(m.name + m.desc))
-                     .forEach(m -> {
-                        m.setOpcode(182);
-                        changed.add(m);
-                     })
-            );
+         List changed = new ArrayList();
+         classNew.methods.forEach((mn) -> {
+            Stream var10000 = StreamSupport.stream(Spliterators.spliteratorUnknownSize(mn.instructions.iterator(), 16), false).filter((i) -> {
+               return i.getOpcode() == 183;
+            });
+            MethodInsnNode.class.getClass();
+            var10000.map(MethodInsnNode.class::cast).filter((m) -> {
+               return privateChanged.contains(m.name + m.desc);
+            }).forEach((m) -> {
+               m.setOpcode(182);
+               changed.add(m);
+            });
+         });
       }
 
-      List<InnerClassNode> innerClassesOld = classOld.innerClasses;
-      List<InnerClassNode> innerClassesNew = classNew.innerClasses;
-      Map<String, InnerClassNode> mapInnerClassesOld = getMapInnerClasses(innerClassesOld);
+      List innerClassesOld = classOld.innerClasses;
+      List innerClassesNew = classNew.innerClasses;
+      Map mapInnerClassesOld = getMapInnerClasses(innerClassesOld);
+      Iterator it = innerClassesNew.iterator();
 
-      for (InnerClassNode innerClassNew : innerClassesNew) {
+      while(it.hasNext()) {
+         InnerClassNode innerClassNew = (InnerClassNode)it.next();
          String idNew = innerClassNew.name;
          InnerClassNode innerClassOld = (InnerClassNode)mapInnerClassesOld.get(idNew);
          if (innerClassOld != null && innerClassNew.access != innerClassOld.access) {
@@ -81,6 +90,7 @@ public class AccessFixer {
          int accessClassNew = combineAccess(classNew.access, classOld.access);
          classNew.access = accessClassNew;
       }
+
    }
 
    private static int combineAccess(int access, int access2) {
@@ -93,14 +103,18 @@ public class AccessFixer {
             accessClean &= -17;
          }
 
-         if (isSet(access, 1) || isSet(access2, 1)) {
-            return accessClean | 1;
-         } else if (isSet(access, 4) || isSet(access2, 4)) {
-            return accessClean | 4;
-         } else if (!isSet(access, MASK_ACCESS) || !isSet(access2, MASK_ACCESS)) {
-            return accessClean;
+         if (!isSet(access, 1) && !isSet(access2, 1)) {
+            if (!isSet(access, 4) && !isSet(access2, 4)) {
+               if (isSet(access, MASK_ACCESS) && isSet(access2, MASK_ACCESS)) {
+                  return !isSet(access, 2) && !isSet(access2, 2) ? accessClean : accessClean | 2;
+               } else {
+                  return accessClean;
+               }
+            } else {
+               return accessClean | 4;
+            }
          } else {
-            return !isSet(access, 2) && !isSet(access2, 2) ? accessClean : accessClean | 2;
+            return accessClean | 1;
          }
       }
    }
@@ -109,10 +123,12 @@ public class AccessFixer {
       return (access & flag) != 0;
    }
 
-   public static Map<String, FieldNode> getMapFields(List<FieldNode> fields) {
-      Map<String, FieldNode> map = new LinkedHashMap();
+   public static Map getMapFields(List fields) {
+      Map map = new LinkedHashMap();
+      Iterator it = fields.iterator();
 
-      for (FieldNode fieldNode : fields) {
+      while(it.hasNext()) {
+         FieldNode fieldNode = (FieldNode)it.next();
          String id = fieldNode.name;
          map.put(id, fieldNode);
       }
@@ -120,10 +136,12 @@ public class AccessFixer {
       return map;
    }
 
-   public static Map<String, MethodNode> getMapMethods(List<MethodNode> methods) {
-      Map<String, MethodNode> map = new LinkedHashMap();
+   public static Map getMapMethods(List methods) {
+      Map map = new LinkedHashMap();
+      Iterator it = methods.iterator();
 
-      for (MethodNode methodNode : methods) {
+      while(it.hasNext()) {
+         MethodNode methodNode = (MethodNode)it.next();
          String id = methodNode.name + methodNode.desc;
          map.put(id, methodNode);
       }
@@ -131,10 +149,12 @@ public class AccessFixer {
       return map;
    }
 
-   public static Map<String, InnerClassNode> getMapInnerClasses(List<InnerClassNode> innerClasses) {
-      Map<String, InnerClassNode> map = new LinkedHashMap();
+   public static Map getMapInnerClasses(List innerClasses) {
+      Map map = new LinkedHashMap();
+      Iterator it = innerClasses.iterator();
 
-      for (InnerClassNode innerClassNode : innerClasses) {
+      while(it.hasNext()) {
+         InnerClassNode innerClassNode = (InnerClassNode)it.next();
          String id = innerClassNode.name;
          map.put(id, innerClassNode);
       }

@@ -4,38 +4,44 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.ViewArea;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.entity.EntitySection;
 import net.optifine.Config;
 
 public class ChunkVisibility {
    public static final int MASK_FACINGS = 63;
-   public static final net.minecraft.core.Direction[][] enumFacingArrays = makeEnumFacingArrays(false);
-   public static final net.minecraft.core.Direction[][] enumFacingOppositeArrays = makeEnumFacingArrays(true);
+   public static final Direction[][] enumFacingArrays = makeEnumFacingArrays(false);
+   public static final Direction[][] enumFacingOppositeArrays = makeEnumFacingArrays(true);
    private static int counter = 0;
    private static int iMaxStatic = -1;
    private static int iMaxStaticFinal = 16;
-   private static net.minecraft.client.multiplayer.ClientLevel worldLast = null;
+   private static ClientLevel worldLast = null;
    private static int pcxLast = Integer.MIN_VALUE;
    private static int pczLast = Integer.MIN_VALUE;
 
-   public static int getMaxChunkY(
-      net.minecraft.client.multiplayer.ClientLevel world, Entity viewEntity, int renderDistanceChunks, net.minecraft.client.renderer.ViewArea viewFrustum
-   ) {
+   public static int getMaxChunkY(ClientLevel world, Entity viewEntity, int renderDistanceChunks, ViewArea viewFrustum) {
       int minHeight = world.m_141937_();
       int maxHeight = world.m_141928_();
       int minChunkHeight = minHeight >> 4;
-      int pcx = net.minecraft.util.Mth.m_14107_(viewEntity.m_20185_()) >> 4;
-      int pcy = net.minecraft.util.Mth.m_14107_(viewEntity.m_20186_() - (double)minHeight) >> 4;
-      int pcz = net.minecraft.util.Mth.m_14107_(viewEntity.m_20189_()) >> 4;
+      int pcx = Mth.m_14107_(viewEntity.m_20185_()) >> 4;
+      int pcy = Mth.m_14107_(viewEntity.m_20186_() - (double)minHeight) >> 4;
+      int pcz = Mth.m_14107_(viewEntity.m_20189_()) >> 4;
       int pcyMax = maxHeight - minHeight >> 4;
       pcy = Config.limit(pcy, 0, pcyMax - 1);
       long playerSectionKey = SectionPos.m_175568_(viewEntity.m_20183_());
-      net.minecraft.world.level.entity.EntitySection playerSection = world.getSectionStorage().m_156895_(playerSectionKey);
+      EntitySection playerSection = world.getSectionStorage().m_156895_(playerSectionKey);
       boolean multiplayer = !Config.isIntegratedServerRunning();
       int cxStart = pcx - renderDistanceChunks;
       int cxEnd = pcx + renderDistanceChunks;
@@ -72,8 +78,9 @@ public class ChunkVisibility {
             czStart = pcz;
       }
 
-      for (int cx = cxStart; cx < cxEnd; cx++) {
-         for (int cz = czStart; cz < czEnd; cz++) {
+      int i;
+      for(int cx = cxStart; cx < cxEnd; ++cx) {
+         for(int cz = czStart; cz < czEnd; ++cz) {
             LevelChunk chunk = world.m_6325_(cx, cz);
             if (chunk.m_6430_()) {
                if (multiplayer) {
@@ -83,10 +90,10 @@ public class ChunkVisibility {
                   }
                }
             } else {
-               net.minecraft.world.level.chunk.LevelChunkSection[] ebss = chunk.m_7103_();
+               LevelChunkSection[] ebss = chunk.m_7103_();
 
-               for (int i = ebss.length - 1; i > iMax; i--) {
-                  net.minecraft.world.level.chunk.LevelChunkSection ebs = ebss[i];
+               for(i = ebss.length - 1; i > iMax; --i) {
+                  LevelChunkSection ebs = ebss[i];
                   if (ebs != null && !ebs.m_188008_()) {
                      if (i > iMax) {
                         iMax = i;
@@ -96,12 +103,16 @@ public class ChunkVisibility {
                }
 
                try {
-                  Map<BlockPos, net.minecraft.world.level.block.entity.BlockEntity> mapTileEntities = chunk.m_62954_();
+                  Map mapTileEntities = chunk.m_62954_();
                   if (!mapTileEntities.isEmpty()) {
-                     for (BlockPos pos : mapTileEntities.keySet()) {
-                        int ix = pos.m_123342_() - minHeight >> 4;
-                        if (ix > iMax) {
-                           iMax = ix;
+                     Set keys = mapTileEntities.keySet();
+                     Iterator it = keys.iterator();
+
+                     while(it.hasNext()) {
+                        BlockPos pos = (BlockPos)it.next();
+                        int i = pos.m_123342_() - minHeight >> 4;
+                        if (i > iMax) {
+                           iMax = i;
                         }
                      }
                   }
@@ -115,12 +126,22 @@ public class ChunkVisibility {
          LongSet sectionKeys = world.getSectionStorage().getSectionKeys();
          LongIterator it = sectionKeys.iterator();
 
-         while (it.hasNext()) {
-            long sectionKey = it.nextLong();
-            int sectionY = SectionPos.m_123225_(sectionKey);
-            int ix = sectionY - minChunkHeight;
-            if ((sectionKey != playerSectionKey || ix != pcy || playerSection == null || playerSection.getEntityList().size() != 1) && ix > iMax) {
-               iMax = ix;
+         label89:
+         while(true) {
+            long sectionKey;
+            int i;
+            do {
+               if (!it.hasNext()) {
+                  break label89;
+               }
+
+               sectionKey = it.nextLong();
+               i = SectionPos.m_123225_(sectionKey);
+               i = i - minChunkHeight;
+            } while(sectionKey == playerSectionKey && i == pcy && playerSection != null && playerSection.getEntityList().size() == 1);
+
+            if (i > iMax) {
+               iMax = i;
             }
          }
       }
@@ -141,35 +162,35 @@ public class ChunkVisibility {
       return counter == 0;
    }
 
-   private static net.minecraft.core.Direction[][] makeEnumFacingArrays(boolean opposite) {
+   private static Direction[][] makeEnumFacingArrays(boolean opposite) {
       int count = 64;
-      net.minecraft.core.Direction[][] arrs = new net.minecraft.core.Direction[count][];
+      Direction[][] arrs = new Direction[count][];
 
-      for (int i = 0; i < count; i++) {
-         List<net.minecraft.core.Direction> list = new ArrayList();
+      for(int i = 0; i < count; ++i) {
+         List list = new ArrayList();
 
-         for (int ix = 0; ix < net.minecraft.core.Direction.f_122346_.length; ix++) {
-            net.minecraft.core.Direction facing = net.minecraft.core.Direction.f_122346_[ix];
-            net.minecraft.core.Direction facingMask = opposite ? facing.m_122424_() : facing;
+         for(int ix = 0; ix < Direction.f_122346_.length; ++ix) {
+            Direction facing = Direction.f_122346_[ix];
+            Direction facingMask = opposite ? facing.m_122424_() : facing;
             int mask = 1 << facingMask.ordinal();
             if ((i & mask) != 0) {
                list.add(facing);
             }
          }
 
-         net.minecraft.core.Direction[] fs = (net.minecraft.core.Direction[])list.toArray(new net.minecraft.core.Direction[list.size()]);
+         Direction[] fs = (Direction[])list.toArray(new Direction[list.size()]);
          arrs[i] = fs;
       }
 
       return arrs;
    }
 
-   public static net.minecraft.core.Direction[] getFacingsNotOpposite(int setDisabled) {
+   public static Direction[] getFacingsNotOpposite(int setDisabled) {
       int index = ~setDisabled & 63;
       return enumFacingOppositeArrays[index];
    }
 
-   public static net.minecraft.core.Direction[] getFacings(int setDirections) {
+   public static Direction[] getFacings(int setDirections) {
       int index = setDirections & 63;
       return enumFacingArrays[index];
    }

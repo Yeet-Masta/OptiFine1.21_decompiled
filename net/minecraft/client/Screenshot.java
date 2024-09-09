@@ -1,7 +1,10 @@
 package net.minecraft.client;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import java.io.DataOutputStream;
@@ -12,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ClickEvent.Action;
@@ -29,30 +33,29 @@ public class Screenshot {
    private final int f_168598_;
    private File f_168599_;
 
-   public static void m_92289_(File gameDirectory, com.mojang.blaze3d.pipeline.RenderTarget buffer, Consumer<Component> messageConsumer) {
-      m_92295_(gameDirectory, null, buffer, messageConsumer);
+   public static void m_92289_(File gameDirectory, RenderTarget buffer, Consumer messageConsumer) {
+      m_92295_(gameDirectory, (String)null, buffer, messageConsumer);
    }
 
-   public static void m_92295_(
-      File gameDirectory, @Nullable String screenshotName, com.mojang.blaze3d.pipeline.RenderTarget buffer, Consumer<Component> messageConsumer
-   ) {
+   public static void m_92295_(File gameDirectory, @Nullable String screenshotName, RenderTarget buffer, Consumer messageConsumer) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> m_92305_(gameDirectory, screenshotName, buffer, messageConsumer));
+         RenderSystem.recordRenderCall(() -> {
+            m_92305_(gameDirectory, screenshotName, buffer, messageConsumer);
+         });
       } else {
          m_92305_(gameDirectory, screenshotName, buffer, messageConsumer);
       }
+
    }
 
-   private static void m_92305_(
-      File gameDirectory, @Nullable String screenshotName, com.mojang.blaze3d.pipeline.RenderTarget buffer, Consumer<Component> messageConsumer
-   ) {
+   private static void m_92305_(File gameDirectory, @Nullable String screenshotName, RenderTarget buffer, Consumer messageConsumer) {
       Minecraft mc = Config.getMinecraft();
-      com.mojang.blaze3d.platform.Window mainWindow = mc.m_91268_();
-      net.minecraft.client.Options gameSettings = Config.getGameSettings();
+      Window mainWindow = mc.m_91268_();
+      Options gameSettings = Config.getGameSettings();
       int fbWidth = mainWindow.m_85441_();
       int fbHeight = mainWindow.m_85442_();
-      int guiScaleOld = gameSettings.m_231928_().m_231551_();
-      int guiScale = mainWindow.m_85385_(mc.f_91066_.m_231928_().m_231551_(), mc.f_91066_.m_231819_().m_231551_());
+      int guiScaleOld = (Integer)gameSettings.m_231928_().m_231551_();
+      int guiScale = mainWindow.m_85385_((Integer)mc.f_91066_.m_231928_().m_231551_(), (Boolean)mc.f_91066_.m_231819_().m_231551_());
       int mul = Config.getScreenshotSize();
       boolean resize = GLX.isUsingFBOs() && mul > 1;
       if (resize) {
@@ -74,7 +77,7 @@ public class Screenshot {
          RenderSystem.applyModelViewMatrix();
       }
 
-      com.mojang.blaze3d.platform.NativeImage nativeimage = m_92279_(buffer);
+      NativeImage nativeimage = m_92279_(buffer);
       if (resize) {
          mc.m_91385_().m_83970_();
          Config.getGameSettings().m_231928_().m_231514_(guiScaleOld);
@@ -102,43 +105,37 @@ public class Screenshot {
          file2 = (File)Reflector.call(event, Reflector.ScreenshotEvent_getScreenshotFile);
       }
 
-      File target = file2;
-      Object eventF = event;
-      net.minecraft.Util.m_183992_()
-         .execute(
-            () -> {
-               try {
-                  nativeimage.m_85056_(target);
-                  Component component = Component.m_237113_(target.getName())
-                     .m_130940_(ChatFormatting.UNDERLINE)
-                     .m_130938_(styleIn -> styleIn.m_131142_(new ClickEvent(Action.OPEN_FILE, target.getAbsolutePath())));
-                  if (eventF != null && Reflector.call(eventF, Reflector.ScreenshotEvent_getResultMessage) != null) {
-                     messageConsumer.accept((Component)Reflector.call(eventF, Reflector.ScreenshotEvent_getResultMessage));
-                  } else {
-                     messageConsumer.accept(Component.m_237110_("screenshot.success", new Object[]{component}));
-                  }
-               } catch (Exception var8x) {
-                  f_92276_.warn("Couldn't save screenshot", var8x);
-                  messageConsumer.accept(Component.m_237110_("screenshot.failure", new Object[]{var8x.getMessage()}));
-               } finally {
-                  nativeimage.close();
-               }
+      Util.m_183992_().execute(() -> {
+         try {
+            nativeimage.m_85056_(file2);
+            Component component = Component.m_237113_(file2.getName()).m_130940_(ChatFormatting.UNDERLINE).m_130938_((styleIn) -> {
+               return styleIn.m_131142_(new ClickEvent(Action.OPEN_FILE, file2.getAbsolutePath()));
+            });
+            if (event != null && Reflector.call(event, Reflector.ScreenshotEvent_getResultMessage) != null) {
+               messageConsumer.accept((Component)Reflector.call(event, Reflector.ScreenshotEvent_getResultMessage));
+            } else {
+               messageConsumer.accept(Component.m_237110_("screenshot.success", new Object[]{component}));
             }
-         );
+         } catch (Exception var8) {
+            f_92276_.warn("Couldn't save screenshot", var8);
+            messageConsumer.accept(Component.m_237110_("screenshot.failure", new Object[]{var8.getMessage()}));
+         } finally {
+            nativeimage.close();
+         }
+
+      });
    }
 
-   public static com.mojang.blaze3d.platform.NativeImage m_92279_(com.mojang.blaze3d.pipeline.RenderTarget framebufferIn) {
+   public static NativeImage m_92279_(RenderTarget framebufferIn) {
       if (!GLX.isUsingFBOs()) {
-         com.mojang.blaze3d.platform.NativeImage nativeimage = new com.mojang.blaze3d.platform.NativeImage(
-            framebufferIn.f_83915_, framebufferIn.f_83916_, false
-         );
+         NativeImage nativeimage = new NativeImage(framebufferIn.f_83915_, framebufferIn.f_83916_, false);
          nativeimage.downloadFromFramebuffer();
          nativeimage.m_85122_();
          return nativeimage;
       } else {
          int i = framebufferIn.f_83915_;
          int j = framebufferIn.f_83916_;
-         com.mojang.blaze3d.platform.NativeImage nativeimage = new com.mojang.blaze3d.platform.NativeImage(i, j, false);
+         NativeImage nativeimage = new NativeImage(i, j, false);
          RenderSystem.bindTexture(framebufferIn.m_83975_());
          nativeimage.m_85045_(0, true);
          nativeimage.m_85122_();
@@ -147,16 +144,16 @@ public class Screenshot {
    }
 
    private static File m_92287_(File gameDirectory) {
-      String s = net.minecraft.Util.m_241986_();
+      String s = Util.m_241986_();
       int i = 1;
 
-      while (true) {
+      while(true) {
          File file1 = new File(gameDirectory, s + (i == 1 ? "" : "_" + i) + ".png");
          if (!file1.exists()) {
             return file1;
          }
 
-         i++;
+         ++i;
       }
    }
 
@@ -166,11 +163,9 @@ public class Screenshot {
       this.f_168594_ = rowHeightIn;
       File file1 = new File(fileIn, "screenshots");
       file1.mkdir();
-      String s = "huge_" + net.minecraft.Util.m_241986_();
-      int i = 1;
+      String s = "huge_" + Util.m_241986_();
 
-      while ((this.f_168599_ = new File(file1, s + (i == 1 ? "" : "_" + i) + ".tga")).exists()) {
-         i++;
+      for(int i = 1; (this.f_168599_ = new File(file1, s + (i == 1 ? "" : "_" + i) + ".tga")).exists(); ++i) {
       }
 
       byte[] abyte = new byte[18];
@@ -198,11 +193,12 @@ public class Screenshot {
 
       this.f_168594_ = j;
 
-      for (int k = 0; k < j; k++) {
+      for(int k = 0; k < j; ++k) {
          bufferIn.position((heightIn - j) * widthIn * 3 + k * widthIn * 3);
          int l = (xIn + k * this.f_168597_) * 3;
          bufferIn.get(this.f_168596_, l, i * 3);
       }
+
    }
 
    public void m_168605_() throws IOException {

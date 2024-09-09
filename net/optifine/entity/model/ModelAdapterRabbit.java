@@ -3,47 +3,45 @@ package net.optifine.entity.model;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.RabbitModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.RabbitRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterRabbit extends ModelAdapter {
-   private static Map<String, Integer> mapPartFields = null;
+   private static Map mapPartFields = null;
 
    public ModelAdapterRabbit() {
       super(EntityType.f_20517_, "rabbit", 0.3F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new RabbitModel(bakeModelLayer(ModelLayers.f_171174_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof RabbitModel modelRabbit)) {
          return null;
       } else {
-         Map<String, Integer> mapParts = getMapPartFields();
+         Map mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             int index = (Integer)mapParts.get(modelPart);
-            return (net.minecraft.client.model.geom.ModelPart)Reflector.getFieldValue(modelRabbit, Reflector.ModelRabbit_ModelRenderers, index);
+            return (ModelPart)Reflector.getFieldValue(modelRabbit, Reflector.ModelRabbit_ModelRenderers, index);
          } else {
             return null;
          }
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
-      return new String[]{
-         "left_foot", "right_foot", "left_thigh", "right_thigh", "body", "left_arm", "right_arm", "head", "right_ear", "left_ear", "tail", "nose"
-      };
+      return new String[]{"left_foot", "right_foot", "left_thigh", "right_thigh", "body", "left_arm", "right_arm", "head", "right_ear", "left_ear", "tail", "nose"};
    }
 
-   private static Map<String, Integer> getMapPartFields() {
+   private static Map getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -64,9 +62,8 @@ public class ModelAdapterRabbit extends ModelAdapter {
       }
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       RabbitRenderer render = new RabbitRenderer(renderManager.getContext());
       render.f_115290_ = (RabbitModel)modelBase;
       render.f_114477_ = shadowSize;

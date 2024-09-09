@@ -10,43 +10,45 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.world.level.block.state.StateHolder;
 
-public abstract class Property<T extends Comparable<T>> {
-   private final Class<T> f_61686_;
+public abstract class Property {
+   private final Class f_61686_;
    private final String f_61687_;
    @Nullable
    private Integer f_61688_;
-   private final Codec<T> f_61689_ = Codec.STRING
-      .comapFlatMap(
-         p_61697_1_ -> (DataResult)this.m_6215_(p_61697_1_)
-               .map(DataResult::success)
-               .orElseGet(() -> DataResult.error(() -> "Unable to read property: " + this + " with value: " + p_61697_1_)),
-         this::m_6940_
-      );
-   private final Codec<net.minecraft.world.level.block.state.properties.Property.Value<T>> f_61690_ = this.f_61689_
-      .xmap(this::m_61699_, net.minecraft.world.level.block.state.properties.Property.Value::f_61713_);
+   private final Codec f_61689_;
+   private final Codec f_61690_;
 
-   protected Property(String name, Class<T> valueClass) {
+   protected Property(String name, Class valueClass) {
+      this.f_61689_ = Codec.STRING.comapFlatMap((p_61697_1_) -> {
+         return (DataResult)this.m_6215_(p_61697_1_).map(DataResult::success).orElseGet(() -> {
+            return DataResult.error(() -> {
+               String var10000 = String.valueOf(this);
+               return "Unable to read property: " + var10000 + " with value: " + p_61697_1_;
+            });
+         });
+      }, this::m_6940_);
+      this.f_61690_ = this.f_61689_.xmap(this::m_61699_, Value::f_61713_);
       this.f_61686_ = valueClass;
       this.f_61687_ = name;
    }
 
-   public net.minecraft.world.level.block.state.properties.Property.Value<T> m_61699_(T p_61699_1_) {
-      return new net.minecraft.world.level.block.state.properties.Property.Value<>(this, p_61699_1_);
+   public Value m_61699_(Comparable p_61699_1_) {
+      return new Value(this, p_61699_1_);
    }
 
-   public net.minecraft.world.level.block.state.properties.Property.Value<T> m_61694_(StateHolder<?, ?> p_61694_1_) {
-      return new net.minecraft.world.level.block.state.properties.Property.Value<>(this, (T)p_61694_1_.m_61143_(this));
+   public Value m_61694_(StateHolder p_61694_1_) {
+      return new Value(this, p_61694_1_.m_61143_(this));
    }
 
-   public Stream<net.minecraft.world.level.block.state.properties.Property.Value<T>> m_61702_() {
+   public Stream m_61702_() {
       return this.m_6908_().stream().map(this::m_61699_);
    }
 
-   public Codec<T> m_156037_() {
+   public Codec m_156037_() {
       return this.f_61689_;
    }
 
-   public Codec<net.minecraft.world.level.block.state.properties.Property.Value<T>> m_61705_() {
+   public Codec m_61705_() {
       return this.f_61690_;
    }
 
@@ -54,15 +56,15 @@ public abstract class Property<T extends Comparable<T>> {
       return this.f_61687_;
    }
 
-   public Class<T> m_61709_() {
+   public Class m_61709_() {
       return this.f_61686_;
    }
 
-   public abstract Collection<T> m_6908_();
+   public abstract Collection m_6908_();
 
-   public abstract String m_6940_(T var1);
+   public abstract String m_6940_(Comparable var1);
 
-   public abstract Optional<T> m_6215_(String var1);
+   public abstract Optional m_6215_(String var1);
 
    public String toString() {
       return MoreObjects.toStringHelper(this).add("name", this.f_61687_).add("clazz", this.f_61686_).add("values", this.m_6908_()).toString();
@@ -72,9 +74,15 @@ public abstract class Property<T extends Comparable<T>> {
       if (this == p_equals_1_) {
          return true;
       } else {
-         return p_equals_1_ instanceof net.minecraft.world.level.block.state.properties.Property<?> property
-            ? this.f_61686_.equals(property.f_61686_) && this.f_61687_.equals(property.f_61687_)
-            : false;
+         boolean var10000;
+         if (p_equals_1_ instanceof Property) {
+            Property property = (Property)p_equals_1_;
+            var10000 = this.f_61686_.equals(property.f_61686_) && this.f_61687_.equals(property.f_61687_);
+         } else {
+            var10000 = false;
+         }
+
+         return var10000;
       }
    }
 
@@ -90,23 +98,35 @@ public abstract class Property<T extends Comparable<T>> {
       return 31 * this.f_61686_.hashCode() + this.f_61687_.hashCode();
    }
 
-   public <U, S extends StateHolder<?, S>> DataResult<S> m_156031_(DynamicOps<U> p_156031_1_, S p_156031_2_, U p_156031_3_) {
-      DataResult<T> dataresult = this.f_61689_.parse(p_156031_1_, p_156031_3_);
-      return dataresult.map(p_156028_2_ -> (StateHolder)p_156031_2_.m_61124_(this, p_156028_2_)).setPartial(p_156031_2_);
+   public DataResult m_156031_(DynamicOps p_156031_1_, StateHolder p_156031_2_, Object p_156031_3_) {
+      DataResult dataresult = this.f_61689_.parse(p_156031_1_, p_156031_3_);
+      return dataresult.map((p_156028_2_) -> {
+         return (StateHolder)p_156031_2_.m_61124_(this, p_156028_2_);
+      }).setPartial(p_156031_2_);
    }
 
-   public static record Value<T extends Comparable<T>>(net.minecraft.world.level.block.state.properties.Property<T> f_61712_, T f_61713_) {
-      public Value(net.minecraft.world.level.block.state.properties.Property<T> f_61712_, T f_61713_) {
-         if (!f_61712_.m_6908_().contains(f_61713_)) {
-            throw new IllegalArgumentException("Value " + f_61713_ + " does not belong to property " + f_61712_);
+   public static record Value(Property f_61712_, Comparable f_61713_) {
+      public Value(Property property, Comparable value) {
+         if (!property.m_6908_().contains(value)) {
+            String var10002 = String.valueOf(value);
+            throw new IllegalArgumentException("Value " + var10002 + " does not belong to property " + String.valueOf(property));
          } else {
-            this.f_61712_ = f_61712_;
-            this.f_61713_ = f_61713_;
+            this.f_61712_ = property;
+            this.f_61713_ = value;
          }
       }
 
       public String toString() {
-         return this.f_61712_.m_61708_() + "=" + this.f_61712_.m_6940_(this.f_61713_);
+         String var10000 = this.f_61712_.m_61708_();
+         return var10000 + "=" + this.f_61712_.m_6940_(this.f_61713_);
+      }
+
+      public Property f_61712_() {
+         return this.f_61712_;
+      }
+
+      public Comparable f_61713_() {
+         return this.f_61713_;
       }
    }
 }

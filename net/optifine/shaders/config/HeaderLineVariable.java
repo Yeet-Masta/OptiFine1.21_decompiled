@@ -20,12 +20,10 @@ public class HeaderLineVariable extends HeaderLine {
       this.patternName2 = Pattern.compile("(\\W)" + name + "\\s*,");
    }
 
-   @Override
    public String getText() {
       return this.text;
    }
 
-   @Override
    public boolean matches(String line) {
       if (!line.contains(this.name)) {
          return false;
@@ -35,7 +33,6 @@ public class HeaderLineVariable extends HeaderLine {
       }
    }
 
-   @Override
    public String removeFrom(String line) {
       Matcher m1 = this.patternName1.matcher(line);
       String lineNew = m1.replaceAll("$1");

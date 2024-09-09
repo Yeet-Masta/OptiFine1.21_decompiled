@@ -5,6 +5,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Vec3i;
@@ -25,10 +27,13 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.Difficulty;
@@ -37,17 +42,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot.Type;
-import net.minecraft.world.entity.Leashable.LeashData;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier.Builder;
 import net.minecraft.world.entity.ai.control.BodyRotationControl;
 import net.minecraft.world.entity.ai.control.JumpControl;
 import net.minecraft.world.entity.ai.control.LookControl;
 import net.minecraft.world.entity.ai.control.MoveControl;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.Goal.Flag;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -81,10 +84,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
@@ -96,14 +97,12 @@ import net.optifine.reflect.Reflector;
 import net.optifine.reflect.ReflectorForge;
 
 public abstract class Mob extends LivingEntity implements EquipmentUser, Leashable, Targeting, IForgeLivingEntity {
-   private static final EntityDataAccessor<Byte> f_21340_ = net.minecraft.network.syncher.SynchedEntityData.m_135353_(
-      net.minecraft.world.entity.Mob.class, EntityDataSerializers.f_135027_
-   );
+   private static final EntityDataAccessor f_21340_;
    private static final int f_147266_ = 1;
    private static final int f_147267_ = 2;
    private static final int f_147268_ = 4;
    protected static final int f_147265_ = 1;
-   private static final Vec3i f_217048_ = new Vec3i(1, 0, 1);
+   private static final Vec3i f_217048_;
    public static final float f_147269_ = 0.15F;
    public static final float f_147261_ = 0.55F;
    public static final float f_147262_ = 0.5F;
@@ -112,8 +111,8 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    public static final float f_337144_ = 1.0F;
    public static final int f_217047_ = 2;
    public static final int f_186008_ = 2;
-   private static final double f_290867_ = Math.sqrt(2.04F) - 0.6F;
-   protected static final net.minecraft.resources.ResourceLocation f_337189_ = net.minecraft.resources.ResourceLocation.m_340282_("random_spawn_bonus");
+   private static final double f_290867_;
+   protected static final ResourceLocation f_337189_;
    public int f_21363_;
    protected int f_21364_;
    protected LookControl f_21365_;
@@ -126,27 +125,36 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    @Nullable
    private LivingEntity f_21362_;
    private final Sensing f_21349_;
-   private final NonNullList<ItemStack> f_21350_ = NonNullList.m_122780_(2, ItemStack.f_41583_);
-   protected final float[] f_21347_ = new float[2];
-   private final NonNullList<ItemStack> f_21351_ = NonNullList.m_122780_(4, ItemStack.f_41583_);
-   protected final float[] f_21348_ = new float[4];
-   private ItemStack f_314973_ = ItemStack.f_41583_;
+   private final NonNullList f_21350_;
+   protected final float[] f_21347_;
+   private final NonNullList f_21351_;
+   protected final float[] f_21348_;
+   private ItemStack f_314973_;
    protected float f_315062_;
    private boolean f_21352_;
    private boolean f_21353_;
-   private final Map<PathType, Float> f_21354_ = Maps.newEnumMap(PathType.class);
+   private final Map f_21354_;
    @Nullable
-   private ResourceKey<LootTable> f_21355_;
+   private ResourceKey f_21355_;
    private long f_21356_;
    @Nullable
-   private LeashData f_337544_;
-   private BlockPos f_21360_ = BlockPos.f_121853_;
-   private float f_21341_ = -1.0F;
+   private Leashable.LeashData f_337544_;
+   private BlockPos f_21360_;
+   private float f_21341_;
    private MobSpawnType spawnType;
-   private boolean spawnCancelled = false;
+   private boolean spawnCancelled;
 
-   protected Mob(EntityType<? extends net.minecraft.world.entity.Mob> type, Level worldIn) {
+   protected Mob(EntityType type, Level worldIn) {
       super(type, worldIn);
+      this.f_21350_ = NonNullList.m_122780_(2, ItemStack.f_41583_);
+      this.f_21347_ = new float[2];
+      this.f_21351_ = NonNullList.m_122780_(4, ItemStack.f_41583_);
+      this.f_21348_ = new float[4];
+      this.f_314973_ = ItemStack.f_41583_;
+      this.f_21354_ = Maps.newEnumMap(PathType.class);
+      this.f_21360_ = BlockPos.f_121853_;
+      this.f_21341_ = -1.0F;
+      this.spawnCancelled = false;
       this.f_21345_ = new GoalSelector(worldIn.m_46658_());
       this.f_21346_ = new GoalSelector(worldIn.m_46658_());
       this.f_21365_ = new LookControl(this);
@@ -161,12 +169,13 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       if (worldIn != null && !worldIn.f_46443_) {
          this.m_8099_();
       }
+
    }
 
    protected void m_8099_() {
    }
 
-   public static Builder m_21552_() {
+   public static AttributeSupplier.Builder m_21552_() {
       return LivingEntity.m_21183_().m_22268_(Attributes.f_22277_, 16.0);
    }
 
@@ -179,11 +188,14 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    public float m_21439_(PathType nodeType) {
-      net.minecraft.world.entity.Mob mob;
+      Mob mob;
       label17: {
-         if (this.m_275832_() instanceof net.minecraft.world.entity.Mob mob1 && mob1.m_8091_()) {
-            mob = mob1;
-            break label17;
+         Entity var4 = this.m_275832_();
+         if (var4 instanceof Mob mob1) {
+            if (mob1.m_8091_()) {
+               mob = mob1;
+               break label17;
+            }
          }
 
          mob = this;
@@ -212,7 +224,15 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    public MoveControl m_21566_() {
-      return this.m_275832_() instanceof net.minecraft.world.entity.Mob mob ? mob.m_21566_() : this.f_21342_;
+      Entity var2 = this.m_275832_();
+      MoveControl var10000;
+      if (var2 instanceof Mob mob) {
+         var10000 = mob.m_21566_();
+      } else {
+         var10000 = this.f_21342_;
+      }
+
+      return var10000;
    }
 
    public JumpControl m_21569_() {
@@ -220,14 +240,24 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    public PathNavigation m_21573_() {
-      return this.m_275832_() instanceof net.minecraft.world.entity.Mob mob ? mob.m_21573_() : this.f_21344_;
+      Entity var2 = this.m_275832_();
+      PathNavigation var10000;
+      if (var2 instanceof Mob mob) {
+         var10000 = mob.m_21573_();
+      } else {
+         var10000 = this.f_21344_;
+      }
+
+      return var10000;
    }
 
    @Nullable
    public LivingEntity m_6688_() {
       Entity entity = this.m_146895_();
-      if (!this.m_21525_() && entity instanceof net.minecraft.world.entity.Mob mob && entity.m_293117_()) {
-         return mob;
+      if (!this.m_21525_() && entity instanceof Mob mob) {
+         if (entity.m_293117_()) {
+            return mob;
+         }
       }
 
       return null;
@@ -244,22 +274,22 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
    @Nullable
    protected final LivingEntity m_319699_() {
-      return (LivingEntity)this.m_6274_().m_21952_(MemoryModuleType.f_26372_).orElse(null);
+      return (LivingEntity)this.m_6274_().m_21952_(MemoryModuleType.f_26372_).orElse((Object)null);
    }
 
    public void m_6710_(@Nullable LivingEntity entitylivingbaseIn) {
       if (Reflector.ForgeHooks_onLivingChangeTarget.exists()) {
-         LivingChangeTargetEvent changeTargetEvent = (LivingChangeTargetEvent)Reflector.ForgeHooks_onLivingChangeTarget
-            .call(this, entitylivingbaseIn, LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
+         LivingChangeTargetEvent changeTargetEvent = (LivingChangeTargetEvent)Reflector.ForgeHooks_onLivingChangeTarget.call(this, entitylivingbaseIn, LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
          if (!changeTargetEvent.isCanceled()) {
             this.f_21362_ = changeTargetEvent.getNewTarget();
          }
+
       } else {
          this.f_21362_ = entitylivingbaseIn;
       }
    }
 
-   public boolean m_6549_(EntityType<?> typeIn) {
+   public boolean m_6549_(EntityType typeIn) {
       return typeIn != EntityType.f_20453_;
    }
 
@@ -271,7 +301,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       this.m_146850_(GameEvent.f_157806_);
    }
 
-   protected void m_8097_(net.minecraft.network.syncher.SynchedEntityData.Builder builderIn) {
+   protected void m_8097_(SynchedEntityData.Builder builderIn) {
       super.m_8097_(builderIn);
       builderIn.m_318949_(f_21340_, (byte)0);
    }
@@ -308,13 +338,14 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       if (this.f_21364_ > 0) {
          int i = this.f_21364_;
 
-         for (int j = 0; j < this.f_21351_.size(); j++) {
-            if (!((ItemStack)this.f_21351_.get(j)).m_41619_() && this.f_21348_[j] <= 1.0F) {
+         int k;
+         for(k = 0; k < this.f_21351_.size(); ++k) {
+            if (!((ItemStack)this.f_21351_.get(k)).m_41619_() && this.f_21348_[k] <= 1.0F) {
                i += 1 + this.f_19796_.m_188503_(3);
             }
          }
 
-         for (int k = 0; k < this.f_21350_.size(); k++) {
+         for(k = 0; k < this.f_21350_.size(); ++k) {
             if (!((ItemStack)this.f_21350_.get(k)).m_41619_() && this.f_21347_[k] <= 1.0F) {
                i += 1 + this.f_19796_.m_188503_(3);
             }
@@ -332,17 +363,17 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
    public void m_21373_() {
       if (this.m_9236_().f_46443_) {
-         for (int i = 0; i < 20; i++) {
+         for(int i = 0; i < 20; ++i) {
             double d0 = this.f_19796_.m_188583_() * 0.02;
             double d1 = this.f_19796_.m_188583_() * 0.02;
             double d2 = this.f_19796_.m_188583_() * 0.02;
             double d3 = 10.0;
-            this.m_9236_()
-               .m_7106_(ParticleTypes.f_123759_, this.m_20165_(1.0) - d0 * 10.0, this.m_20187_() - d1 * 10.0, this.m_20262_(1.0) - d2 * 10.0, d0, d1, d2);
+            this.m_9236_().m_7106_(ParticleTypes.f_123759_, this.m_20165_(1.0) - d0 * 10.0, this.m_20187_() - d1 * 10.0, this.m_20262_(1.0) - d2 * 10.0, d0, d1, d2);
          }
       } else {
          this.m_9236_().m_7605_(this, (byte)20);
       }
+
    }
 
    public void m_7822_(byte id) {
@@ -351,6 +382,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       } else {
          super.m_7822_(id);
       }
+
    }
 
    public void m_8119_() {
@@ -361,11 +393,12 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
          if (!this.m_9236_().f_46443_ && this.f_19797_ % 5 == 0) {
             this.m_8022_();
          }
+
       }
    }
 
    protected void m_8022_() {
-      boolean flag = !(this.m_6688_() instanceof net.minecraft.world.entity.Mob);
+      boolean flag = !(this.m_6688_() instanceof Mob);
       boolean flag1 = !(this.m_20202_() instanceof Boat);
       this.f_21345_.m_25360_(Flag.MOVE, flag);
       this.f_21345_.m_25360_(Flag.JUMP, flag && flag1);
@@ -387,8 +420,10 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       compound.m_128379_("CanPickUpLoot", this.m_21531_());
       compound.m_128379_("PersistenceRequired", this.f_21353_);
       ListTag listtag = new ListTag();
+      Iterator var3 = this.f_21351_.iterator();
 
-      for (ItemStack itemstack : this.f_21351_) {
+      while(var3.hasNext()) {
+         ItemStack itemstack = (ItemStack)var3.next();
          if (!itemstack.m_41619_()) {
             listtag.add(itemstack.m_41739_(this.m_321891_()));
          } else {
@@ -398,15 +433,20 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
       compound.m_128365_("ArmorItems", listtag);
       ListTag listtag1 = new ListTag();
+      float[] var11 = this.f_21348_;
+      int var5 = var11.length;
 
-      for (float f : this.f_21348_) {
+      for(int var6 = 0; var6 < var5; ++var6) {
+         float f = var11[var6];
          listtag1.add(FloatTag.m_128566_(f));
       }
 
       compound.m_128365_("ArmorDropChances", listtag1);
       ListTag listtag2 = new ListTag();
+      Iterator var13 = this.f_21350_.iterator();
 
-      for (ItemStack itemstack1 : this.f_21350_) {
+      while(var13.hasNext()) {
+         ItemStack itemstack1 = (ItemStack)var13.next();
          if (!itemstack1.m_41619_()) {
             listtag2.add(itemstack1.m_41739_(this.m_321891_()));
          } else {
@@ -416,8 +456,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
       compound.m_128365_("HandItems", listtag2);
       ListTag listtag3 = new ListTag();
+      float[] var16 = this.f_21347_;
+      int var17 = var16.length;
 
-      for (float f1 : this.f_21347_) {
+      for(int var8 = 0; var8 < var17; ++var8) {
+         float f1 = var16[var8];
          listtag3.add(FloatTag.m_128566_(f1));
       }
 
@@ -443,6 +486,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       if (this.spawnType != null) {
          compound.m_128359_("forge:spawn_type", this.spawnType.name());
       }
+
    }
 
    public void m_7378_(CompoundTag compound) {
@@ -452,36 +496,39 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       }
 
       this.f_21353_ = compound.m_128471_("PersistenceRequired");
+      ListTag listtag3;
+      int l;
+      CompoundTag compoundtag1;
       if (compound.m_128425_("ArmorItems", 9)) {
-         ListTag listtag = compound.m_128437_("ArmorItems", 10);
+         listtag3 = compound.m_128437_("ArmorItems", 10);
 
-         for (int i = 0; i < this.f_21351_.size(); i++) {
-            CompoundTag compoundtag = listtag.m_128728_(i);
-            this.f_21351_.set(i, ItemStack.m_318937_(this.m_321891_(), compoundtag));
+         for(l = 0; l < this.f_21351_.size(); ++l) {
+            compoundtag1 = listtag3.m_128728_(l);
+            this.f_21351_.set(l, ItemStack.m_318937_(this.m_321891_(), compoundtag1));
          }
       }
 
       if (compound.m_128425_("ArmorDropChances", 9)) {
-         ListTag listtag1 = compound.m_128437_("ArmorDropChances", 5);
+         listtag3 = compound.m_128437_("ArmorDropChances", 5);
 
-         for (int j = 0; j < listtag1.size(); j++) {
-            this.f_21348_[j] = listtag1.m_128775_(j);
+         for(l = 0; l < listtag3.size(); ++l) {
+            this.f_21348_[l] = listtag3.m_128775_(l);
          }
       }
 
       if (compound.m_128425_("HandItems", 9)) {
-         ListTag listtag2 = compound.m_128437_("HandItems", 10);
+         listtag3 = compound.m_128437_("HandItems", 10);
 
-         for (int k = 0; k < this.f_21350_.size(); k++) {
-            CompoundTag compoundtag1 = listtag2.m_128728_(k);
-            this.f_21350_.set(k, ItemStack.m_318937_(this.m_321891_(), compoundtag1));
+         for(l = 0; l < this.f_21350_.size(); ++l) {
+            compoundtag1 = listtag3.m_128728_(l);
+            this.f_21350_.set(l, ItemStack.m_318937_(this.m_321891_(), compoundtag1));
          }
       }
 
       if (compound.m_128425_("HandDropChances", 9)) {
-         ListTag listtag3 = compound.m_128437_("HandDropChances", 5);
+         listtag3 = compound.m_128437_("HandDropChances", 5);
 
-         for (int l = 0; l < listtag3.size(); l++) {
+         for(l = 0; l < listtag3.size(); ++l) {
             this.f_21347_[l] = listtag3.m_128775_(l);
          }
       }
@@ -496,7 +543,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       this.f_337544_ = this.m_340395_(compound);
       this.m_21559_(compound.m_128471_("LeftHanded"));
       if (compound.m_128425_("DeathLootTable", 8)) {
-         this.f_21355_ = ResourceKey.m_135785_(Registries.f_314309_, net.minecraft.resources.ResourceLocation.m_338530_(compound.m_128461_("DeathLootTable")));
+         this.f_21355_ = ResourceKey.m_135785_(Registries.f_314309_, ResourceLocation.m_338530_(compound.m_128461_("DeathLootTable")));
          this.f_21356_ = compound.m_128454_("DeathLootTableSeed");
       }
 
@@ -508,6 +555,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             compound.m_128473_("forge:spawn_type");
          }
       }
+
    }
 
    protected void m_7625_(DamageSource damageSourceIn, boolean recentHitIn) {
@@ -515,11 +563,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       this.f_21355_ = null;
    }
 
-   public final ResourceKey<LootTable> m_5743_() {
+   public final ResourceKey m_5743_() {
       return this.f_21355_ == null ? this.m_7582_() : this.f_21355_;
    }
 
-   protected ResourceKey<LootTable> m_7582_() {
+   protected ResourceKey m_7582_() {
       return super.m_5743_();
    }
 
@@ -561,9 +609,10 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
       if (!this.m_9236_().f_46443_ && this.m_21531_() && this.m_6084_() && !this.f_20890_ && mobGriefing) {
          Vec3i vec3i = this.m_213552_();
+         Iterator var3 = this.m_9236_().m_45976_(ItemEntity.class, this.m_20191_().m_82377_((double)vec3i.m_123341_(), (double)vec3i.m_123342_(), (double)vec3i.m_123343_())).iterator();
 
-         for (ItemEntity itementity : this.m_9236_()
-            .m_45976_(ItemEntity.class, this.m_20191_().m_82377_((double)vec3i.m_123341_(), (double)vec3i.m_123342_(), (double)vec3i.m_123343_()))) {
+         while(var3.hasNext()) {
+            ItemEntity itementity = (ItemEntity)var3.next();
             if (!itementity.m_213877_() && !itementity.m_32055_().m_41619_() && !itementity.m_32063_() && this.m_7243_(itementity.m_32055_())) {
                this.m_7581_(itementity);
             }
@@ -588,6 +637,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             itemEntity.m_146870_();
          }
       }
+
    }
 
    public ItemStack m_255207_(ItemStack itemStackIn) {
@@ -631,54 +681,63 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
          case ANIMAL_ARMOR:
             this.f_315062_ = 2.0F;
       }
+
    }
 
    protected boolean m_7808_(ItemStack candidate, ItemStack existing) {
       if (existing.m_41619_()) {
          return true;
-      } else if (candidate.m_41720_() instanceof SwordItem) {
-         if (!(existing.m_41720_() instanceof SwordItem)) {
-            return true;
-         } else {
-            double d2 = this.m_319522_(candidate);
-            double d3 = this.m_319522_(existing);
-            return d2 != d3 ? d2 > d3 : this.m_21477_(candidate, existing);
-         }
-      } else if (candidate.m_41720_() instanceof BowItem && existing.m_41720_() instanceof BowItem) {
-         return this.m_21477_(candidate, existing);
-      } else if (candidate.m_41720_() instanceof CrossbowItem && existing.m_41720_() instanceof CrossbowItem) {
-         return this.m_21477_(candidate, existing);
-      } else if (candidate.m_41720_() instanceof ArmorItem armoritem) {
-         if (EnchantmentHelper.m_340193_(existing, EnchantmentEffectComponents.f_337286_)) {
-            return false;
-         } else if (!(existing.m_41720_() instanceof ArmorItem)) {
-            return true;
-         } else {
-            ArmorItem armoritem1 = (ArmorItem)existing.m_41720_();
-            if (armoritem.m_40404_() != armoritem1.m_40404_()) {
-               return armoritem.m_40404_() > armoritem1.m_40404_();
-            } else {
-               return armoritem.m_40405_() != armoritem1.m_40405_() ? armoritem.m_40405_() > armoritem1.m_40405_() : this.m_21477_(candidate, existing);
-            }
-         }
       } else {
-         if (candidate.m_41720_() instanceof DiggerItem) {
-            if (existing.m_41720_() instanceof BlockItem) {
+         double d0;
+         double d1;
+         if (candidate.m_41720_() instanceof SwordItem) {
+            if (!(existing.m_41720_() instanceof SwordItem)) {
                return true;
+            } else {
+               d1 = this.m_319522_(candidate);
+               d0 = this.m_319522_(existing);
+               return d1 != d0 ? d1 > d0 : this.m_21477_(candidate, existing);
             }
+         } else if (candidate.m_41720_() instanceof BowItem && existing.m_41720_() instanceof BowItem) {
+            return this.m_21477_(candidate, existing);
+         } else if (candidate.m_41720_() instanceof CrossbowItem && existing.m_41720_() instanceof CrossbowItem) {
+            return this.m_21477_(candidate, existing);
+         } else {
+            Item var4 = candidate.m_41720_();
+            if (var4 instanceof ArmorItem) {
+               ArmorItem armoritem = (ArmorItem)var4;
+               if (EnchantmentHelper.m_340193_(existing, EnchantmentEffectComponents.f_337286_)) {
+                  return false;
+               } else if (!(existing.m_41720_() instanceof ArmorItem)) {
+                  return true;
+               } else {
+                  ArmorItem armoritem1 = (ArmorItem)existing.m_41720_();
+                  if (armoritem.m_40404_() != armoritem1.m_40404_()) {
+                     return armoritem.m_40404_() > armoritem1.m_40404_();
+                  } else {
+                     return armoritem.m_40405_() != armoritem1.m_40405_() ? armoritem.m_40405_() > armoritem1.m_40405_() : this.m_21477_(candidate, existing);
+                  }
+               }
+            } else {
+               if (candidate.m_41720_() instanceof DiggerItem) {
+                  if (existing.m_41720_() instanceof BlockItem) {
+                     return true;
+                  }
 
-            if (existing.m_41720_() instanceof DiggerItem) {
-               double d1 = this.m_319522_(candidate);
-               double d0 = this.m_319522_(existing);
-               if (d1 != d0) {
-                  return d1 > d0;
+                  if (existing.m_41720_() instanceof DiggerItem) {
+                     d1 = this.m_319522_(candidate);
+                     d0 = this.m_319522_(existing);
+                     if (d1 != d0) {
+                        return d1 > d0;
+                     }
+
+                     return this.m_21477_(candidate, existing);
+                  }
                }
 
-               return this.m_21477_(candidate, existing);
+               return false;
             }
          }
-
-         return false;
       }
    }
 
@@ -752,10 +811,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       } else {
          this.f_20891_ = 0;
       }
+
    }
 
    protected final void m_6140_() {
-      this.f_20891_++;
+      ++this.f_20891_;
       ProfilerFiller profilerfiller = this.m_9236_().m_46473_();
       profilerfiller.m_6180_("sensing");
       this.f_21349_.m_26789_();
@@ -813,8 +873,8 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    protected void m_322776_() {
       float f = (float)this.m_8085_();
       float f1 = this.m_6080_();
-      float f2 = net.minecraft.util.Mth.m_14177_(this.f_20883_ - f1);
-      float f3 = net.minecraft.util.Mth.m_14036_(net.minecraft.util.Mth.m_14177_(this.f_20883_ - f1), -f, f);
+      float f2 = Mth.m_14177_(this.f_20883_ - f1);
+      float f3 = Mth.m_14036_(Mth.m_14177_(this.f_20883_ - f1), -f, f);
       float f4 = f1 + f2 - f3;
       this.m_5616_(f4);
    }
@@ -834,14 +894,14 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       }
 
       double d3 = Math.sqrt(d0 * d0 + d2 * d2);
-      float f = (float)(net.minecraft.util.Mth.m_14136_(d2, d0) * 180.0 / (float) Math.PI) - 90.0F;
-      float f1 = (float)(-(net.minecraft.util.Mth.m_14136_(d1, d3) * 180.0 / (float) Math.PI));
+      float f = (float)(Mth.m_14136_(d2, d0) * 180.0 / 3.1415927410125732) - 90.0F;
+      float f1 = (float)(-(Mth.m_14136_(d1, d3) * 180.0 / 3.1415927410125732));
       this.m_146926_(this.m_21376_(this.m_146909_(), f1, maxPitchIncrease));
       this.m_146922_(this.m_21376_(this.m_146908_(), f, maxYawIncrease));
    }
 
    private float m_21376_(float angle, float targetAngle, float maxIncrease) {
-      float f = net.minecraft.util.Mth.m_14177_(targetAngle - angle);
+      float f = Mth.m_14177_(targetAngle - angle);
       if (f > maxIncrease) {
          f = maxIncrease;
       }
@@ -853,9 +913,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       return angle + f;
    }
 
-   public static boolean m_217057_(
-      EntityType<? extends net.minecraft.world.entity.Mob> typeIn, LevelAccessor worldIn, MobSpawnType reason, BlockPos pos, RandomSource randomIn
-   ) {
+   public static boolean m_217057_(EntityType typeIn, LevelAccessor worldIn, MobSpawnType reason, BlockPos pos, RandomSource randomIn) {
       BlockPos blockpos = pos.m_7495_();
       return reason == MobSpawnType.SPAWNER || worldIn.m_8055_(blockpos).m_60643_(worldIn, blockpos, typeIn);
    }
@@ -890,11 +948,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       }
    }
 
-   public Iterable<ItemStack> m_21487_() {
+   public Iterable m_21487_() {
       return this.f_21350_;
    }
 
-   public Iterable<ItemStack> m_21151_() {
+   public Iterable m_21151_() {
       return this.f_21351_;
    }
 
@@ -918,17 +976,27 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       this.m_21468_(EquipmentSlot.BODY, itemStackIn);
    }
 
-   public Iterable<ItemStack> m_322068_() {
-      return (Iterable<ItemStack>)(this.f_314973_.m_41619_() ? this.f_21351_ : Iterables.concat(this.f_21351_, List.of(this.f_314973_)));
+   public Iterable m_322068_() {
+      return (Iterable)(this.f_314973_.m_41619_() ? this.f_21351_ : Iterables.concat(this.f_21351_, List.of(this.f_314973_)));
    }
 
    public ItemStack m_6844_(EquipmentSlot slotIn) {
-      return switch (slotIn.m_20743_()) {
-         case HAND -> (ItemStack)this.f_21350_.get(slotIn.m_20749_());
-         case HUMANOID_ARMOR -> (ItemStack)this.f_21351_.get(slotIn.m_20749_());
-         case ANIMAL_ARMOR -> this.f_314973_;
-         default -> throw new MatchException(null, null);
-      };
+      ItemStack var10000;
+      switch (slotIn.m_20743_()) {
+         case HAND:
+            var10000 = (ItemStack)this.f_21350_.get(slotIn.m_20749_());
+            break;
+         case HUMANOID_ARMOR:
+            var10000 = (ItemStack)this.f_21351_.get(slotIn.m_20749_());
+            break;
+         case ANIMAL_ARMOR:
+            var10000 = this.f_314973_;
+            break;
+         default:
+            throw new MatchException((String)null, (Throwable)null);
+      }
+
+      return var10000;
    }
 
    public void m_21035_(EquipmentSlot slotIn, ItemStack itemStackIn) {
@@ -945,12 +1013,16 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             this.f_314973_ = itemStackIn;
             this.m_238392_(slotIn, itemstack, itemStackIn);
       }
+
    }
 
    protected void m_7472_(ServerLevel worldIn, DamageSource sourceIn, boolean recentlyHitIn) {
       super.m_7472_(worldIn, sourceIn, recentlyHitIn);
+      EquipmentSlot[] var4 = EquipmentSlot.values();
+      int var5 = var4.length;
 
-      for (EquipmentSlot equipmentslot : EquipmentSlot.values()) {
+      for(int var6 = 0; var6 < var5; ++var6) {
+         EquipmentSlot equipmentslot = var4[var6];
          ItemStack itemstack = this.m_6844_(equipmentslot);
          float f = this.m_21519_(equipmentslot);
          if (f != 0.0F) {
@@ -958,15 +1030,14 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             Entity entity = sourceIn.m_7639_();
             if (entity instanceof LivingEntity) {
                LivingEntity livingentity = (LivingEntity)entity;
-               if (this.m_9236_() instanceof ServerLevel serverlevel) {
+               Level var14 = this.m_9236_();
+               if (var14 instanceof ServerLevel) {
+                  ServerLevel serverlevel = (ServerLevel)var14;
                   f = EnchantmentHelper.m_339734_(serverlevel, livingentity, sourceIn, f);
                }
             }
 
-            if (!itemstack.m_41619_()
-               && !EnchantmentHelper.m_340193_(itemstack, EnchantmentEffectComponents.f_337159_)
-               && (recentlyHitIn || flag)
-               && this.f_19796_.m_188501_() < f) {
+            if (!itemstack.m_41619_() && !EnchantmentHelper.m_340193_(itemstack, EnchantmentEffectComponents.f_337159_) && (recentlyHitIn || flag) && this.f_19796_.m_188501_() < f) {
                if (!flag && itemstack.m_41763_()) {
                   itemstack.m_41721_(itemstack.m_41776_() - this.f_19796_.m_188503_(1 + this.f_19796_.m_188503_(Math.max(itemstack.m_41776_() - 3, 1))));
                }
@@ -976,25 +1047,41 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             }
          }
       }
+
    }
 
    protected float m_21519_(EquipmentSlot slotIn) {
-      return switch (slotIn.m_20743_()) {
-         case HAND -> this.f_21347_[slotIn.m_20749_()];
-         case HUMANOID_ARMOR -> this.f_21348_[slotIn.m_20749_()];
-         case ANIMAL_ARMOR -> this.f_315062_;
-         default -> throw new MatchException(null, null);
-      };
+      float var10000;
+      switch (slotIn.m_20743_()) {
+         case HAND:
+            var10000 = this.f_21347_[slotIn.m_20749_()];
+            break;
+         case HUMANOID_ARMOR:
+            var10000 = this.f_21348_[slotIn.m_20749_()];
+            break;
+         case ANIMAL_ARMOR:
+            var10000 = this.f_315062_;
+            break;
+         default:
+            throw new MatchException((String)null, (Throwable)null);
+      }
+
+      return var10000;
    }
 
    public void m_339194_() {
-      this.m_339901_(goalIn -> true);
+      this.m_339901_((goalIn) -> {
+         return true;
+      });
    }
 
-   public Set<EquipmentSlot> m_339901_(Predicate<ItemStack> checkIn) {
-      Set<EquipmentSlot> set = new HashSet();
+   public Set m_339901_(Predicate checkIn) {
+      Set set = new HashSet();
+      EquipmentSlot[] var3 = EquipmentSlot.values();
+      int var4 = var3.length;
 
-      for (EquipmentSlot equipmentslot : EquipmentSlot.values()) {
+      for(int var5 = 0; var5 < var4; ++var5) {
+         EquipmentSlot equipmentslot = var3[var5];
          ItemStack itemstack = this.m_6844_(equipmentslot);
          if (!itemstack.m_41619_()) {
             if (!checkIn.test(itemstack)) {
@@ -1013,20 +1100,19 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    private LootParams m_320276_(ServerLevel levelIn) {
-      return new net.minecraft.world.level.storage.loot.LootParams.Builder(levelIn)
-         .m_287286_(LootContextParams.f_81460_, this.m_20182_())
-         .m_287286_(LootContextParams.f_81455_, this)
-         .m_287235_(LootContextParamSets.f_313897_);
+      return (new LootParams.Builder(levelIn)).m_287286_(LootContextParams.f_81460_, this.m_20182_()).m_287286_(LootContextParams.f_81455_, this).m_287235_(LootContextParamSets.f_313897_);
    }
 
    public void m_319416_(EquipmentTable tableIn) {
       this.m_322414_(tableIn.f_316700_(), tableIn.f_315505_());
    }
 
-   public void m_322414_(ResourceKey<LootTable> keyIn, Map<EquipmentSlot, Float> mapIn) {
-      if (this.m_9236_() instanceof ServerLevel serverlevel) {
+   public void m_322414_(ResourceKey keyIn, Map mapIn) {
+      Level var4 = this.m_9236_();
+      if (var4 instanceof ServerLevel serverlevel) {
          this.m_319719_(keyIn, this.m_320276_(serverlevel), mapIn);
       }
+
    }
 
    protected void m_213945_(RandomSource randomIn, DifficultyInstance difficulty) {
@@ -1034,20 +1120,23 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
          int i = randomIn.m_188503_(2);
          float f = this.m_9236_().m_46791_() == Difficulty.HARD ? 0.1F : 0.25F;
          if (randomIn.m_188501_() < 0.095F) {
-            i++;
+            ++i;
          }
 
          if (randomIn.m_188501_() < 0.095F) {
-            i++;
+            ++i;
          }
 
          if (randomIn.m_188501_() < 0.095F) {
-            i++;
+            ++i;
          }
 
          boolean flag = true;
+         EquipmentSlot[] var6 = EquipmentSlot.values();
+         int var7 = var6.length;
 
-         for (EquipmentSlot equipmentslot : EquipmentSlot.values()) {
+         for(int var8 = 0; var8 < var7; ++var8) {
+            EquipmentSlot equipmentslot = var6[var8];
             if (equipmentslot.m_20743_() == Type.HUMANOID_ARMOR) {
                ItemStack itemstack = this.m_6844_(equipmentslot);
                if (!flag && randomIn.m_188501_() < f) {
@@ -1064,6 +1153,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             }
          }
       }
+
    }
 
    @Nullable
@@ -1124,12 +1214,16 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
    protected void m_213946_(ServerLevelAccessor worldIn, RandomSource randomIn, DifficultyInstance difficultyIn) {
       this.m_214095_(worldIn, randomIn, difficultyIn);
+      EquipmentSlot[] var4 = EquipmentSlot.values();
+      int var5 = var4.length;
 
-      for (EquipmentSlot equipmentslot : EquipmentSlot.values()) {
+      for(int var6 = 0; var6 < var5; ++var6) {
+         EquipmentSlot equipmentslot = var4[var6];
          if (equipmentslot.m_20743_() == Type.HUMANOID_ARMOR) {
             this.m_217051_(worldIn, randomIn, equipmentslot, difficultyIn);
          }
       }
+
    }
 
    protected void m_214095_(ServerLevelAccessor worldIn, RandomSource randomIn, DifficultyInstance difficultyIn) {
@@ -1146,6 +1240,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
          EnchantmentHelper.m_338695_(itemstack, worldIn.m_9598_(), VanillaEnchantmentProviders.f_337458_, difficultyIn, randomIn);
          this.m_21035_(slotIn, itemstack);
       }
+
    }
 
    @Nullable
@@ -1176,6 +1271,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
          case ANIMAL_ARMOR:
             this.f_315062_ = chance;
       }
+
    }
 
    public boolean m_21531_() {
@@ -1232,10 +1328,10 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       if (itemstack.m_41720_() instanceof SpawnEggItem) {
          if (this.m_9236_() instanceof ServerLevel) {
             SpawnEggItem spawneggitem = (SpawnEggItem)itemstack.m_41720_();
-            Optional<net.minecraft.world.entity.Mob> optional = spawneggitem.m_43215_(
-               playerIn, this, this.m_6095_(), (ServerLevel)this.m_9236_(), this.m_20182_(), itemstack
-            );
-            optional.ifPresent(mobIn -> this.m_5502_(playerIn, mobIn));
+            Optional optional = spawneggitem.m_43215_(playerIn, this, this.m_6095_(), (ServerLevel)this.m_9236_(), this.m_20182_(), itemstack);
+            optional.ifPresent((mobIn) -> {
+               this.m_5502_(playerIn, mobIn);
+            });
             return optional.isPresent() ? InteractionResult.SUCCESS : InteractionResult.PASS;
          } else {
             return InteractionResult.CONSUME;
@@ -1245,7 +1341,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       }
    }
 
-   protected void m_5502_(Player playerIn, net.minecraft.world.entity.Mob child) {
+   protected void m_5502_(Player playerIn, Mob child) {
    }
 
    protected InteractionResult m_6071_(Player playerIn, InteractionHand handIn) {
@@ -1282,11 +1378,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    @Nullable
-   public <T extends net.minecraft.world.entity.Mob> T m_21406_(EntityType<T> typeIn, boolean equipmentIn) {
+   public Mob m_21406_(EntityType typeIn, boolean equipmentIn) {
       if (this.m_213877_()) {
          return null;
       } else {
-         T t = (T)typeIn.m_20615_(this.m_9236_());
+         Mob t = (Mob)typeIn.m_20615_(this.m_9236_());
          if (t == null) {
             return null;
          } else {
@@ -1305,8 +1401,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             t.m_20331_(this.m_20147_());
             if (equipmentIn) {
                t.m_21553_(this.m_21531_());
+               EquipmentSlot[] var4 = EquipmentSlot.values();
+               int var5 = var4.length;
 
-               for (EquipmentSlot equipmentslot : EquipmentSlot.values()) {
+               for(int var6 = 0; var6 < var5; ++var6) {
+                  EquipmentSlot equipmentslot = var4[var6];
                   ItemStack itemstack = this.m_6844_(equipmentslot);
                   if (!itemstack.m_41619_()) {
                      t.m_21035_(equipmentslot, itemstack.m_278832_());
@@ -1329,11 +1428,11 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    @Nullable
-   public LeashData m_338492_() {
+   public Leashable.LeashData m_338492_() {
       return this.f_337544_;
    }
 
-   public void m_338401_(@Nullable LeashData leashDataIn) {
+   public void m_338401_(@Nullable Leashable.LeashData leashDataIn) {
       this.f_337544_ = leashDataIn;
    }
 
@@ -1342,6 +1441,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       if (this.m_338492_() == null) {
          this.m_147271_();
       }
+
    }
 
    public void m_339671_() {
@@ -1367,30 +1467,30 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    }
 
    public void m_21557_(boolean disable) {
-      byte b0 = this.f_19804_.<Byte>m_135370_(f_21340_);
+      byte b0 = (Byte)this.f_19804_.m_135370_(f_21340_);
       this.f_19804_.m_135381_(f_21340_, disable ? (byte)(b0 | 1) : (byte)(b0 & -2));
    }
 
    public void m_21559_(boolean leftHanded) {
-      byte b0 = this.f_19804_.<Byte>m_135370_(f_21340_);
+      byte b0 = (Byte)this.f_19804_.m_135370_(f_21340_);
       this.f_19804_.m_135381_(f_21340_, leftHanded ? (byte)(b0 | 2) : (byte)(b0 & -3));
    }
 
    public void m_21561_(boolean hasAggro) {
-      byte b0 = this.f_19804_.<Byte>m_135370_(f_21340_);
+      byte b0 = (Byte)this.f_19804_.m_135370_(f_21340_);
       this.f_19804_.m_135381_(f_21340_, hasAggro ? (byte)(b0 | 4) : (byte)(b0 & -5));
    }
 
    public boolean m_21525_() {
-      return (this.f_19804_.<Byte>m_135370_(f_21340_) & 1) != 0;
+      return ((Byte)this.f_19804_.m_135370_(f_21340_) & 1) != 0;
    }
 
    public boolean m_21526_() {
-      return (this.f_19804_.<Byte>m_135370_(f_21340_) & 2) != 0;
+      return ((Byte)this.f_19804_.m_135370_(f_21340_) & 2) != 0;
    }
 
    public boolean m_5912_() {
-      return (this.f_19804_.<Byte>m_135370_(f_21340_) & 4) != 0;
+      return ((Byte)this.f_19804_.m_135370_(f_21340_) & 4) != 0;
    }
 
    public void m_6863_(boolean childZombie) {
@@ -1410,14 +1510,7 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       if (entity != null) {
          AABB aabb1 = entity.m_20191_();
          AABB aabb2 = this.m_20191_();
-         aabb = new AABB(
-            Math.min(aabb2.f_82288_, aabb1.f_82288_),
-            aabb2.f_82289_,
-            Math.min(aabb2.f_82290_, aabb1.f_82290_),
-            Math.max(aabb2.f_82291_, aabb1.f_82291_),
-            aabb2.f_82292_,
-            Math.max(aabb2.f_82293_, aabb1.f_82293_)
-         );
+         aabb = new AABB(Math.min(aabb2.f_82288_, aabb1.f_82288_), aabb2.f_82289_, Math.min(aabb2.f_82290_, aabb1.f_82290_), Math.max(aabb2.f_82291_, aabb1.f_82291_), aabb2.f_82292_, Math.max(aabb2.f_82293_, aabb1.f_82293_));
       } else {
          aabb = this.m_20191_();
       }
@@ -1428,23 +1521,23 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
    public boolean m_7327_(Entity entityIn) {
       float f = (float)this.m_246858_(Attributes.f_22281_);
       DamageSource damagesource = this.m_269291_().m_269333_(this);
-      if (this.m_9236_() instanceof ServerLevel serverlevel) {
+      Level var5 = this.m_9236_();
+      if (var5 instanceof ServerLevel serverlevel) {
          f = EnchantmentHelper.m_338960_(serverlevel, this.m_338776_(), entityIn, damagesource, f);
       }
 
       boolean flag = entityIn.m_6469_(damagesource, f);
       if (flag) {
          float f1 = this.m_338419_(entityIn, damagesource);
-         if (f1 > 0.0F && entityIn instanceof LivingEntity livingentity) {
-            livingentity.m_147240_(
-               (double)(f1 * 0.5F),
-               (double)net.minecraft.util.Mth.m_14031_(this.m_146908_() * (float) (Math.PI / 180.0)),
-               (double)(-net.minecraft.util.Mth.m_14089_(this.m_146908_() * (float) (Math.PI / 180.0)))
-            );
+         if (f1 > 0.0F && entityIn instanceof LivingEntity) {
+            LivingEntity livingentity = (LivingEntity)entityIn;
+            livingentity.m_147240_((double)(f1 * 0.5F), (double)Mth.m_14031_(this.m_146908_() * 0.017453292F), (double)(-Mth.m_14089_(this.m_146908_() * 0.017453292F)));
             this.m_20256_(this.m_20184_().m_82542_(0.6, 1.0, 0.6));
          }
 
-         if (this.m_9236_() instanceof ServerLevel serverlevel1) {
+         Level var7 = this.m_9236_();
+         if (var7 instanceof ServerLevel) {
+            ServerLevel serverlevel1 = (ServerLevel)var7;
             EnchantmentHelper.m_338760_(serverlevel1, entityIn, damagesource);
          }
 
@@ -1471,8 +1564,10 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       return false;
    }
 
-   protected void m_203347_(TagKey<Fluid> fluidTag) {
-      this.jumpInLiquidInternal(() -> super.m_203347_(fluidTag));
+   protected void m_203347_(TagKey fluidTag) {
+      this.jumpInLiquidInternal(() -> {
+         super.m_203347_(fluidTag);
+      });
    }
 
    private void jumpInLiquidInternal(Runnable onSuper) {
@@ -1481,11 +1576,13 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
       } else {
          this.m_20256_(this.m_20184_().m_82520_(0.0, 0.3, 0.0));
       }
+
    }
 
-   @Override
    public void jumpInFluid(FluidType type) {
-      this.jumpInLiquidInternal(() -> IForgeLivingEntity.super.jumpInFluid(type));
+      this.jumpInLiquidInternal(() -> {
+         IForgeLivingEntity.super.jumpInFluid(type);
+      });
    }
 
    public final MobSpawnType getSpawnType() {
@@ -1506,20 +1603,23 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
    @VisibleForTesting
    public void m_147272_() {
-      this.m_262441_(goalIn -> true);
+      this.m_262441_((goalIn) -> {
+         return true;
+      });
       this.m_6274_().m_147343_();
    }
 
-   public void m_262441_(Predicate<Goal> predicateIn) {
+   public void m_262441_(Predicate predicateIn) {
       this.f_21345_.m_262460_(predicateIn);
    }
 
    protected void m_6089_() {
       super.m_6089_();
-      this.m_323629_().forEach(itemStackIn -> {
+      this.m_323629_().forEach((itemStackIn) -> {
          if (!itemStackIn.m_41619_()) {
             itemStackIn.m_41764_(0);
          }
+
       });
    }
 
@@ -1554,15 +1654,17 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
 
    private List getListPlayers(Level entityWorld) {
       Level world = this.m_20193_();
-      if (world instanceof net.minecraft.client.multiplayer.ClientLevel worldClient) {
+      if (world instanceof ClientLevel worldClient) {
          return worldClient.m_6907_();
+      } else if (world instanceof ServerLevel worldServer) {
+         return worldServer.m_6907_();
       } else {
-         return world instanceof ServerLevel worldServer ? worldServer.m_6907_() : null;
+         return null;
       }
    }
 
    private void onUpdateMinimal() {
-      this.f_20891_++;
+      ++this.f_20891_;
       if (this instanceof Monster) {
          float brightness = this.m_213856_();
          boolean raider = this instanceof Raider;
@@ -1570,5 +1672,13 @@ public abstract class Mob extends LivingEntity implements EquipmentUser, Leashab
             this.f_20891_ += 2;
          }
       }
+
+   }
+
+   static {
+      f_21340_ = SynchedEntityData.m_135353_(Mob.class, EntityDataSerializers.f_135027_);
+      f_217048_ = new Vec3i(1, 0, 1);
+      f_290867_ = Math.sqrt(2.0399999618530273) - 0.6000000238418579;
+      f_337189_ = ResourceLocation.m_340282_("random_spawn_bonus");
    }
 }

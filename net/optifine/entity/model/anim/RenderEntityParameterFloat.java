@@ -2,14 +2,25 @@ package net.optifine.entity.model.anim;
 
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseRailBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.optifine.Config;
 import net.optifine.entity.model.CustomEntityModels;
@@ -35,7 +46,8 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
    POS_Z("pos_z", true),
    ROT_X("rot_x"),
    ROT_Y("rot_y"),
-   ID("id", true),
+   // $FF: renamed from: ID net.optifine.entity.model.anim.RenderEntityParameterFloat
+   field_34("id", true),
    PLAYER_POS_X("player_pos_x", true),
    PLAYER_POS_Y("player_pos_y", true),
    PLAYER_POS_Z("player_pos_z", true),
@@ -51,9 +63,10 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
 
    private String name;
    private boolean blockEntity;
-   private net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager;
+   private EntityRenderDispatcher renderManager;
    private static final RenderEntityParameterFloat[] VALUES = values();
-   private static Minecraft mc = Minecraft.m_91087_();
+   // $FF: renamed from: mc net.minecraft.client.Minecraft
+   private static Minecraft field_35 = Minecraft.m_91087_();
    private static String KEY_ANGER_TIME_MAX = "ANGER_TIME_MAX";
 
    private RenderEntityParameterFloat(String name) {
@@ -74,60 +87,45 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
       return this.blockEntity;
    }
 
-   @Override
    public float eval() {
-      switch (this) {
-         case PLAYER_POS_X:
-            return net.minecraft.util.Mth.m_14179_(
-               net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)mc.f_91074_.f_19854_, (float)mc.f_91074_.m_20185_()
-            );
-         case PLAYER_POS_Y:
-            return net.minecraft.util.Mth.m_14179_(
-               net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)mc.f_91074_.f_19855_, (float)mc.f_91074_.m_20186_()
-            );
-         case PLAYER_POS_Z:
-            return net.minecraft.util.Mth.m_14179_(
-               net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)mc.f_91074_.f_19856_, (float)mc.f_91074_.m_20189_()
-            );
-         case PLAYER_ROT_X:
-            return MathUtils.toRad(
-               net.minecraft.util.Mth.m_14179_(
-                  net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), mc.f_91074_.f_19860_, mc.f_91074_.m_146909_()
-               )
-            );
-         case PLAYER_ROT_Y:
-            return MathUtils.toRad(
-               net.minecraft.util.Mth.m_14179_(
-                  net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), mc.f_91074_.f_19859_, mc.f_91074_.m_146908_()
-               )
-            );
-         case FRAME_TIME:
+      switch (this.ordinal()) {
+         case 18:
+            return Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)field_35.f_91074_.f_19854_, (float)field_35.f_91074_.m_20185_());
+         case 19:
+            return Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)field_35.f_91074_.f_19855_, (float)field_35.f_91074_.m_20186_());
+         case 20:
+            return Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)field_35.f_91074_.f_19856_, (float)field_35.f_91074_.m_20189_());
+         case 21:
+            return MathUtils.toRad(Mth.m_14179_(GameRenderer.getRenderPartialTicks(), field_35.f_91074_.f_19860_, field_35.f_91074_.m_146909_()));
+         case 22:
+            return MathUtils.toRad(Mth.m_14179_(GameRenderer.getRenderPartialTicks(), field_35.f_91074_.f_19859_, field_35.f_91074_.m_146908_()));
+         case 23:
             return this.getLastFrameTime();
-         case FRAME_COUNTER:
+         case 24:
             return (float)(Config.getWorldRenderer().getFrameCount() % 720720);
-         case ANGER_TIME:
-         case ANGER_TIME_START:
-         case SWING_PROGRESS:
+         case 25:
+         case 26:
+         case 27:
          default:
-            net.minecraft.world.level.block.entity.BlockEntity blockEntity = net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher.tileEntityRendered;
+            BlockEntity blockEntity = BlockEntityRenderDispatcher.tileEntityRendered;
             if (blockEntity != null) {
-               switch (this) {
-                  case POS_X:
+               switch (this.ordinal()) {
+                  case 12:
                      return (float)blockEntity.m_58899_().m_123341_();
-                  case POS_Y:
+                  case 13:
                      return (float)blockEntity.m_58899_().m_123342_();
-                  case POS_Z:
+                  case 14:
                      return (float)blockEntity.m_58899_().m_123343_();
-                  case ROT_X:
-                  case ROT_Y:
+                  case 15:
+                  case 16:
                   default:
                      break;
-                  case ID:
+                  case 17:
                      return this.toFloat(blockEntity.m_58899_());
                }
             }
 
-            net.minecraft.client.renderer.entity.EntityRenderer render = this.renderManager.getEntityRenderer();
+            EntityRenderer render = this.renderManager.getEntityRenderer();
             if (render == null) {
                return 0.0F;
             } else {
@@ -135,58 +133,55 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
                if (entity == null) {
                   return 0.0F;
                } else {
-                  if (render instanceof net.minecraft.client.renderer.entity.LivingEntityRenderer rlb) {
-                     switch (this) {
-                        case LIMB_SWING:
+                  if (render instanceof LivingEntityRenderer) {
+                     LivingEntityRenderer rlb = (LivingEntityRenderer)render;
+                     switch (this.ordinal()) {
+                        case 0:
                            return rlb.renderLimbSwing;
-                        case LIMB_SWING_SPEED:
+                        case 1:
                            return rlb.renderLimbSwingAmount;
-                        case AGE:
+                        case 2:
                            return rlb.renderAgeInTicks;
-                        case HEAD_YAW:
+                        case 3:
                            return rlb.renderHeadYaw;
-                        case HEAD_PITCH:
+                        case 4:
                            return rlb.renderHeadPitch;
                         default:
-                           if (entity instanceof LivingEntity livingEntity) {
-                              switch (this) {
-                                 case HEALTH:
+                           if (entity instanceof LivingEntity) {
+                              LivingEntity livingEntity = (LivingEntity)entity;
+                              switch (this.ordinal()) {
+                                 case 5:
                                     return livingEntity.m_21223_();
-                                 case HURT_TIME:
-                                    return livingEntity.f_20916_ > 0
-                                       ? (float)livingEntity.f_20916_ - net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks()
-                                       : 0.0F;
-                                 case DEATH_TIME:
-                                    return livingEntity.f_20919_ > 0
-                                       ? (float)livingEntity.f_20919_ + net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks()
-                                       : 0.0F;
-                                 case IDLE_TIME:
-                                    return livingEntity.m_21216_() > 0
-                                       ? (float)livingEntity.m_21216_() + net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks()
-                                       : 0.0F;
-                                 case MAX_HEALTH:
+                                 case 6:
+                                    return livingEntity.f_20916_ > 0 ? (float)livingEntity.f_20916_ - GameRenderer.getRenderPartialTicks() : 0.0F;
+                                 case 7:
+                                    return livingEntity.f_20919_ > 0 ? (float)livingEntity.f_20919_ + GameRenderer.getRenderPartialTicks() : 0.0F;
+                                 case 8:
+                                    return livingEntity.m_21216_() > 0 ? (float)livingEntity.m_21216_() + GameRenderer.getRenderPartialTicks() : 0.0F;
+                                 case 9:
                                     return livingEntity.m_21233_();
-                                 case MOVE_FORWARD:
+                                 case 10:
                                     return livingEntity.f_20902_;
-                                 case MOVE_STRAFING:
+                                 case 11:
                                     return livingEntity.f_20900_;
-                                 case POS_X:
-                                 case POS_Y:
-                                 case POS_Z:
-                                 case ROT_X:
-                                 case ROT_Y:
-                                 case ID:
-                                 case PLAYER_POS_X:
-                                 case PLAYER_POS_Y:
-                                 case PLAYER_POS_Z:
-                                 case PLAYER_ROT_X:
-                                 case PLAYER_ROT_Y:
-                                 case FRAME_TIME:
-                                 case FRAME_COUNTER:
+                                 case 12:
+                                 case 13:
+                                 case 14:
+                                 case 15:
+                                 case 16:
+                                 case 17:
+                                 case 18:
+                                 case 19:
+                                 case 20:
+                                 case 21:
+                                 case 22:
+                                 case 23:
+                                 case 24:
                                  default:
                                     break;
-                                 case ANGER_TIME:
-                                    if (livingEntity instanceof NeutralMob neutralMob) {
+                                 case 25:
+                                    if (livingEntity instanceof NeutralMob) {
+                                       NeutralMob neutralMob = (NeutralMob)livingEntity;
                                        float val = (float)neutralMob.m_6784_();
                                        float valMax = EntityVariableFloat.getEntityValue(KEY_ANGER_TIME_MAX);
                                        if (val > 0.0F) {
@@ -195,7 +190,7 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
                                           }
 
                                           if (val < valMax) {
-                                             val -= net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks();
+                                             val -= GameRenderer.getRenderPartialTicks();
                                           }
                                        } else if (valMax > 0.0F) {
                                           EntityVariableFloat.setEntityValue(KEY_ANGER_TIME_MAX, 0.0F);
@@ -203,36 +198,36 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
 
                                        return val;
                                     }
-                                 case ANGER_TIME_START:
+                                 case 26:
                                     return EntityVariableFloat.getEntityValue(KEY_ANGER_TIME_MAX);
-                                 case SWING_PROGRESS:
-                                    return livingEntity.m_21324_(net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks());
+                                 case 27:
+                                    return livingEntity.m_21324_(GameRenderer.getRenderPartialTicks());
                               }
                            }
                      }
                   }
 
-                  if (entity instanceof Boat boat) {
-                     switch (this) {
-                        case LIMB_SWING:
-                           float left = boat.m_38315_(0, net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks());
-                           float right = boat.m_38315_(1, net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks());
-                           return Math.max(left, right);
-                        case LIMB_SWING_SPEED:
+                  float posX;
+                  float posZ;
+                  if (entity instanceof Boat) {
+                     Boat boat = (Boat)entity;
+                     switch (this.ordinal()) {
+                        case 0:
+                           posX = boat.m_38315_(0, GameRenderer.getRenderPartialTicks());
+                           posZ = boat.m_38315_(1, GameRenderer.getRenderPartialTicks());
+                           return Math.max(posX, posZ);
+                        case 1:
                            return 1.0F;
                      }
                   }
 
-                  if (entity instanceof AbstractMinecart minecart) {
-                     switch (this) {
-                        case LIMB_SWING:
-                           float posX = net.minecraft.util.Mth.m_14179_(
-                              net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)minecart.f_19790_, (float)minecart.m_20185_()
-                           );
-                           float posZ = net.minecraft.util.Mth.m_14179_(
-                              net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)minecart.f_19792_, (float)minecart.m_20189_()
-                           );
-                           net.minecraft.world.level.block.state.BlockState bs = Minecraft.m_91087_().f_91073_.m_8055_(minecart.m_20183_());
+                  if (entity instanceof AbstractMinecart) {
+                     AbstractMinecart minecart = (AbstractMinecart)entity;
+                     switch (this.ordinal()) {
+                        case 0:
+                           posX = Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)minecart.f_19790_, (float)minecart.m_20185_());
+                           posZ = Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)minecart.f_19792_, (float)minecart.m_20189_());
+                           BlockState bs = Minecraft.m_91087_().f_91073_.m_8055_(minecart.m_20183_());
                            if (bs.m_204336_(BlockTags.f_13034_)) {
                               RailShape rs = (RailShape)bs.m_61143_(((BaseRailBlock)bs.m_60734_()).m_7978_());
                               switch (rs) {
@@ -246,56 +241,36 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
                                     return -(posX + posZ);
                               }
                            }
-                        case LIMB_SWING_SPEED:
+                        case 1:
                            return 1.0F;
                      }
                   }
 
-                  switch (this) {
-                     case POS_X:
-                        return net.minecraft.util.Mth.m_14179_(
-                           net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)entity.f_19854_, (float)entity.m_20185_()
-                        );
-                     case POS_Y:
-                        return net.minecraft.util.Mth.m_14179_(
-                           net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)entity.f_19855_, (float)entity.m_20186_()
-                        );
-                     case POS_Z:
-                        return net.minecraft.util.Mth.m_14179_(
-                           net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), (float)entity.f_19856_, (float)entity.m_20189_()
-                        );
-                     case ROT_X:
-                        return MathUtils.toRad(
-                           net.minecraft.util.Mth.m_14179_(
-                              net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), entity.f_19860_, entity.m_146909_()
-                           )
-                        );
-                     case ROT_Y:
+                  switch (this.ordinal()) {
+                     case 12:
+                        return Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)entity.f_19854_, (float)entity.m_20185_());
+                     case 13:
+                        return Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)entity.f_19855_, (float)entity.m_20186_());
+                     case 14:
+                        return Mth.m_14179_(GameRenderer.getRenderPartialTicks(), (float)entity.f_19856_, (float)entity.m_20189_());
+                     case 15:
+                        return MathUtils.toRad(Mth.m_14179_(GameRenderer.getRenderPartialTicks(), entity.f_19860_, entity.m_146909_()));
+                     case 16:
                         if (entity instanceof LivingEntity) {
-                           return MathUtils.toRad(
-                              net.minecraft.util.Mth.m_14179_(
-                                 net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(),
-                                 ((LivingEntity)entity).f_20884_,
-                                 ((LivingEntity)entity).f_20883_
-                              )
-                           );
+                           return MathUtils.toRad(Mth.m_14179_(GameRenderer.getRenderPartialTicks(), ((LivingEntity)entity).f_20884_, ((LivingEntity)entity).f_20883_));
                         }
 
-                        return MathUtils.toRad(
-                           net.minecraft.util.Mth.m_14179_(
-                              net.minecraft.client.renderer.GameRenderer.getRenderPartialTicks(), entity.f_19859_, entity.m_146908_()
-                           )
-                        );
-                     case ID:
+                        return MathUtils.toRad(Mth.m_14179_(GameRenderer.getRenderPartialTicks(), entity.f_19859_, entity.m_146908_()));
+                     case 17:
                         return this.toFloat(entity.m_20148_());
                      default:
                         return 0.0F;
                   }
                }
             }
-         case DIMENSION:
-            return (float)WorldUtils.getDimensionId(mc.f_91073_);
-         case RULE_INDEX:
+         case 28:
+            return (float)WorldUtils.getDimensionId((Level)field_35.f_91073_);
+         case 29:
             return (float)CustomEntityModels.getMatchingRuleIndex();
       }
    }
@@ -303,13 +278,13 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
    float getLastFrameTime() {
       float timeMul = 1.0F;
       Minecraft mc = Minecraft.m_91087_();
-      net.minecraft.client.server.IntegratedServer is = mc.m_91092_();
+      IntegratedServer is = mc.m_91092_();
       if (is != null && mc.m_91090_()) {
          if (is.m_305863_()) {
             return 0.0F;
          }
 
-         net.minecraft.world.TickRateManager trm = is.m_306290_();
+         TickRateManager trm = is.m_306290_();
          if (trm.m_306363_()) {
             return 0.0F;
          }
@@ -326,19 +301,21 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
    private float toFloat(UUID uuid) {
       int i0 = Long.hashCode(uuid.getLeastSignificantBits());
       int i1 = Long.hashCode(uuid.getMostSignificantBits());
-      return Float.intBitsToFloat(i0 ^ i1);
+      float id = Float.intBitsToFloat(i0 ^ i1);
+      return id;
    }
 
    private float toFloat(BlockPos pos) {
       int hash = Config.getRandom(pos, 0);
-      return Float.intBitsToFloat(hash);
+      float id = Float.intBitsToFloat(hash);
+      return id;
    }
 
    public static RenderEntityParameterFloat parse(String str) {
       if (str == null) {
          return null;
       } else {
-         for (int i = 0; i < VALUES.length; i++) {
+         for(int i = 0; i < VALUES.length; ++i) {
             RenderEntityParameterFloat type = VALUES[i];
             if (type.getName().equals(str)) {
                return type;
@@ -347,5 +324,10 @@ public enum RenderEntityParameterFloat implements IExpressionFloat {
 
          return null;
       }
+   }
+
+   // $FF: synthetic method
+   private static RenderEntityParameterFloat[] $values() {
+      return new RenderEntityParameterFloat[]{LIMB_SWING, LIMB_SWING_SPEED, AGE, HEAD_YAW, HEAD_PITCH, HEALTH, HURT_TIME, DEATH_TIME, IDLE_TIME, MAX_HEALTH, MOVE_FORWARD, MOVE_STRAFING, POS_X, POS_Y, POS_Z, ROT_X, ROT_Y, field_34, PLAYER_POS_X, PLAYER_POS_Y, PLAYER_POS_Z, PLAYER_ROT_X, PLAYER_ROT_Y, FRAME_TIME, FRAME_COUNTER, ANGER_TIME, ANGER_TIME_START, SWING_PROGRESS, DIMENSION, RULE_INDEX};
    }
 }

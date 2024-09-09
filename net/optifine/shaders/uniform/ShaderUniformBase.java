@@ -30,6 +30,7 @@ public abstract class ShaderUniformBase {
          System.arraycopy(this.locations, 0, locationsNew, 0, this.locations.length);
          this.locations = locationsNew;
       }
+
    }
 
    protected abstract void onProgramSet(int var1);
@@ -76,6 +77,7 @@ public abstract class ShaderUniformBase {
       if (Shaders.checkGLError(this.name) != 0) {
          this.disable();
       }
+
    }
 
    protected static final void flushRenderBuffers() {

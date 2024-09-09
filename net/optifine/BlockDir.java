@@ -1,44 +1,46 @@
 package net.optifine;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 public enum BlockDir {
-   DOWN(net.minecraft.core.Direction.DOWN),
-   UP(net.minecraft.core.Direction.UP),
-   NORTH(net.minecraft.core.Direction.NORTH),
-   SOUTH(net.minecraft.core.Direction.SOUTH),
-   WEST(net.minecraft.core.Direction.WEST),
-   EAST(net.minecraft.core.Direction.EAST),
-   NORTH_WEST(net.minecraft.core.Direction.NORTH, net.minecraft.core.Direction.WEST),
-   NORTH_EAST(net.minecraft.core.Direction.NORTH, net.minecraft.core.Direction.EAST),
-   SOUTH_WEST(net.minecraft.core.Direction.SOUTH, net.minecraft.core.Direction.WEST),
-   SOUTH_EAST(net.minecraft.core.Direction.SOUTH, net.minecraft.core.Direction.EAST),
-   DOWN_NORTH(net.minecraft.core.Direction.DOWN, net.minecraft.core.Direction.NORTH),
-   DOWN_SOUTH(net.minecraft.core.Direction.DOWN, net.minecraft.core.Direction.SOUTH),
-   UP_NORTH(net.minecraft.core.Direction.UP, net.minecraft.core.Direction.NORTH),
-   UP_SOUTH(net.minecraft.core.Direction.UP, net.minecraft.core.Direction.SOUTH),
-   DOWN_WEST(net.minecraft.core.Direction.DOWN, net.minecraft.core.Direction.WEST),
-   DOWN_EAST(net.minecraft.core.Direction.DOWN, net.minecraft.core.Direction.EAST),
-   UP_WEST(net.minecraft.core.Direction.UP, net.minecraft.core.Direction.WEST),
-   UP_EAST(net.minecraft.core.Direction.UP, net.minecraft.core.Direction.EAST);
+   DOWN(Direction.DOWN),
+   // $FF: renamed from: UP net.optifine.BlockDir
+   field_36(Direction.field_61),
+   NORTH(Direction.NORTH),
+   SOUTH(Direction.SOUTH),
+   WEST(Direction.WEST),
+   EAST(Direction.EAST),
+   NORTH_WEST(Direction.NORTH, Direction.WEST),
+   NORTH_EAST(Direction.NORTH, Direction.EAST),
+   SOUTH_WEST(Direction.SOUTH, Direction.WEST),
+   SOUTH_EAST(Direction.SOUTH, Direction.EAST),
+   DOWN_NORTH(Direction.DOWN, Direction.NORTH),
+   DOWN_SOUTH(Direction.DOWN, Direction.SOUTH),
+   UP_NORTH(Direction.field_61, Direction.NORTH),
+   UP_SOUTH(Direction.field_61, Direction.SOUTH),
+   DOWN_WEST(Direction.DOWN, Direction.WEST),
+   DOWN_EAST(Direction.DOWN, Direction.EAST),
+   UP_WEST(Direction.field_61, Direction.WEST),
+   UP_EAST(Direction.field_61, Direction.EAST);
 
-   private net.minecraft.core.Direction facing1;
-   private net.minecraft.core.Direction facing2;
+   private Direction facing1;
+   private Direction facing2;
 
-   private BlockDir(net.minecraft.core.Direction facing1) {
+   private BlockDir(Direction facing1) {
       this.facing1 = facing1;
    }
 
-   private BlockDir(net.minecraft.core.Direction facing1, net.minecraft.core.Direction facing2) {
+   private BlockDir(Direction facing1, Direction facing2) {
       this.facing1 = facing1;
       this.facing2 = facing2;
    }
 
-   public net.minecraft.core.Direction getFacing1() {
+   public Direction getFacing1() {
       return this.facing1;
    }
 
-   public net.minecraft.core.Direction getFacing2() {
+   public Direction getFacing2() {
       return this.facing2;
    }
 
@@ -80,5 +82,10 @@ public enum BlockDir {
 
    public boolean isDouble() {
       return this.facing2 != null;
+   }
+
+   // $FF: synthetic method
+   private static BlockDir[] $values() {
+      return new BlockDir[]{DOWN, field_36, NORTH, SOUTH, WEST, EAST, NORTH_WEST, NORTH_EAST, SOUTH_WEST, SOUTH_EAST, DOWN_NORTH, DOWN_SOUTH, UP_NORTH, UP_SOUTH, DOWN_WEST, DOWN_EAST, UP_WEST, UP_EAST};
    }
 }

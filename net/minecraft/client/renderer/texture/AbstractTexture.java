@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.io.IOException;
 import java.util.concurrent.Executor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.optifine.Config;
 import net.optifine.shaders.MultiTexID;
@@ -27,7 +28,7 @@ public abstract class AbstractTexture implements AutoCloseable {
          this.f_117951_ = blurIn;
          this.f_117952_ = mipmapIn;
          int i;
-         int j;
+         short j;
          if (blurIn) {
             i = mipmapIn ? 9987 : 9729;
             j = 9729;
@@ -62,6 +63,7 @@ public abstract class AbstractTexture implements AutoCloseable {
                TextureUtil.releaseTextureId(this.f_117950_);
                this.f_117950_ = -1;
             }
+
          });
       } else if (this.f_117950_ != -1) {
          ShadersTex.deleteTextures(this, this.f_117950_);
@@ -69,24 +71,23 @@ public abstract class AbstractTexture implements AutoCloseable {
          TextureUtil.releaseTextureId(this.f_117950_);
          this.f_117950_ = -1;
       }
+
    }
 
    public abstract void m_6704_(ResourceManager var1) throws IOException;
 
    public void m_117966_() {
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> GlStateManager._bindTexture(this.m_117963_()));
+         RenderSystem.recordRenderCall(() -> {
+            GlStateManager._bindTexture(this.m_117963_());
+         });
       } else {
          GlStateManager._bindTexture(this.m_117963_());
       }
+
    }
 
-   public void m_6479_(
-      net.minecraft.client.renderer.texture.TextureManager textureManagerIn,
-      ResourceManager resourceManagerIn,
-      net.minecraft.resources.ResourceLocation resourceLocationIn,
-      Executor executorIn
-   ) {
+   public void m_6479_(TextureManager textureManagerIn, ResourceManager resourceManagerIn, ResourceLocation resourceLocationIn, Executor executorIn) {
       textureManagerIn.m_118495_(resourceLocationIn, this);
    }
 

@@ -11,10 +11,10 @@ public class SimplePrime {
          return 2L;
       } else {
          if ((number & 1L) == 0L) {
-            number--;
+            --number;
          }
 
-         while (!testPrime(number)) {
+         while(!testPrime(number)) {
             number -= 2L;
             if (number <= 2L) {
                return 2L;
@@ -30,10 +30,10 @@ public class SimplePrime {
          return 2L;
       } else {
          if ((number & 1L) == 0L) {
-            number++;
+            ++number;
          }
 
-         while (!testPrime(number)) {
+         while(!testPrime(number)) {
             number += 2L;
             if (number < 0L) {
                return 0L;
@@ -54,7 +54,7 @@ public class SimplePrime {
       } else {
          long sqrt = (long)Math.floor(Math.sqrt((double)number));
 
-         for (long i = 3L; i <= sqrt; i += 2L) {
+         for(long i = 3L; i <= sqrt; i += 2L) {
             if (number % i == 0L) {
                return false;
             }

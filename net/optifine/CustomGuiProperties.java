@@ -1,11 +1,14 @@
 package net.optifine;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.animal.horse.Donkey;
@@ -15,17 +18,20 @@ import net.minecraft.world.entity.animal.horse.Mule;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 import net.minecraft.world.level.block.entity.DropperBlockEntity;
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.world.level.block.entity.TrappedChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.optifine.config.BiomeId;
 import net.optifine.config.ConnectedParser;
@@ -40,8 +46,8 @@ import net.optifine.util.TextureUtils;
 public class CustomGuiProperties {
    private String fileName = null;
    private String basePath = null;
-   private CustomGuiProperties.EnumContainer container = null;
-   private Map<net.minecraft.resources.ResourceLocation, net.minecraft.resources.ResourceLocation> textureLocations = null;
+   private EnumContainer container = null;
+   private Map textureLocations = null;
    private NbtTagValue nbtName = null;
    private BiomeId[] biomes = null;
    private RangeListInt heights = null;
@@ -51,64 +57,31 @@ public class CustomGuiProperties {
    private Boolean ender = null;
    private RangeListInt levels = null;
    private MatchProfession[] professions = null;
-   private CustomGuiProperties.EnumVariant[] variants = null;
-   private net.minecraft.world.item.DyeColor[] colors = null;
-   private static final CustomGuiProperties.EnumVariant[] VARIANTS_HORSE = new CustomGuiProperties.EnumVariant[]{
-      CustomGuiProperties.EnumVariant.HORSE,
-      CustomGuiProperties.EnumVariant.DONKEY,
-      CustomGuiProperties.EnumVariant.MULE,
-      CustomGuiProperties.EnumVariant.LLAMA
-   };
-   private static final CustomGuiProperties.EnumVariant[] VARIANTS_DISPENSER = new CustomGuiProperties.EnumVariant[]{
-      CustomGuiProperties.EnumVariant.DISPENSER, CustomGuiProperties.EnumVariant.DROPPER
-   };
-   private static final CustomGuiProperties.EnumVariant[] VARIANTS_INVALID = new CustomGuiProperties.EnumVariant[0];
-   private static final net.minecraft.world.item.DyeColor[] COLORS_INVALID = new net.minecraft.world.item.DyeColor[0];
-   private static final net.minecraft.resources.ResourceLocation ANVIL_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/anvil.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation BEACON_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/beacon.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation BREWING_STAND_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/brewing_stand.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation CHEST_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/generic_54.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation CRAFTING_TABLE_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/crafting_table.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation HORSE_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/horse.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation DISPENSER_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/dispenser.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation ENCHANTMENT_TABLE_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/enchanting_table.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation FURNACE_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/furnace.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation HOPPER_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/hopper.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation INVENTORY_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/inventory.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation SHULKER_BOX_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/shulker_box.png"
-   );
-   private static final net.minecraft.resources.ResourceLocation VILLAGER_GUI_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/gui/container/villager2.png"
-   );
+   private EnumVariant[] variants = null;
+   private DyeColor[] colors = null;
+   private static final EnumVariant[] VARIANTS_HORSE;
+   private static final EnumVariant[] VARIANTS_DISPENSER;
+   private static final EnumVariant[] VARIANTS_INVALID;
+   private static final DyeColor[] COLORS_INVALID;
+   private static final ResourceLocation ANVIL_GUI_TEXTURE;
+   private static final ResourceLocation BEACON_GUI_TEXTURE;
+   private static final ResourceLocation BREWING_STAND_GUI_TEXTURE;
+   private static final ResourceLocation CHEST_GUI_TEXTURE;
+   private static final ResourceLocation CRAFTING_TABLE_GUI_TEXTURE;
+   private static final ResourceLocation HORSE_GUI_TEXTURE;
+   private static final ResourceLocation DISPENSER_GUI_TEXTURE;
+   private static final ResourceLocation ENCHANTMENT_TABLE_GUI_TEXTURE;
+   private static final ResourceLocation FURNACE_GUI_TEXTURE;
+   private static final ResourceLocation HOPPER_GUI_TEXTURE;
+   private static final ResourceLocation INVENTORY_GUI_TEXTURE;
+   private static final ResourceLocation SHULKER_BOX_GUI_TEXTURE;
+   private static final ResourceLocation VILLAGER_GUI_TEXTURE;
 
    public CustomGuiProperties(Properties props, String path) {
       ConnectedParser cp = new ConnectedParser("CustomGuis");
       this.fileName = cp.parseName(path);
       this.basePath = cp.parseBasePath(path);
-      this.container = (CustomGuiProperties.EnumContainer)cp.parseEnum(props.getProperty("container"), CustomGuiProperties.EnumContainer.values(), "container");
+      this.container = (EnumContainer)cp.parseEnum(props.getProperty("container"), CustomGuiProperties.EnumContainer.values(), "container");
       this.textureLocations = parseTextureLocations(props, "texture", this.container, "textures/gui/", this.basePath);
       this.nbtName = cp.parseNbtTagValue("name", props.getProperty("name"));
       this.biomes = cp.parseBiomes(props.getProperty("biomes"));
@@ -119,30 +92,30 @@ public class CustomGuiProperties {
       this.ender = cp.parseBooleanObject(props.getProperty("ender"));
       this.levels = cp.parseRangeListInt(props.getProperty("levels"));
       this.professions = cp.parseProfessions(props.getProperty("professions"));
-      CustomGuiProperties.EnumVariant[] vars = getContainerVariants(this.container);
-      this.variants = (CustomGuiProperties.EnumVariant[])cp.parseEnums(props.getProperty("variants"), vars, "variants", VARIANTS_INVALID);
+      EnumVariant[] vars = getContainerVariants(this.container);
+      this.variants = (EnumVariant[])cp.parseEnums(props.getProperty("variants"), vars, "variants", VARIANTS_INVALID);
       this.colors = parseEnumDyeColors(props.getProperty("colors"));
    }
 
-   private static CustomGuiProperties.EnumVariant[] getContainerVariants(CustomGuiProperties.EnumContainer cont) {
+   private static EnumVariant[] getContainerVariants(EnumContainer cont) {
       if (cont == CustomGuiProperties.EnumContainer.HORSE) {
          return VARIANTS_HORSE;
       } else {
-         return cont == CustomGuiProperties.EnumContainer.DISPENSER ? VARIANTS_DISPENSER : new CustomGuiProperties.EnumVariant[0];
+         return cont == CustomGuiProperties.EnumContainer.DISPENSER ? VARIANTS_DISPENSER : new EnumVariant[0];
       }
    }
 
-   private static net.minecraft.world.item.DyeColor[] parseEnumDyeColors(String str) {
+   private static DyeColor[] parseEnumDyeColors(String str) {
       if (str == null) {
          return null;
       } else {
          str = str.toLowerCase();
          String[] tokens = Config.tokenize(str, " ");
-         net.minecraft.world.item.DyeColor[] cols = new net.minecraft.world.item.DyeColor[tokens.length];
+         DyeColor[] cols = new DyeColor[tokens.length];
 
-         for (int i = 0; i < tokens.length; i++) {
+         for(int i = 0; i < tokens.length; ++i) {
             String token = tokens[i];
-            net.minecraft.world.item.DyeColor col = parseEnumDyeColor(token);
+            DyeColor col = parseEnumDyeColor(token);
             if (col == null) {
                warn("Invalid color: " + token);
                return COLORS_INVALID;
@@ -155,14 +128,14 @@ public class CustomGuiProperties {
       }
    }
 
-   private static net.minecraft.world.item.DyeColor parseEnumDyeColor(String str) {
+   private static DyeColor parseEnumDyeColor(String str) {
       if (str == null) {
          return null;
       } else {
-         net.minecraft.world.item.DyeColor[] colors = net.minecraft.world.item.DyeColor.values();
+         DyeColor[] colors = DyeColor.values();
 
-         for (int i = 0; i < colors.length; i++) {
-            net.minecraft.world.item.DyeColor enumDyeColor = colors[i];
+         for(int i = 0; i < colors.length; ++i) {
+            DyeColor enumDyeColor = colors[i];
             if (enumDyeColor.m_7912_().equals(str)) {
                return enumDyeColor;
             }
@@ -176,7 +149,7 @@ public class CustomGuiProperties {
       }
    }
 
-   private static net.minecraft.resources.ResourceLocation parseTextureLocation(String str, String basePath) {
+   private static ResourceLocation parseTextureLocation(String str, String basePath) {
       if (str == null) {
          return null;
       } else {
@@ -186,34 +159,35 @@ public class CustomGuiProperties {
             tex = tex + ".png";
          }
 
-         return new net.minecraft.resources.ResourceLocation(basePath + "/" + tex);
+         return new ResourceLocation(basePath + "/" + tex);
       }
    }
 
-   private static Map<net.minecraft.resources.ResourceLocation, net.minecraft.resources.ResourceLocation> parseTextureLocations(
-      Properties props, String property, CustomGuiProperties.EnumContainer container, String pathPrefix, String basePath
-   ) {
-      Map<net.minecraft.resources.ResourceLocation, net.minecraft.resources.ResourceLocation> map = new HashMap();
+   private static Map parseTextureLocations(Properties props, String property, EnumContainer container, String pathPrefix, String basePath) {
+      Map map = new HashMap();
       String propVal = props.getProperty(property);
       if (propVal != null) {
-         net.minecraft.resources.ResourceLocation locKey = getGuiTextureLocation(container);
-         net.minecraft.resources.ResourceLocation locVal = parseTextureLocation(propVal, basePath);
+         ResourceLocation locKey = getGuiTextureLocation(container);
+         ResourceLocation locVal = parseTextureLocation(propVal, basePath);
          if (locKey != null && locVal != null) {
             map.put(locKey, locVal);
          }
       }
 
       String keyPrefix = property + ".";
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
 
-      for (String key : props.keySet()) {
+      while(it.hasNext()) {
+         String key = (String)it.next();
          if (key.startsWith(keyPrefix)) {
             String pathRel = key.substring(keyPrefix.length());
             pathRel = pathRel.replace('\\', '/');
             pathRel = StrUtils.removePrefixSuffix(pathRel, "/", ".png");
             String path = pathPrefix + pathRel + ".png";
             String val = props.getProperty(key);
-            net.minecraft.resources.ResourceLocation locKey = new net.minecraft.resources.ResourceLocation(path);
-            net.minecraft.resources.ResourceLocation locVal = parseTextureLocation(val, basePath);
+            ResourceLocation locKey = new ResourceLocation(path);
+            ResourceLocation locVal = parseTextureLocation(val, basePath);
             map.put(locKey, locVal);
          }
       }
@@ -221,38 +195,38 @@ public class CustomGuiProperties {
       return map;
    }
 
-   private static net.minecraft.resources.ResourceLocation getGuiTextureLocation(CustomGuiProperties.EnumContainer container) {
+   private static ResourceLocation getGuiTextureLocation(EnumContainer container) {
       if (container == null) {
          return null;
       } else {
-         switch (container) {
-            case ANVIL:
+         switch (container.ordinal()) {
+            case 0:
                return ANVIL_GUI_TEXTURE;
-            case BEACON:
+            case 1:
                return BEACON_GUI_TEXTURE;
-            case BREWING_STAND:
+            case 2:
                return BREWING_STAND_GUI_TEXTURE;
-            case CHEST:
+            case 3:
                return CHEST_GUI_TEXTURE;
-            case CRAFTING:
+            case 4:
                return CRAFTING_TABLE_GUI_TEXTURE;
-            case DISPENSER:
+            case 5:
                return DISPENSER_GUI_TEXTURE;
-            case ENCHANTMENT:
+            case 6:
                return ENCHANTMENT_TABLE_GUI_TEXTURE;
-            case FURNACE:
+            case 7:
                return FURNACE_GUI_TEXTURE;
-            case HOPPER:
+            case 8:
                return HOPPER_GUI_TEXTURE;
-            case HORSE:
+            case 9:
                return HORSE_GUI_TEXTURE;
-            case VILLAGER:
+            case 10:
                return VILLAGER_GUI_TEXTURE;
-            case SHULKER_BOX:
+            case 11:
                return SHULKER_BOX_GUI_TEXTURE;
-            case CREATIVE:
+            case 12:
                return null;
-            case INVENTORY:
+            case 13:
                return INVENTORY_GUI_TEXTURE;
             default:
                return null;
@@ -261,29 +235,31 @@ public class CustomGuiProperties {
    }
 
    public boolean isValid(String path) {
-      if (this.fileName == null || this.fileName.length() <= 0) {
+      if (this.fileName != null && this.fileName.length() > 0) {
+         if (this.basePath == null) {
+            warn("No base path found: " + path);
+            return false;
+         } else if (this.container == null) {
+            warn("No container found: " + path);
+            return false;
+         } else if (this.textureLocations.isEmpty()) {
+            warn("No texture found: " + path);
+            return false;
+         } else if (this.professions == ConnectedParser.PROFESSIONS_INVALID) {
+            warn("Invalid professions or careers: " + path);
+            return false;
+         } else if (this.variants == VARIANTS_INVALID) {
+            warn("Invalid variants: " + path);
+            return false;
+         } else if (this.colors == COLORS_INVALID) {
+            warn("Invalid colors: " + path);
+            return false;
+         } else {
+            return true;
+         }
+      } else {
          warn("No name found: " + path);
          return false;
-      } else if (this.basePath == null) {
-         warn("No base path found: " + path);
-         return false;
-      } else if (this.container == null) {
-         warn("No container found: " + path);
-         return false;
-      } else if (this.textureLocations.isEmpty()) {
-         warn("No texture found: " + path);
-         return false;
-      } else if (this.professions == ConnectedParser.PROFESSIONS_INVALID) {
-         warn("Invalid professions or careers: " + path);
-         return false;
-      } else if (this.variants == VARIANTS_INVALID) {
-         warn("Invalid variants: " + path);
-         return false;
-      } else if (this.colors == COLORS_INVALID) {
-         warn("Invalid colors: " + path);
-         return false;
-      } else {
-         return true;
       }
    }
 
@@ -291,7 +267,7 @@ public class CustomGuiProperties {
       Config.warn("[CustomGuis] " + str);
    }
 
-   private boolean matchesGeneral(CustomGuiProperties.EnumContainer ec, BlockPos pos, LevelReader blockAccess) {
+   private boolean matchesGeneral(EnumContainer ec, BlockPos pos, LevelReader blockAccess) {
       if (this.container != ec) {
          return false;
       } else {
@@ -306,7 +282,7 @@ public class CustomGuiProperties {
       }
    }
 
-   public boolean matchesPos(CustomGuiProperties.EnumContainer ec, BlockPos pos, LevelReader blockAccess, Screen screen) {
+   public boolean matchesPos(EnumContainer ec, BlockPos pos, LevelReader blockAccess, Screen screen) {
       if (!this.matchesGeneral(ec, pos, blockAccess)) {
          return false;
       } else {
@@ -317,14 +293,14 @@ public class CustomGuiProperties {
             }
          }
 
-         switch (ec) {
-            case BEACON:
+         switch (ec.ordinal()) {
+            case 1:
                return this.matchesBeacon(pos, blockAccess);
-            case CHEST:
+            case 3:
                return this.matchesChest(pos, blockAccess);
-            case DISPENSER:
+            case 5:
                return this.matchesDispenser(pos, blockAccess);
-            case SHULKER_BOX:
+            case 11:
                return this.matchesShulker(pos, blockAccess);
             default:
                return true;
@@ -338,7 +314,8 @@ public class CustomGuiProperties {
    }
 
    private boolean matchesBeacon(BlockPos pos, BlockAndTintGetter blockAccess) {
-      if (!(blockAccess.m_7702_(pos) instanceof BeaconBlockEntity teb)) {
+      BlockEntity te = blockAccess.m_7702_(pos);
+      if (!(te instanceof BeaconBlockEntity teb)) {
          return false;
       } else {
          if (this.levels != null) {
@@ -357,16 +334,18 @@ public class CustomGuiProperties {
    }
 
    private boolean matchesChest(BlockPos pos, BlockAndTintGetter blockAccess) {
-      net.minecraft.world.level.block.entity.BlockEntity te = blockAccess.m_7702_(pos);
+      BlockEntity te = blockAccess.m_7702_(pos);
       if (te instanceof ChestBlockEntity tec) {
          return this.matchesChest(tec, pos, blockAccess);
+      } else if (te instanceof EnderChestBlockEntity teec) {
+         return this.matchesEnderChest(teec, pos, blockAccess);
       } else {
-         return te instanceof EnderChestBlockEntity teec ? this.matchesEnderChest(teec, pos, blockAccess) : false;
+         return false;
       }
    }
 
    private boolean matchesChest(ChestBlockEntity tec, BlockPos pos, BlockAndTintGetter blockAccess) {
-      net.minecraft.world.level.block.state.BlockState blockState = blockAccess.m_8055_(pos);
+      BlockState blockState = blockAccess.m_8055_(pos);
       ChestType chestType = blockState.m_61138_(ChestBlock.f_51479_) ? (ChestType)blockState.m_61143_(ChestBlock.f_51479_) : ChestType.SINGLE;
       boolean isLarge = chestType != ChestType.SINGLE;
       boolean isTrapped = tec instanceof TrappedChestBlockEntity;
@@ -384,17 +363,20 @@ public class CustomGuiProperties {
          return false;
       } else if (this.trapped != null && this.trapped != isTrapped) {
          return false;
+      } else if (this.christmas != null && this.christmas != isChristmas) {
+         return false;
       } else {
-         return this.christmas != null && this.christmas != isChristmas ? false : this.ender == null || this.ender == isEnder;
+         return this.ender == null || this.ender == isEnder;
       }
    }
 
    private boolean matchesDispenser(BlockPos pos, BlockAndTintGetter blockAccess) {
-      if (!(blockAccess.m_7702_(pos) instanceof DispenserBlockEntity ted)) {
+      BlockEntity te = blockAccess.m_7702_(pos);
+      if (!(te instanceof DispenserBlockEntity ted)) {
          return false;
       } else {
          if (this.variants != null) {
-            CustomGuiProperties.EnumVariant var = this.getDispenserVariant(ted);
+            EnumVariant var = this.getDispenserVariant(ted);
             if (!Config.equalsOne(var, this.variants)) {
                return false;
             }
@@ -404,16 +386,17 @@ public class CustomGuiProperties {
       }
    }
 
-   private CustomGuiProperties.EnumVariant getDispenserVariant(DispenserBlockEntity ted) {
+   private EnumVariant getDispenserVariant(DispenserBlockEntity ted) {
       return ted instanceof DropperBlockEntity ? CustomGuiProperties.EnumVariant.DROPPER : CustomGuiProperties.EnumVariant.DISPENSER;
    }
 
    private boolean matchesShulker(BlockPos pos, BlockAndTintGetter blockAccess) {
-      if (!(blockAccess.m_7702_(pos) instanceof ShulkerBoxBlockEntity tesb)) {
+      BlockEntity te = blockAccess.m_7702_(pos);
+      if (!(te instanceof ShulkerBoxBlockEntity tesb)) {
          return false;
       } else {
          if (this.colors != null) {
-            net.minecraft.world.item.DyeColor col = tesb.m_59701_();
+            DyeColor col = tesb.m_59701_();
             if (!Config.equalsOne(col, this.colors)) {
                return false;
             }
@@ -423,7 +406,7 @@ public class CustomGuiProperties {
       }
    }
 
-   public boolean matchesEntity(CustomGuiProperties.EnumContainer ec, Entity entity, LevelReader blockAccess) {
+   public boolean matchesEntity(EnumContainer ec, Entity entity, LevelReader blockAccess) {
       if (!this.matchesGeneral(ec, entity.m_20183_(), blockAccess)) {
          return false;
       } else {
@@ -434,10 +417,10 @@ public class CustomGuiProperties {
             }
          }
 
-         switch (ec) {
-            case HORSE:
+         switch (ec.ordinal()) {
+            case 9:
                return this.matchesHorse(entity, blockAccess);
-            case VILLAGER:
+            case 10:
                return this.matchesVillager(entity, blockAccess);
             default:
                return true;
@@ -467,14 +450,14 @@ public class CustomGuiProperties {
          return false;
       } else {
          if (this.variants != null) {
-            CustomGuiProperties.EnumVariant var = this.getHorseVariant(ah);
+            EnumVariant var = this.getHorseVariant(ah);
             if (!Config.equalsOne(var, this.variants)) {
                return false;
             }
          }
 
          if (this.colors != null && ah instanceof Llama el) {
-            net.minecraft.world.item.DyeColor col = el.m_30826_();
+            DyeColor col = el.m_30826_();
             if (!Config.equalsOne(col, this.colors)) {
                return false;
             }
@@ -484,7 +467,7 @@ public class CustomGuiProperties {
       }
    }
 
-   private CustomGuiProperties.EnumVariant getHorseVariant(AbstractHorse entity) {
+   private EnumVariant getHorseVariant(AbstractHorse entity) {
       if (entity instanceof Horse) {
          return CustomGuiProperties.EnumVariant.HORSE;
       } else if (entity instanceof Donkey) {
@@ -496,17 +479,38 @@ public class CustomGuiProperties {
       }
    }
 
-   public CustomGuiProperties.EnumContainer getContainer() {
+   public EnumContainer getContainer() {
       return this.container;
    }
 
-   public net.minecraft.resources.ResourceLocation getTextureLocation(net.minecraft.resources.ResourceLocation loc) {
-      net.minecraft.resources.ResourceLocation locNew = (net.minecraft.resources.ResourceLocation)this.textureLocations.get(loc);
+   public ResourceLocation getTextureLocation(ResourceLocation loc) {
+      ResourceLocation locNew = (ResourceLocation)this.textureLocations.get(loc);
       return locNew == null ? loc : locNew;
    }
 
    public String toString() {
-      return "name: " + this.fileName + ", container: " + this.container + ", textures: " + this.textureLocations;
+      String var10000 = this.fileName;
+      return "name: " + var10000 + ", container: " + String.valueOf(this.container) + ", textures: " + String.valueOf(this.textureLocations);
+   }
+
+   static {
+      VARIANTS_HORSE = new EnumVariant[]{CustomGuiProperties.EnumVariant.HORSE, CustomGuiProperties.EnumVariant.DONKEY, CustomGuiProperties.EnumVariant.MULE, CustomGuiProperties.EnumVariant.LLAMA};
+      VARIANTS_DISPENSER = new EnumVariant[]{CustomGuiProperties.EnumVariant.DISPENSER, CustomGuiProperties.EnumVariant.DROPPER};
+      VARIANTS_INVALID = new EnumVariant[0];
+      COLORS_INVALID = new DyeColor[0];
+      ANVIL_GUI_TEXTURE = new ResourceLocation("textures/gui/container/anvil.png");
+      BEACON_GUI_TEXTURE = new ResourceLocation("textures/gui/container/beacon.png");
+      BREWING_STAND_GUI_TEXTURE = new ResourceLocation("textures/gui/container/brewing_stand.png");
+      CHEST_GUI_TEXTURE = new ResourceLocation("textures/gui/container/generic_54.png");
+      CRAFTING_TABLE_GUI_TEXTURE = new ResourceLocation("textures/gui/container/crafting_table.png");
+      HORSE_GUI_TEXTURE = new ResourceLocation("textures/gui/container/horse.png");
+      DISPENSER_GUI_TEXTURE = new ResourceLocation("textures/gui/container/dispenser.png");
+      ENCHANTMENT_TABLE_GUI_TEXTURE = new ResourceLocation("textures/gui/container/enchanting_table.png");
+      FURNACE_GUI_TEXTURE = new ResourceLocation("textures/gui/container/furnace.png");
+      HOPPER_GUI_TEXTURE = new ResourceLocation("textures/gui/container/hopper.png");
+      INVENTORY_GUI_TEXTURE = new ResourceLocation("textures/gui/container/inventory.png");
+      SHULKER_BOX_GUI_TEXTURE = new ResourceLocation("textures/gui/container/shulker_box.png");
+      VILLAGER_GUI_TEXTURE = new ResourceLocation("textures/gui/container/villager2.png");
    }
 
    public static enum EnumContainer {
@@ -524,6 +528,11 @@ public class CustomGuiProperties {
       SHULKER_BOX,
       CREATIVE,
       INVENTORY;
+
+      // $FF: synthetic method
+      private static EnumContainer[] $values() {
+         return new EnumContainer[]{ANVIL, BEACON, BREWING_STAND, CHEST, CRAFTING, DISPENSER, ENCHANTMENT, FURNACE, HOPPER, HORSE, VILLAGER, SHULKER_BOX, CREATIVE, INVENTORY};
+      }
    }
 
    private static enum EnumVariant {
@@ -533,5 +542,10 @@ public class CustomGuiProperties {
       LLAMA,
       DISPENSER,
       DROPPER;
+
+      // $FF: synthetic method
+      private static EnumVariant[] $values() {
+         return new EnumVariant[]{HORSE, DONKEY, MULE, LLAMA, DISPENSER, DROPPER};
+      }
    }
 }

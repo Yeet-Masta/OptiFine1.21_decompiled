@@ -3,7 +3,9 @@ package net.optifine.entity.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.entity.EntityType;
 
 public abstract class ModelAdapterPlayer extends ModelAdapterBiped {
@@ -11,8 +13,7 @@ public abstract class ModelAdapterPlayer extends ModelAdapterBiped {
       super(type, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (model instanceof PlayerModel playerModel) {
          if (modelPart.equals("left_sleeve")) {
             return playerModel.f_103374_;
@@ -38,9 +39,8 @@ public abstract class ModelAdapterPlayer extends ModelAdapterBiped {
       return super.getModelRenderer(model, modelPart);
    }
 
-   @Override
    public String[] getModelRendererNames() {
-      List<String> names = new ArrayList(Arrays.asList(super.getModelRendererNames()));
+      List names = new ArrayList(Arrays.asList(super.getModelRendererNames()));
       names.add("left_sleeve");
       names.add("right_sleeve");
       names.add("left_pants");

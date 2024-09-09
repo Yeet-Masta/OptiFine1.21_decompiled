@@ -5,18 +5,25 @@ import com.ibm.icu.text.ArabicShaping;
 import com.ibm.icu.text.ArabicShapingException;
 import com.ibm.icu.text.Bidi;
 import com.mojang.blaze3d.font.GlyphInfo;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.minecraft.client.StringSplitter;
+import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.client.gui.font.glyphs.EmptyGlyph;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringDecomposer;
 import net.minecraftforge.client.extensions.IForgeFont;
@@ -30,26 +37,26 @@ public class Font implements IForgeFont {
    public static final int f_193827_ = 8;
    public final int f_92710_ = 9;
    public final RandomSource f_92711_ = RandomSource.m_216327_();
-   private final Function<net.minecraft.resources.ResourceLocation, net.minecraft.client.gui.font.FontSet> f_92713_;
+   private final Function f_92713_;
    final boolean f_242994_;
    private final StringSplitter f_92714_;
    private Matrix4f matrixShadow = new Matrix4f();
 
-   public Font(Function<net.minecraft.resources.ResourceLocation, net.minecraft.client.gui.font.FontSet> fontsIn, boolean filterIn) {
+   public Font(Function fontsIn, boolean filterIn) {
       this.f_92713_ = fontsIn;
       this.f_242994_ = filterIn;
-      this.f_92714_ = new StringSplitter(
-         (charIn, styleIn) -> this.m_92863_(styleIn.m_131192_()).m_243128_(charIn, this.f_242994_).m_83827_(styleIn.m_131154_())
-      );
+      this.f_92714_ = new StringSplitter((charIn, styleIn) -> {
+         return this.m_92863_(styleIn.m_131192_()).m_243128_(charIn, this.f_242994_).m_83827_(styleIn.m_131154_());
+      });
    }
 
-   net.minecraft.client.gui.font.FontSet m_92863_(net.minecraft.resources.ResourceLocation locationIn) {
-      return (net.minecraft.client.gui.font.FontSet)this.f_92713_.apply(locationIn);
+   FontSet m_92863_(ResourceLocation locationIn) {
+      return (FontSet)this.f_92713_.apply(locationIn);
    }
 
    public String m_92801_(String text) {
       try {
-         Bidi bidi = new Bidi(new ArabicShaping(8).shape(text), 127);
+         Bidi bidi = new Bidi((new ArabicShaping(8)).shape(text), 127);
          bidi.setReorderingMode(0);
          return bidi.writeReordered(2);
       } catch (ArabicShapingException var3) {
@@ -57,94 +64,36 @@ public class Font implements IForgeFont {
       }
    }
 
-   public int m_271703_(
-      String text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn
-   ) {
+   public int m_271703_(String text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn) {
       return this.m_272078_(text, x, y, color, shadow, matrixIn, bufferIn, modeIn, colorBackgroundIn, packedLightIn, this.m_92718_());
    }
 
-   public int m_272078_(
-      String text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn,
-      boolean bidiIn
-   ) {
+   public int m_272078_(String text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn, boolean bidiIn) {
       return this.m_271880_(text, x, y, color, shadow, matrixIn, bufferIn, modeIn, colorBackgroundIn, packedLightIn, bidiIn);
    }
 
-   public int m_272077_(
-      Component text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn
-   ) {
+   public int m_272077_(Component text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn) {
       return this.m_272191_(text.m_7532_(), x, y, color, shadow, matrixIn, bufferIn, modeIn, colorBackgroundIn, packedLightIn);
    }
 
-   public int m_272191_(
-      FormattedCharSequence text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn
-   ) {
+   public int m_272191_(FormattedCharSequence text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn) {
       return this.m_272085_(text, x, y, color, shadow, matrixIn, bufferIn, modeIn, colorBackgroundIn, packedLightIn);
    }
 
-   public void m_168645_(
-      FormattedCharSequence text,
-      float x,
-      float y,
-      int colorText,
-      int colorOutline,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      int packedLight
-   ) {
+   public void m_168645_(FormattedCharSequence text, float x, float y, int colorText, int colorOutline, Matrix4f matrixIn, MultiBufferSource bufferIn, int packedLight) {
       int i = m_92719_(colorOutline);
-      net.minecraft.client.gui.Font.StringRenderOutput font$stringrenderoutput = new net.minecraft.client.gui.Font.StringRenderOutput(
-         bufferIn, 0.0F, 0.0F, i, false, matrixIn, net.minecraft.client.gui.Font.DisplayMode.NORMAL, packedLight
-      );
+      StringRenderOutput font$stringrenderoutput = new StringRenderOutput(bufferIn, 0.0F, 0.0F, i, false, matrixIn, Font.DisplayMode.NORMAL, packedLight);
 
-      for (int j = -1; j <= 1; j++) {
-         for (int k = -1; k <= 1; k++) {
+      for(int j = -1; j <= 1; ++j) {
+         for(int k = -1; k <= 1; ++k) {
             if (j != 0 || k != 0) {
                float[] afloat = new float[]{x};
-               int l = j;
-               int i1 = k;
                text.m_13731_((indexIn, styleIn, charIn) -> {
                   boolean flag = styleIn.m_131154_();
-                  net.minecraft.client.gui.font.FontSet fontset = this.m_92863_(styleIn.m_131192_());
+                  FontSet fontset = this.m_92863_(styleIn.m_131192_());
                   GlyphInfo glyphinfo = fontset.m_243128_(charIn, this.f_242994_);
-                  font$stringrenderoutput.f_92948_ = afloat[0] + (float)l * glyphinfo.m_5645_();
-                  font$stringrenderoutput.f_92949_ = y + (float)i1 * glyphinfo.m_5645_();
+                  font$stringrenderoutput.f_92948_ = afloat[0] + (float)j * glyphinfo.m_5645_();
+                  font$stringrenderoutput.f_92949_ = y + (float)k * glyphinfo.m_5645_();
                   afloat[0] += glyphinfo.m_83827_(flag);
                   return font$stringrenderoutput.m_6411_(indexIn, styleIn.m_178520_(i), charIn);
                });
@@ -152,30 +101,16 @@ public class Font implements IForgeFont {
          }
       }
 
-      net.minecraft.client.gui.Font.StringRenderOutput font$stringrenderoutput1 = new net.minecraft.client.gui.Font.StringRenderOutput(
-         bufferIn, x, y, m_92719_(colorText), false, matrixIn, net.minecraft.client.gui.Font.DisplayMode.POLYGON_OFFSET, packedLight
-      );
+      StringRenderOutput font$stringrenderoutput1 = new StringRenderOutput(bufferIn, x, y, m_92719_(colorText), false, matrixIn, Font.DisplayMode.POLYGON_OFFSET, packedLight);
       text.m_13731_(font$stringrenderoutput1);
       font$stringrenderoutput1.m_92961_(0, x);
    }
 
    private static int m_92719_(int colorIn) {
-      return (colorIn & -67108864) == 0 ? colorIn | 0xFF000000 : colorIn;
+      return (colorIn & -67108864) == 0 ? colorIn | -16777216 : colorIn;
    }
 
-   private int m_271880_(
-      String text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn,
-      boolean bidiIn
-   ) {
+   private int m_271880_(String text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn, boolean bidiIn) {
       if (bidiIn) {
          text = this.m_92801_(text);
       }
@@ -191,18 +126,7 @@ public class Font implements IForgeFont {
       return (int)x + (shadow ? 1 : 0);
    }
 
-   private int m_272085_(
-      FormattedCharSequence text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn
-   ) {
+   private int m_272085_(FormattedCharSequence text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn) {
       color = m_92719_(color);
       Matrix4f matrix4f = this.matrixShadow.set(matrixIn);
       if (shadow) {
@@ -214,75 +138,36 @@ public class Font implements IForgeFont {
       return (int)x + (shadow ? 1 : 0);
    }
 
-   private float m_271978_(
-      String text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn
-   ) {
-      net.minecraft.client.gui.Font.StringRenderOutput font$stringrenderoutput = new net.minecraft.client.gui.Font.StringRenderOutput(
-         bufferIn, x, y, color, shadow, matrixIn, modeIn, packedLightIn
-      );
+   private float m_271978_(String text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn) {
+      StringRenderOutput font$stringrenderoutput = new StringRenderOutput(bufferIn, x, y, color, shadow, matrixIn, modeIn, packedLightIn);
       StringDecomposer.m_14346_(text, Style.f_131099_, font$stringrenderoutput);
       return font$stringrenderoutput.m_92961_(colorBackgroundIn, x);
    }
 
-   private float m_271992_(
-      FormattedCharSequence text,
-      float x,
-      float y,
-      int color,
-      boolean shadow,
-      Matrix4f matrixIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      net.minecraft.client.gui.Font.DisplayMode modeIn,
-      int colorBackgroundIn,
-      int packedLightIn
-   ) {
-      net.minecraft.client.gui.Font.StringRenderOutput font$stringrenderoutput = new net.minecraft.client.gui.Font.StringRenderOutput(
-         bufferIn, x, y, color, shadow, matrixIn, modeIn, packedLightIn
-      );
+   private float m_271992_(FormattedCharSequence text, float x, float y, int color, boolean shadow, Matrix4f matrixIn, MultiBufferSource bufferIn, DisplayMode modeIn, int colorBackgroundIn, int packedLightIn) {
+      StringRenderOutput font$stringrenderoutput = new StringRenderOutput(bufferIn, x, y, color, shadow, matrixIn, modeIn, packedLightIn);
       text.m_13731_(font$stringrenderoutput);
       return font$stringrenderoutput.m_92961_(colorBackgroundIn, x);
    }
 
-   void m_253238_(
-      net.minecraft.client.gui.font.glyphs.BakedGlyph glyphIn,
-      boolean boldIn,
-      boolean italicIn,
-      float boldOffsetIn,
-      float xIn,
-      float yIn,
-      Matrix4f matrix,
-      com.mojang.blaze3d.vertex.VertexConsumer bufferIn,
-      float redIn,
-      float greenIn,
-      float blueIn,
-      float alphaIn,
-      int packedLight
-   ) {
+   void m_253238_(BakedGlyph glyphIn, boolean boldIn, boolean italicIn, float boldOffsetIn, float xIn, float yIn, Matrix4f matrix, VertexConsumer bufferIn, float redIn, float greenIn, float blueIn, float alphaIn, int packedLight) {
       glyphIn.m_5626_(italicIn, xIn, yIn, matrix, bufferIn, redIn, greenIn, blueIn, alphaIn, packedLight);
       if (boldIn) {
          glyphIn.m_5626_(italicIn, xIn + boldOffsetIn, yIn, matrix, bufferIn, redIn, greenIn, blueIn, alphaIn, packedLight);
       }
+
    }
 
    public int m_92895_(String text) {
-      return net.minecraft.util.Mth.m_14167_(this.f_92714_.m_92353_(text));
+      return Mth.m_14167_(this.f_92714_.m_92353_(text));
    }
 
    public int m_92852_(FormattedText text) {
-      return net.minecraft.util.Mth.m_14167_(this.f_92714_.m_92384_(text));
+      return Mth.m_14167_(this.f_92714_.m_92384_(text));
    }
 
    public int m_92724_(FormattedCharSequence textIn) {
-      return net.minecraft.util.Mth.m_14167_(this.f_92714_.m_92336_(textIn));
+      return Mth.m_14167_(this.f_92714_.m_92336_(textIn));
    }
 
    public String m_92837_(String text, int width, boolean fromRight) {
@@ -305,7 +190,7 @@ public class Font implements IForgeFont {
       return 9 * this.f_92714_.m_92414_(text, width, Style.f_131099_).size();
    }
 
-   public List<FormattedCharSequence> m_92923_(FormattedText text, int width) {
+   public List m_92923_(FormattedText text, int width) {
       return Language.m_128107_().m_128112_(this.f_92714_.m_92414_(text, width, Style.f_131099_));
    }
 
@@ -317,7 +202,7 @@ public class Font implements IForgeFont {
       return this.f_92714_;
    }
 
-   public net.minecraft.client.gui.Font self() {
+   public Font self() {
       return this;
    }
 
@@ -325,10 +210,15 @@ public class Font implements IForgeFont {
       NORMAL,
       SEE_THROUGH,
       POLYGON_OFFSET;
+
+      // $FF: synthetic method
+      private static DisplayMode[] $values() {
+         return new DisplayMode[]{NORMAL, SEE_THROUGH, POLYGON_OFFSET};
+      }
    }
 
    class StringRenderOutput implements FormattedCharSink {
-      final net.minecraft.client.renderer.MultiBufferSource f_92937_;
+      final MultiBufferSource f_92937_;
       private final boolean f_92939_;
       private final float f_92940_;
       private final float f_92941_;
@@ -336,16 +226,16 @@ public class Font implements IForgeFont {
       private final float f_92943_;
       private final float f_92944_;
       private final Matrix4f f_92945_;
-      private final net.minecraft.client.gui.Font.DisplayMode f_181362_;
+      private final DisplayMode f_181362_;
       private final int f_92947_;
       float f_92948_;
       float f_92949_;
       @Nullable
-      private List<net.minecraft.client.gui.font.glyphs.BakedGlyph.Effect> f_92950_;
+      private List f_92950_;
       private Style lastStyle;
-      private net.minecraft.client.gui.font.FontSet lastStyleFont;
+      private FontSet lastStyleFont;
 
-      private void m_92964_(net.minecraft.client.gui.font.glyphs.BakedGlyph.Effect effectIn) {
+      private void m_92964_(BakedGlyph.Effect effectIn) {
          if (this.f_92950_ == null) {
             this.f_92950_ = Lists.newArrayList();
          }
@@ -353,36 +243,25 @@ public class Font implements IForgeFont {
          this.f_92950_.add(effectIn);
       }
 
-      public StringRenderOutput(
-         final net.minecraft.client.renderer.MultiBufferSource bufferIn,
-         final float xIn,
-         final float yIn,
-         final int colorIn,
-         final boolean shadowIn,
-         final Matrix4f matrixIn,
-         final net.minecraft.client.gui.Font.DisplayMode modeIn,
-         final int packedLightIn
-      ) {
+      public StringRenderOutput(final MultiBufferSource bufferIn, final float xIn, final float yIn, final int colorIn, final boolean shadowIn, final Matrix4f matrixIn, final DisplayMode modeIn, final int packedLightIn) {
          this.f_92937_ = bufferIn;
          this.f_92948_ = xIn;
          this.f_92949_ = yIn;
          this.f_92939_ = shadowIn;
          this.f_92940_ = shadowIn ? 0.25F : 1.0F;
-         this.f_92941_ = (float)(colorIn >> 16 & 0xFF) / 255.0F * this.f_92940_;
-         this.f_92942_ = (float)(colorIn >> 8 & 0xFF) / 255.0F * this.f_92940_;
-         this.f_92943_ = (float)(colorIn & 0xFF) / 255.0F * this.f_92940_;
-         this.f_92944_ = (float)(colorIn >> 24 & 0xFF) / 255.0F;
-         this.f_92945_ = MathUtils.isIdentity(matrixIn) ? net.minecraft.client.gui.font.glyphs.BakedGlyph.MATRIX_IDENTITY : matrixIn;
+         this.f_92941_ = (float)(colorIn >> 16 & 255) / 255.0F * this.f_92940_;
+         this.f_92942_ = (float)(colorIn >> 8 & 255) / 255.0F * this.f_92940_;
+         this.f_92943_ = (float)(colorIn & 255) / 255.0F * this.f_92940_;
+         this.f_92944_ = (float)(colorIn >> 24 & 255) / 255.0F;
+         this.f_92945_ = MathUtils.isIdentity(matrixIn) ? BakedGlyph.MATRIX_IDENTITY : matrixIn;
          this.f_181362_ = modeIn;
          this.f_92947_ = packedLightIn;
       }
 
       public boolean m_6411_(int indexIn, Style styleIn, int charIn) {
-         net.minecraft.client.gui.font.FontSet fontset = this.getFont(styleIn);
+         FontSet fontset = this.getFont(styleIn);
          GlyphInfo glyphinfo = fontset.m_243128_(charIn, Font.this.f_242994_);
-         net.minecraft.client.gui.font.glyphs.BakedGlyph bakedglyph = styleIn.m_131176_() && charIn != 32
-            ? fontset.m_95067_(glyphinfo)
-            : fontset.m_95078_(charIn);
+         BakedGlyph bakedglyph = styleIn.m_131176_() && charIn != 32 ? fontset.m_95067_(glyphinfo) : fontset.m_95078_(charIn);
          boolean flag = styleIn.m_131154_();
          float f3 = this.f_92944_;
          TextColor textcolor = styleIn.m_131135_();
@@ -391,40 +270,32 @@ public class Font implements IForgeFont {
          float f2;
          if (textcolor != null) {
             int i = textcolor.m_131265_();
-            f = (float)(i >> 16 & 0xFF) / 255.0F * this.f_92940_;
-            f1 = (float)(i >> 8 & 0xFF) / 255.0F * this.f_92940_;
-            f2 = (float)(i & 0xFF) / 255.0F * this.f_92940_;
+            f = (float)(i >> 16 & 255) / 255.0F * this.f_92940_;
+            f1 = (float)(i >> 8 & 255) / 255.0F * this.f_92940_;
+            f2 = (float)(i & 255) / 255.0F * this.f_92940_;
          } else {
             f = this.f_92941_;
             f1 = this.f_92942_;
             f2 = this.f_92943_;
          }
 
+         float f7;
+         float f6;
          if (!(bakedglyph instanceof EmptyGlyph)) {
-            float f5 = flag ? glyphinfo.m_5619_() : 0.0F;
-            float f4 = this.f_92939_ ? glyphinfo.m_5645_() : 0.0F;
-            com.mojang.blaze3d.vertex.VertexConsumer vertexconsumer = this.f_92937_.m_6299_(bakedglyph.m_181387_(this.f_181362_));
-            Font.this.m_253238_(
-               bakedglyph, flag, styleIn.m_131161_(), f5, this.f_92948_ + f4, this.f_92949_ + f4, this.f_92945_, vertexconsumer, f, f1, f2, f3, this.f_92947_
-            );
+            f6 = flag ? glyphinfo.m_5619_() : 0.0F;
+            f7 = this.f_92939_ ? glyphinfo.m_5645_() : 0.0F;
+            VertexConsumer vertexconsumer = this.f_92937_.m_6299_(bakedglyph.m_181387_(this.f_181362_));
+            Font.this.m_253238_(bakedglyph, flag, styleIn.m_131161_(), f6, this.f_92948_ + f7, this.f_92949_ + f7, this.f_92945_, vertexconsumer, f, f1, f2, f3, this.f_92947_);
          }
 
-         float f6 = glyphinfo.m_83827_(flag);
-         float f7 = this.f_92939_ ? 1.0F : 0.0F;
+         f6 = glyphinfo.m_83827_(flag);
+         f7 = this.f_92939_ ? 1.0F : 0.0F;
          if (styleIn.m_131168_()) {
-            this.m_92964_(
-               new net.minecraft.client.gui.font.glyphs.BakedGlyph.Effect(
-                  this.f_92948_ + f7 - 1.0F, this.f_92949_ + f7 + 4.5F, this.f_92948_ + f7 + f6, this.f_92949_ + f7 + 4.5F - 1.0F, 0.01F, f, f1, f2, f3
-               )
-            );
+            this.m_92964_(new BakedGlyph.Effect(this.f_92948_ + f7 - 1.0F, this.f_92949_ + f7 + 4.5F, this.f_92948_ + f7 + f6, this.f_92949_ + f7 + 4.5F - 1.0F, 0.01F, f, f1, f2, f3));
          }
 
          if (styleIn.m_131171_()) {
-            this.m_92964_(
-               new net.minecraft.client.gui.font.glyphs.BakedGlyph.Effect(
-                  this.f_92948_ + f7 - 1.0F, this.f_92949_ + f7 + 9.0F, this.f_92948_ + f7 + f6, this.f_92949_ + f7 + 9.0F - 1.0F, 0.01F, f, f1, f2, f3
-               )
-            );
+            this.m_92964_(new BakedGlyph.Effect(this.f_92948_ + f7 - 1.0F, this.f_92949_ + f7 + 9.0F, this.f_92948_ + f7 + f6, this.f_92949_ + f7 + 9.0F - 1.0F, 0.01F, f, f1, f2, f3));
          }
 
          this.f_92948_ += f6;
@@ -433,22 +304,20 @@ public class Font implements IForgeFont {
 
       public float m_92961_(int colorBackgroundIn, float xIn) {
          if (colorBackgroundIn != 0) {
-            float f = (float)(colorBackgroundIn >> 24 & 0xFF) / 255.0F;
-            float f1 = (float)(colorBackgroundIn >> 16 & 0xFF) / 255.0F;
-            float f2 = (float)(colorBackgroundIn >> 8 & 0xFF) / 255.0F;
-            float f3 = (float)(colorBackgroundIn & 0xFF) / 255.0F;
-            this.m_92964_(
-               new net.minecraft.client.gui.font.glyphs.BakedGlyph.Effect(
-                  xIn - 1.0F, this.f_92949_ + 9.0F, this.f_92948_ + 1.0F, this.f_92949_ - 1.0F, 0.01F, f1, f2, f3, f
-               )
-            );
+            float f = (float)(colorBackgroundIn >> 24 & 255) / 255.0F;
+            float f1 = (float)(colorBackgroundIn >> 16 & 255) / 255.0F;
+            float f2 = (float)(colorBackgroundIn >> 8 & 255) / 255.0F;
+            float f3 = (float)(colorBackgroundIn & 255) / 255.0F;
+            this.m_92964_(new BakedGlyph.Effect(xIn - 1.0F, this.f_92949_ + 9.0F, this.f_92948_ + 1.0F, this.f_92949_ - 1.0F, 0.01F, f1, f2, f3, f));
          }
 
          if (this.f_92950_ != null) {
-            net.minecraft.client.gui.font.glyphs.BakedGlyph bakedglyph = Font.this.m_92863_(Style.f_131100_).m_95064_();
-            com.mojang.blaze3d.vertex.VertexConsumer vertexconsumer = this.f_92937_.m_6299_(bakedglyph.m_181387_(this.f_181362_));
+            BakedGlyph bakedglyph = Font.this.m_92863_(Style.f_131100_).m_95064_();
+            VertexConsumer vertexconsumer = this.f_92937_.m_6299_(bakedglyph.m_181387_(this.f_181362_));
+            Iterator var9 = this.f_92950_.iterator();
 
-            for (net.minecraft.client.gui.font.glyphs.BakedGlyph.Effect bakedglyph$effect : this.f_92950_) {
+            while(var9.hasNext()) {
+               BakedGlyph.Effect bakedglyph$effect = (BakedGlyph.Effect)var9.next();
                bakedglyph.m_95220_(bakedglyph$effect, this.f_92945_, vertexconsumer, this.f_92947_);
             }
          }
@@ -456,7 +325,7 @@ public class Font implements IForgeFont {
          return this.f_92948_;
       }
 
-      private net.minecraft.client.gui.font.FontSet getFont(Style styleIn) {
+      private FontSet getFont(Style styleIn) {
          if (styleIn == this.lastStyle) {
             return this.lastStyleFont;
          } else {

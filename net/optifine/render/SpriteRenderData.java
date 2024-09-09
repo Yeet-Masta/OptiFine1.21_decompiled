@@ -1,11 +1,13 @@
 package net.optifine.render;
 
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+
 public class SpriteRenderData {
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite sprite;
+   private TextureAtlasSprite sprite;
    private int[] positions;
    private int[] counts;
 
-   public SpriteRenderData(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite, int[] positions, int[] counts) {
+   public SpriteRenderData(TextureAtlasSprite sprite, int[] positions, int[] counts) {
       this.sprite = sprite;
       this.positions = positions;
       this.counts = counts;
@@ -14,7 +16,7 @@ public class SpriteRenderData {
       }
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite() {
+   public TextureAtlasSprite getSprite() {
       return this.sprite;
    }
 
@@ -27,6 +29,7 @@ public class SpriteRenderData {
    }
 
    public String toString() {
-      return this.sprite.getName() + ", " + this.positions.length;
+      String var10000 = String.valueOf(this.sprite.getName());
+      return var10000 + ", " + this.positions.length;
    }
 }

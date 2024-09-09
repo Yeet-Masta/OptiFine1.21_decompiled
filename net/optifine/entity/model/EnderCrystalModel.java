@@ -1,21 +1,26 @@
 package net.optifine.entity.model;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EndCrystalRenderer;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
-public class EnderCrystalModel extends net.minecraft.client.model.Model {
-   public net.minecraft.client.model.geom.ModelPart cube;
-   public net.minecraft.client.model.geom.ModelPart glass;
-   public net.minecraft.client.model.geom.ModelPart base;
+public class EnderCrystalModel extends Model {
+   public ModelPart cube;
+   public ModelPart glass;
+   public ModelPart base;
 
    public EnderCrystalModel() {
-      super(net.minecraft.client.renderer.RenderType::m_110458_);
+      super(RenderType::m_110458_);
       EndCrystalRenderer renderer = new EndCrystalRenderer(Minecraft.m_91087_().m_91290_().getContext());
-      this.cube = (net.minecraft.client.model.geom.ModelPart)Reflector.RenderEnderCrystal_modelRenderers.getValue(renderer, 0);
-      this.glass = (net.minecraft.client.model.geom.ModelPart)Reflector.RenderEnderCrystal_modelRenderers.getValue(renderer, 1);
-      this.base = (net.minecraft.client.model.geom.ModelPart)Reflector.RenderEnderCrystal_modelRenderers.getValue(renderer, 2);
+      this.cube = (ModelPart)Reflector.RenderEnderCrystal_modelRenderers.getValue(renderer, 0);
+      this.glass = (ModelPart)Reflector.RenderEnderCrystal_modelRenderers.getValue(renderer, 1);
+      this.base = (ModelPart)Reflector.RenderEnderCrystal_modelRenderers.getValue(renderer, 2);
    }
 
    public EndCrystalRenderer updateRenderer(EndCrystalRenderer render) {
@@ -30,9 +35,6 @@ public class EnderCrystalModel extends net.minecraft.client.model.Model {
       }
    }
 
-   @Override
-   public void m_7695_(
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn, com.mojang.blaze3d.vertex.VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn
-   ) {
+   public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 }

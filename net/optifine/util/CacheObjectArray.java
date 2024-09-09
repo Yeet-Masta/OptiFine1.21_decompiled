@@ -2,10 +2,11 @@ package net.optifine.util;
 
 import java.lang.reflect.Array;
 import java.util.ArrayDeque;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 
 public class CacheObjectArray {
-   private static ArrayDeque<int[]> arrays = new ArrayDeque();
+   private static ArrayDeque arrays = new ArrayDeque();
    private static int maxCacheSize = 10;
 
    private static synchronized int[] allocateArray(int size) {
@@ -30,12 +31,12 @@ public class CacheObjectArray {
       testClone(size, count);
       testNewObj(size, count);
       testCloneObj(size, count);
-      testNewObjDyn(net.minecraft.world.level.block.state.BlockState.class, size, count);
+      testNewObjDyn(BlockState.class, size, count);
       long timeNew = testNew(size, count);
       long timeClone = testClone(size, count);
       long timeNewObj = testNewObj(size, count);
       long timeCloneObj = testCloneObj(size, count);
-      long timeNewObjDyn = testNewObjDyn(net.minecraft.world.level.block.state.BlockState.class, size, count);
+      long timeNewObjDyn = testNewObjDyn(BlockState.class, size, count);
       Config.dbg("New: " + timeNew);
       Config.dbg("Clone: " + timeClone);
       Config.dbg("NewObj: " + timeNewObj);
@@ -47,7 +48,7 @@ public class CacheObjectArray {
       long timeStart = System.currentTimeMillis();
       int[] template = new int[size];
 
-      for (int i = 0; i < count; i++) {
+      for(int i = 0; i < count; ++i) {
          int[] var6 = (int[])template.clone();
       }
 
@@ -58,8 +59,8 @@ public class CacheObjectArray {
    private static long testNew(int size, int count) {
       long timeStart = System.currentTimeMillis();
 
-      for (int i = 0; i < count; i++) {
-         int[] var5 = (int[])Array.newInstance(int.class, size);
+      for(int i = 0; i < count; ++i) {
+         int[] var5 = (int[])Array.newInstance(Integer.TYPE, size);
       }
 
       long timeEnd = System.currentTimeMillis();
@@ -68,10 +69,10 @@ public class CacheObjectArray {
 
    private static long testCloneObj(int size, int count) {
       long timeStart = System.currentTimeMillis();
-      net.minecraft.world.level.block.state.BlockState[] template = new net.minecraft.world.level.block.state.BlockState[size];
+      BlockState[] template = new BlockState[size];
 
-      for (int i = 0; i < count; i++) {
-         net.minecraft.world.level.block.state.BlockState[] var6 = (net.minecraft.world.level.block.state.BlockState[])template.clone();
+      for(int i = 0; i < count; ++i) {
+         BlockState[] var6 = (BlockState[])template.clone();
       }
 
       long timeEnd = System.currentTimeMillis();
@@ -81,8 +82,8 @@ public class CacheObjectArray {
    private static long testNewObj(int size, int count) {
       long timeStart = System.currentTimeMillis();
 
-      for (int i = 0; i < count; i++) {
-         net.minecraft.world.level.block.state.BlockState[] var5 = new net.minecraft.world.level.block.state.BlockState[size];
+      for(int i = 0; i < count; ++i) {
+         BlockState[] var5 = new BlockState[size];
       }
 
       long timeEnd = System.currentTimeMillis();
@@ -92,7 +93,7 @@ public class CacheObjectArray {
    private static long testNewObjDyn(Class cls, int size, int count) {
       long timeStart = System.currentTimeMillis();
 
-      for (int i = 0; i < count; i++) {
+      for(int i = 0; i < count; ++i) {
          Object[] var6 = (Object[])Array.newInstance(cls, size);
       }
 

@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -14,31 +15,38 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import net.minecraft.ResourceLocationException;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.optifine.Config;
 import net.optifine.ConnectedProperties;
 import net.optifine.util.BiomeUtils;
 import net.optifine.util.BlockUtils;
 import net.optifine.util.EntityTypeUtils;
+import net.optifine.util.ItemUtils;
 
 public class ConnectedParser {
    private String context = null;
    public static final MatchProfession[] PROFESSIONS_INVALID = new MatchProfession[0];
-   public static final net.minecraft.world.item.DyeColor[] DYE_COLORS_INVALID = new net.minecraft.world.item.DyeColor[0];
-   private static Map<net.minecraft.resources.ResourceLocation, BiomeId> MAP_BIOMES_COMPACT = null;
-   private static final INameGetter<Enum> NAME_GETTER_ENUM = new INameGetter<Enum>() {
+   public static final DyeColor[] DYE_COLORS_INVALID = new DyeColor[0];
+   private static Map MAP_BIOMES_COMPACT = null;
+   private static final INameGetter NAME_GETTER_ENUM = new INameGetter() {
       public String getName(Enum en) {
          return en.name();
       }
    };
-   private static final INameGetter<net.minecraft.world.item.DyeColor> NAME_GETTER_DYE_COLOR = new INameGetter<net.minecraft.world.item.DyeColor>() {
-      public String getName(net.minecraft.world.item.DyeColor col) {
+   private static final INameGetter NAME_GETTER_DYE_COLOR = new INameGetter() {
+      public String getName(DyeColor col) {
          return col.m_7912_();
       }
    };
@@ -75,7 +83,7 @@ public class ConnectedParser {
          List list = new ArrayList();
          String[] blockStrs = Config.tokenize(propMatchBlocks, " ");
 
-         for (int i = 0; i < blockStrs.length; i++) {
+         for(int i = 0; i < blockStrs.length; ++i) {
             String blockStr = blockStrs[i];
             MatchBlock[] mbs = this.parseMatchBlock(blockStr);
             if (mbs != null) {
@@ -83,11 +91,12 @@ public class ConnectedParser {
             }
          }
 
-         return (MatchBlock[])list.toArray(new MatchBlock[list.size()]);
+         MatchBlock[] mbs = (MatchBlock[])list.toArray(new MatchBlock[list.size()]);
+         return mbs;
       }
    }
 
-   public net.minecraft.world.level.block.state.BlockState parseBlockState(String str, net.minecraft.world.level.block.state.BlockState def) {
+   public BlockState parseBlockState(String str, BlockState def) {
       MatchBlock[] mbs = this.parseMatchBlock(str);
       if (mbs == null) {
          return def;
@@ -111,25 +120,25 @@ public class ConnectedParser {
          } else {
             String[] parts = Config.tokenize(blockStr, ":");
             String domain = "minecraft";
-            int blockIndex = 0;
-            byte var16;
+            int blockIndex = false;
+            byte blockIndex;
             if (parts.length > 1 && this.isFullBlockName(parts)) {
                domain = parts[0];
-               var16 = 1;
+               blockIndex = 1;
             } else {
                domain = "minecraft";
-               var16 = 0;
+               blockIndex = 0;
             }
 
-            String blockPart = parts[var16];
-            String[] params = (String[])Arrays.copyOfRange(parts, var16 + 1, parts.length);
+            String blockPart = parts[blockIndex];
+            String[] params = (String[])Arrays.copyOfRange(parts, blockIndex + 1, parts.length);
             Block[] blocks = this.parseBlockPart(domain, blockPart);
             if (blocks == null) {
                return null;
             } else {
                MatchBlock[] datas = new MatchBlock[blocks.length];
 
-               for (int i = 0; i < blocks.length; i++) {
+               for(int i = 0; i < blocks.length; ++i) {
                   Block block = blocks[i];
                   int blockId = BuiltInRegistries.f_256975_.m_7447_(block);
                   int[] metadatas = null;
@@ -155,7 +164,11 @@ public class ConnectedParser {
          return false;
       } else {
          String part1 = parts[1];
-         return part1.length() < 1 ? false : !part1.contains("=");
+         if (part1.length() < 1) {
+            return false;
+         } else {
+            return !part1.contains("=");
+         }
       }
    }
 
@@ -172,7 +185,7 @@ public class ConnectedParser {
 
    public Block[] parseBlockPart(String domain, String blockPart) {
       String fullName = domain + ":" + blockPart;
-      net.minecraft.resources.ResourceLocation fullLoc = this.makeResourceLocation(fullName);
+      ResourceLocation fullLoc = this.makeResourceLocation(fullName);
       if (fullLoc == null) {
          return null;
       } else {
@@ -181,23 +194,26 @@ public class ConnectedParser {
             this.warn("Block not found for name: " + fullName);
             return null;
          } else {
-            return new Block[]{block};
+            Block[] blocks = new Block[]{block};
+            return blocks;
          }
       }
    }
 
-   private net.minecraft.resources.ResourceLocation makeResourceLocation(String str) {
+   private ResourceLocation makeResourceLocation(String str) {
       try {
-         return new net.minecraft.resources.ResourceLocation(str);
+         ResourceLocation loc = new ResourceLocation(str);
+         return loc;
       } catch (ResourceLocationException var3) {
          this.warn("Invalid resource location: " + var3.getMessage());
          return null;
       }
    }
 
-   private net.minecraft.resources.ResourceLocation makeResourceLocation(String namespace, String path) {
+   private ResourceLocation makeResourceLocation(String namespace, String path) {
       try {
-         return new net.minecraft.resources.ResourceLocation(namespace, path);
+         ResourceLocation loc = new ResourceLocation(namespace, path);
+         return loc;
       } catch (ResourceLocationException var4) {
          this.warn("Invalid resource location: " + var4.getMessage());
          return null;
@@ -208,11 +224,11 @@ public class ConnectedParser {
       if (params.length <= 0) {
          return null;
       } else {
-         net.minecraft.world.level.block.state.BlockState stateDefault = block.m_49966_();
+         BlockState stateDefault = block.m_49966_();
          Collection properties = stateDefault.m_61147_();
-         Map<net.minecraft.world.level.block.state.properties.Property, List<Comparable>> mapPropValues = new HashMap();
+         Map mapPropValues = new HashMap();
 
-         for (int i = 0; i < params.length; i++) {
+         for(int i = 0; i < params.length; ++i) {
             String param = params[i];
             if (param.length() > 0) {
                String[] parts = Config.tokenize(param, "=");
@@ -223,13 +239,13 @@ public class ConnectedParser {
 
                String key = parts[0];
                String valStr = parts[1];
-               net.minecraft.world.level.block.state.properties.Property prop = ConnectedProperties.getProperty(key, properties);
+               Property prop = ConnectedProperties.getProperty(key, properties);
                if (prop == null) {
-                  this.warn("Property not found: " + key + ", block: " + block);
+                  this.warn("Property not found: " + key + ", block: " + String.valueOf(block));
                   return null;
                }
 
-               List<Comparable> list = (List<Comparable>)mapPropValues.get(key);
+               List list = (List)mapPropValues.get(key);
                if (list == null) {
                   list = new ArrayList();
                   mapPropValues.put(prop, list);
@@ -237,15 +253,15 @@ public class ConnectedParser {
 
                String[] vals = Config.tokenize(valStr, ",");
 
-               for (int v = 0; v < vals.length; v++) {
+               for(int v = 0; v < vals.length; ++v) {
                   String val = vals[v];
                   Comparable propVal = parsePropertyValue(prop, val);
                   if (propVal == null) {
-                     this.warn("Property value not found: " + val + ", property: " + key + ", block: " + block);
+                     this.warn("Property value not found: " + val + ", property: " + key + ", block: " + String.valueOf(block));
                      return null;
                   }
 
-                  list.add(propVal);
+                  ((List)list).add(propVal);
                }
             }
          }
@@ -253,12 +269,12 @@ public class ConnectedParser {
          if (mapPropValues.isEmpty()) {
             return null;
          } else {
-            List<Integer> listMetadatas = new ArrayList();
+            List listMetadatas = new ArrayList();
             int metaCount = BlockUtils.getMetadataCount(block);
 
-            for (int md = 0; md < metaCount; md++) {
+            for(int md = 0; md < metaCount; ++md) {
                try {
-                  net.minecraft.world.level.block.state.BlockState bs = BlockUtils.getBlockState(block, md);
+                  BlockState bs = BlockUtils.getBlockState(block, md);
                   if (this.matchState(bs, mapPropValues)) {
                      listMetadatas.add(md);
                   }
@@ -271,8 +287,8 @@ public class ConnectedParser {
             } else {
                int[] metadatas = new int[listMetadatas.size()];
 
-               for (int ix = 0; ix < metadatas.length; ix++) {
-                  metadatas[ix] = (Integer)listMetadatas.get(ix);
+               for(int i = 0; i < metadatas.length; ++i) {
+                  metadatas[i] = (Integer)listMetadatas.get(i);
                }
 
                return metadatas;
@@ -281,7 +297,7 @@ public class ConnectedParser {
       }
    }
 
-   public static Comparable parsePropertyValue(net.minecraft.world.level.block.state.properties.Property prop, String valStr) {
+   public static Comparable parsePropertyValue(Property prop, String valStr) {
       Class valueClass = prop.m_61709_();
       Comparable valueObj = parseValue(valStr, valueClass);
       if (valueObj == null) {
@@ -293,17 +309,26 @@ public class ConnectedParser {
    }
 
    public static Comparable getPropertyValue(String value, Collection propertyValues) {
-      for (Comparable obj : propertyValues) {
-         if (getValueName(obj).equals(value)) {
-            return obj;
-         }
-      }
+      Iterator it = propertyValues.iterator();
 
-      return null;
+      Comparable obj;
+      do {
+         if (!it.hasNext()) {
+            return null;
+         }
+
+         obj = (Comparable)it.next();
+      } while(!getValueName(obj).equals(value));
+
+      return obj;
    }
 
    private static Object getValueName(Comparable obj) {
-      return obj instanceof StringRepresentable iss ? iss.m_7912_() : obj.toString();
+      if (obj instanceof StringRepresentable iss) {
+         return iss.m_7912_();
+      } else {
+         return obj.toString();
+      }
    }
 
    public static Comparable parseValue(String str, Class cls) {
@@ -322,22 +347,26 @@ public class ConnectedParser {
       }
    }
 
-   public boolean matchState(
-      net.minecraft.world.level.block.state.BlockState bs, Map<net.minecraft.world.level.block.state.properties.Property, List<Comparable>> mapPropValues
-   ) {
-      for (net.minecraft.world.level.block.state.properties.Property prop : mapPropValues.keySet()) {
-         List<Comparable> vals = (List<Comparable>)mapPropValues.get(prop);
-         Comparable bsVal = bs.m_61143_(prop);
+   public boolean matchState(BlockState bs, Map mapPropValues) {
+      Set keys = mapPropValues.keySet();
+      Iterator it = keys.iterator();
+
+      List vals;
+      Comparable bsVal;
+      do {
+         if (!it.hasNext()) {
+            return true;
+         }
+
+         Property prop = (Property)it.next();
+         vals = (List)mapPropValues.get(prop);
+         bsVal = bs.m_61143_(prop);
          if (bsVal == null) {
             return false;
          }
+      } while(vals.contains(bsVal));
 
-         if (!vals.contains(bsVal)) {
-            return false;
-         }
-      }
-
-      return true;
+      return false;
    }
 
    public BiomeId[] parseBiomes(String str) {
@@ -352,35 +381,39 @@ public class ConnectedParser {
          }
 
          String[] biomeNames = Config.tokenize(str, " ");
-         List<BiomeId> list = new ArrayList();
+         List list = new ArrayList();
 
-         for (int i = 0; i < biomeNames.length; i++) {
+         BiomeId bi;
+         for(int i = 0; i < biomeNames.length; ++i) {
             String biomeName = biomeNames[i];
-            BiomeId biome = this.getBiomeId(biomeName);
-            if (biome == null) {
+            bi = this.getBiomeId(biomeName);
+            if (bi == null) {
                this.warn("Biome not found: " + biomeName);
             } else {
-               list.add(biome);
+               ((List)list).add(bi);
             }
          }
 
          if (negative) {
-            Set<net.minecraft.resources.ResourceLocation> allBiomes = new HashSet(BiomeUtils.getLocations());
+            Set allBiomes = new HashSet(BiomeUtils.getLocations());
+            Iterator var10 = ((List)list).iterator();
 
-            for (BiomeId bi : list) {
+            while(var10.hasNext()) {
+               bi = (BiomeId)var10.next();
                allBiomes.remove(bi.getResourceLocation());
             }
 
             list = BiomeUtils.getBiomeIds(allBiomes);
          }
 
-         return (BiomeId[])list.toArray(new BiomeId[list.size()]);
+         BiomeId[] biomeArr = (BiomeId[])((List)list).toArray(new BiomeId[((List)list).size()]);
+         return biomeArr;
       }
    }
 
    public BiomeId getBiomeId(String biomeName) {
       biomeName = biomeName.toLowerCase();
-      net.minecraft.resources.ResourceLocation biomeLoc = this.makeResourceLocation(biomeName);
+      ResourceLocation biomeLoc = this.makeResourceLocation(biomeName);
       if (biomeLoc != null) {
          BiomeId biome = BiomeUtils.getBiomeId(biomeLoc);
          if (biome != null) {
@@ -389,15 +422,18 @@ public class ConnectedParser {
       }
 
       String biomeNameCompact = biomeName.replace(" ", "").replace("_", "");
-      net.minecraft.resources.ResourceLocation biomeLocCompact = this.makeResourceLocation(biomeNameCompact);
+      ResourceLocation biomeLocCompact = this.makeResourceLocation(biomeNameCompact);
       if (MAP_BIOMES_COMPACT == null) {
          MAP_BIOMES_COMPACT = new HashMap();
+         Set biomeIds = BiomeUtils.getLocations();
+         Iterator it = biomeIds.iterator();
 
-         for (net.minecraft.resources.ResourceLocation loc : BiomeUtils.getLocations()) {
+         while(it.hasNext()) {
+            ResourceLocation loc = (ResourceLocation)it.next();
             BiomeId biomeCompact = BiomeUtils.getBiomeId(loc);
             if (biomeCompact != null) {
                String pathCompact = loc.m_135815_().replace(" ", "").replace("_", "").toLowerCase();
-               net.minecraft.resources.ResourceLocation locCompact = this.makeResourceLocation(loc.m_135827_(), pathCompact);
+               ResourceLocation locCompact = this.makeResourceLocation(loc.m_135827_(), pathCompact);
                if (locCompact != null) {
                   MAP_BIOMES_COMPACT.put(locCompact, biomeCompact);
                }
@@ -443,10 +479,10 @@ public class ConnectedParser {
       if (str == null) {
          return null;
       } else {
-         List<Integer> list = new ArrayList();
+         List list = new ArrayList();
          String[] intStrs = Config.tokenize(str, " ,");
 
-         for (int i = 0; i < intStrs.length; i++) {
+         for(int i = 0; i < intStrs.length; ++i) {
             String intStr = intStrs[i];
             if (intStr.contains("-")) {
                String[] subStrs = Config.tokenize(intStr, "-");
@@ -456,7 +492,7 @@ public class ConnectedParser {
                   int min = Config.parseInt(subStrs[0], -1);
                   int max = Config.parseInt(subStrs[1], -1);
                   if (min >= 0 && max >= 0 && min <= max) {
-                     for (int n = min; n <= max; n++) {
+                     for(int n = min; n <= max; ++n) {
                         list.add(n);
                      }
                   } else {
@@ -475,8 +511,8 @@ public class ConnectedParser {
 
          int[] ints = new int[list.size()];
 
-         for (int ix = 0; ix < ints.length; ix++) {
-            ints[ix] = (Integer)list.get(ix);
+         for(int i = 0; i < ints.length; ++i) {
+            ints[i] = (Integer)list.get(i);
          }
 
          return ints;
@@ -487,53 +523,57 @@ public class ConnectedParser {
       if (str == null) {
          return defVal;
       } else {
-         EnumSet setFaces = EnumSet.allOf(net.minecraft.core.Direction.class);
+         EnumSet setFaces = EnumSet.allOf(Direction.class);
          String[] faceStrs = Config.tokenize(str, " ,");
 
-         for (int i = 0; i < faceStrs.length; i++) {
+         for(int i = 0; i < faceStrs.length; ++i) {
             String faceStr = faceStrs[i];
             if (faceStr.equals("sides")) {
-               setFaces.add(net.minecraft.core.Direction.NORTH);
-               setFaces.add(net.minecraft.core.Direction.SOUTH);
-               setFaces.add(net.minecraft.core.Direction.WEST);
-               setFaces.add(net.minecraft.core.Direction.EAST);
+               setFaces.add(Direction.NORTH);
+               setFaces.add(Direction.SOUTH);
+               setFaces.add(Direction.WEST);
+               setFaces.add(Direction.EAST);
             } else if (faceStr.equals("all")) {
-               setFaces.addAll(Arrays.asList(net.minecraft.core.Direction.f_122346_));
+               setFaces.addAll(Arrays.asList(Direction.f_122346_));
             } else {
-               net.minecraft.core.Direction face = this.parseFace(faceStr);
+               Direction face = this.parseFace(faceStr);
                if (face != null) {
                   setFaces.add(face);
                }
             }
          }
 
-         boolean[] faces = new boolean[net.minecraft.core.Direction.f_122346_.length];
+         boolean[] faces = new boolean[Direction.f_122346_.length];
 
-         for (int ix = 0; ix < faces.length; ix++) {
-            faces[ix] = setFaces.contains(net.minecraft.core.Direction.f_122346_[ix]);
+         for(int i = 0; i < faces.length; ++i) {
+            faces[i] = setFaces.contains(Direction.f_122346_[i]);
          }
 
          return faces;
       }
    }
 
-   public net.minecraft.core.Direction parseFace(String str) {
+   public Direction parseFace(String str) {
       str = str.toLowerCase();
-      if (str.equals("bottom") || str.equals("down")) {
-         return net.minecraft.core.Direction.DOWN;
-      } else if (str.equals("top") || str.equals("up")) {
-         return net.minecraft.core.Direction.UP;
-      } else if (str.equals("north")) {
-         return net.minecraft.core.Direction.NORTH;
-      } else if (str.equals("south")) {
-         return net.minecraft.core.Direction.SOUTH;
-      } else if (str.equals("east")) {
-         return net.minecraft.core.Direction.EAST;
-      } else if (str.equals("west")) {
-         return net.minecraft.core.Direction.WEST;
+      if (!str.equals("bottom") && !str.equals("down")) {
+         if (!str.equals("top") && !str.equals("up")) {
+            if (str.equals("north")) {
+               return Direction.NORTH;
+            } else if (str.equals("south")) {
+               return Direction.SOUTH;
+            } else if (str.equals("east")) {
+               return Direction.EAST;
+            } else if (str.equals("west")) {
+               return Direction.WEST;
+            } else {
+               Config.warn("Unknown face: " + str);
+               return null;
+            }
+         } else {
+            return Direction.field_61;
+         }
       } else {
-         Config.warn("Unknown face: " + str);
-         return null;
+         return Direction.DOWN;
       }
    }
 
@@ -552,7 +592,7 @@ public class ConnectedParser {
          RangeListInt list = new RangeListInt();
          String[] parts = Config.tokenize(str, " ,");
 
-         for (int i = 0; i < parts.length; i++) {
+         for(int i = 0; i < parts.length; ++i) {
             String part = parts[i];
             RangeInt ri = this.parseRangeInt(part);
             if (ri == null) {
@@ -573,7 +613,7 @@ public class ConnectedParser {
          RangeListInt list = new RangeListInt();
          String[] parts = Config.tokenize(str, " ,");
 
-         for (int i = 0; i < parts.length; i++) {
+         for(int i = 0; i < parts.length; ++i) {
             String part = parts[i];
             RangeInt ri = this.parseRangeIntNeg(part);
             if (ri == null) {
@@ -694,7 +734,8 @@ public class ConnectedParser {
          str = str.trim();
 
          try {
-            return Integer.parseInt(str, 16) & 16777215;
+            int val = Integer.parseInt(str, 16) & 16777215;
+            return val;
          } catch (NumberFormatException var3) {
             return defVal;
          }
@@ -708,22 +749,23 @@ public class ConnectedParser {
          str = str.trim();
 
          try {
-            return (int)(Long.parseLong(str, 16) & -1L);
+            int val = (int)(Long.parseLong(str, 16) & -1L);
+            return val;
          } catch (NumberFormatException var3) {
             return defVal;
          }
       }
    }
 
-   public net.minecraft.client.renderer.RenderType parseBlockRenderLayer(String str, net.minecraft.client.renderer.RenderType def) {
+   public RenderType parseBlockRenderLayer(String str, RenderType def) {
       if (str == null) {
          return def;
       } else {
          str = str.toLowerCase().trim();
-         net.minecraft.client.renderer.RenderType[] layers = net.minecraft.client.renderer.RenderType.CHUNK_RENDER_TYPES;
+         RenderType[] layers = RenderType.CHUNK_RENDER_TYPES;
 
-         for (int i = 0; i < layers.length; i++) {
-            net.minecraft.client.renderer.RenderType layer = layers[i];
+         for(int i = 0; i < layers.length; ++i) {
+            RenderType layer = layers[i];
             if (str.equals(layer.getName().toLowerCase())) {
                return layer;
             }
@@ -733,14 +775,14 @@ public class ConnectedParser {
       }
    }
 
-   public <T> T parseObject(String str, T[] objs, INameGetter nameGetter, String property) {
+   public Object parseObject(String str, Object[] objs, INameGetter nameGetter, String property) {
       if (str == null) {
          return null;
       } else {
          String strLower = str.toLowerCase().trim();
 
-         for (int i = 0; i < objs.length; i++) {
-            T obj = objs[i];
+         for(int i = 0; i < objs.length; ++i) {
+            Object obj = objs[i];
             String name = nameGetter.getName(obj);
             if (name != null && name.toLowerCase().equals(strLower)) {
                return obj;
@@ -752,17 +794,17 @@ public class ConnectedParser {
       }
    }
 
-   public <T> T[] parseObjects(String str, T[] objs, INameGetter nameGetter, String property, T[] errValue) {
+   public Object[] parseObjects(String str, Object[] objs, INameGetter nameGetter, String property, Object[] errValue) {
       if (str == null) {
          return null;
       } else {
          str = str.toLowerCase().trim();
          String[] parts = Config.tokenize(str, " ");
-         T[] arr = (T[])Array.newInstance(objs.getClass().getComponentType(), parts.length);
+         Object[] arr = (Object[])Array.newInstance(objs.getClass().getComponentType(), parts.length);
 
-         for (int i = 0; i < parts.length; i++) {
+         for(int i = 0; i < parts.length; ++i) {
             String part = parts[i];
-            T obj = this.parseObject(part, objs, nameGetter, property);
+            Object obj = this.parseObject(part, objs, nameGetter, property);
             if (obj == null) {
                return errValue;
             }
@@ -775,25 +817,28 @@ public class ConnectedParser {
    }
 
    public Enum parseEnum(String str, Enum[] enums, String property) {
-      return this.parseObject(str, enums, NAME_GETTER_ENUM, property);
+      return (Enum)this.parseObject(str, enums, NAME_GETTER_ENUM, property);
    }
 
    public Enum[] parseEnums(String str, Enum[] enums, String property, Enum[] errValue) {
-      return this.parseObjects(str, enums, NAME_GETTER_ENUM, property, errValue);
+      return (Enum[])this.parseObjects(str, enums, NAME_GETTER_ENUM, property, errValue);
    }
 
-   public net.minecraft.world.item.DyeColor[] parseDyeColors(String str, String property, net.minecraft.world.item.DyeColor[] errValue) {
-      return this.parseObjects(str, net.minecraft.world.item.DyeColor.values(), NAME_GETTER_DYE_COLOR, property, errValue);
+   public DyeColor[] parseDyeColors(String str, String property, DyeColor[] errValue) {
+      return (DyeColor[])this.parseObjects(str, DyeColor.values(), NAME_GETTER_DYE_COLOR, property, errValue);
    }
 
    public Weather[] parseWeather(String str, String property, Weather[] errValue) {
-      return this.parseObjects(str, Weather.values(), NAME_GETTER_ENUM, property, errValue);
+      return (Weather[])this.parseObjects(str, Weather.values(), NAME_GETTER_ENUM, property, errValue);
    }
 
    public NbtTagValue[] parseNbtTagValues(Properties props, String prefix) {
-      List<NbtTagValue> listNbts = new ArrayList();
+      List listNbts = new ArrayList();
+      Set keySet = props.keySet();
+      Iterator it = keySet.iterator();
 
-      for (String key : props.keySet()) {
+      while(it.hasNext()) {
+         String key = (String)it.next();
          if (key.startsWith(prefix)) {
             String val = (String)props.get(key);
             String id = key.substring(prefix.length());
@@ -802,7 +847,12 @@ public class ConnectedParser {
          }
       }
 
-      return listNbts.isEmpty() ? null : (NbtTagValue[])listNbts.toArray(new NbtTagValue[listNbts.size()]);
+      if (listNbts.isEmpty()) {
+         return null;
+      } else {
+         NbtTagValue[] nbts = (NbtTagValue[])listNbts.toArray(new NbtTagValue[listNbts.size()]);
+         return nbts;
+      }
    }
 
    public NbtTagValue parseNbtTagValue(String path, String value) {
@@ -813,10 +863,10 @@ public class ConnectedParser {
       if (profStr == null) {
          return null;
       } else {
-         List<MatchProfession> list = new ArrayList();
+         List list = new ArrayList();
          String[] tokens = Config.tokenize(profStr, " ");
 
-         for (int i = 0; i < tokens.length; i++) {
+         for(int i = 0; i < tokens.length; ++i) {
             String str = tokens[i];
             MatchProfession prof = this.parseProfession(str);
             if (prof == null) {
@@ -827,7 +877,12 @@ public class ConnectedParser {
             list.add(prof);
          }
 
-         return list.isEmpty() ? null : (MatchProfession[])list.toArray(new MatchProfession[list.size()]);
+         if (list.isEmpty()) {
+            return null;
+         } else {
+            MatchProfession[] arr = (MatchProfession[])list.toArray(new MatchProfession[list.size()]);
+            return arr;
+         }
       }
    }
 
@@ -849,7 +904,8 @@ public class ConnectedParser {
          return null;
       } else {
          int[] levels = this.parseIntList(strLevels);
-         return new MatchProfession(prof, levels);
+         MatchProfession mp = new MatchProfession(prof, levels);
+         return mp;
       }
    }
 
@@ -858,11 +914,11 @@ public class ConnectedParser {
          return null;
       } else {
          str = str.toLowerCase();
-         net.minecraft.resources.ResourceLocation loc = this.makeResourceLocation(str);
+         ResourceLocation loc = this.makeResourceLocation(str);
          if (loc == null) {
             return null;
          } else {
-            Registry<VillagerProfession> registry = BuiltInRegistries.f_256735_;
+            Registry registry = BuiltInRegistries.f_256735_;
             return !registry.m_7804_(loc) ? null : (VillagerProfession)registry.m_7745_(loc);
          }
       }
@@ -870,20 +926,21 @@ public class ConnectedParser {
 
    public int[] parseItems(String str) {
       str = str.trim();
-      Set<Integer> setIds = new TreeSet();
+      Set setIds = new TreeSet();
       String[] tokens = Config.tokenize(str, " ");
 
-      for (int i = 0; i < tokens.length; i++) {
+      for(int i = 0; i < tokens.length; ++i) {
          String token = tokens[i];
-         net.minecraft.resources.ResourceLocation loc = this.makeResourceLocation(token);
+         ResourceLocation loc = this.makeResourceLocation(token);
          if (loc != null) {
-            Item item = net.optifine.util.ItemUtils.getItem(loc);
+            Item item = ItemUtils.getItem(loc);
             if (item == null) {
                this.warn("Item not found: " + token);
             } else {
-               int id = net.optifine.util.ItemUtils.getId(item);
+               int id = ItemUtils.getId(item);
                if (id < 0) {
-                  this.warn("Item has no ID: " + item + ", name: " + token);
+                  String var10001 = String.valueOf(item);
+                  this.warn("Item has no ID: " + var10001 + ", name: " + token);
                } else {
                   setIds.add(new Integer(id));
                }
@@ -892,17 +949,18 @@ public class ConnectedParser {
       }
 
       Integer[] integers = (Integer[])setIds.toArray(new Integer[setIds.size()]);
-      return Config.toPrimitive(integers);
+      int[] ints = Config.toPrimitive(integers);
+      return ints;
    }
 
    public int[] parseEntities(String str) {
       str = str.trim();
-      Set<Integer> setIds = new TreeSet();
+      Set setIds = new TreeSet();
       String[] tokens = Config.tokenize(str, " ");
 
-      for (int i = 0; i < tokens.length; i++) {
+      for(int i = 0; i < tokens.length; ++i) {
          String token = tokens[i];
-         net.minecraft.resources.ResourceLocation loc = this.makeResourceLocation(token);
+         ResourceLocation loc = this.makeResourceLocation(token);
          if (loc != null) {
             EntityType type = EntityTypeUtils.getEntityType(loc);
             if (type == null) {
@@ -910,7 +968,8 @@ public class ConnectedParser {
             } else {
                int id = BuiltInRegistries.f_256780_.m_7447_(type);
                if (id < 0) {
-                  this.warn("Entity has no ID: " + type + ", name: " + token);
+                  String var10001 = String.valueOf(type);
+                  this.warn("Entity has no ID: " + var10001 + ", name: " + token);
                } else {
                   setIds.add(new Integer(id));
                }
@@ -919,6 +978,7 @@ public class ConnectedParser {
       }
 
       Integer[] integers = (Integer[])setIds.toArray(new Integer[setIds.size()]);
-      return Config.toPrimitive(integers);
+      int[] ints = Config.toPrimitive(integers);
+      return ints;
    }
 }

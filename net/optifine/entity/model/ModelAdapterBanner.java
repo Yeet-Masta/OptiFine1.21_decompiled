@@ -1,6 +1,10 @@
 package net.optifine.entity.model;
 
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.blockentity.BannerRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.Config;
 
@@ -9,13 +13,11 @@ public class ModelAdapterBanner extends ModelAdapter {
       super(BlockEntityType.f_58935_, "banner", 0.0F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new BannerModel();
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BannerModel modelBanner)) {
          return null;
       } else if (modelPart.equals("slate")) {
@@ -27,24 +29,24 @@ public class ModelAdapterBanner extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"slate", "stand", "top"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model model, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderer renderer = rendererCache.get(
-         BlockEntityType.f_58935_, index, () -> new BannerRenderer(dispatcher.getContext())
-      );
+   public IEntityRenderer makeEntityRender(Model model, float shadowSize, RendererCache rendererCache, int index) {
+      BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58935_, index, () -> {
+         return new BannerRenderer(dispatcher.getContext());
+      });
       if (!(renderer instanceof BannerRenderer)) {
          return null;
-      } else if (!(model instanceof BannerModel bannerModel)) {
-         Config.warn("Not a banner model: " + model);
+      } else if (!(model instanceof BannerModel)) {
+         Config.warn("Not a banner model: " + String.valueOf(model));
          return null;
       } else {
-         return bannerModel.updateRenderer(renderer);
+         BannerModel bannerModel = (BannerModel)model;
+         renderer = bannerModel.updateRenderer(renderer);
+         return renderer;
       }
    }
 }

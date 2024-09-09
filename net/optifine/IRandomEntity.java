@@ -2,7 +2,9 @@ package net.optifine;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
 
 public interface IRandomEntity {
    int getId();
@@ -19,7 +21,7 @@ public interface IRandomEntity {
 
    CompoundTag getNbtTag();
 
-   net.minecraft.world.item.DyeColor getColor();
+   DyeColor getColor();
 
-   net.minecraft.world.level.block.state.BlockState getBlockState();
+   BlockState getBlockState();
 }

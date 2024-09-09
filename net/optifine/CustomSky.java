@@ -1,12 +1,16 @@
 package net.optifine;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.optifine.render.Blender;
 import net.optifine.shaders.RenderStage;
 import net.optifine.shaders.Shaders;
 import net.optifine.util.PropertiesOrdered;
@@ -33,19 +37,21 @@ public class CustomSky {
       String prefix = "optifine/sky/world";
       int lastWorldId = -1;
 
-      for (int w = 0; w < wsls.length; w++) {
+      int w;
+      for(w = 0; w < wsls.length; ++w) {
          String worldPrefix = prefix + w;
          List listSkyLayers = new ArrayList();
 
-         for (int i = 0; i < 1000; i++) {
+         for(int i = 0; i < 1000; ++i) {
             String path = worldPrefix + "/sky" + i + ".properties";
             int countMissing = 0;
 
             try {
-               net.minecraft.resources.ResourceLocation locPath = new net.minecraft.resources.ResourceLocation(path);
+               ResourceLocation locPath = new ResourceLocation(path);
                InputStream in = Config.getResourceStream(locPath);
                if (in == null) {
-                  if (++countMissing > 10) {
+                  ++countMissing;
+                  if (countMissing > 10) {
                      break;
                   }
                }
@@ -54,14 +60,14 @@ public class CustomSky {
                props.load(in);
                in.close();
                Config.dbg("CustomSky properties: " + path);
-               String defSource = i + ".png";
+               String defSource = "" + i + ".png";
                CustomSkyLayer sl = new CustomSkyLayer(props, defSource);
                if (sl.isValid(path)) {
                   String srcPath = StrUtils.addSuffixCheck(sl.source, ".png");
-                  net.minecraft.resources.ResourceLocation locSource = new net.minecraft.resources.ResourceLocation(srcPath);
-                  net.minecraft.client.renderer.texture.AbstractTexture tex = TextureUtils.getTexture(locSource);
+                  ResourceLocation locSource = new ResourceLocation(srcPath);
+                  AbstractTexture tex = TextureUtils.getTexture(locSource);
                   if (tex == null) {
-                     Config.log("CustomSky: Texture not found: " + locSource);
+                     Config.log("CustomSky: Texture not found: " + String.valueOf(locSource));
                   } else {
                      sl.textureId = tex.m_117963_();
                      listSkyLayers.add(sl);
@@ -69,7 +75,8 @@ public class CustomSky {
                   }
                }
             } catch (FileNotFoundException var17) {
-               if (++countMissing > 10) {
+               ++countMissing;
+               if (countMissing > 10) {
                   break;
                }
             } catch (IOException var18) {
@@ -87,10 +94,10 @@ public class CustomSky {
       if (lastWorldId < 0) {
          return null;
       } else {
-         int worldCount = lastWorldId + 1;
-         CustomSkyLayer[][] wslsTrim = new CustomSkyLayer[worldCount][0];
+         w = lastWorldId + 1;
+         CustomSkyLayer[][] wslsTrim = new CustomSkyLayer[w][0];
 
-         for (int i = 0; i < wslsTrim.length; i++) {
+         for(int i = 0; i < wslsTrim.length; ++i) {
             wslsTrim[i] = wsls[i];
          }
 
@@ -98,7 +105,7 @@ public class CustomSky {
       }
    }
 
-   public static void renderSky(Level world, com.mojang.blaze3d.vertex.PoseStack matrixStackIn, float partialTicks) {
+   public static void renderSky(Level world, PoseStack matrixStackIn, float partialTicks) {
       if (worldSkyLayers != null) {
          if (Config.isShaders()) {
             Shaders.setRenderStage(RenderStage.CUSTOM_SKY);
@@ -117,7 +124,7 @@ public class CustomSky {
                   thunderStrength /= rainStrength;
                }
 
-               for (int i = 0; i < sls.length; i++) {
+               for(int i = 0; i < sls.length; ++i) {
                   CustomSkyLayer sl = sls[i];
                   if (sl.isActive(world, timeOfDay)) {
                      sl.render(world, matrixStackIn, timeOfDay, celestialAngle, rainStrength, thunderStrength);
@@ -125,7 +132,7 @@ public class CustomSky {
                }
 
                float rainBrightness = 1.0F - rainStrength;
-               net.optifine.render.Blender.clearBlend(rainBrightness);
+               Blender.clearBlend(rainBrightness);
             }
          }
       }
@@ -138,7 +145,11 @@ public class CustomSky {
          int dimId = WorldUtils.getDimensionId(world);
          if (dimId >= 0 && dimId < worldSkyLayers.length) {
             CustomSkyLayer[] sls = worldSkyLayers[dimId];
-            return sls == null ? false : sls.length > 0;
+            if (sls == null) {
+               return false;
+            } else {
+               return sls.length > 0;
+            }
          } else {
             return false;
          }

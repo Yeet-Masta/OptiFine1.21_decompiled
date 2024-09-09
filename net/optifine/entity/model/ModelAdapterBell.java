@@ -1,6 +1,10 @@
 package net.optifine.entity.model;
 
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.blockentity.BellRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.Config;
 
@@ -9,13 +13,11 @@ public class ModelAdapterBell extends ModelAdapter {
       super(BlockEntityType.f_58909_, "bell", 0.0F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new BellModel();
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BellModel modelBell)) {
          return null;
       } else {
@@ -23,24 +25,24 @@ public class ModelAdapterBell extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model model, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderer renderer = rendererCache.get(
-         BlockEntityType.f_58909_, index, () -> new BellRenderer(dispatcher.getContext())
-      );
+   public IEntityRenderer makeEntityRender(Model model, float shadowSize, RendererCache rendererCache, int index) {
+      BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58909_, index, () -> {
+         return new BellRenderer(dispatcher.getContext());
+      });
       if (!(renderer instanceof BellRenderer)) {
          return null;
-      } else if (!(model instanceof BellModel bellModel)) {
-         Config.warn("Not a bell model: " + model);
+      } else if (!(model instanceof BellModel)) {
+         Config.warn("Not a bell model: " + String.valueOf(model));
          return null;
       } else {
-         return bellModel.updateRenderer(renderer);
+         BellModel bellModel = (BellModel)model;
+         renderer = bellModel.updateRenderer(renderer);
+         return renderer;
       }
    }
 }

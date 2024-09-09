@@ -3,9 +3,12 @@ package net.optifine.shaders;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.Config;
 import net.optifine.config.ConnectedParser;
 import net.optifine.reflect.Reflector;
@@ -21,8 +24,11 @@ public class EntityAliases {
    public static int getEntityAliasId(int entityId) {
       if (entityAliases == null) {
          return -1;
+      } else if (entityId >= 0 && entityId < entityAliases.length) {
+         int aliasId = entityAliases[entityId];
+         return aliasId;
       } else {
-         return entityId >= 0 && entityId < entityAliases.length ? entityAliases[entityId] : -1;
+         return -1;
       }
    }
 
@@ -40,7 +46,7 @@ public class EntityAliases {
             Config.dbg("[Shaders] Delayed loading of entity mappings after resources are loaded");
             updateOnResourcesReloaded = true;
          } else {
-            List<Integer> listEntityAliases = new ArrayList();
+            List listEntityAliases = new ArrayList();
             String path = "/shaders/entity.properties";
             InputStream in = shaderPack.getResourceAsStream(path);
             if (in != null) {
@@ -55,22 +61,23 @@ public class EntityAliases {
       }
    }
 
-   private static void loadModEntityAliases(List<Integer> listEntityAliases) {
+   private static void loadModEntityAliases(List listEntityAliases) {
       String[] modIds = ReflectorForge.getForgeModIds();
 
-      for (int i = 0; i < modIds.length; i++) {
+      for(int i = 0; i < modIds.length; ++i) {
          String modId = modIds[i];
 
          try {
-            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(modId, "shaders/entity.properties");
+            ResourceLocation loc = new ResourceLocation(modId, "shaders/entity.properties");
             InputStream in = Config.getResourceStream(loc);
             loadEntityAliases(in, loc.toString(), listEntityAliases);
          } catch (IOException var6) {
          }
       }
+
    }
 
-   private static void loadEntityAliases(InputStream in, String path, List<Integer> listEntityAliases) {
+   private static void loadEntityAliases(InputStream in, String path, List listEntityAliases) {
       if (in != null) {
          try {
             in = MacroProcessor.process(in, path, true);
@@ -79,29 +86,36 @@ public class EntityAliases {
             in.close();
             Config.dbg("[Shaders] Parsing entity mappings: " + path);
             ConnectedParser cp = new ConnectedParser("Shaders");
+            Set keys = props.keySet();
+            Iterator it = keys.iterator();
 
-            for (String key : props.keySet()) {
-               String val = props.getProperty(key);
-               String prefix = "entity.";
-               if (!key.startsWith(prefix)) {
-                  Config.warn("[Shaders] Invalid entity ID: " + key);
-               } else {
-                  String aliasIdStr = StrUtils.removePrefix(key, prefix);
-                  int aliasId = Config.parseInt(aliasIdStr, -1);
-                  if (aliasId < 0) {
-                     Config.warn("[Shaders] Invalid entity alias ID: " + aliasId);
+            while(true) {
+               while(it.hasNext()) {
+                  String key = (String)it.next();
+                  String val = props.getProperty(key);
+                  String prefix = "entity.";
+                  if (!key.startsWith(prefix)) {
+                     Config.warn("[Shaders] Invalid entity ID: " + key);
                   } else {
-                     int[] entityIds = cp.parseEntities(val);
-                     if (entityIds != null && entityIds.length >= 1) {
-                        for (int i = 0; i < entityIds.length; i++) {
-                           int entityId = entityIds[i];
-                           addToList(listEntityAliases, entityId, aliasId);
-                        }
+                     String aliasIdStr = StrUtils.removePrefix(key, prefix);
+                     int aliasId = Config.parseInt(aliasIdStr, -1);
+                     if (aliasId < 0) {
+                        Config.warn("[Shaders] Invalid entity alias ID: " + aliasId);
                      } else {
-                        Config.warn("[Shaders] Invalid entity ID mapping: " + key + "=" + val);
+                        int[] entityIds = cp.parseEntities(val);
+                        if (entityIds != null && entityIds.length >= 1) {
+                           for(int i = 0; i < entityIds.length; ++i) {
+                              int entityId = entityIds[i];
+                              addToList(listEntityAliases, entityId, aliasId);
+                           }
+                        } else {
+                           Config.warn("[Shaders] Invalid entity ID mapping: " + key + "=" + val);
+                        }
                      }
                   }
                }
+
+               return;
             }
          } catch (IOException var15) {
             Config.warn("[Shaders] Error reading: " + path);
@@ -109,18 +123,18 @@ public class EntityAliases {
       }
    }
 
-   private static void addToList(List<Integer> list, int index, int val) {
-      while (list.size() <= index) {
+   private static void addToList(List list, int index, int val) {
+      while(list.size() <= index) {
          list.add(-1);
       }
 
       list.set(index, val);
    }
 
-   private static int[] toArray(List<Integer> list) {
+   private static int[] toArray(List list) {
       int[] arr = new int[list.size()];
 
-      for (int i = 0; i < arr.length; i++) {
+      for(int i = 0; i < arr.length; ++i) {
          arr[i] = (Integer)list.get(i);
       }
 

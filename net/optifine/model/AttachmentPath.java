@@ -1,10 +1,13 @@
 package net.optifine.model;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.geom.ModelPart;
+
 public class AttachmentPath {
    private Attachment attachment;
-   private net.minecraft.client.model.geom.ModelPart[] modelParts;
+   private ModelPart[] modelParts;
 
-   public AttachmentPath(Attachment attachment, net.minecraft.client.model.geom.ModelPart[] modelParts) {
+   public AttachmentPath(Attachment attachment, ModelPart[] modelParts) {
       this.attachment = attachment;
       this.modelParts = modelParts;
    }
@@ -13,13 +16,13 @@ public class AttachmentPath {
       return this.attachment;
    }
 
-   public net.minecraft.client.model.geom.ModelPart[] getModelParts() {
+   public ModelPart[] getModelParts() {
       return this.modelParts;
    }
 
    public boolean isVisible() {
-      for (int i = 0; i < this.modelParts.length; i++) {
-         net.minecraft.client.model.geom.ModelPart modelPart = this.modelParts[i];
+      for(int i = 0; i < this.modelParts.length; ++i) {
+         ModelPart modelPart = this.modelParts[i];
          if (!modelPart.f_104207_) {
             return false;
          }
@@ -28,9 +31,9 @@ public class AttachmentPath {
       return true;
    }
 
-   public void applyTransform(com.mojang.blaze3d.vertex.PoseStack matrixStackIn) {
-      for (int i = 0; i < this.modelParts.length; i++) {
-         net.minecraft.client.model.geom.ModelPart modelPart = this.modelParts[i];
+   public void applyTransform(PoseStack matrixStackIn) {
+      for(int i = 0; i < this.modelParts.length; ++i) {
+         ModelPart modelPart = this.modelParts[i];
          modelPart.m_104299_(matrixStackIn);
       }
 
@@ -38,6 +41,7 @@ public class AttachmentPath {
    }
 
    public String toString() {
-      return "attachment: " + this.attachment.getType() + ", parents: " + this.modelParts.length;
+      String var10000 = String.valueOf(this.attachment.getType());
+      return "attachment: " + var10000 + ", parents: " + this.modelParts.length;
    }
 }

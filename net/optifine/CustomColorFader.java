@@ -1,12 +1,14 @@
 package net.optifine;
 
+import net.minecraft.world.phys.Vec3;
+
 public class CustomColorFader {
-   private net.minecraft.world.phys.Vec3 color = null;
+   private Vec3 color = null;
    private long timeUpdate = System.currentTimeMillis();
 
-   public net.minecraft.world.phys.Vec3 getColor(double x, double y, double z) {
+   public Vec3 getColor(double x, double y, double z) {
       if (this.color == null) {
-         this.color = new net.minecraft.world.phys.Vec3(x, y, z);
+         this.color = new Vec3(x, y, z);
          return this.color;
       } else {
          long timeNow = System.currentTimeMillis();
@@ -26,7 +28,7 @@ public class CustomColorFader {
                double xn = this.color.f_82479_ + dx * k;
                double yn = this.color.f_82480_ + dy * k;
                double zn = this.color.f_82481_ + dz * k;
-               this.color = new net.minecraft.world.phys.Vec3(xn, yn, zn);
+               this.color = new Vec3(xn, yn, zn);
                return this.color;
             }
          }

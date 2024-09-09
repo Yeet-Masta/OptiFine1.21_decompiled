@@ -2,7 +2,10 @@ package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.MinecartModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.MinecartRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -17,13 +20,11 @@ public class ModelAdapterMinecart extends ModelAdapter {
       super(type, name, shadow);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new MinecartModel(bakeModelLayer(ModelLayers.f_171198_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof MinecartModel modelMinecart)) {
          return null;
       } else if (modelPart.equals("bottom")) {
@@ -41,14 +42,12 @@ public class ModelAdapterMinecart extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"bottom", "back", "front", "right", "left", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       MinecartRenderer render = new MinecartRenderer(renderManager.getContext(), ModelLayers.f_171198_);
       if (!Reflector.RenderMinecart_modelMinecart.exists()) {
          Config.warn("Field not found: RenderMinecart.modelMinecart");

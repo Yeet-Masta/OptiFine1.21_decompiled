@@ -1,11 +1,11 @@
 package net.minecraftforge.common.property;
 
-public interface IUnlistedProperty<V> {
+public interface IUnlistedProperty {
    String getName();
 
-   boolean isValid(V var1);
+   boolean isValid(Object var1);
 
-   Class<V> getType();
+   Class getType();
 
-   String valueToString(V var1);
+   String valueToString(Object var1);
 }

@@ -5,6 +5,7 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -21,7 +22,7 @@ public class PlayerControllerOF extends MultiPlayerGameMode {
       super(mcIn, netHandler);
    }
 
-   public boolean m_105269_(BlockPos loc, net.minecraft.core.Direction face) {
+   public boolean m_105269_(BlockPos loc, Direction face) {
       this.acting = true;
       this.lastClickBlockPos = loc;
       boolean res = super.m_105269_(loc, face);
@@ -29,7 +30,7 @@ public class PlayerControllerOF extends MultiPlayerGameMode {
       return res;
    }
 
-   public boolean m_105283_(BlockPos posBlock, net.minecraft.core.Direction directionFacing) {
+   public boolean m_105283_(BlockPos posBlock, Direction directionFacing) {
       this.acting = true;
       this.lastClickBlockPos = posBlock;
       boolean res = super.m_105283_(posBlock, directionFacing);

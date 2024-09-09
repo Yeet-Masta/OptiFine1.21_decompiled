@@ -1,5 +1,8 @@
 package net.optifine.shaders;
 
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.util.Mth;
 import net.optifine.Config;
 import net.optifine.util.MathUtils;
 import org.joml.Matrix4f;
@@ -7,7 +10,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum {
+public class ShadowFrustum extends Frustum {
    public ShadowFrustum(Matrix4f matrixIn, Matrix4f projectionIn) {
       super(matrixIn, projectionIn);
       this.extendForShadows(matrixIn, projectionIn);
@@ -15,7 +18,7 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
    }
 
    private void extendForShadows(Matrix4f matrixIn, Matrix4f projectionIn) {
-      net.minecraft.client.multiplayer.ClientLevel world = Config.getMinecraft().f_91073_;
+      ClientLevel world = Config.getMinecraft().f_91073_;
       if (world != null) {
          Matrix4f matrixFull = MathUtils.copy(projectionIn);
          matrixFull.mul(matrixIn);
@@ -28,11 +31,11 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
          viewRight.normalize();
          float partialTicks = 0.0F;
          float car = world.m_46490_(partialTicks);
-         float sunTiltRad = Shaders.sunPathRotation * net.minecraft.util.Mth.deg2Rad;
-         float sar = car > net.minecraft.util.Mth.PId2 && car < 3.0F * net.minecraft.util.Mth.PId2 ? car + (float) Math.PI : car;
-         float sx = -net.minecraft.util.Mth.m_14031_(sar);
-         float sy = net.minecraft.util.Mth.m_14089_(sar) * net.minecraft.util.Mth.m_14089_(sunTiltRad);
-         float sz = -net.minecraft.util.Mth.m_14089_(sar) * net.minecraft.util.Mth.m_14031_(sunTiltRad);
+         float sunTiltRad = Shaders.sunPathRotation * Mth.deg2Rad;
+         float sar = car > Mth.PId2 && car < 3.0F * Mth.PId2 ? car + 3.1415927F : car;
+         float sx = -Mth.m_14031_(sar);
+         float sy = Mth.m_14089_(sar) * Mth.m_14089_(sunTiltRad);
+         float sz = -Mth.m_14089_(sar) * Mth.m_14031_(sunTiltRad);
          Vector4f vecSun = new Vector4f(sx, sy, sz, 0.0F);
          vecSun.normalize();
          Vector3f viewUpDot = MathUtils.makeVector3f(viewUp);
@@ -70,8 +73,8 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
          if (dotRight < 0.0F || dotLeft < 0.0F) {
             vecNear.add(0.0F, 0.0F, 0.0F, farPlaneDistance);
             if (dotRight < 0.0F && dotLeft < 0.0F) {
-               rotRight = this.rotateDotPlus(vecRight, vecSunH, -1, viewUp);
-               rotLeft = this.rotateDotPlus(vecLeft, vecSunH, 1, viewUp);
+               this.rotateDotPlus(vecRight, vecSunH, -1, viewUp);
+               this.rotateDotPlus(vecLeft, vecSunH, 1, viewUp);
                vecRight.set(-vecRight.x(), -vecRight.y(), -vecRight.z(), -vecRight.w());
                vecLeft.set(-vecLeft.x(), -vecLeft.y(), -vecLeft.z(), -vecLeft.w());
                float distRight = -dotRight * farPlaneDistance * mulFarDist;
@@ -79,9 +82,9 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
                vecRight.add(0.0F, 0.0F, 0.0F, distRight);
                vecLeft.add(0.0F, 0.0F, 0.0F, distLeft);
             } else if (dotRight < 0.0F) {
-               rotRight = this.rotateDotPlus(vecRight, vecSunH, -1, viewUp);
+               this.rotateDotPlus(vecRight, vecSunH, -1, viewUp);
             } else {
-               rotLeft = this.rotateDotPlus(vecLeft, vecSunH, 1, viewUp);
+               this.rotateDotPlus(vecLeft, vecSunH, 1, viewUp);
             }
          }
 
@@ -95,8 +98,8 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
          if (dotTop < 0.0F || dotBottom < 0.0F) {
             vecNear.add(0.0F, 0.0F, 0.0F, farPlaneDistance);
             if (dotTop < 0.0F && dotBottom < 0.0F) {
-               rotTop = this.rotateDotPlus(vecTop, vecSunV, -1, viewRight);
-               rotBottom = this.rotateDotPlus(vecBottom, vecSunV, 1, viewRight);
+               this.rotateDotPlus(vecTop, vecSunV, -1, viewRight);
+               this.rotateDotPlus(vecBottom, vecSunV, 1, viewRight);
                vecTop.set(-vecTop.x(), -vecTop.y(), -vecTop.z(), -vecTop.w());
                vecBottom.set(-vecBottom.x(), -vecBottom.y(), -vecBottom.z(), -vecBottom.w());
                float distTop = -dotTop * maxDistTop;
@@ -104,11 +107,12 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
                vecTop.add(0.0F, 0.0F, 0.0F, distTop);
                vecBottom.add(0.0F, 0.0F, 0.0F, distBottom);
             } else if (dotTop < 0.0F) {
-               rotTop = this.rotateDotPlus(vecTop, vecSunV, -1, viewRight);
+               this.rotateDotPlus(vecTop, vecSunV, -1, viewRight);
             } else {
-               rotBottom = this.rotateDotPlus(vecBottom, vecSunV, 1, viewRight);
+               this.rotateDotPlus(vecBottom, vecSunV, 1, viewRight);
             }
          }
+
       }
    }
 
@@ -117,7 +121,7 @@ public class ShadowFrustum extends net.minecraft.client.renderer.culling.Frustum
       Quaternionf rot = MathUtils.rotationDegrees(vecRot3, (float)angleDeg);
       float angleDegSum = 0.0F;
 
-      while (true) {
+      while(true) {
          float dot = vecFrustum.dot(vecSun);
          if (dot >= 0.0F) {
             return angleDegSum;

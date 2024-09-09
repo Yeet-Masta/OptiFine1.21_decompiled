@@ -8,12 +8,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import net.minecraft.src.C_4168_;
+import net.minecraft.src.C_5322_;
 
-public class ChunkRenderTypeSet implements Iterable<RenderType> {
-   private static final List<RenderType> CHUNK_RENDER_TYPES_LIST = RenderType.I();
-   private static final RenderType[] CHUNK_RENDER_TYPES = (RenderType[])CHUNK_RENDER_TYPES_LIST.toArray(new RenderType[0]);
-   private static final ChunkRenderTypeSet NONE = new ChunkRenderTypeSet.None();
-   private static final ChunkRenderTypeSet ALL = new ChunkRenderTypeSet.All();
+public class ChunkRenderTypeSet implements Iterable {
+   private static final List CHUNK_RENDER_TYPES_LIST = C_4168_.m_110506_();
+   private static final C_4168_[] CHUNK_RENDER_TYPES;
+   private static final ChunkRenderTypeSet NONE;
+   private static final ChunkRenderTypeSet ALL;
    private final BitSet bits;
 
    public static ChunkRenderTypeSet none() {
@@ -24,20 +26,25 @@ public class ChunkRenderTypeSet implements Iterable<RenderType> {
       return ALL;
    }
 
-   public static ChunkRenderTypeSet of(RenderType... renderTypes) {
-      return of(Arrays.asList(renderTypes));
+   // $FF: renamed from: of (net.minecraft.src.C_4168_[]) net.minecraftforge.client.ChunkRenderTypeSet
+   public static ChunkRenderTypeSet method_6(C_4168_... renderTypes) {
+      return method_7(Arrays.asList(renderTypes));
    }
 
-   public static ChunkRenderTypeSet of(Collection<RenderType> renderTypes) {
-      return renderTypes.isEmpty() ? none() : of(renderTypes);
+   // $FF: renamed from: of (java.util.Collection) net.minecraftforge.client.ChunkRenderTypeSet
+   public static ChunkRenderTypeSet method_7(Collection renderTypes) {
+      return renderTypes.isEmpty() ? none() : method_8(renderTypes);
    }
 
-   private static ChunkRenderTypeSet of(Iterable<RenderType> renderTypes) {
+   // $FF: renamed from: of (java.lang.Iterable) net.minecraftforge.client.ChunkRenderTypeSet
+   private static ChunkRenderTypeSet method_8(Iterable renderTypes) {
       BitSet bits = new BitSet();
+      Iterator var2 = renderTypes.iterator();
 
-      for (RenderType renderType : renderTypes) {
+      while(var2.hasNext()) {
+         C_4168_ renderType = (C_4168_)var2.next();
          int index = renderType.getChunkLayerId();
-         Preconditions.checkArgument(index >= 0, "Attempted to create chunk render type set with a non-chunk render type: " + renderType);
+         Preconditions.checkArgument(index >= 0, "Attempted to create chunk render type set with a non-chunk render type: " + String.valueOf(renderType));
          bits.set(index);
       }
 
@@ -45,17 +52,19 @@ public class ChunkRenderTypeSet implements Iterable<RenderType> {
    }
 
    public static ChunkRenderTypeSet union(ChunkRenderTypeSet... sets) {
-      return union(Arrays.asList(sets));
+      return union((Collection)Arrays.asList(sets));
    }
 
-   public static ChunkRenderTypeSet union(Collection<ChunkRenderTypeSet> sets) {
-      return sets.isEmpty() ? none() : union(sets);
+   public static ChunkRenderTypeSet union(Collection sets) {
+      return sets.isEmpty() ? none() : union((Iterable)sets);
    }
 
-   public static ChunkRenderTypeSet union(Iterable<ChunkRenderTypeSet> sets) {
+   public static ChunkRenderTypeSet union(Iterable sets) {
       BitSet bits = new BitSet();
+      Iterator var2 = sets.iterator();
 
-      for (ChunkRenderTypeSet set : sets) {
+      while(var2.hasNext()) {
+         ChunkRenderTypeSet set = (ChunkRenderTypeSet)var2.next();
          bits.or(set.bits);
       }
 
@@ -63,18 +72,20 @@ public class ChunkRenderTypeSet implements Iterable<RenderType> {
    }
 
    public static ChunkRenderTypeSet intersection(ChunkRenderTypeSet... sets) {
-      return intersection(Arrays.asList(sets));
+      return intersection((Collection)Arrays.asList(sets));
    }
 
-   public static ChunkRenderTypeSet intersection(Collection<ChunkRenderTypeSet> sets) {
-      return sets.isEmpty() ? all() : intersection(sets);
+   public static ChunkRenderTypeSet intersection(Collection sets) {
+      return sets.isEmpty() ? all() : intersection((Iterable)sets);
    }
 
-   public static ChunkRenderTypeSet intersection(Iterable<ChunkRenderTypeSet> sets) {
+   public static ChunkRenderTypeSet intersection(Iterable sets) {
       BitSet bits = new BitSet();
       bits.set(0, CHUNK_RENDER_TYPES.length);
+      Iterator var2 = sets.iterator();
 
-      for (ChunkRenderTypeSet set : sets) {
+      while(var2.hasNext()) {
+         ChunkRenderTypeSet set = (ChunkRenderTypeSet)var2.next();
          bits.and(set.bits);
       }
 
@@ -89,54 +100,38 @@ public class ChunkRenderTypeSet implements Iterable<RenderType> {
       return this.bits.isEmpty();
    }
 
-   public boolean contains(RenderType renderType) {
+   public boolean contains(C_4168_ renderType) {
       int id = renderType.getChunkLayerId();
       return id >= 0 && this.bits.get(id);
    }
 
-   public Iterator<RenderType> iterator() {
-      return new ChunkRenderTypeSet.IteratorImpl();
+   public Iterator iterator() {
+      return new IteratorImpl();
    }
 
-   public List<RenderType> asList() {
+   public List asList() {
       return ImmutableList.copyOf(this);
    }
 
-   private static final class All extends ChunkRenderTypeSet {
-      private All() {
-         super(Util.a(new BitSet(), bits -> bits.set(0, ChunkRenderTypeSet.CHUNK_RENDER_TYPES.length)));
-      }
-
-      @Override
-      public boolean isEmpty() {
-         return false;
-      }
-
-      @Override
-      public boolean contains(RenderType renderType) {
-         return renderType.getChunkLayerId() >= 0;
-      }
-
-      @Override
-      public Iterator<RenderType> iterator() {
-         return ChunkRenderTypeSet.CHUNK_RENDER_TYPES_LIST.iterator();
-      }
-
-      @Override
-      public List<RenderType> asList() {
-         return ChunkRenderTypeSet.CHUNK_RENDER_TYPES_LIST;
-      }
+   static {
+      CHUNK_RENDER_TYPES = (C_4168_[])CHUNK_RENDER_TYPES_LIST.toArray(new C_4168_[0]);
+      NONE = new None();
+      ALL = new All();
    }
 
-   private final class IteratorImpl implements Iterator<RenderType> {
-      private int index = ChunkRenderTypeSet.this.bits.nextSetBit(0);
+   private final class IteratorImpl implements Iterator {
+      private int index;
+
+      private IteratorImpl() {
+         this.index = ChunkRenderTypeSet.this.bits.nextSetBit(0);
+      }
 
       public boolean hasNext() {
          return this.index >= 0;
       }
 
-      public RenderType next() {
-         RenderType renderType = ChunkRenderTypeSet.CHUNK_RENDER_TYPES[this.index];
+      public C_4168_ next() {
+         C_4168_ renderType = ChunkRenderTypeSet.CHUNK_RENDER_TYPES[this.index];
          this.index = ChunkRenderTypeSet.this.bits.nextSetBit(this.index + 1);
          return renderType;
       }
@@ -147,24 +142,44 @@ public class ChunkRenderTypeSet implements Iterable<RenderType> {
          super(new BitSet());
       }
 
-      @Override
       public boolean isEmpty() {
          return true;
       }
 
-      @Override
-      public boolean contains(RenderType renderType) {
+      public boolean contains(C_4168_ renderType) {
          return false;
       }
 
-      @Override
-      public Iterator<RenderType> iterator() {
+      public Iterator iterator() {
          return Collections.emptyIterator();
       }
 
-      @Override
-      public List<RenderType> asList() {
+      public List asList() {
          return List.of();
+      }
+   }
+
+   private static final class All extends ChunkRenderTypeSet {
+      private All() {
+         super((BitSet)C_5322_.m_137469_(new BitSet(), (bits) -> {
+            bits.set(0, ChunkRenderTypeSet.CHUNK_RENDER_TYPES.length);
+         }));
+      }
+
+      public boolean isEmpty() {
+         return false;
+      }
+
+      public boolean contains(C_4168_ renderType) {
+         return renderType.getChunkLayerId() >= 0;
+      }
+
+      public Iterator iterator() {
+         return ChunkRenderTypeSet.CHUNK_RENDER_TYPES_LIST.iterator();
+      }
+
+      public List asList() {
+         return ChunkRenderTypeSet.CHUNK_RENDER_TYPES_LIST;
       }
    }
 }

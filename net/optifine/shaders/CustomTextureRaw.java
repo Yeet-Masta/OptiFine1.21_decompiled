@@ -14,25 +14,13 @@ public class CustomTextureRaw implements ICustomTexture {
    private int textureUnit;
    private int textureId;
 
-   public CustomTextureRaw(
-      TextureType type,
-      InternalFormat internalFormat,
-      int width,
-      int height,
-      int depth,
-      PixelFormat pixelFormat,
-      PixelType pixelType,
-      ByteBuffer data,
-      int textureUnit,
-      boolean blur,
-      boolean clamp
-   ) {
+   public CustomTextureRaw(TextureType type, InternalFormat internalFormat, int width, int height, int depth, PixelFormat pixelFormat, PixelType pixelType, ByteBuffer data, int textureUnit, boolean blur, boolean clamp) {
       this.type = type;
       this.textureUnit = textureUnit;
       this.textureId = GL11.glGenTextures();
       GL11.glBindTexture(this.getTarget(), this.textureId);
       TextureUtils.resetDataUnpacking();
-      int wrapMode = clamp ? '\u812f' : 10497;
+      int wrapMode = clamp ? '脯' : 10497;
       int filterMode = blur ? 9729 : 9728;
       switch (type) {
          case TEXTURE_1D:
@@ -67,26 +55,23 @@ public class CustomTextureRaw implements ICustomTexture {
       GL11.glBindTexture(this.getTarget(), 0);
    }
 
-   @Override
    public int getTarget() {
       return this.type.getId();
    }
 
-   @Override
    public int getTextureId() {
       return this.textureId;
    }
 
-   @Override
    public int getTextureUnit() {
       return this.textureUnit;
    }
 
-   @Override
    public void deleteTexture() {
       if (this.textureId > 0) {
          GL11.glDeleteTextures(this.textureId);
          this.textureId = 0;
       }
+
    }
 }

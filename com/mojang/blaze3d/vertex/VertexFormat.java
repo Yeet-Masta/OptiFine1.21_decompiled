@@ -10,79 +10,77 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 public class VertexFormat {
    public static final int f_337347_ = -1;
-   private List<com.mojang.blaze3d.vertex.VertexFormatElement> f_86012_;
-   private List<String> f_337579_;
+   private List f_86012_;
+   private List f_337579_;
    private int f_86014_;
    private int f_337518_;
    private int[] f_337288_ = new int[32];
    @Nullable
-   private com.mojang.blaze3d.vertex.VertexBuffer f_231232_;
+   private VertexBuffer f_231232_;
    private String name;
    private int positionElementOffset = -1;
    private int normalElementOffset = -1;
    private int colorElementOffset = -1;
    private Int2IntMap uvOffsetsById = new Int2IntArrayMap();
-   private ImmutableMap<String, com.mojang.blaze3d.vertex.VertexFormatElement> elementMapping;
+   private ImmutableMap elementMapping;
    private boolean extended;
 
-   VertexFormat(List<com.mojang.blaze3d.vertex.VertexFormatElement> elementsIn, List<String> namesIn, IntList offsetsIn, int vertexSizeIn) {
+   VertexFormat(List elementsIn, List namesIn, IntList offsetsIn, int vertexSizeIn) {
       this.f_86012_ = elementsIn;
       this.f_337579_ = namesIn;
       this.f_86014_ = vertexSizeIn;
-      this.f_337518_ = elementsIn.stream().mapToInt(com.mojang.blaze3d.vertex.VertexFormatElement::m_339950_).reduce(0, (val1, val2) -> val1 | val2);
-      Map<String, com.mojang.blaze3d.vertex.VertexFormatElement> mapElements = new HashMap();
+      this.f_337518_ = elementsIn.stream().mapToInt(VertexFormatElement::m_339950_).reduce(0, (val1, val2) -> {
+         return val1 | val2;
+      });
+      Map mapElements = new HashMap();
 
-      for (int i = 0; i < this.f_337579_.size(); i++) {
+      int i;
+      for(i = 0; i < this.f_337579_.size(); ++i) {
          String name = (String)this.f_337579_.get(i);
-         com.mojang.blaze3d.vertex.VertexFormatElement element = (com.mojang.blaze3d.vertex.VertexFormatElement)this.f_86012_.get(i);
+         VertexFormatElement element = (VertexFormatElement)this.f_86012_.get(i);
          mapElements.put(name, element);
       }
 
       this.elementMapping = ImmutableMap.copyOf(mapElements);
 
-      for (int i = 0; i < this.f_337288_.length; i++) {
-         com.mojang.blaze3d.vertex.VertexFormatElement vertexformatelement = com.mojang.blaze3d.vertex.VertexFormatElement.m_340524_(i);
+      for(i = 0; i < this.f_337288_.length; ++i) {
+         VertexFormatElement vertexformatelement = VertexFormatElement.m_340524_(i);
          int j = vertexformatelement != null ? elementsIn.indexOf(vertexformatelement) : -1;
          this.f_337288_[i] = j != -1 ? offsetsIn.getInt(j) : -1;
          if (vertexformatelement != null) {
-            com.mojang.blaze3d.vertex.VertexFormatElement.Usage usage = vertexformatelement.f_86031_();
+            VertexFormatElement.Usage usage = vertexformatelement.f_86031_();
             int offset = this.f_337288_[i];
-            if (usage == com.mojang.blaze3d.vertex.VertexFormatElement.Usage.POSITION) {
+            if (usage == VertexFormatElement.Usage.POSITION) {
                this.positionElementOffset = offset;
-            } else if (usage == com.mojang.blaze3d.vertex.VertexFormatElement.Usage.NORMAL) {
+            } else if (usage == VertexFormatElement.Usage.NORMAL) {
                this.normalElementOffset = offset;
-            } else if (usage == com.mojang.blaze3d.vertex.VertexFormatElement.Usage.COLOR) {
+            } else if (usage == VertexFormatElement.Usage.COLOR) {
                this.colorElementOffset = offset;
-            } else if (usage == com.mojang.blaze3d.vertex.VertexFormatElement.Usage.UV) {
+            } else if (usage == VertexFormatElement.Usage.field_48) {
                this.uvOffsetsById.put(vertexformatelement.f_86032_(), offset);
             }
          }
       }
+
    }
 
-   public static com.mojang.blaze3d.vertex.VertexFormat.Builder m_339703_() {
-      return new com.mojang.blaze3d.vertex.VertexFormat.Builder();
+   public static Builder m_339703_() {
+      return new Builder();
    }
 
    public String toString() {
-      StringBuilder stringbuilder = new StringBuilder("Vertex format: " + this.name + " (").append(this.f_86014_).append(" bytes):\n");
+      StringBuilder stringbuilder = (new StringBuilder("Vertex format: " + this.name + " (")).append(this.f_86014_).append(" bytes):\n");
 
-      for (int i = 0; i < this.f_86012_.size(); i++) {
-         com.mojang.blaze3d.vertex.VertexFormatElement vertexformatelement = (com.mojang.blaze3d.vertex.VertexFormatElement)this.f_86012_.get(i);
-         stringbuilder.append(i)
-            .append(". ")
-            .append((String)this.f_337579_.get(i))
-            .append(": ")
-            .append(vertexformatelement)
-            .append(" @ ")
-            .append(this.m_338798_(vertexformatelement))
-            .append('\n');
+      for(int i = 0; i < this.f_86012_.size(); ++i) {
+         VertexFormatElement vertexformatelement = (VertexFormatElement)this.f_86012_.get(i);
+         stringbuilder.append(i).append(". ").append((String)this.f_337579_.get(i)).append(": ").append(vertexformatelement).append(" @ ").append(this.m_338798_(vertexformatelement)).append('\n');
       }
 
       return stringbuilder.toString();
@@ -92,11 +90,11 @@ public class VertexFormat {
       return this.f_86014_;
    }
 
-   public List<com.mojang.blaze3d.vertex.VertexFormatElement> m_86023_() {
+   public List m_86023_() {
       return this.f_86012_;
    }
 
-   public List<String> m_166911_() {
+   public List m_166911_() {
       return this.f_337579_;
    }
 
@@ -104,11 +102,11 @@ public class VertexFormat {
       return this.f_337288_;
    }
 
-   public int m_338798_(com.mojang.blaze3d.vertex.VertexFormatElement elementIn) {
+   public int m_338798_(VertexFormatElement elementIn) {
       return this.f_337288_[elementIn.f_337730_()];
    }
 
-   public boolean m_339292_(com.mojang.blaze3d.vertex.VertexFormatElement elementIn) {
+   public boolean m_339292_(VertexFormatElement elementIn) {
       return (this.f_337518_ & elementIn.m_339950_()) != 0;
    }
 
@@ -116,10 +114,10 @@ public class VertexFormat {
       return this.f_337518_;
    }
 
-   public String m_340604_(com.mojang.blaze3d.vertex.VertexFormatElement elementIn) {
+   public String m_340604_(VertexFormatElement elementIn) {
       int i = this.f_86012_.indexOf(elementIn);
       if (i == -1) {
-         throw new IllegalArgumentException(elementIn + " is not contained in format");
+         throw new IllegalArgumentException(String.valueOf(elementIn) + " is not contained in format");
       } else {
          return (String)this.f_337579_.get(i);
       }
@@ -129,12 +127,11 @@ public class VertexFormat {
       if (this == p_equals_1_) {
          return true;
       } else {
-         if (p_equals_1_ instanceof com.mojang.blaze3d.vertex.VertexFormat vertexformat
-            && this.f_337518_ == vertexformat.f_337518_
-            && this.f_86014_ == vertexformat.f_86014_
-            && this.f_337579_.equals(vertexformat.f_337579_)
-            && Arrays.equals(this.f_337288_, vertexformat.f_337288_)) {
-            return true;
+         if (p_equals_1_ instanceof VertexFormat) {
+            VertexFormat vertexformat = (VertexFormat)p_equals_1_;
+            if (this.f_337518_ == vertexformat.f_337518_ && this.f_86014_ == vertexformat.f_86014_ && this.f_337579_.equals(vertexformat.f_337579_) && Arrays.equals(this.f_337288_, vertexformat.f_337288_)) {
+               return true;
+            }
          }
 
          return false;
@@ -151,19 +148,21 @@ public class VertexFormat {
       } else {
          this.m_166916_();
       }
+
    }
 
    private void m_166916_() {
       int i = this.m_86020_();
 
-      for (int j = 0; j < this.f_86012_.size(); j++) {
-         com.mojang.blaze3d.vertex.VertexFormatElement vertexformatelement = (com.mojang.blaze3d.vertex.VertexFormatElement)this.f_86012_.get(j);
+      for(int j = 0; j < this.f_86012_.size(); ++j) {
+         VertexFormatElement vertexformatelement = (VertexFormatElement)this.f_86012_.get(j);
          int attributeIndex = vertexformatelement.getAttributeIndex();
          if (attributeIndex >= 0) {
             GlStateManager._enableVertexAttribArray(attributeIndex);
             vertexformatelement.m_166965_(attributeIndex, (long)this.m_338798_(vertexformatelement), i);
          }
       }
+
    }
 
    public void m_86024_() {
@@ -172,22 +171,24 @@ public class VertexFormat {
       } else {
          this.m_166917_();
       }
+
    }
 
    private void m_166917_() {
-      for (int i = 0; i < this.f_86012_.size(); i++) {
-         com.mojang.blaze3d.vertex.VertexFormatElement vertexformatelement = (com.mojang.blaze3d.vertex.VertexFormatElement)this.f_86012_.get(i);
+      for(int i = 0; i < this.f_86012_.size(); ++i) {
+         VertexFormatElement vertexformatelement = (VertexFormatElement)this.f_86012_.get(i);
          int attributeIndex = vertexformatelement.getAttributeIndex();
          if (attributeIndex >= 0) {
             GlStateManager._disableVertexAttribArray(attributeIndex);
          }
       }
+
    }
 
-   public com.mojang.blaze3d.vertex.VertexBuffer m_231233_() {
-      com.mojang.blaze3d.vertex.VertexBuffer vertexbuffer = this.f_231232_;
+   public VertexBuffer m_231233_() {
+      VertexBuffer vertexbuffer = this.f_231232_;
       if (vertexbuffer == null) {
-         this.f_231232_ = vertexbuffer = new com.mojang.blaze3d.vertex.VertexBuffer(com.mojang.blaze3d.vertex.VertexBuffer.Usage.DYNAMIC);
+         this.f_231232_ = vertexbuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
       }
 
       return vertexbuffer;
@@ -237,7 +238,7 @@ public class VertexFormat {
       this.name = name;
    }
 
-   public void copyFrom(com.mojang.blaze3d.vertex.VertexFormat vf) {
+   public void copyFrom(VertexFormat vf) {
       this.f_86012_ = vf.f_86012_;
       this.f_337579_ = vf.f_337579_;
       this.f_86014_ = vf.f_86014_;
@@ -253,13 +254,14 @@ public class VertexFormat {
       this.extended = vf.extended;
    }
 
-   public com.mojang.blaze3d.vertex.VertexFormat duplicate() {
-      com.mojang.blaze3d.vertex.VertexFormat.Builder vfb = m_339703_();
+   public VertexFormat duplicate() {
+      Builder vfb = m_339703_();
       vfb.addAll(this);
-      return vfb.m_339368_();
+      VertexFormat vf = vfb.m_339368_();
+      return vf;
    }
 
-   public ImmutableMap<String, com.mojang.blaze3d.vertex.VertexFormatElement> getElementMapping() {
+   public ImmutableMap getElementMapping() {
       return this.elementMapping;
    }
 
@@ -276,57 +278,44 @@ public class VertexFormat {
    }
 
    public static class Builder {
-      private final com.google.common.collect.ImmutableMap.Builder<String, com.mojang.blaze3d.vertex.VertexFormatElement> f_337231_ = ImmutableMap.builder();
+      private final ImmutableMap.Builder f_337231_ = ImmutableMap.builder();
       private final IntList f_337307_ = new IntArrayList();
       private int f_336835_;
 
-      public com.mojang.blaze3d.vertex.VertexFormat.Builder m_339091_(String nameIn, com.mojang.blaze3d.vertex.VertexFormatElement elementIn) {
+      public Builder m_339091_(String nameIn, VertexFormatElement elementIn) {
          this.f_337231_.put(nameIn, elementIn);
          this.f_337307_.add(this.f_336835_);
-         this.f_336835_ = this.f_336835_ + elementIn.m_339527_();
+         this.f_336835_ += elementIn.m_339527_();
          return this;
       }
 
-      public com.mojang.blaze3d.vertex.VertexFormat.Builder m_339010_(int sizeIn) {
+      public Builder m_339010_(int sizeIn) {
          this.f_336835_ += sizeIn;
          return this;
       }
 
-      public com.mojang.blaze3d.vertex.VertexFormat m_339368_() {
-         ImmutableMap<String, com.mojang.blaze3d.vertex.VertexFormatElement> immutablemap = this.f_337231_.buildOrThrow();
-         ImmutableList<com.mojang.blaze3d.vertex.VertexFormatElement> immutablelist = immutablemap.values().asList();
-         ImmutableList<String> immutablelist1 = immutablemap.keySet().asList();
-         return new com.mojang.blaze3d.vertex.VertexFormat(immutablelist, immutablelist1, this.f_337307_, this.f_336835_);
+      public VertexFormat m_339368_() {
+         ImmutableMap immutablemap = this.f_337231_.buildOrThrow();
+         ImmutableList immutablelist = immutablemap.values().asList();
+         ImmutableList immutablelist1 = immutablemap.keySet().asList();
+         return new VertexFormat(immutablelist, immutablelist1, this.f_337307_, this.f_336835_);
       }
 
-      public com.mojang.blaze3d.vertex.VertexFormat.Builder addAll(com.mojang.blaze3d.vertex.VertexFormat vf) {
-         for (com.mojang.blaze3d.vertex.VertexFormatElement vfe : vf.m_86023_()) {
+      public Builder addAll(VertexFormat vf) {
+         List elements = vf.m_86023_();
+         Iterator var3 = elements.iterator();
+
+         while(var3.hasNext()) {
+            VertexFormatElement vfe = (VertexFormatElement)var3.next();
             String name = vf.m_340604_(vfe);
             this.m_339091_(name, vfe);
          }
 
-         while (this.f_336835_ < vf.m_86020_()) {
+         while(this.f_336835_ < vf.m_86020_()) {
             this.m_339010_(1);
          }
 
          return this;
-      }
-   }
-
-   public static enum IndexType {
-      SHORT(5123, 2),
-      INT(5125, 4);
-
-      public final int f_166923_;
-      public final int f_166924_;
-
-      private IndexType(final int glTypeIn, final int sizeBytesIn) {
-         this.f_166923_ = glTypeIn;
-         this.f_166924_ = sizeBytesIn;
-      }
-
-      public static com.mojang.blaze3d.vertex.VertexFormat.IndexType m_166933_(int indexCountIn) {
-         return (indexCountIn & -65536) != 0 ? INT : SHORT;
       }
    }
 
@@ -353,11 +342,52 @@ public class VertexFormat {
       }
 
       public int m_166958_(int vertexCountIn) {
-         return switch (this) {
-            case LINES, QUADS -> vertexCountIn / 4 * 6;
-            case LINE_STRIP, DEBUG_LINES, DEBUG_LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN -> vertexCountIn;
-            default -> 0;
-         };
+         int var10000;
+         switch (this.ordinal()) {
+            case 0:
+            case 7:
+               var10000 = vertexCountIn / 4 * 6;
+               break;
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+               var10000 = vertexCountIn;
+               break;
+            default:
+               var10000 = 0;
+         }
+
+         return var10000;
+      }
+
+      // $FF: synthetic method
+      private static Mode[] $values() {
+         return new Mode[]{LINES, LINE_STRIP, DEBUG_LINES, DEBUG_LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS};
+      }
+   }
+
+   public static enum IndexType {
+      SHORT(5123, 2),
+      INT(5125, 4);
+
+      public final int f_166923_;
+      public final int f_166924_;
+
+      private IndexType(final int glTypeIn, final int sizeBytesIn) {
+         this.f_166923_ = glTypeIn;
+         this.f_166924_ = sizeBytesIn;
+      }
+
+      public static IndexType m_166933_(int indexCountIn) {
+         return (indexCountIn & -65536) != 0 ? INT : SHORT;
+      }
+
+      // $FF: synthetic method
+      private static IndexType[] $values() {
+         return new IndexType[]{SHORT, INT};
       }
    }
 }

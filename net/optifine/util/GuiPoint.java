@@ -1,19 +1,21 @@
 package net.optifine.util;
 
 public class GuiPoint {
-   private int x;
-   private int y;
+   // $FF: renamed from: x int
+   private int field_52;
+   // $FF: renamed from: y int
+   private int field_53;
 
    public GuiPoint(int x, int y) {
-      this.x = x;
-      this.y = y;
+      this.field_52 = x;
+      this.field_53 = y;
    }
 
    public int getX() {
-      return this.x;
+      return this.field_52;
    }
 
    public int getY() {
-      return this.y;
+      return this.field_53;
    }
 }

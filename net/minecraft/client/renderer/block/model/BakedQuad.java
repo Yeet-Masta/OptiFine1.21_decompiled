@@ -1,5 +1,8 @@
 package net.minecraft.client.renderer.block.model;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.Direction;
 import net.optifine.Config;
 import net.optifine.model.BakedQuadRetextured;
 import net.optifine.model.QuadBounds;
@@ -9,23 +12,19 @@ import net.optifine.render.VertexPosition;
 public class BakedQuad {
    protected int[] f_111292_;
    protected final int f_111293_;
-   protected net.minecraft.core.Direction f_111294_;
-   protected net.minecraft.client.renderer.texture.TextureAtlasSprite f_111295_;
+   protected Direction f_111294_;
+   protected TextureAtlasSprite f_111295_;
    private final boolean f_111296_;
-   private boolean hasAmbientOcclusion = true;
-   private int[] vertexDataSingle = null;
+   private boolean hasAmbientOcclusion;
+   private int[] vertexDataSingle;
    private QuadBounds quadBounds;
    private boolean quadEmissiveChecked;
-   private net.minecraft.client.renderer.block.model.BakedQuad quadEmissive;
+   private BakedQuad quadEmissive;
    private QuadVertexPositions quadVertexPositions;
 
-   public BakedQuad(
-      int[] vertexDataIn,
-      int tintIndexIn,
-      net.minecraft.core.Direction faceIn,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteIn,
-      boolean shadeIn
-   ) {
+   public BakedQuad(int[] vertexDataIn, int tintIndexIn, Direction faceIn, TextureAtlasSprite spriteIn, boolean shadeIn) {
+      this.hasAmbientOcclusion = true;
+      this.vertexDataSingle = null;
       this.f_111292_ = vertexDataIn;
       this.f_111293_ = tintIndexIn;
       this.f_111294_ = faceIn;
@@ -34,19 +33,12 @@ public class BakedQuad {
       this.fixVertexData();
    }
 
-   public BakedQuad(
-      int[] vertexDataIn,
-      int tintIndexIn,
-      net.minecraft.core.Direction faceIn,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteIn,
-      boolean shadeIn,
-      boolean hasAmbientOcclusion
-   ) {
+   public BakedQuad(int[] vertexDataIn, int tintIndexIn, Direction faceIn, TextureAtlasSprite spriteIn, boolean shadeIn, boolean hasAmbientOcclusion) {
       this(vertexDataIn, tintIndexIn, faceIn, spriteIn, shadeIn);
       this.hasAmbientOcclusion = hasAmbientOcclusion;
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite m_173410_() {
+   public TextureAtlasSprite m_173410_() {
       if (this.f_111295_ == null) {
          this.f_111295_ = getSpriteByUv(this.m_111303_());
       }
@@ -67,9 +59,9 @@ public class BakedQuad {
       return this.f_111293_;
    }
 
-   public net.minecraft.core.Direction m_111306_() {
+   public Direction m_111306_() {
       if (this.f_111294_ == null) {
-         this.f_111294_ = net.minecraft.client.renderer.block.model.FaceBakery.m_111612_(this.m_111303_());
+         this.f_111294_ = FaceBakery.m_111612_(this.m_111303_());
       }
 
       return this.f_111294_;
@@ -91,11 +83,11 @@ public class BakedQuad {
       return this.vertexDataSingle;
    }
 
-   private static int[] makeVertexDataSingle(int[] vd, net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   private static int[] makeVertexDataSingle(int[] vd, TextureAtlasSprite sprite) {
       int[] vdSingle = (int[])vd.clone();
       int step = vdSingle.length / 4;
 
-      for (int i = 0; i < 4; i++) {
+      for(int i = 0; i < 4; ++i) {
          int pos = i * step;
          float tu = Float.intBitsToFloat(vdSingle[pos + 4]);
          float tv = Float.intBitsToFloat(vdSingle[pos + 4 + 1]);
@@ -108,14 +100,14 @@ public class BakedQuad {
       return vdSingle;
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getSpriteByUv(int[] vertexData) {
+   private static TextureAtlasSprite getSpriteByUv(int[] vertexData) {
       float uMin = 1.0F;
       float vMin = 1.0F;
       float uMax = 0.0F;
       float vMax = 0.0F;
       int step = vertexData.length / 4;
 
-      for (int i = 0; i < 4; i++) {
+      for(int i = 0; i < 4; ++i) {
          int pos = i * step;
          float tu = Float.intBitsToFloat(vertexData[pos + 4]);
          float tv = Float.intBitsToFloat(vertexData[pos + 4 + 1]);
@@ -127,17 +119,19 @@ public class BakedQuad {
 
       float uMid = (uMin + uMax) / 2.0F;
       float vMid = (vMin + vMax) / 2.0F;
-      return Config.getTextureMap().getIconByUV((double)uMid, (double)vMid);
+      TextureAtlasSprite spriteUv = Config.getTextureMap().getIconByUV((double)uMid, (double)vMid);
+      return spriteUv;
    }
 
    protected void fixVertexData() {
       if (Config.isShaders()) {
-         if (this.f_111292_.length == com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK_VANILLA_SIZE) {
-            this.f_111292_ = fixVertexDataSize(this.f_111292_, com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK_SHADERS_SIZE);
+         if (this.f_111292_.length == DefaultVertexFormat.BLOCK_VANILLA_SIZE) {
+            this.f_111292_ = fixVertexDataSize(this.f_111292_, DefaultVertexFormat.BLOCK_SHADERS_SIZE);
          }
-      } else if (this.f_111292_.length == com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK_SHADERS_SIZE) {
-         this.f_111292_ = fixVertexDataSize(this.f_111292_, com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK_VANILLA_SIZE);
+      } else if (this.f_111292_.length == DefaultVertexFormat.BLOCK_SHADERS_SIZE) {
+         this.f_111292_ = fixVertexDataSize(this.f_111292_, DefaultVertexFormat.BLOCK_VANILLA_SIZE);
       }
+
    }
 
    private static int[] fixVertexDataSize(int[] vd, int sizeNew) {
@@ -145,7 +139,7 @@ public class BakedQuad {
       int stepNew = sizeNew / 4;
       int[] vdNew = new int[stepNew * 4];
 
-      for (int i = 0; i < 4; i++) {
+      for(int i = 0; i < 4; ++i) {
          int len = Math.min(step, stepNew);
          System.arraycopy(vd, i * step, vdNew, i * stepNew, len);
       }
@@ -190,7 +184,7 @@ public class BakedQuad {
       return this.isFullQuad() && this.isFaceQuad();
    }
 
-   public net.minecraft.client.renderer.block.model.BakedQuad getQuadEmissive() {
+   public BakedQuad getQuadEmissive() {
       if (this.quadEmissiveChecked) {
          return this.quadEmissive;
       } else {
@@ -208,7 +202,7 @@ public class BakedQuad {
          this.quadVertexPositions = new QuadVertexPositions();
       }
 
-      return this.quadVertexPositions.get(key);
+      return (VertexPosition[])this.quadVertexPositions.get(key);
    }
 
    public boolean hasAmbientOcclusion() {
@@ -216,6 +210,7 @@ public class BakedQuad {
    }
 
    public String toString() {
-      return "vertexData: " + this.f_111292_.length + ", tint: " + this.f_111293_ + ", facing: " + this.f_111294_ + ", sprite: " + this.f_111295_;
+      int var10000 = this.f_111292_.length;
+      return "vertexData: " + var10000 + ", tint: " + this.f_111293_ + ", facing: " + String.valueOf(this.f_111294_) + ", sprite: " + String.valueOf(this.f_111295_);
    }
 }

@@ -1,6 +1,8 @@
 package net.optifine.entity.model.anim;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.MobRenderer;
 
 public enum RendererVariableFloat implements IModelVariableFloat {
@@ -13,7 +15,7 @@ public enum RendererVariableFloat implements IModelVariableFloat {
    SHADOW_OFFSET_Z("shadow_offset_z");
 
    private String name;
-   private net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager;
+   private EntityRenderDispatcher renderManager;
    private static final RendererVariableFloat[] VALUES = values();
 
    private RendererVariableFloat(String name) {
@@ -21,80 +23,79 @@ public enum RendererVariableFloat implements IModelVariableFloat {
       this.renderManager = Minecraft.m_91087_().m_91290_();
    }
 
-   @Override
    public float eval() {
       return this.getValue();
    }
 
-   @Override
    public float getValue() {
-      net.minecraft.client.renderer.entity.EntityRenderer renderer = this.renderManager.getEntityRenderer();
+      EntityRenderer renderer = this.renderManager.getEntityRenderer();
       if (renderer == null) {
          return 0.0F;
       } else {
-         switch (this) {
-            case SHADOW_SIZE:
+         switch (this.ordinal()) {
+            case 0:
                return renderer.f_114477_;
-            case SHADOW_OPACITY:
+            case 1:
                return renderer.f_114478_;
-            case LEASH_OFFSET_X:
-            case LEASH_OFFSET_Y:
-            case LEASH_OFFSET_Z:
+            case 2:
+            case 3:
+            case 4:
             default:
-               if (renderer instanceof MobRenderer mobRenderer) {
-                  switch (this) {
-                     case LEASH_OFFSET_X:
+               if (renderer instanceof MobRenderer) {
+                  MobRenderer mobRenderer = (MobRenderer)renderer;
+                  switch (this.ordinal()) {
+                     case 2:
                         return mobRenderer.leashOffsetX;
-                     case LEASH_OFFSET_Y:
+                     case 3:
                         return mobRenderer.leashOffsetY;
-                     case LEASH_OFFSET_Z:
+                     case 4:
                         return mobRenderer.leashOffsetZ;
                   }
                }
 
                return 0.0F;
-            case SHADOW_OFFSET_X:
+            case 5:
                return renderer.shadowOffsetX;
-            case SHADOW_OFFSET_Z:
+            case 6:
                return renderer.shadowOffsetZ;
          }
       }
    }
 
-   @Override
    public void setValue(float value) {
-      net.minecraft.client.renderer.entity.EntityRenderer renderer = this.renderManager.getEntityRenderer();
+      EntityRenderer renderer = this.renderManager.getEntityRenderer();
       if (renderer != null) {
-         switch (this) {
-            case SHADOW_SIZE:
+         switch (this.ordinal()) {
+            case 0:
                renderer.f_114477_ = value;
                return;
-            case SHADOW_OPACITY:
+            case 1:
                renderer.f_114478_ = value;
                return;
-            case LEASH_OFFSET_X:
-            case LEASH_OFFSET_Y:
-            case LEASH_OFFSET_Z:
+            case 2:
+            case 3:
+            case 4:
             default:
-               if (renderer instanceof MobRenderer mobRenderer) {
-                  switch (this) {
-                     case LEASH_OFFSET_X:
+               if (renderer instanceof MobRenderer) {
+                  MobRenderer mobRenderer = (MobRenderer)renderer;
+                  switch (this.ordinal()) {
+                     case 2:
                         mobRenderer.leashOffsetX = value;
                         return;
-                     case LEASH_OFFSET_Y:
+                     case 3:
                         mobRenderer.leashOffsetY = value;
                         return;
-                     case LEASH_OFFSET_Z:
+                     case 4:
                         mobRenderer.leashOffsetZ = value;
                         return;
                   }
                }
 
                return;
-            case SHADOW_OFFSET_X:
+            case 5:
                renderer.shadowOffsetX = value;
                return;
-            case SHADOW_OFFSET_Z:
+            case 6:
                renderer.shadowOffsetZ = value;
          }
       }
@@ -108,7 +109,7 @@ public enum RendererVariableFloat implements IModelVariableFloat {
       if (str == null) {
          return null;
       } else {
-         for (int i = 0; i < VALUES.length; i++) {
+         for(int i = 0; i < VALUES.length; ++i) {
             RendererVariableFloat type = VALUES[i];
             if (type.getName().equals(str)) {
                return type;
@@ -121,5 +122,10 @@ public enum RendererVariableFloat implements IModelVariableFloat {
 
    public String toString() {
       return this.name;
+   }
+
+   // $FF: synthetic method
+   private static RendererVariableFloat[] $values() {
+      return new RendererVariableFloat[]{SHADOW_SIZE, SHADOW_OPACITY, LEASH_OFFSET_X, LEASH_OFFSET_Y, LEASH_OFFSET_Z, SHADOW_OFFSET_X, SHADOW_OFFSET_Z};
    }
 }

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -50,27 +51,29 @@ public class Differ {
             var5.printStackTrace();
             System.exit(1);
          }
+
       }
    }
 
    private static void process(File baseFile, File modFile, File diffFile) throws IOException, DeltaException, NoSuchAlgorithmException {
       ZipFile modZip = new ZipFile(modFile);
-      Map<String, String> cfgMap = Patcher.getConfigurationMap(modZip);
+      Map cfgMap = Patcher.getConfigurationMap(modZip);
       Pattern[] patterns = Patcher.getConfigurationPatterns(cfgMap);
       ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(diffFile));
       ZipFile baseZip = new ZipFile(baseFile);
       Enumeration modZipEntries = modZip.entries();
-      Map<String, Map<String, Integer>> mapStats = new HashMap();
+      Map mapStats = new HashMap();
 
-      while (modZipEntries.hasMoreElements()) {
+      while(modZipEntries.hasMoreElements()) {
          ZipEntry modZipEntry = (ZipEntry)modZipEntries.nextElement();
          if (!modZipEntry.isDirectory()) {
             InputStream in = modZip.getInputStream(modZipEntry);
             byte[] bytes = Utils.readAll(in);
             String name = modZipEntry.getName();
             byte[] bytesDiff = makeDiff(name, bytes, patterns, cfgMap, baseZip);
+            ZipEntry zipEntryDiff;
             if (bytesDiff != bytes) {
-               ZipEntry zipEntryDiff = new ZipEntry("patch/" + name + ".xdelta");
+               zipEntryDiff = new ZipEntry("patch/" + name + ".xdelta");
                zipOut.putNextEntry(zipEntryDiff);
                zipOut.write(bytesDiff);
                zipOut.closeEntry();
@@ -83,8 +86,8 @@ public class Differ {
                zipOut.write(bytesMd5Str);
                zipOut.closeEntry();
             } else {
-               ZipEntry zipEntrySame = new ZipEntry(name);
-               zipOut.putNextEntry(zipEntrySame);
+               zipEntryDiff = new ZipEntry(name);
+               zipOut.putNextEntry(zipEntryDiff);
                zipOut.write(bytes);
                zipOut.closeEntry();
                addStat(mapStats, name, "same");
@@ -96,52 +99,56 @@ public class Differ {
       printStats(mapStats);
    }
 
-   private static void printStats(Map<String, Map<String, Integer>> mapStats) {
-      List<String> folders = new ArrayList(mapStats.keySet());
+   private static void printStats(Map mapStats) {
+      List folders = new ArrayList(mapStats.keySet());
       Collections.sort(folders);
+      Iterator it = folders.iterator();
 
-      for (String folder : folders) {
-         Map<String, Integer> map = (Map<String, Integer>)mapStats.get(folder);
-         List<String> types = new ArrayList(map.keySet());
+      while(it.hasNext()) {
+         String folder = (String)it.next();
+         Map map = (Map)mapStats.get(folder);
+         List types = new ArrayList(map.keySet());
          Collections.sort(types);
          String dbg = "";
 
-         for (String type : types) {
-            Integer val = (Integer)map.get(type);
+         String type;
+         Integer val;
+         for(Iterator it2 = types.iterator(); it2.hasNext(); dbg = dbg + type + " " + val) {
+            type = (String)it2.next();
+            val = (Integer)map.get(type);
             if (dbg.length() > 0) {
                dbg = dbg + ", ";
             }
-
-            dbg = dbg + type + " " + val;
          }
 
          Utils.dbg(folder + " = " + dbg);
       }
+
    }
 
-   private static void addStat(Map<String, Map<String, Integer>> mapStats, String name, String type) {
+   private static void addStat(Map mapStats, String name, String type) {
       int pos = name.lastIndexOf(47);
       String folder = "";
       if (pos >= 0) {
          folder = name.substring(0, pos);
       }
 
-      Map<String, Integer> map = (Map<String, Integer>)mapStats.get(folder);
+      Map map = (Map)mapStats.get(folder);
       if (map == null) {
          map = new HashMap();
          mapStats.put(folder, map);
       }
 
-      Integer val = (Integer)map.get(type);
+      Integer val = (Integer)((Map)map).get(type);
       if (val == null) {
          val = new Integer(0);
       }
 
       val = new Integer(val + 1);
-      map.put(type, val);
+      ((Map)map).put(type, val);
    }
 
-   public static byte[] makeDiff(String name, byte[] bytesMod, Pattern[] patterns, Map<String, String> cfgMap, ZipFile zipBase) throws IOException, DeltaException {
+   public static byte[] makeDiff(String name, byte[] bytesMod, Pattern[] patterns, Map cfgMap, ZipFile zipBase) throws IOException, DeltaException {
       String baseName = Patcher.getPatchBase(name, patterns, cfgMap);
       if (baseName == null) {
          return bytesMod;
@@ -155,7 +162,7 @@ public class Differ {
             ByteArrayInputStream baisTarget = new ByteArrayInputStream(bytesMod);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             DiffWriter diffWriter = new GDiffWriter(new DataOutputStream(outputStream));
-            Delta.computeDelta(baseBytes, baisTarget, bytesMod.length, diffWriter);
+            Delta.computeDelta((byte[])baseBytes, baisTarget, bytesMod.length, diffWriter);
             diffWriter.close();
             return outputStream.toByteArray();
          }

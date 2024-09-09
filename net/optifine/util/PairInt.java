@@ -11,7 +11,8 @@ public class PairInt {
       this.hashCode = left + 37 * right;
    }
 
-   public static PairInt of(int left, int right) {
+   // $FF: renamed from: of (int, int) net.optifine.util.PairInt
+   public static PairInt method_12(int left, int right) {
       return new PairInt(left, right);
    }
 
@@ -30,8 +31,11 @@ public class PairInt {
    public boolean equals(Object obj) {
       if (obj == this) {
          return true;
+      } else if (!(obj instanceof PairInt)) {
+         return false;
       } else {
-         return !(obj instanceof PairInt pi) ? false : this.left == pi.left && this.right == pi.right;
+         PairInt pi = (PairInt)obj;
+         return this.left == pi.left && this.right == pi.right;
       }
    }
 

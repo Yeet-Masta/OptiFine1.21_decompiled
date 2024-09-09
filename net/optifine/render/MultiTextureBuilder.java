@@ -3,26 +3,23 @@ package net.optifine.render;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.optifine.Config;
 import net.optifine.util.IntArray;
 import net.optifine.util.TextureUtils;
 
 public class MultiTextureBuilder {
    private int vertexCount;
-   private net.minecraft.client.renderer.RenderType blockLayer;
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSprites;
+   private RenderType blockLayer;
+   private TextureAtlasSprite[] quadSprites;
    private boolean reorderingAllowed;
    private boolean[] drawnIcons = new boolean[256];
-   private List<SpriteRenderData> spriteRenderDatas = new ArrayList();
+   private List spriteRenderDatas = new ArrayList();
    private IntArray vertexPositions = new IntArray(16);
    private IntArray vertexCounts = new IntArray(16);
 
-   public MultiTextureData build(
-      int vertexCountIn,
-      net.minecraft.client.renderer.RenderType blockLayerIn,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSpritesIn,
-      int[] quadOrderingIn
-   ) {
+   public MultiTextureData build(int vertexCountIn, RenderType blockLayerIn, TextureAtlasSprite[] quadSpritesIn, int[] quadOrderingIn) {
       if (quadSpritesIn == null) {
          return null;
       } else {
@@ -33,9 +30,7 @@ public class MultiTextureBuilder {
             MultiTextureData mtd = new MultiTextureData(srds);
             if (this.blockLayer.isNeedsSorting()) {
                int countQuads = vertexCountIn / 4;
-               net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSpritesNew = (net.minecraft.client.renderer.texture.TextureAtlasSprite[])Arrays.copyOfRange(
-                  quadSpritesIn, 0, countQuads
-               );
+               TextureAtlasSprite[] quadSpritesNew = (TextureAtlasSprite[])Arrays.copyOfRange(quadSpritesIn, 0, countQuads);
                mtd.setResortParameters(vertexCountIn, blockLayerIn, quadSpritesNew);
             }
 
@@ -44,12 +39,7 @@ public class MultiTextureBuilder {
       }
    }
 
-   public SpriteRenderData[] buildRenderDatas(
-      int vertexCountIn,
-      net.minecraft.client.renderer.RenderType blockLayerIn,
-      net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSpritesIn,
-      int[] quadOrderingIn
-   ) {
+   public SpriteRenderData[] buildRenderDatas(int vertexCountIn, RenderType blockLayerIn, TextureAtlasSprite[] quadSpritesIn, int[] quadOrderingIn) {
       if (quadSpritesIn == null) {
          return null;
       } else {
@@ -68,9 +58,9 @@ public class MultiTextureBuilder {
          int grassOverlayIndex = -1;
          int countQuads = this.vertexCount / 4;
 
-         for (int i = 0; i < countQuads; i++) {
+         for(int i = 0; i < countQuads; ++i) {
             int is = quadOrderingIn != null ? quadOrderingIn[i] : i;
-            net.minecraft.client.renderer.texture.TextureAtlasSprite icon = this.quadSprites[is];
+            TextureAtlasSprite icon = this.quadSprites[is];
             if (icon != null) {
                int iconIndex = icon.getIndexInMap();
                if (iconIndex >= this.drawnIcons.length) {
@@ -84,7 +74,7 @@ public class MultiTextureBuilder {
                      }
                   } else {
                      i = this.drawForIcon(icon, i, quadOrderingIn) - 1;
-                     texSwitch++;
+                     ++texSwitch;
                      if (this.reorderingAllowed) {
                         this.drawnIcons[iconIndex] = true;
                      }
@@ -95,23 +85,24 @@ public class MultiTextureBuilder {
 
          if (grassOverlayIndex >= 0) {
             this.drawForIcon(TextureUtils.iconGrassSideOverlay, grassOverlayIndex, quadOrderingIn);
-            texSwitch++;
+            ++texSwitch;
          }
 
-         return (SpriteRenderData[])this.spriteRenderDatas.toArray(new SpriteRenderData[this.spriteRenderDatas.size()]);
+         SpriteRenderData[] srds = (SpriteRenderData[])this.spriteRenderDatas.toArray(new SpriteRenderData[this.spriteRenderDatas.size()]);
+         return srds;
       }
    }
 
-   private int drawForIcon(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite, int startQuadPos, int[] quadOrderingIn) {
+   private int drawForIcon(TextureAtlasSprite sprite, int startQuadPos, int[] quadOrderingIn) {
       this.vertexPositions.clear();
       this.vertexCounts.clear();
       int firstRegionEnd = -1;
       int lastPos = -1;
       int countQuads = this.vertexCount / 4;
 
-      for (int i = startQuadPos; i < countQuads; i++) {
+      for(int i = startQuadPos; i < countQuads; ++i) {
          int is = quadOrderingIn != null ? quadOrderingIn[i] : i;
-         net.minecraft.client.renderer.texture.TextureAtlasSprite ts = this.quadSprites[is];
+         TextureAtlasSprite ts = this.quadSprites[is];
          if (ts == sprite) {
             if (lastPos < 0) {
                lastPos = i;

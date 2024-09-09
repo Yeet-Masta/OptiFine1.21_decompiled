@@ -6,13 +6,18 @@ import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
 import com.mojang.blaze3d.shaders.AbstractUniform;
+import com.mojang.blaze3d.shaders.Program;
 import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.shaders.Shader;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -20,11 +25,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.FileUtil;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.ChainedJsonException;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceProvider;
@@ -45,20 +53,20 @@ public class ShaderInstance implements Shader, AutoCloseable {
    static final Logger f_173323_ = LogUtils.getLogger();
    private static final AbstractUniform f_173324_ = new AbstractUniform();
    private static final boolean f_173325_ = true;
-   private static net.minecraft.client.renderer.ShaderInstance f_173326_;
+   private static ShaderInstance f_173326_;
    private static int f_173327_ = -1;
-   private final Map<String, Object> f_173328_ = Maps.newHashMap();
-   private final List<String> f_173329_ = Lists.newArrayList();
-   private final List<Integer> f_173330_ = Lists.newArrayList();
-   private final List<Uniform> f_173331_ = Lists.newArrayList();
-   private final List<Integer> f_173332_ = Lists.newArrayList();
-   private final Map<String, Uniform> f_173333_ = Maps.newHashMap();
+   private final Map f_173328_;
+   private final List f_173329_;
+   private final List f_173330_;
+   private final List f_173331_;
+   private final List f_173332_;
+   private final Map f_173333_;
    private final int f_173299_;
    private final String f_173300_;
    private boolean f_173301_;
-   private final com.mojang.blaze3d.shaders.Program f_173305_;
-   private final com.mojang.blaze3d.shaders.Program f_173306_;
-   private final com.mojang.blaze3d.vertex.VertexFormat f_173307_;
+   private final Program f_173305_;
+   private final Program f_173306_;
+   private final VertexFormat f_173307_;
    @Nullable
    public final Uniform f_173308_;
    @Nullable
@@ -90,16 +98,20 @@ public class ShaderInstance implements Shader, AutoCloseable {
    @Nullable
    public final Uniform f_173320_;
 
-   public ShaderInstance(ResourceProvider providerIn, String nameIn, com.mojang.blaze3d.vertex.VertexFormat formatIn) throws IOException {
-      this(providerIn, new net.minecraft.resources.ResourceLocation(nameIn), formatIn);
+   public ShaderInstance(ResourceProvider providerIn, String nameIn, VertexFormat formatIn) throws IOException {
+      this(providerIn, new ResourceLocation(nameIn), formatIn);
    }
 
-   public ShaderInstance(ResourceProvider providerIn, net.minecraft.resources.ResourceLocation shaderLocation, com.mojang.blaze3d.vertex.VertexFormat formatIn) throws IOException {
+   public ShaderInstance(ResourceProvider providerIn, ResourceLocation shaderLocation, VertexFormat formatIn) throws IOException {
+      this.f_173328_ = Maps.newHashMap();
+      this.f_173329_ = Lists.newArrayList();
+      this.f_173330_ = Lists.newArrayList();
+      this.f_173331_ = Lists.newArrayList();
+      this.f_173332_ = Lists.newArrayList();
+      this.f_173333_ = Maps.newHashMap();
       this.f_173300_ = shaderLocation.m_135827_().equals("minecraft") ? shaderLocation.m_135815_() : shaderLocation.toString();
       this.f_173307_ = formatIn;
-      net.minecraft.resources.ResourceLocation resourcelocation = net.minecraft.resources.ResourceLocation.m_339182_(
-         shaderLocation.m_135827_(), "shaders/core/" + shaderLocation.m_135815_() + ".json"
-      );
+      ResourceLocation resourcelocation = ResourceLocation.m_339182_(shaderLocation.m_135827_(), "shaders/core/" + shaderLocation.m_135815_() + ".json");
 
       try {
          Reader reader = providerIn.m_215597_(resourcelocation);
@@ -108,11 +120,13 @@ public class ShaderInstance implements Shader, AutoCloseable {
             JsonObject jsonobject = GsonHelper.m_13859_(reader);
             String s1 = GsonHelper.m_13906_(jsonobject, "vertex");
             String s = GsonHelper.m_13906_(jsonobject, "fragment");
-            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", null);
+            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", (JsonArray)null);
             if (jsonarray != null) {
                int i = 0;
 
-               for (JsonElement jsonelement : jsonarray) {
+               for(Iterator var11 = jsonarray.iterator(); var11.hasNext(); ++i) {
+                  JsonElement jsonelement = (JsonElement)var11.next();
+
                   try {
                      this.m_173344_(jsonelement);
                   } catch (Exception var18) {
@@ -120,16 +134,18 @@ public class ShaderInstance implements Shader, AutoCloseable {
                      chainedjsonexception1.m_135908_("samplers[" + i + "]");
                      throw chainedjsonexception1;
                   }
-
-                  i++;
                }
             }
 
-            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "uniforms", null);
+            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "uniforms", (JsonArray)null);
+            int j;
+            Iterator var25;
             if (jsonarray1 != null) {
-               int j = 0;
+               j = 0;
 
-               for (JsonElement jsonelement1 : jsonarray1) {
+               for(var25 = jsonarray1.iterator(); var25.hasNext(); ++j) {
+                  JsonElement jsonelement1 = (JsonElement)var25.next();
+
                   try {
                      this.m_173354_(jsonelement1);
                   } catch (Exception var17) {
@@ -137,22 +153,22 @@ public class ShaderInstance implements Shader, AutoCloseable {
                      chainedjsonexception2.m_135908_("uniforms[" + j + "]");
                      throw chainedjsonexception2;
                   }
-
-                  j++;
                }
             }
 
-            this.f_173305_ = m_173340_(providerIn, com.mojang.blaze3d.shaders.Program.Type.VERTEX, s1);
-            this.f_173306_ = m_173340_(providerIn, com.mojang.blaze3d.shaders.Program.Type.FRAGMENT, s);
+            this.f_173305_ = m_173340_(providerIn, Program.Type.VERTEX, s1);
+            this.f_173306_ = m_173340_(providerIn, Program.Type.FRAGMENT, s);
             this.f_173299_ = ProgramManager.m_85577_();
-            int k = 0;
+            int k = false;
+            var25 = formatIn.m_166911_().iterator();
 
-            for (String s2 : formatIn.m_166911_()) {
-               com.mojang.blaze3d.vertex.VertexFormatElement vfe = (com.mojang.blaze3d.vertex.VertexFormatElement)this.f_173307_.getElementMapping().get(s2);
-               k = vfe.getAttributeIndex();
-               if (k >= 0) {
-                  Uniform.m_166710_(this.f_173299_, k, s2);
-                  k++;
+            while(var25.hasNext()) {
+               String s2 = (String)var25.next();
+               VertexFormatElement vfe = (VertexFormatElement)this.f_173307_.getElementMapping().get(s2);
+               j = vfe.getAttributeIndex();
+               if (j >= 0) {
+                  Uniform.m_166710_(this.f_173299_, j, s2);
+                  ++j;
                }
             }
 
@@ -197,70 +213,66 @@ public class ShaderInstance implements Shader, AutoCloseable {
       this.f_173320_ = this.m_173348_("ChunkOffset");
    }
 
-   private static com.mojang.blaze3d.shaders.Program m_173340_(final ResourceProvider providerIn, com.mojang.blaze3d.shaders.Program.Type typeIn, String nameIn) throws IOException {
-      com.mojang.blaze3d.shaders.Program program1 = (com.mojang.blaze3d.shaders.Program)typeIn.m_85570_().get(nameIn);
-      com.mojang.blaze3d.shaders.Program program;
+   private static Program m_173340_(final ResourceProvider providerIn, Program.Type typeIn, String nameIn) throws IOException {
+      Program program1 = (Program)typeIn.m_85570_().get(nameIn);
+      Program program;
       if (program1 == null) {
-         net.minecraft.resources.ResourceLocation loc = net.minecraft.resources.ResourceLocation.m_340282_(nameIn);
-         String s = "shaders/core/" + loc.m_135815_() + typeIn.m_85569_();
-         Resource resource = providerIn.m_215593_(net.minecraft.resources.ResourceLocation.m_339182_(loc.m_135827_(), s));
+         ResourceLocation loc = ResourceLocation.m_340282_(nameIn);
+         String var10000 = loc.m_135815_();
+         String s = "shaders/core/" + var10000 + typeIn.m_85569_();
+         Resource resource = providerIn.m_215593_(ResourceLocation.m_339182_(loc.m_135827_(), s));
          InputStream inputstream = resource.m_215507_();
 
          try {
             final String s1 = FileUtil.m_179922_(s);
-            program = com.mojang.blaze3d.shaders.Program.m_166604_(
-               typeIn,
-               nameIn,
-               inputstream,
-               resource.m_215506_(),
-               new GlslPreprocessor() {
-                  private final Set<String> f_173369_ = Sets.newHashSet();
+            program = Program.m_166604_(typeIn, nameIn, inputstream, resource.m_215506_(), new GlslPreprocessor() {
+               private final Set f_173369_ = Sets.newHashSet();
 
-                  public String m_142138_(boolean localIn, String fileIn) {
-                     if (Reflector.ForgeHooksClient_getShaderImportLocation.exists()) {
-                        net.minecraft.resources.ResourceLocation resLocForge = (net.minecraft.resources.ResourceLocation)Reflector.ForgeHooksClient_getShaderImportLocation
-                           .call(s1, localIn, fileIn);
-                        fileIn = resLocForge.toString();
-                     } else {
-                        fileIn = FileUtil.m_179924_((localIn ? s1 : "shaders/include/") + fileIn);
-                     }
+               public String m_142138_(boolean localIn, String fileIn) {
+                  ResourceLocation resourcelocation;
+                  if (Reflector.ForgeHooksClient_getShaderImportLocation.exists()) {
+                     resourcelocation = (ResourceLocation)Reflector.ForgeHooksClient_getShaderImportLocation.call(s1, localIn, fileIn);
+                     fileIn = resourcelocation.toString();
+                  } else {
+                     String var10000 = localIn ? s1 : "shaders/include/";
+                     fileIn = FileUtil.m_179924_(var10000 + fileIn);
+                  }
 
-                     if (!this.f_173369_.add(fileIn)) {
-                        return null;
-                     } else {
-                        net.minecraft.resources.ResourceLocation resourcelocation = net.minecraft.resources.ResourceLocation.m_338530_(fileIn);
+                  if (!this.f_173369_.add(fileIn)) {
+                     return null;
+                  } else {
+                     resourcelocation = ResourceLocation.m_338530_(fileIn);
 
+                     try {
+                        Reader reader = providerIn.m_215597_(resourcelocation);
+
+                        String s2;
                         try {
-                           Reader reader = providerIn.m_215597_(resourcelocation);
-
-                           String s2;
-                           try {
-                              s2 = IOUtils.toString(reader);
-                           } catch (Throwable var9) {
-                              if (reader != null) {
-                                 try {
-                                    reader.close();
-                                 } catch (Throwable var8) {
-                                    var9.addSuppressed(var8);
-                                 }
-                              }
-
-                              throw var9;
-                           }
-
+                           s2 = IOUtils.toString(reader);
+                        } catch (Throwable var9) {
                            if (reader != null) {
-                              reader.close();
+                              try {
+                                 reader.close();
+                              } catch (Throwable var8) {
+                                 var9.addSuppressed(var8);
+                              }
                            }
 
-                           return s2;
-                        } catch (IOException var10) {
-                           net.minecraft.client.renderer.ShaderInstance.f_173323_.error("Could not open GLSL import {}: {}", fileIn, var10.getMessage());
-                           return "#error " + var10.getMessage();
+                           throw var9;
                         }
+
+                        if (reader != null) {
+                           reader.close();
+                        }
+
+                        return s2;
+                     } catch (IOException var10) {
+                        ShaderInstance.f_173323_.error("Could not open GLSL import {}: {}", fileIn, var10.getMessage());
+                        return "#error " + var10.getMessage();
                      }
                   }
                }
-            );
+            });
          } catch (Throwable var12) {
             if (inputstream != null) {
                try {
@@ -284,7 +296,10 @@ public class ShaderInstance implements Shader, AutoCloseable {
    }
 
    public void close() {
-      for (Uniform uniform : this.f_173331_) {
+      Iterator var1 = this.f_173331_.iterator();
+
+      while(var1.hasNext()) {
+         Uniform uniform = (Uniform)var1.next();
          uniform.close();
       }
 
@@ -297,10 +312,10 @@ public class ShaderInstance implements Shader, AutoCloseable {
       f_173326_ = null;
       int i = GlStateManager._getActiveTexture();
       if (Boolean.FALSE) {
-         for (int j = 0; j < this.f_173330_.size(); j++) {
+         for(int j = 0; j < this.f_173330_.size(); ++j) {
             if (this.f_173328_.get(this.f_173329_.get(j)) != null) {
                int textureUnit = this.getTextureUnit((String)this.f_173329_.get(j), j);
-               GlStateManager._activeTexture(33984 + textureUnit);
+               GlStateManager._activeTexture('蓀' + textureUnit);
                GlStateManager._bindTexture(0);
             }
          }
@@ -320,19 +335,19 @@ public class ShaderInstance implements Shader, AutoCloseable {
 
       int i = GlStateManager._getActiveTexture();
 
-      for (int j = 0; j < this.f_173330_.size(); j++) {
+      for(int j = 0; j < this.f_173330_.size(); ++j) {
          String s = (String)this.f_173329_.get(j);
          if (this.f_173328_.get(s) != null) {
             int k = Uniform.m_85624_(this.f_173299_, s);
             int textureUnit = this.getTextureUnit(s, j);
             Uniform.m_85616_(k, textureUnit);
-            RenderSystem.activeTexture(33984 + textureUnit);
+            RenderSystem.activeTexture('蓀' + textureUnit);
             Object object = this.f_173328_.get(s);
             int l = -1;
-            if (object instanceof com.mojang.blaze3d.pipeline.RenderTarget) {
-               l = ((com.mojang.blaze3d.pipeline.RenderTarget)object).m_83975_();
-            } else if (object instanceof net.minecraft.client.renderer.texture.AbstractTexture) {
-               l = ((net.minecraft.client.renderer.texture.AbstractTexture)object).m_117963_();
+            if (object instanceof RenderTarget) {
+               l = ((RenderTarget)object).m_83975_();
+            } else if (object instanceof AbstractTexture) {
+               l = ((AbstractTexture)object).m_117963_();
             } else if (object instanceof Integer) {
                l = (Integer)object;
             }
@@ -348,8 +363,10 @@ public class ShaderInstance implements Shader, AutoCloseable {
       }
 
       GlStateManager._activeTexture(i);
+      Iterator var8 = this.f_173331_.iterator();
 
-      for (Uniform uniform : this.f_173331_) {
+      while(var8.hasNext()) {
+         Uniform uniform = (Uniform)var8.next();
          uniform.m_85633_();
       }
 
@@ -359,6 +376,7 @@ public class ShaderInstance implements Shader, AutoCloseable {
          Shaders.uniform_atlasSize.setValue(Shaders.atlasSizeX, Shaders.atlasSizeY);
          RenderUtils.setFlushRenderBuffers(oldFlush);
       }
+
    }
 
    public void m_108957_() {
@@ -380,24 +398,28 @@ public class ShaderInstance implements Shader, AutoCloseable {
       RenderSystem.assertOnRenderThread();
       IntList intlist = new IntArrayList();
 
-      for (int i = 0; i < this.f_173329_.size(); i++) {
-         String s = (String)this.f_173329_.get(i);
+      int l;
+      for(l = 0; l < this.f_173329_.size(); ++l) {
+         String s = (String)this.f_173329_.get(l);
          int j = Uniform.m_85624_(this.f_173299_, s);
          if (j == -1) {
             f_173323_.warn("Shader {} could not find sampler named {} in the specified shader program.", this.f_173300_, s);
             this.f_173328_.remove(s);
-            intlist.add(i);
+            intlist.add(l);
          } else {
             this.f_173330_.add(j);
          }
       }
 
-      for (int l = intlist.size() - 1; l >= 0; l--) {
+      for(l = intlist.size() - 1; l >= 0; --l) {
          int i1 = intlist.getInt(l);
          this.f_173329_.remove(i1);
       }
 
-      for (Uniform uniform : this.f_173331_) {
+      Iterator var6 = this.f_173331_.iterator();
+
+      while(var6.hasNext()) {
+         Uniform uniform = (Uniform)var6.next();
          String s1 = uniform.m_85599_();
          int k = Uniform.m_85624_(this.f_173299_, s1);
          if (k == -1) {
@@ -408,17 +430,19 @@ public class ShaderInstance implements Shader, AutoCloseable {
             this.f_173333_.put(s1, uniform);
          }
       }
+
    }
 
    private void m_173344_(JsonElement jsonElementIn) {
       JsonObject jsonobject = GsonHelper.m_13918_(jsonElementIn, "sampler");
       String s = GsonHelper.m_13906_(jsonobject, "name");
       if (!GsonHelper.m_13813_(jsonobject, "file")) {
-         this.f_173328_.put(s, null);
+         this.f_173328_.put(s, (Object)null);
          this.f_173329_.add(s);
       } else {
          this.f_173329_.add(s);
       }
+
    }
 
    public void m_173350_(String nameIn, Object samplerIn) {
@@ -438,7 +462,9 @@ public class ShaderInstance implements Shader, AutoCloseable {
       } else {
          int k = 0;
 
-         for (JsonElement jsonelement : jsonarray) {
+         for(Iterator var9 = jsonarray.iterator(); var9.hasNext(); ++k) {
+            JsonElement jsonelement = (JsonElement)var9.next();
+
             try {
                afloat[k] = GsonHelper.m_13888_(jsonelement, "value");
             } catch (Exception var13) {
@@ -446,14 +472,12 @@ public class ShaderInstance implements Shader, AutoCloseable {
                chainedjsonexception.m_135908_("values[" + k + "]");
                throw chainedjsonexception;
             }
-
-            k++;
          }
 
          if (j > 1 && jsonarray.size() == 1) {
-            while (k < j) {
+            while(k < j) {
                afloat[k] = afloat[0];
-               k++;
+               ++k;
             }
          }
 
@@ -471,11 +495,11 @@ public class ShaderInstance implements Shader, AutoCloseable {
       }
    }
 
-   public com.mojang.blaze3d.shaders.Program m_108962_() {
+   public Program m_108962_() {
       return this.f_173305_;
    }
 
-   public com.mojang.blaze3d.shaders.Program m_108964_() {
+   public Program m_108964_() {
       return this.f_173306_;
    }
 
@@ -484,7 +508,7 @@ public class ShaderInstance implements Shader, AutoCloseable {
       this.f_173305_.m_166610_(this);
    }
 
-   public com.mojang.blaze3d.vertex.VertexFormat m_173364_() {
+   public VertexFormat m_173364_() {
       return this.f_173307_;
    }
 
@@ -496,10 +520,8 @@ public class ShaderInstance implements Shader, AutoCloseable {
       return this.f_173299_;
    }
 
-   public void m_340471_(
-      com.mojang.blaze3d.vertex.VertexFormat.Mode modeIn, Matrix4f viewIn, Matrix4f projectionIn, com.mojang.blaze3d.platform.Window windowIn
-   ) {
-      for (int i = 0; i < 12; i++) {
+   public void m_340471_(VertexFormat.Mode modeIn, Matrix4f viewIn, Matrix4f projectionIn, Window windowIn) {
+      for(int i = 0; i < 12; ++i) {
          int j = RenderSystem.getShaderTexture(i);
          this.setSampler(i, j);
       }
@@ -548,8 +570,7 @@ public class ShaderInstance implements Shader, AutoCloseable {
          this.f_173311_.m_7971_((float)windowIn.m_85441_(), (float)windowIn.m_85442_());
       }
 
-      if (this.f_173318_ != null
-         && (modeIn == com.mojang.blaze3d.vertex.VertexFormat.Mode.LINES || modeIn == com.mojang.blaze3d.vertex.VertexFormat.Mode.LINE_STRIP)) {
+      if (this.f_173318_ != null && (modeIn == VertexFormat.Mode.LINES || modeIn == VertexFormat.Mode.LINE_STRIP)) {
          this.f_173318_.m_5985_(RenderSystem.getShaderLineWidth());
       }
 

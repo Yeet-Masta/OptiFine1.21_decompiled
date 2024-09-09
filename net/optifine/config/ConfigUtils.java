@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.Config;
 import net.optifine.util.PropertiesOrdered;
 
@@ -24,7 +25,7 @@ public class ConfigUtils {
 
    public static Properties readProperties(String fileName) {
       try {
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(fileName);
+         ResourceLocation loc = new ResourceLocation(fileName);
          InputStream in = Config.getResourceStream(loc);
          if (in == null) {
             return null;
@@ -38,7 +39,8 @@ public class ConfigUtils {
          return null;
       } catch (IOException var5) {
          Config.warn("Error parsing: " + fileName);
-         Config.warn(var5.getClass().getName() + ": " + var5.getMessage());
+         String var10000 = var5.getClass().getName();
+         Config.warn(var10000 + ": " + var5.getMessage());
          return null;
       }
    }

@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Properties;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -31,9 +32,9 @@ class GuiSlotShaders extends SlotGui {
       if (posYSelected > wMid) {
          this.scroll(posYSelected - wMid);
       }
+
    }
 
-   @Override
    public int getRowWidth() {
       return this.width - 20;
    }
@@ -43,20 +44,19 @@ class GuiSlotShaders extends SlotGui {
       this.selectedIndex = 0;
       int i = 0;
 
-      for (int n = this.shaderslist.size(); i < n; i++) {
+      for(int n = this.shaderslist.size(); i < n; ++i) {
          if (((String)this.shaderslist.get(i)).equals(Shaders.currentShaderName)) {
             this.selectedIndex = i;
             break;
          }
       }
+
    }
 
-   @Override
    protected int getItemCount() {
       return this.shaderslist.size();
    }
 
-   @Override
    protected boolean selectItem(int index, int buttons, double x, double y) {
       if (index == this.selectedIndex && this.lastClicked == this.lastClickedCached) {
          return false;
@@ -103,7 +103,7 @@ class GuiSlotShaders extends SlotGui {
                   String verMin = ("HD_U_" + relMin).replace('_', ' ');
                   String msg1 = I18n.m_118938_("of.message.shaders.nv1", new Object[]{verMin});
                   String msg2 = I18n.m_118938_("of.message.shaders.nv2", new Object[0]);
-                  BooleanConsumer callback = result -> {
+                  BooleanConsumer callback = (result) -> {
                      if (result) {
                         this.selectIndex(index);
                      }
@@ -119,29 +119,22 @@ class GuiSlotShaders extends SlotGui {
       }
    }
 
-   @Override
    protected boolean isSelectedItem(int index) {
       return index == this.selectedIndex;
    }
 
-   @Override
    protected int getScrollbarPosition() {
       return this.width - 6;
    }
 
-   @Override
    public int getItemHeight() {
       return this.getItemCount() * 18;
    }
 
-   @Override
    protected void renderBackground() {
    }
 
-   @Override
-   protected void renderItem(
-      net.minecraft.client.gui.GuiGraphics graphicsIn, int index, int posX, int posY, int contentY, int mouseX, int mouseY, float partialTicks
-   ) {
+   protected void renderItem(GuiGraphics graphicsIn, int index, int posX, int posY, int contentY, int mouseX, int mouseY, float partialTicks) {
       String label = (String)this.shaderslist.get(index);
       if (label.equals("OFF")) {
          label = Lang.get("of.options.shaders.packNone");
@@ -156,7 +149,6 @@ class GuiSlotShaders extends SlotGui {
       return this.selectedIndex;
    }
 
-   @Override
    public boolean m_6050_(double mouseX, double mouseY, double deltaH, double deltaV) {
       return super.m_6050_(mouseX, mouseY, deltaH, deltaV * 3.0);
    }

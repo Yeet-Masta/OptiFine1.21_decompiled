@@ -2,29 +2,37 @@ package net.optifine.render;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import net.minecraft.client.renderer.RenderType;
 import net.optifine.Config;
 import net.optifine.shaders.ShadersRender;
 import net.optifine.util.LinkedList;
 import org.lwjgl.PointerBuffer;
 
 public class VboRegion {
-   private net.minecraft.client.renderer.RenderType layer = null;
+   private RenderType layer = null;
    private int glArrayObjectId = GlStateManager._glGenVertexArrays();
    private int glBufferId = GlStateManager._glGenBuffers();
    private int capacity = 4096;
    private int positionTop = 0;
    private int sizeUsed;
-   private LinkedList<VboRange> rangeList = new LinkedList<>();
+   private LinkedList rangeList = new LinkedList();
    private VboRange compactRangeLast = null;
-   private PointerBuffer bufferIndexVertex = Config.createDirectPointerBuffer(this.capacity);
-   private IntBuffer bufferCountVertex = Config.createDirectIntBuffer(this.capacity);
-   private final int vertexBytes = com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85811_.m_86020_();
-   private com.mojang.blaze3d.vertex.VertexFormat.Mode drawMode = com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS;
-   private boolean isShaders = Config.isShaders();
+   private PointerBuffer bufferIndexVertex;
+   private IntBuffer bufferCountVertex;
+   private final int vertexBytes;
+   private VertexFormat.Mode drawMode;
+   private boolean isShaders;
 
-   public VboRegion(net.minecraft.client.renderer.RenderType layer) {
+   public VboRegion(RenderType layer) {
+      this.bufferIndexVertex = Config.createDirectPointerBuffer(this.capacity);
+      this.bufferCountVertex = Config.createDirectIntBuffer(this.capacity);
+      this.vertexBytes = DefaultVertexFormat.f_85811_.m_86020_();
+      this.drawMode = VertexFormat.Mode.QUADS;
+      this.isShaders = Config.isShaders();
       this.layer = layer;
       this.bindBuffer();
       long capacityBytes = this.toBytes(this.capacity);
@@ -44,6 +52,7 @@ public class VboRegion {
                this.rangeList.remove(range.getNode());
                this.sizeUsed -= sizeOld;
             }
+
          } else {
             if (sizeNew > sizeOld) {
                range.setPosition(this.positionTop);
@@ -68,6 +77,7 @@ public class VboRegion {
             if (this.positionTop > this.sizeUsed * 11 / 10) {
                this.compactRanges(1);
             }
+
          }
       }
    }
@@ -76,7 +86,7 @@ public class VboRegion {
       if (!this.rangeList.isEmpty()) {
          VboRange range = this.compactRangeLast;
          if (range == null || !this.rangeList.contains(range.getNode())) {
-            range = this.rangeList.getFirst().getItem();
+            range = (VboRange)this.rangeList.getFirst().getItem();
          }
 
          int posCompact = range.getPosition();
@@ -89,8 +99,8 @@ public class VboRegion {
 
          int count = 0;
 
-         while (range != null && count < countMax) {
-            count++;
+         while(range != null && count < countMax) {
+            ++count;
             if (range.getPosition() == posCompact) {
                posCompact += range.getSize();
                range = range.getNext();
@@ -105,7 +115,7 @@ public class VboRegion {
                   this.checkVboSize(this.positionTop + range.getSize());
                   this.copyVboData(range.getPosition(), this.positionTop, range.getSize());
                   range.setPosition(this.positionTop);
-                  this.positionTop = this.positionTop + range.getSize();
+                  this.positionTop += range.getSize();
                   VboRange rangeNext = range.getNext();
                   this.rangeList.remove(range.getNode());
                   this.rangeList.addLast(range.getNode());
@@ -115,7 +125,7 @@ public class VboRegion {
          }
 
          if (range == null) {
-            this.positionTop = this.rangeList.getLast().getItem().getPositionNext();
+            this.positionTop = ((VboRange)this.rangeList.getLast().getItem()).getPositionNext();
          }
 
          this.compactRangeLast = range;
@@ -126,21 +136,21 @@ public class VboRegion {
       int count = 0;
       int size = 0;
 
-      for (VboRange range = this.rangeList.getFirst().getItem(); range != null; range = range.getNext()) {
-         count++;
+      for(VboRange range = (VboRange)this.rangeList.getFirst().getItem(); range != null; range = range.getNext()) {
+         ++count;
          size += range.getSize();
          if (range.getPosition() < 0 || range.getSize() <= 0 || range.getPositionNext() > this.positionTop) {
-            throw new RuntimeException("Invalid range: " + range);
+            throw new RuntimeException("Invalid range: " + String.valueOf(range));
          }
 
          VboRange rangePrev = range.getPrev();
          if (rangePrev != null && range.getPosition() < rangePrev.getPositionNext()) {
-            throw new RuntimeException("Invalid range: " + range);
+            throw new RuntimeException("Invalid range: " + String.valueOf(range));
          }
 
          VboRange rangeNext = range.getNext();
          if (rangeNext != null && range.getPositionNext() > rangeNext.getPosition()) {
-            throw new RuntimeException("Invalid range: " + range);
+            throw new RuntimeException("Invalid range: " + String.valueOf(range));
          }
       }
 
@@ -155,6 +165,7 @@ public class VboRegion {
       if (this.capacity < sizeMin) {
          this.expandVbo(sizeMin);
       }
+
    }
 
    private void copyVboData(int posFrom, int posTo, int size) {
@@ -170,10 +181,8 @@ public class VboRegion {
    }
 
    private void expandVbo(int sizeMin) {
-      int capacityNew = this.capacity * 6 / 4;
-
-      while (capacityNew < sizeMin) {
-         capacityNew = capacityNew * 6 / 4;
+      int capacityNew;
+      for(capacityNew = this.capacity * 6 / 4; capacityNew < sizeMin; capacityNew = capacityNew * 6 / 4) {
       }
 
       long capacityBytes = this.toBytes(this.capacity);
@@ -204,10 +213,11 @@ public class VboRegion {
       GlStateManager._glBindBuffer(GlStateManager.GL_ARRAY_BUFFER, this.glBufferId);
    }
 
-   public void drawArrays(com.mojang.blaze3d.vertex.VertexFormat.Mode drawMode, VboRange range) {
+   public void drawArrays(VertexFormat.Mode drawMode, VboRange range) {
       if (this.drawMode != drawMode) {
          if (this.bufferIndexVertex.position() > 0) {
-            throw new IllegalArgumentException("Mixed region draw modes: " + this.drawMode + " != " + drawMode);
+            String var10002 = String.valueOf(this.drawMode);
+            throw new IllegalArgumentException("Mixed region draw modes: " + var10002 + " != " + String.valueOf(drawMode));
          }
 
          this.drawMode = drawMode;
@@ -230,7 +240,7 @@ public class VboRegion {
 
       int indexCount = this.drawMode.m_166958_(this.positionTop);
       RenderSystem.AutoStorageIndexBuffer rendersystem$autostorageindexbuffer = RenderSystem.getSequentialBuffer(this.drawMode);
-      com.mojang.blaze3d.vertex.VertexFormat.IndexType indexType = rendersystem$autostorageindexbuffer.m_157483_();
+      VertexFormat.IndexType indexType = rendersystem$autostorageindexbuffer.m_157483_();
       rendersystem$autostorageindexbuffer.m_221946_(indexCount);
       this.bufferIndexVertex.flip();
       this.bufferCountVertex.flip();
@@ -240,6 +250,7 @@ public class VboRegion {
       if (this.positionTop > this.sizeUsed * 11 / 10) {
          this.compactRanges(1);
       }
+
    }
 
    public void unbindBuffer() {
@@ -260,6 +271,7 @@ public class VboRegion {
          GlStateManager._glDeleteBuffers(this.glBufferId);
          this.glBufferId = -1;
       }
+
    }
 
    private long toBytes(int vertex) {

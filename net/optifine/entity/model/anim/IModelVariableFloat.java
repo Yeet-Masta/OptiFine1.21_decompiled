@@ -8,7 +8,6 @@ public interface IModelVariableFloat extends IExpressionFloat, IModelVariable {
 
    void setValue(float var1);
 
-   @Override
    default void setValue(IExpression expr) {
       float val = ((IExpressionFloat)expr).eval();
       this.setValue(val);

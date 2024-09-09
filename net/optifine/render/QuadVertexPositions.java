@@ -3,9 +3,9 @@ package net.optifine.render;
 import net.optifine.util.IntExpiringCache;
 import net.optifine.util.RandomUtils;
 
-public class QuadVertexPositions extends IntExpiringCache<VertexPosition[]> {
+public class QuadVertexPositions extends IntExpiringCache {
    public QuadVertexPositions() {
-      super(60000 + RandomUtils.getRandomInt(10000));
+      super('\uea60' + RandomUtils.getRandomInt(10000));
    }
 
    protected VertexPosition[] make() {

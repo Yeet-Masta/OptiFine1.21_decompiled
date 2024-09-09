@@ -3,13 +3,16 @@ package net.optifine.entity.model;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.StriderModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.StriderRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterStrider extends ModelAdapter {
-   private static Map<String, String> mapParts = makeMapParts();
+   private static Map mapParts = makeMapParts();
 
    public ModelAdapterStrider() {
       super(EntityType.f_20482_, "strider", 0.5F);
@@ -19,13 +22,11 @@ public class ModelAdapterStrider extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new StriderModel(bakeModelLayer(ModelLayers.f_171251_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof StriderModel modelStrider)) {
          return null;
       } else if (modelPart.equals("root")) {
@@ -38,13 +39,13 @@ public class ModelAdapterStrider extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
-      return (String[])mapParts.keySet().toArray(new String[0]);
+      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
+      return names;
    }
 
-   private static Map<String, String> makeMapParts() {
-      Map<String, String> map = new LinkedHashMap();
+   private static Map makeMapParts() {
+      Map map = new LinkedHashMap();
       map.put("right_leg", "right_leg");
       map.put("left_leg", "left_leg");
       map.put("body", "body");
@@ -58,9 +59,8 @@ public class ModelAdapterStrider extends ModelAdapter {
       return map;
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       StriderRenderer render = new StriderRenderer(renderManager.getContext());
       render.f_115290_ = (StriderModel)modelBase;
       render.f_114477_ = shadowSize;

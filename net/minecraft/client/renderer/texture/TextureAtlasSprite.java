@@ -1,12 +1,17 @@
 package net.minecraft.client.renderer.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import net.minecraft.client.renderer.SpriteCoordinateExpander;
+import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceMetadata;
@@ -17,42 +22,53 @@ import net.optifine.util.CounterInt;
 import net.optifine.util.TextureUtils;
 
 public class TextureAtlasSprite {
-   private net.minecraft.resources.ResourceLocation f_244141_;
-   private net.minecraft.client.renderer.texture.SpriteContents f_244165_;
+   private ResourceLocation f_244141_;
+   private SpriteContents f_244165_;
    int f_118349_;
    int f_118350_;
    private float f_118351_;
    private float f_118352_;
    private float f_118353_;
    private float f_118354_;
-   private int indexInMap = -1;
+   private int indexInMap;
    public float baseU;
    public float baseV;
    public int sheetWidth;
    public int sheetHeight;
-   private final net.minecraft.resources.ResourceLocation name;
-   public int glSpriteTextureId = -1;
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite spriteSingle = null;
-   public boolean isSpriteSingle = false;
+   private final ResourceLocation name;
+   public int glSpriteTextureId;
+   public TextureAtlasSprite spriteSingle;
+   public boolean isSpriteSingle;
    public static final String SUFFIX_SPRITE_SINGLE = ".sprite_single";
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite spriteNormal = null;
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite spriteSpecular = null;
-   public ShadersTextureType spriteShadersType = null;
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite spriteEmissive = null;
-   public boolean isSpriteEmissive = false;
-   protected int animationIndex = -1;
+   public TextureAtlasSprite spriteNormal;
+   public TextureAtlasSprite spriteSpecular;
+   public ShadersTextureType spriteShadersType;
+   public TextureAtlasSprite spriteEmissive;
+   public boolean isSpriteEmissive;
+   protected int animationIndex;
    private boolean terrain;
    private boolean shaders;
    private boolean multiTexture;
    private ResourceManager resourceManager;
    private int imageWidth;
    private int imageHeight;
-   private net.minecraft.client.renderer.texture.TextureAtlas atlasTexture;
-   private net.minecraft.client.renderer.texture.SpriteContents.Ticker spriteContentsTicker;
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite parentSprite;
-   protected boolean usesParentAnimationTime = false;
+   private TextureAtlas atlasTexture;
+   private SpriteContents.Ticker spriteContentsTicker;
+   private TextureAtlasSprite parentSprite;
+   protected boolean usesParentAnimationTime;
 
-   public TextureAtlasSprite(net.minecraft.resources.ResourceLocation atlasLocation, net.minecraft.resources.ResourceLocation name) {
+   public TextureAtlasSprite(ResourceLocation atlasLocation, ResourceLocation name) {
+      this.indexInMap = -1;
+      this.glSpriteTextureId = -1;
+      this.spriteSingle = null;
+      this.isSpriteSingle = false;
+      this.spriteNormal = null;
+      this.spriteSpecular = null;
+      this.spriteShadersType = null;
+      this.spriteEmissive = null;
+      this.isSpriteEmissive = false;
+      this.animationIndex = -1;
+      this.usesParentAnimationTime = false;
       this.f_244141_ = atlasLocation;
       this.name = name;
       this.f_244165_ = null;
@@ -67,16 +83,22 @@ public class TextureAtlasSprite {
       this.imageHeight = 0;
    }
 
-   private TextureAtlasSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite parent) {
+   private TextureAtlasSprite(TextureAtlasSprite parent) {
+      this.indexInMap = -1;
+      this.glSpriteTextureId = -1;
+      this.spriteSingle = null;
+      this.isSpriteSingle = false;
+      this.spriteNormal = null;
+      this.spriteSpecular = null;
+      this.spriteShadersType = null;
+      this.spriteEmissive = null;
+      this.isSpriteEmissive = false;
+      this.animationIndex = -1;
+      this.usesParentAnimationTime = false;
       this.atlasTexture = parent.atlasTexture;
       this.name = parent.getName();
-      net.minecraft.client.renderer.texture.SpriteContents parentContents = parent.f_244165_;
-      this.f_244165_ = new net.minecraft.client.renderer.texture.SpriteContents(
-         parentContents.m_246162_(),
-         new FrameSize(parentContents.f_244302_, parentContents.f_244600_),
-         parentContents.getOriginalImage(),
-         parentContents.m_293312_()
-      );
+      SpriteContents parentContents = parent.f_244165_;
+      this.f_244165_ = new SpriteContents(parentContents.m_246162_(), new FrameSize(parentContents.f_244302_, parentContents.f_244600_), parentContents.getOriginalImage(), parentContents.m_293312_());
       this.f_244165_.setSprite(this);
       this.f_244165_.setScaleFactor(parentContents.getScaleFactor());
       this.imageWidth = parent.imageWidth;
@@ -100,16 +122,10 @@ public class TextureAtlasSprite {
       if (this.spriteContentsTicker != null && parent.spriteContentsTicker != null) {
          this.spriteContentsTicker.animationActive = parent.spriteContentsTicker.animationActive;
       }
+
    }
 
-   public void init(
-      net.minecraft.resources.ResourceLocation locationIn,
-      net.minecraft.client.renderer.texture.SpriteContents contentsIn,
-      int atlasWidthIn,
-      int atlasHeightIn,
-      int xIn,
-      int yIn
-   ) {
+   public void init(ResourceLocation locationIn, SpriteContents contentsIn, int atlasWidthIn, int atlasHeightIn, int xIn, int yIn) {
       this.f_244141_ = locationIn;
       this.f_244165_ = contentsIn;
       this.f_244165_.setSprite(this);
@@ -127,27 +143,22 @@ public class TextureAtlasSprite {
       this.baseV = Math.min(this.f_118353_, this.f_118354_);
    }
 
-   protected TextureAtlasSprite(
-      net.minecraft.resources.ResourceLocation locationIn,
-      net.minecraft.client.renderer.texture.SpriteContents contentsIn,
-      int atlasWidthIn,
-      int atlasHeightIn,
-      int xIn,
-      int yIn
-   ) {
-      this(locationIn, contentsIn, atlasWidthIn, atlasHeightIn, xIn, yIn, null, null);
+   protected TextureAtlasSprite(ResourceLocation locationIn, SpriteContents contentsIn, int atlasWidthIn, int atlasHeightIn, int xIn, int yIn) {
+      this(locationIn, contentsIn, atlasWidthIn, atlasHeightIn, xIn, yIn, (TextureAtlas)null, (ShadersTextureType)null);
    }
 
-   protected TextureAtlasSprite(
-      net.minecraft.resources.ResourceLocation locationIn,
-      net.minecraft.client.renderer.texture.SpriteContents contentsIn,
-      int atlasWidthIn,
-      int atlasHeightIn,
-      int xIn,
-      int yIn,
-      net.minecraft.client.renderer.texture.TextureAtlas atlas,
-      ShadersTextureType spriteShadersTypeIn
-   ) {
+   protected TextureAtlasSprite(ResourceLocation locationIn, SpriteContents contentsIn, int atlasWidthIn, int atlasHeightIn, int xIn, int yIn, TextureAtlas atlas, ShadersTextureType spriteShadersTypeIn) {
+      this.indexInMap = -1;
+      this.glSpriteTextureId = -1;
+      this.spriteSingle = null;
+      this.isSpriteSingle = false;
+      this.spriteNormal = null;
+      this.spriteSpecular = null;
+      this.spriteShadersType = null;
+      this.spriteEmissive = null;
+      this.isSpriteEmissive = false;
+      this.animationIndex = -1;
+      this.usesParentAnimationTime = false;
       this.atlasTexture = atlas;
       this.spriteShadersType = spriteShadersTypeIn;
       this.f_244141_ = locationIn;
@@ -184,35 +195,31 @@ public class TextureAtlasSprite {
       return this.f_118352_;
    }
 
-   public net.minecraft.client.renderer.texture.SpriteContents m_245424_() {
+   public SpriteContents m_245424_() {
       return this.f_244165_;
    }
 
    @Nullable
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker m_247406_() {
-      final net.minecraft.client.renderer.texture.SpriteTicker spriteticker = this.f_244165_.m_246786_();
+   public Ticker m_247406_() {
+      final SpriteTicker spriteticker = this.f_244165_.m_246786_();
       if (spriteticker != null) {
          spriteticker.setSprite(this);
       }
 
-      return spriteticker != null ? new net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker() {
-         @Override
+      return spriteticker != null ? new Ticker() {
          public void m_245385_() {
             spriteticker.m_247697_(TextureAtlasSprite.this.f_118349_, TextureAtlasSprite.this.f_118350_);
          }
 
-         @Override
          public void close() {
             spriteticker.close();
          }
 
-         @Override
-         public net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite() {
+         public TextureAtlasSprite getSprite() {
             return TextureAtlasSprite.this;
          }
 
-         @Override
-         public net.minecraft.client.renderer.texture.SpriteTicker getSpriteTicker() {
+         public SpriteTicker getSpriteTicker() {
             return spriteticker;
          }
       } : null;
@@ -246,24 +253,13 @@ public class TextureAtlasSprite {
       return (v - this.f_118353_) / f;
    }
 
-   public net.minecraft.resources.ResourceLocation m_247685_() {
+   public ResourceLocation m_247685_() {
       return this.f_244141_;
    }
 
    public String toString() {
-      return "TextureAtlasSprite{name= "
-         + this.name
-         + ", contents='"
-         + this.f_244165_
-         + "', u0="
-         + this.f_118351_
-         + ", u1="
-         + this.f_118352_
-         + ", v0="
-         + this.f_118353_
-         + ", v1="
-         + this.f_118354_
-         + "}";
+      String var10000 = String.valueOf(this.name);
+      return "TextureAtlasSprite{name= " + var10000 + ", contents='" + String.valueOf(this.f_244165_) + "', u0=" + this.f_118351_ + ", u1=" + this.f_118352_ + ", v0=" + this.f_118353_ + ", v1=" + this.f_118354_ + "}";
    }
 
    public void m_118416_() {
@@ -280,8 +276,8 @@ public class TextureAtlasSprite {
       return 4.0F / this.m_118366_();
    }
 
-   public com.mojang.blaze3d.vertex.VertexConsumer m_118381_(com.mojang.blaze3d.vertex.VertexConsumer bufferIn) {
-      return new net.minecraft.client.renderer.SpriteCoordinateExpander(bufferIn, this);
+   public VertexConsumer m_118381_(VertexConsumer bufferIn) {
+      return new SpriteCoordinateExpander(bufferIn, this);
    }
 
    public int getIndexInMap() {
@@ -291,7 +287,7 @@ public class TextureAtlasSprite {
    public void updateIndexInMap(CounterInt counterInt) {
       if (this.indexInMap < 0) {
          if (this.atlasTexture != null) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite registeredSprite = this.atlasTexture.getRegisteredSprite(this.getName());
+            TextureAtlasSprite registeredSprite = this.atlasTexture.getRegisteredSprite(this.getName());
             if (registeredSprite != null) {
                this.indexInMap = registeredSprite.getIndexInMap();
             }
@@ -300,6 +296,7 @@ public class TextureAtlasSprite {
          if (this.indexInMap < 0) {
             this.indexInMap = counterInt.nextValue();
          }
+
       }
    }
 
@@ -320,13 +317,14 @@ public class TextureAtlasSprite {
       if (this.spriteSpecular != null) {
          this.spriteSpecular.setAnimationIndex(animationIndex);
       }
+
    }
 
    public boolean isAnimationActive() {
       return this.spriteContentsTicker == null ? false : this.spriteContentsTicker.animationActive;
    }
 
-   public static void fixTransparentColor(com.mojang.blaze3d.platform.NativeImage ni) {
+   public static void fixTransparentColor(NativeImage ni) {
       int[] data = new int[ni.m_84982_() * ni.m_85084_()];
       ni.getBufferRGBA().get(data);
       fixTransparentColor(data);
@@ -340,33 +338,40 @@ public class TextureAtlasSprite {
          long blueSum = 0L;
          long count = 0L;
 
-         for (int i = 0; i < data.length; i++) {
-            int col = data[i];
-            int alpha = col >> 24 & 0xFF;
-            if (alpha >= 16) {
-               int red = col >> 16 & 0xFF;
-               int green = col >> 8 & 0xFF;
-               int blue = col & 0xFF;
-               redSum += (long)red;
-               greenSum += (long)green;
-               blueSum += (long)blue;
-               count++;
+         int redAvg;
+         int greenAvg;
+         int blueAvg;
+         int colAvg;
+         int i;
+         int col;
+         for(redAvg = 0; redAvg < data.length; ++redAvg) {
+            greenAvg = data[redAvg];
+            blueAvg = greenAvg >> 24 & 255;
+            if (blueAvg >= 16) {
+               colAvg = greenAvg >> 16 & 255;
+               i = greenAvg >> 8 & 255;
+               col = greenAvg & 255;
+               redSum += (long)colAvg;
+               greenSum += (long)i;
+               blueSum += (long)col;
+               ++count;
             }
          }
 
          if (count > 0L) {
-            int redAvg = (int)(redSum / count);
-            int greenAvg = (int)(greenSum / count);
-            int blueAvg = (int)(blueSum / count);
-            int colAvg = redAvg << 16 | greenAvg << 8 | blueAvg;
+            redAvg = (int)(redSum / count);
+            greenAvg = (int)(greenSum / count);
+            blueAvg = (int)(blueSum / count);
+            colAvg = redAvg << 16 | greenAvg << 8 | blueAvg;
 
-            for (int ix = 0; ix < data.length; ix++) {
-               int col = data[ix];
-               int alpha = col >> 24 & 0xFF;
+            for(i = 0; i < data.length; ++i) {
+               col = data[i];
+               int alpha = col >> 24 & 255;
                if (alpha <= 16) {
-                  data[ix] = colAvg;
+                  data[i] = colAvg;
                }
             }
+
          }
       }
    }
@@ -410,16 +415,18 @@ public class TextureAtlasSprite {
    public float toSingleU(float u) {
       u -= this.baseU;
       float ku = (float)this.sheetWidth / (float)this.getWidth();
-      return u * ku;
+      u *= ku;
+      return u;
    }
 
    public float toSingleV(float v) {
       v -= this.baseV;
       float kv = (float)this.sheetHeight / (float)this.getHeight();
-      return v * kv;
+      v *= kv;
+      return v;
    }
 
-   public com.mojang.blaze3d.platform.NativeImage[] getMipmapImages() {
+   public NativeImage[] getMipmapImages() {
       return this.f_244165_.f_243731_;
    }
 
@@ -455,15 +462,15 @@ public class TextureAtlasSprite {
       return this.f_118353_ + f * (float)v16 / 16.0F;
    }
 
-   public net.minecraft.resources.ResourceLocation getName() {
+   public ResourceLocation getName() {
       return this.name;
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlas getTextureAtlas() {
+   public TextureAtlas getTextureAtlas() {
       return this.atlasTexture;
    }
 
-   public void setTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas atlas) {
+   public void setTextureAtlas(TextureAtlas atlas) {
       this.atlasTexture = atlas;
       if (this.spriteSingle != null) {
          this.spriteSingle.setTextureAtlas(atlas);
@@ -476,6 +483,7 @@ public class TextureAtlasSprite {
       if (this.spriteSpecular != null) {
          this.spriteSpecular.setTextureAtlas(atlas);
       }
+
    }
 
    public int getWidth() {
@@ -486,35 +494,30 @@ public class TextureAtlasSprite {
       return this.f_244165_.getSpriteHeight();
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite makeSpriteSingle() {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite ss = new net.minecraft.client.renderer.texture.TextureAtlasSprite(this);
+   public TextureAtlasSprite makeSpriteSingle() {
+      TextureAtlasSprite ss = new TextureAtlasSprite(this);
       ss.isSpriteSingle = true;
       return ss;
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite makeSpriteShaders(
-      ShadersTextureType type, int colDef, net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture parentAnimatedTexture
-   ) {
+   public TextureAtlasSprite makeSpriteShaders(ShadersTextureType type, int colDef, SpriteContents.AnimatedTexture parentAnimatedTexture) {
       String suffix = type.getSuffix();
-      net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(
-         this.getName().m_135827_(), this.getName().m_135815_() + suffix
-      );
-      net.minecraft.resources.ResourceLocation locPng = this.atlasTexture.getSpritePath(loc);
-      net.minecraft.client.renderer.texture.TextureAtlasSprite ss = null;
-      Optional<Resource> optRes = this.resourceManager.m_213713_(locPng);
+      String var10002 = this.getName().m_135827_();
+      String var10003 = this.getName().m_135815_();
+      ResourceLocation loc = new ResourceLocation(var10002, var10003 + suffix);
+      ResourceLocation locPng = this.atlasTexture.getSpritePath(loc);
+      TextureAtlasSprite ss = null;
+      Optional optRes = this.resourceManager.m_213713_(locPng);
       if (optRes.isPresent()) {
          try {
             Resource iresource = (Resource)optRes.get();
-            Resource resPngSize = this.resourceManager.m_215593_(locPng);
-            com.mojang.blaze3d.platform.NativeImage image = com.mojang.blaze3d.platform.NativeImage.m_85058_(iresource.m_215507_());
+            this.resourceManager.m_215593_(locPng);
+            NativeImage image = NativeImage.m_85058_(iresource.m_215507_());
             ResourceMetadata resMeta = iresource.m_215509_();
-            net.minecraft.client.resources.metadata.animation.AnimationMetadataSection animMeta = (net.minecraft.client.resources.metadata.animation.AnimationMetadataSection)resMeta.m_214059_(
-                  net.minecraft.client.resources.metadata.animation.AnimationMetadataSection.f_119011_
-               )
-               .orElse(net.minecraft.client.resources.metadata.animation.AnimationMetadataSection.f_119012_);
+            AnimationMetadataSection animMeta = (AnimationMetadataSection)resMeta.m_214059_(AnimationMetadataSection.f_119011_).orElse(AnimationMetadataSection.f_119012_);
             FrameSize frameSize = animMeta.m_245821_(image.m_84982_(), image.m_85084_());
             if (image.m_84982_() != this.getWidth()) {
-               com.mojang.blaze3d.platform.NativeImage imageScaled = TextureUtils.scaleImage(image, this.getWidth());
+               NativeImage imageScaled = TextureUtils.scaleImage(image, this.getWidth());
                if (imageScaled != image) {
                   double scaleFactor = 1.0 * (double)this.getWidth() / (double)image.m_84982_();
                   image.close();
@@ -523,27 +526,19 @@ public class TextureAtlasSprite {
                }
             }
 
-            net.minecraft.client.renderer.texture.SpriteContents contentsShaders = new net.minecraft.client.renderer.texture.SpriteContents(
-               loc, frameSize, image, resMeta
-            );
-            ss = new net.minecraft.client.renderer.texture.TextureAtlasSprite(
-               this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type
-            );
+            SpriteContents contentsShaders = new SpriteContents(loc, frameSize, image, resMeta);
+            ss = new TextureAtlasSprite(this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type);
             ss.parentSprite = this;
          } catch (IOException var18) {
          }
       }
 
       if (ss == null) {
-         com.mojang.blaze3d.platform.NativeImage image = new com.mojang.blaze3d.platform.NativeImage(this.getWidth(), this.getHeight(), false);
+         NativeImage image = new NativeImage(this.getWidth(), this.getHeight(), false);
          int colAbgr = TextureUtils.toAbgr(colDef);
          image.m_84997_(0, 0, image.m_84982_(), image.m_85084_(), colAbgr);
-         net.minecraft.client.renderer.texture.SpriteContents contentsShaders = new net.minecraft.client.renderer.texture.SpriteContents(
-            loc, new FrameSize(this.getWidth(), this.getHeight()), image, ResourceMetadata.f_215577_
-         );
-         ss = new net.minecraft.client.renderer.texture.TextureAtlasSprite(
-            this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type
-         );
+         SpriteContents contentsShaders = new SpriteContents(loc, new FrameSize(this.getWidth(), this.getHeight()), image, ResourceMetadata.f_215577_);
+         ss = new TextureAtlasSprite(this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type);
       }
 
       if (this.terrain && this.multiTexture && !this.isSpriteSingle) {
@@ -599,53 +594,50 @@ public class TextureAtlasSprite {
             this.spriteSpecular = this.makeSpriteShaders(ShadersTextureType.SPECULAR, 0, this.f_244165_.getAnimatedTexture());
          }
       }
+
    }
 
-   private static boolean matchesTiming(
-      net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture at1, net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture at2
-   ) {
-      if (at1 == null || at2 == null) {
-         return false;
-      } else if (at1 == at2) {
-         return true;
-      } else {
-         boolean ip1 = at1.f_244317_;
-         boolean ip2 = at2.f_244317_;
-         if (ip1 != ip2) {
-            return false;
+   private static boolean matchesTiming(SpriteContents.AnimatedTexture at1, SpriteContents.AnimatedTexture at2) {
+      if (at1 != null && at2 != null) {
+         if (at1 == at2) {
+            return true;
          } else {
-            List<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> frames1 = at1.f_243714_;
-            List<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> frames2 = at2.f_243714_;
-            if (frames1 != null && frames2 != null) {
-               if (frames1.size() != frames2.size()) {
-                  return false;
-               } else {
-                  for (int i = 0; i < frames1.size(); i++) {
-                     net.minecraft.client.renderer.texture.SpriteContents.FrameInfo fi1 = (net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)frames1.get(
-                        i
-                     );
-                     net.minecraft.client.renderer.texture.SpriteContents.FrameInfo fi2 = (net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)frames2.get(
-                        i
-                     );
-                     if (fi1 == null || fi2 == null) {
-                        return false;
-                     }
-
-                     if (fi1.f_243751_ != fi2.f_243751_) {
-                        return false;
-                     }
-
-                     if (fi1.f_244553_ != fi2.f_244553_) {
-                        return false;
-                     }
-                  }
-
-                  return true;
-               }
-            } else {
+            boolean ip1 = at1.f_244317_;
+            boolean ip2 = at2.f_244317_;
+            if (ip1 != ip2) {
                return false;
+            } else {
+               List frames1 = at1.f_243714_;
+               List frames2 = at2.f_243714_;
+               if (frames1 != null && frames2 != null) {
+                  if (frames1.size() != frames2.size()) {
+                     return false;
+                  } else {
+                     for(int i = 0; i < frames1.size(); ++i) {
+                        SpriteContents.FrameInfo fi1 = (SpriteContents.FrameInfo)frames1.get(i);
+                        SpriteContents.FrameInfo fi2 = (SpriteContents.FrameInfo)frames2.get(i);
+                        if (fi1 == null || fi2 == null) {
+                           return false;
+                        }
+
+                        if (fi1.f_243751_ != fi2.f_243751_) {
+                           return false;
+                        }
+
+                        if (fi1.f_244553_ != fi2.f_244553_) {
+                           return false;
+                        }
+                     }
+
+                     return true;
+                  }
+               } else {
+                  return false;
+               }
             }
          }
+      } else {
+         return false;
       }
    }
 
@@ -659,6 +651,7 @@ public class TextureAtlasSprite {
       if (this.spriteContentsTicker != null) {
          this.spriteContentsTicker.m_247697_(this.f_118349_, this.f_118350_);
       }
+
    }
 
    public void preTick() {
@@ -677,6 +670,7 @@ public class TextureAtlasSprite {
             this.spriteSpecular.spriteContentsTicker.f_244631_ = this.spriteContentsTicker.f_244631_;
             this.spriteSpecular.spriteContentsTicker.f_244511_ = this.spriteContentsTicker.f_244511_;
          }
+
       }
    }
 
@@ -689,11 +683,11 @@ public class TextureAtlasSprite {
       return this.f_244165_.getOriginalImage().m_84985_(x, y);
    }
 
-   public net.minecraft.client.renderer.texture.SpriteContents.Ticker getSpriteContentsTicker() {
+   public SpriteContents.Ticker getSpriteContentsTicker() {
       return this.spriteContentsTicker;
    }
 
-   public void setSpriteContentsTicker(net.minecraft.client.renderer.texture.SpriteContents.Ticker spriteContentsTicker) {
+   public void setSpriteContentsTicker(SpriteContents.Ticker spriteContentsTicker) {
       if (this.spriteContentsTicker != null) {
          this.spriteContentsTicker.close();
       }
@@ -702,12 +696,15 @@ public class TextureAtlasSprite {
       if (this.spriteContentsTicker != null && this.parentSprite != null && this.parentSprite.f_244165_ != null) {
          this.usesParentAnimationTime = matchesTiming(this.f_244165_.getAnimatedTexture(), this.parentSprite.f_244165_.getAnimatedTexture());
       }
+
    }
 
-   public void setTicker(net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker ticker) {
-      if (ticker.getSpriteTicker() instanceof net.minecraft.client.renderer.texture.SpriteContents.Ticker spriteContentsTicker) {
+   public void setTicker(Ticker ticker) {
+      SpriteTicker spriteTicker = ticker.getSpriteTicker();
+      if (spriteTicker instanceof SpriteContents.Ticker spriteContentsTicker) {
          this.setSpriteContentsTicker(spriteContentsTicker);
       }
+
    }
 
    public void increaseMipLevel(int mipLevelIn) {
@@ -719,6 +716,7 @@ public class TextureAtlasSprite {
       if (this.spriteSpecular != null) {
          this.spriteSpecular.increaseMipLevel(mipLevelIn);
       }
+
    }
 
    public interface Ticker extends AutoCloseable {
@@ -726,11 +724,11 @@ public class TextureAtlasSprite {
 
       void close();
 
-      default net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite() {
+      default TextureAtlasSprite getSprite() {
          return null;
       }
 
-      default net.minecraft.client.renderer.texture.SpriteTicker getSpriteTicker() {
+      default SpriteTicker getSpriteTicker() {
          return null;
       }
    }

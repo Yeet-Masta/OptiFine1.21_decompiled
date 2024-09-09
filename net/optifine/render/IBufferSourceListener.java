@@ -1,5 +1,8 @@
 package net.optifine.render;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import net.minecraft.client.renderer.RenderType;
+
 public interface IBufferSourceListener {
-   void finish(net.minecraft.client.renderer.RenderType var1, com.mojang.blaze3d.vertex.BufferBuilder var2);
+   void finish(RenderType var1, BufferBuilder var2);
 }

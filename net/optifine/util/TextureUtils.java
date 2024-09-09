@@ -1,10 +1,12 @@
 package net.optifine.util;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.NativeImage;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +20,19 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import net.minecraft.client.renderer.entity.layers.MushroomCowMushroomLayer;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.optifine.BetterGrass;
 import net.optifine.BetterSnow;
@@ -71,47 +83,41 @@ public class TextureUtils {
    private static final String texPortal = "nether_portal";
    private static final String texGlass = "glass";
    private static final String texGlassPaneTop = "glass_pane_top";
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconGrassTop;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconGrassSide;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconGrassSideOverlay;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconSnow;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconGrassSideSnowed;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconMyceliumSide;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconMyceliumTop;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconWaterStill;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconWaterFlow;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconLavaStill;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconLavaFlow;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconFireLayer0;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconFireLayer1;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconSoulFireLayer0;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconSoulFireLayer1;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconCampFire;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconCampFireLogLit;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconSoulCampFire;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconSoulCampFireLogLit;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconPortal;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconGlass;
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite iconGlassPaneTop;
+   public static TextureAtlasSprite iconGrassTop;
+   public static TextureAtlasSprite iconGrassSide;
+   public static TextureAtlasSprite iconGrassSideOverlay;
+   public static TextureAtlasSprite iconSnow;
+   public static TextureAtlasSprite iconGrassSideSnowed;
+   public static TextureAtlasSprite iconMyceliumSide;
+   public static TextureAtlasSprite iconMyceliumTop;
+   public static TextureAtlasSprite iconWaterStill;
+   public static TextureAtlasSprite iconWaterFlow;
+   public static TextureAtlasSprite iconLavaStill;
+   public static TextureAtlasSprite iconLavaFlow;
+   public static TextureAtlasSprite iconFireLayer0;
+   public static TextureAtlasSprite iconFireLayer1;
+   public static TextureAtlasSprite iconSoulFireLayer0;
+   public static TextureAtlasSprite iconSoulFireLayer1;
+   public static TextureAtlasSprite iconCampFire;
+   public static TextureAtlasSprite iconCampFireLogLit;
+   public static TextureAtlasSprite iconSoulCampFire;
+   public static TextureAtlasSprite iconSoulCampFireLogLit;
+   public static TextureAtlasSprite iconPortal;
+   public static TextureAtlasSprite iconGlass;
+   public static TextureAtlasSprite iconGlassPaneTop;
    public static final String SPRITE_PREFIX_BLOCKS = "minecraft:block/";
    public static final String SPRITE_PREFIX_ITEMS = "minecraft:item/";
-   public static final net.minecraft.resources.ResourceLocation LOCATION_SPRITE_EMPTY = new net.minecraft.resources.ResourceLocation(
-      "optifine/ctm/default/empty"
-   );
-   public static final net.minecraft.resources.ResourceLocation LOCATION_TEXTURE_EMPTY = new net.minecraft.resources.ResourceLocation(
-      "optifine/ctm/default/empty.png"
-   );
-   public static final net.minecraft.resources.ResourceLocation WHITE_TEXTURE_LOCATION = new net.minecraft.resources.ResourceLocation("textures/misc/white.png");
+   public static final ResourceLocation LOCATION_SPRITE_EMPTY = new ResourceLocation("optifine/ctm/default/empty");
+   public static final ResourceLocation LOCATION_TEXTURE_EMPTY = new ResourceLocation("optifine/ctm/default/empty.png");
+   public static final ResourceLocation WHITE_TEXTURE_LOCATION = new ResourceLocation("textures/misc/white.png");
    private static IntBuffer staticBuffer = Config.createDirectIntBuffer(256);
    private static int glMaximumTextureSize = -1;
-   private static Map<Integer, String> mapTextureAllocations = new HashMap();
-   private static Map<net.minecraft.resources.ResourceLocation, net.minecraft.resources.ResourceLocation> mapSpriteLocations = new HashMap();
-   private static net.minecraft.resources.ResourceLocation LOCATION_ATLAS_PAINTINGS = new net.minecraft.resources.ResourceLocation(
-      "textures/atlas/paintings.png"
-   );
+   private static Map mapTextureAllocations = new HashMap();
+   private static Map mapSpriteLocations = new HashMap();
+   private static ResourceLocation LOCATION_ATLAS_PAINTINGS = new ResourceLocation("textures/atlas/paintings.png");
 
    public static void update() {
-      net.minecraft.client.renderer.texture.TextureAtlas mapBlocks = getTextureMapBlocks();
+      TextureAtlas mapBlocks = getTextureMapBlocks();
       if (mapBlocks != null) {
          String prefix = "minecraft:block/";
          iconGrassTop = getSpriteCheck(mapBlocks, prefix + "grass_block_top");
@@ -141,11 +147,9 @@ public class TextureUtils {
       }
    }
 
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite getSpriteCheck(
-      net.minecraft.client.renderer.texture.TextureAtlas textureMap, String name
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = textureMap.getUploadedSprite(name);
-      if (sprite == null || net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.isMisingSprite(sprite)) {
+   public static TextureAtlasSprite getSpriteCheck(TextureAtlas textureMap, String name) {
+      TextureAtlasSprite sprite = textureMap.getUploadedSprite(name);
+      if (sprite == null || MissingTextureAtlasSprite.isMisingSprite(sprite)) {
          Config.warn("Sprite not found: " + name);
       }
 
@@ -160,7 +164,7 @@ public class TextureUtils {
             BufferedImage scaledImage = new BufferedImage(width, height * 2, 2);
             Graphics2D gr = scaledImage.createGraphics();
             gr.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            gr.drawImage(bi, 0, 0, width, height, null);
+            gr.drawImage(bi, 0, 0, width, height, (ImageObserver)null);
             return scaledImage;
          }
       }
@@ -169,10 +173,8 @@ public class TextureUtils {
    }
 
    public static int ceilPowerOfTwo(int val) {
-      int i = 1;
-
-      while (i < val) {
-         i *= 2;
+      int i;
+      for(i = 1; i < val; i *= 2) {
       }
 
       return i;
@@ -182,7 +184,7 @@ public class TextureUtils {
       int i = 1;
 
       int po2;
-      for (po2 = 0; i < val; po2++) {
+      for(po2 = 0; i < val; ++po2) {
          i *= 2;
       }
 
@@ -192,23 +194,23 @@ public class TextureUtils {
    public static int twoToPower(int power) {
       int val = 1;
 
-      for (int i = 0; i < power; i++) {
+      for(int i = 0; i < power; ++i) {
          val *= 2;
       }
 
       return val;
    }
 
-   public static net.minecraft.client.renderer.texture.AbstractTexture getTexture(net.minecraft.resources.ResourceLocation loc) {
-      net.minecraft.client.renderer.texture.AbstractTexture tex = Config.getTextureManager().m_118506_(loc);
+   public static AbstractTexture getTexture(ResourceLocation loc) {
+      AbstractTexture tex = Config.getTextureManager().m_118506_(loc);
       if (tex != null) {
          return tex;
       } else if (!Config.hasResource(loc)) {
          return null;
       } else {
-         net.minecraft.client.renderer.texture.AbstractTexture var2 = new net.minecraft.client.renderer.texture.SimpleTexture(loc);
-         Config.getTextureManager().m_118495_(loc, var2);
-         return var2;
+         AbstractTexture tex = new SimpleTexture(loc);
+         Config.getTextureManager().m_118495_(loc, tex);
+         return tex;
       }
    }
 
@@ -236,7 +238,7 @@ public class TextureUtils {
          SmartLeaves.updateLeavesModels();
          CustomPanorama.update();
          CustomGuis.update();
-         net.minecraft.client.renderer.entity.layers.MushroomCowMushroomLayer.update();
+         MushroomCowMushroomLayer.update();
          CustomLoadingScreens.update();
          CustomBlockLayers.update();
          Config.getTextureManager().m_7673_();
@@ -245,12 +247,13 @@ public class TextureUtils {
       }
    }
 
-   public static net.minecraft.client.renderer.texture.TextureAtlas getTextureMapBlocks() {
+   public static TextureAtlas getTextureMapBlocks() {
       return Config.getTextureMap();
    }
 
    public static void registerResourceListener() {
-      if (Config.getResourceManager() instanceof net.minecraft.server.packs.resources.ReloadableResourceManager rrm) {
+      ResourceManager rm = Config.getResourceManager();
+      if (rm instanceof ReloadableResourceManager rrm) {
          SimplePreparableReloadListener rl = new SimplePreparableReloadListener() {
             protected Object m_5944_(ResourceManager p_212854_1_, ProfilerFiller p_212854_2_) {
                return null;
@@ -267,6 +270,7 @@ public class TextureUtils {
          };
          rrm.m_7217_(rmrl);
       }
+
    }
 
    public static void registerTickableTextures() {
@@ -275,34 +279,30 @@ public class TextureUtils {
             TextureAnimations.updateAnimations();
          }
 
-         @Override
          public void m_6704_(ResourceManager var1) throws IOException {
          }
 
-         @Override
          public int m_117963_() {
             return 0;
          }
 
-         @Override
          public void restoreLastBlurMipmap() {
          }
 
-         @Override
          public MultiTexID getMultiTexID() {
             return null;
          }
       };
-      net.minecraft.resources.ResourceLocation ttl = new net.minecraft.resources.ResourceLocation("optifine/tickable_textures");
+      ResourceLocation ttl = new ResourceLocation("optifine/tickable_textures");
       Config.getTextureManager().m_118495_(ttl, tt);
    }
 
-   public static void registerCustomModels(net.minecraft.client.resources.model.ModelBakery modelBakery) {
+   public static void registerCustomModels(ModelBakery modelBakery) {
       CustomItems.loadModels(modelBakery);
    }
 
-   public static void registerCustomSprites(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
-      if (textureMap.m_118330_().equals(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_)) {
+   public static void registerCustomSprites(TextureAtlas textureMap) {
+      if (textureMap.m_118330_().equals(TextureAtlas.f_118259_)) {
          ConnectedTextures.updateIcons(textureMap);
          CustomItems.updateIcons(textureMap);
          BetterGrass.updateIcons(textureMap);
@@ -311,14 +311,12 @@ public class TextureUtils {
       textureMap.registerSprite(LOCATION_SPRITE_EMPTY);
    }
 
-   public static void registerCustomSpriteLocations(
-      net.minecraft.resources.ResourceLocation atlasLocation, Set<net.minecraft.resources.ResourceLocation> spriteLocations
-   ) {
+   public static void registerCustomSpriteLocations(ResourceLocation atlasLocation, Set spriteLocations) {
       RandomEntities.registerSprites(atlasLocation, spriteLocations);
    }
 
-   public static void refreshCustomSprites(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
-      if (textureMap.m_118330_().equals(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_)) {
+   public static void refreshCustomSprites(TextureAtlas textureMap) {
+      if (textureMap.m_118330_().equals(TextureAtlas.f_118259_)) {
          ConnectedTextures.refreshIcons(textureMap);
          CustomItems.refreshIcons(textureMap);
          BetterGrass.refreshIcons(textureMap);
@@ -327,14 +325,14 @@ public class TextureUtils {
       EmissiveTextures.refreshIcons(textureMap);
    }
 
-   public static net.minecraft.resources.ResourceLocation fixResourceLocation(net.minecraft.resources.ResourceLocation loc, String basePath) {
+   public static ResourceLocation fixResourceLocation(ResourceLocation loc, String basePath) {
       if (!loc.m_135827_().equals("minecraft")) {
          return loc;
       } else {
          String path = loc.m_135815_();
          String pathFixed = fixResourcePath(path, basePath);
          if (pathFixed != path) {
-            loc = new net.minecraft.resources.ResourceLocation(loc.m_135827_(), pathFixed);
+            loc = new ResourceLocation(loc.m_135827_(), pathFixed);
          }
 
          return loc;
@@ -344,14 +342,16 @@ public class TextureUtils {
    public static String fixResourcePath(String path, String basePath) {
       String strAssMc = "assets/minecraft/";
       if (path.startsWith(strAssMc)) {
-         return path.substring(strAssMc.length());
+         path = path.substring(strAssMc.length());
+         return path;
       } else if (path.startsWith("./")) {
          path = path.substring(2);
          if (!basePath.endsWith("/")) {
             basePath = basePath + "/";
          }
 
-         return basePath + path;
+         path = basePath + path;
+         return path;
       } else {
          if (path.startsWith("/~")) {
             path = path.substring(1);
@@ -360,9 +360,13 @@ public class TextureUtils {
          String strOptifine = "optifine/";
          if (path.startsWith("~/")) {
             path = path.substring(2);
-            return strOptifine + path;
+            path = strOptifine + path;
+            return path;
+         } else if (path.startsWith("/")) {
+            path = strOptifine + path.substring(1);
+            return path;
          } else {
-            return path.startsWith("/") ? strOptifine + path.substring(1) : path;
+            return path;
          }
       }
    }
@@ -379,6 +383,7 @@ public class TextureUtils {
          level = Math.min(level, maxLevel);
          GL11.glTexParameterf(3553, 34046, level);
       }
+
    }
 
    public static void bindTexture(int glTexId) {
@@ -386,17 +391,18 @@ public class TextureUtils {
    }
 
    public static boolean isPowerOfTwo(int x) {
-      int x2 = net.minecraft.util.Mth.m_14125_(x);
+      int x2 = Mth.m_14125_(x);
       return x2 == x;
    }
 
-   public static com.mojang.blaze3d.platform.NativeImage scaleImage(com.mojang.blaze3d.platform.NativeImage ni, int w2) {
+   public static NativeImage scaleImage(NativeImage ni, int w2) {
       BufferedImage bi = toBufferedImage(ni);
       BufferedImage bi2 = scaleImage(bi, w2);
-      return toNativeImage(bi2);
+      NativeImage ni2 = toNativeImage(bi2);
+      return ni2;
    }
 
-   public static BufferedImage toBufferedImage(com.mojang.blaze3d.platform.NativeImage ni) {
+   public static BufferedImage toBufferedImage(NativeImage ni) {
       int width = ni.m_84982_();
       int height = ni.m_85084_();
       int[] data = new int[width * height];
@@ -406,12 +412,12 @@ public class TextureUtils {
       return bi;
    }
 
-   private static com.mojang.blaze3d.platform.NativeImage toNativeImage(BufferedImage bi) {
+   private static NativeImage toNativeImage(BufferedImage bi) {
       int width = bi.getWidth();
       int height = bi.getHeight();
       int[] data = new int[width * height];
       bi.getRGB(0, 0, width, height, data, 0, width);
-      com.mojang.blaze3d.platform.NativeImage ni = new com.mojang.blaze3d.platform.NativeImage(width, height, false);
+      NativeImage ni = new NativeImage(width, height, false);
       ni.getBufferRGBA().put(data);
       return ni;
    }
@@ -428,7 +434,7 @@ public class TextureUtils {
       }
 
       g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, method);
-      g2.drawImage(bi, 0, 0, w2, h2, null);
+      g2.drawImage(bi, 0, 0, w2, h2, (ImageObserver)null);
       return bi2;
    }
 
@@ -436,10 +442,8 @@ public class TextureUtils {
       if (size == sizeGrid) {
          return size;
       } else {
-         int sizeNew = size / sizeGrid * sizeGrid;
-
-         while (sizeNew < size) {
-            sizeNew += sizeGrid;
+         int sizeNew;
+         for(sizeNew = size / sizeGrid * sizeGrid; sizeNew < size; sizeNew += sizeGrid) {
          }
 
          return sizeNew;
@@ -450,10 +454,8 @@ public class TextureUtils {
       if (size >= sizeMin) {
          return size;
       } else {
-         int sizeNew = sizeMin / size * size;
-
-         while (sizeNew < sizeMin) {
-            sizeNew += size;
+         int sizeNew;
+         for(sizeNew = sizeMin / size * size; sizeNew < sizeMin; sizeNew += size) {
          }
 
          return sizeNew;
@@ -463,39 +465,42 @@ public class TextureUtils {
    public static Dimension getImageSize(InputStream in, String suffix) {
       Iterator iter = ImageIO.getImageReadersBySuffix(suffix);
 
-      while (iter.hasNext()) {
-         ImageReader reader = (ImageReader)iter.next();
+      while(true) {
+         if (iter.hasNext()) {
+            ImageReader reader = (ImageReader)iter.next();
 
-         Dimension var7;
-         try {
-            ImageInputStream iis = ImageIO.createImageInputStream(in);
-            reader.setInput(iis);
-            int width = reader.getWidth(reader.getMinIndex());
-            int height = reader.getHeight(reader.getMinIndex());
-            var7 = new Dimension(width, height);
-         } catch (IOException var11) {
-            continue;
-         } finally {
-            reader.dispose();
+            Dimension var7;
+            try {
+               ImageInputStream iis = ImageIO.createImageInputStream(in);
+               reader.setInput(iis);
+               int width = reader.getWidth(reader.getMinIndex());
+               int height = reader.getHeight(reader.getMinIndex());
+               var7 = new Dimension(width, height);
+            } catch (IOException var11) {
+               continue;
+            } finally {
+               reader.dispose();
+            }
+
+            return var7;
          }
 
-         return var7;
+         return null;
       }
-
-      return null;
    }
 
-   public static void dbgMipmaps(net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite) {
-      com.mojang.blaze3d.platform.NativeImage[] mipmapImages = textureatlassprite.getMipmapImages();
+   public static void dbgMipmaps(TextureAtlasSprite textureatlassprite) {
+      NativeImage[] mipmapImages = textureatlassprite.getMipmapImages();
 
-      for (int l = 0; l < mipmapImages.length; l++) {
-         com.mojang.blaze3d.platform.NativeImage image = mipmapImages[l];
+      for(int l = 0; l < mipmapImages.length; ++l) {
+         NativeImage image = mipmapImages[l];
          if (image == null) {
-            Config.dbg(l + ": " + image);
+            Config.dbg("" + l + ": " + String.valueOf(image));
          } else {
-            Config.dbg(l + ": " + image.m_84982_() * image.m_85084_());
+            Config.dbg("" + l + ": " + image.m_84982_() * image.m_85084_());
          }
       }
+
    }
 
    public static void saveGlTexture(String name, int textureId, int mipmapLevels, int width, int height) {
@@ -509,13 +514,14 @@ public class TextureUtils {
          dir.mkdirs();
       }
 
-      for (int i = 0; i < 16; i++) {
-         String namePng = name + "_" + i + ".png";
+      int level;
+      for(level = 0; level < 16; ++level) {
+         String namePng = name + "_" + level + ".png";
          File filePng = new File(namePng);
          filePng.delete();
       }
 
-      for (int level = 0; level <= mipmapLevels; level++) {
+      for(level = 0; level <= mipmapLevels; ++level) {
          File filePng = new File(name + "_" + level + ".png");
          int widthLevel = width >> level;
          int heightLevel = height >> level;
@@ -529,12 +535,14 @@ public class TextureUtils {
 
          try {
             ImageIO.write(image, "png", filePng);
-            Config.dbg("Exported: " + filePng);
+            Config.dbg("Exported: " + String.valueOf(filePng));
          } catch (Exception var16) {
-            Config.warn("Error writing: " + filePng);
-            Config.warn(var16.getClass().getName() + ": " + var16.getMessage());
+            Config.warn("Error writing: " + String.valueOf(filePng));
+            String var10000 = var16.getClass().getName();
+            Config.warn(var10000 + ": " + var16.getMessage());
          }
       }
+
    }
 
    public static int getGLMaximumTextureSize() {
@@ -546,7 +554,7 @@ public class TextureUtils {
    }
 
    private static int detectGLMaximumTextureSize() {
-      for (int i = 65536; i > 0; i >>= 1) {
+      for(int i = 65536; i > 0; i >>= 1) {
          GlStateManager._texImage2D(32868, 0, 6408, i, i, 0, 6408, 5121, (IntBuffer)null);
          int err = GL11.glGetError();
          int width = GlStateManager._getTexLevelParameter(32868, 0, 4096);
@@ -575,11 +583,12 @@ public class TextureUtils {
    }
 
    public static int toAbgr(int argb) {
-      int a = argb >> 24 & 0xFF;
-      int r = argb >> 16 & 0xFF;
-      int g = argb >> 8 & 0xFF;
-      int b = argb >> 0 & 0xFF;
-      return a << 24 | b << 16 | g << 8 | r;
+      int a = argb >> 24 & 255;
+      int r = argb >> 16 & 255;
+      int g = argb >> 8 & 255;
+      int b = argb >> 0 & 255;
+      int abgr = a << 24 | b << 16 | g << 8 | r;
+      return abgr;
    }
 
    public static void resetDataUnpacking() {
@@ -605,7 +614,7 @@ public class TextureUtils {
       Config.dbg("Textures: " + mapTextureAllocations.size());
    }
 
-   public static net.minecraft.client.renderer.texture.TextureAtlasSprite getCustomSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public static TextureAtlasSprite getCustomSprite(TextureAtlasSprite sprite) {
       if (Config.isRandomEntities()) {
          sprite = RandomEntities.getRandomSprite(sprite);
       }
@@ -617,13 +626,13 @@ public class TextureUtils {
       return sprite;
    }
 
-   public static net.minecraft.resources.ResourceLocation getSpriteLocation(net.minecraft.resources.ResourceLocation loc) {
-      net.minecraft.resources.ResourceLocation locSprite = (net.minecraft.resources.ResourceLocation)mapSpriteLocations.get(loc);
+   public static ResourceLocation getSpriteLocation(ResourceLocation loc) {
+      ResourceLocation locSprite = (ResourceLocation)mapSpriteLocations.get(loc);
       if (locSprite == null) {
          String pathSprite = loc.m_135815_();
          pathSprite = StrUtils.removePrefix(pathSprite, "textures/");
          pathSprite = StrUtils.removeSuffix(pathSprite, ".png");
-         locSprite = new net.minecraft.resources.ResourceLocation(loc.m_135827_(), pathSprite);
+         locSprite = new ResourceLocation(loc.m_135827_(), pathSprite);
          mapSpriteLocations.put(loc, locSprite);
       }
 

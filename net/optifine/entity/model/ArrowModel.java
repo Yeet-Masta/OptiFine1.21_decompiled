@@ -1,17 +1,20 @@
 package net.optifine.entity.model;
 
-public class ArrowModel extends net.minecraft.client.model.Model {
-   public net.minecraft.client.model.geom.ModelPart body;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.RenderType;
 
-   public ArrowModel(net.minecraft.client.model.geom.ModelPart body) {
-      super(net.minecraft.client.renderer.RenderType::m_110458_);
+public class ArrowModel extends Model {
+   public ModelPart body;
+
+   public ArrowModel(ModelPart body) {
+      super(RenderType::m_110458_);
       this.body = body;
    }
 
-   @Override
-   public void m_7695_(
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn, com.mojang.blaze3d.vertex.VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn
-   ) {
+   public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
       this.body.m_104306_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn);
    }
 }

@@ -3,31 +3,32 @@ package net.optifine.entity.model;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.PhantomModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterPhantom extends ModelAdapter {
-   private static Map<String, String> mapPartFields = null;
+   private static Map mapPartFields = null;
 
    public ModelAdapterPhantom() {
       super(EntityType.f_20509_, "phantom", 0.75F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new PhantomModel(bakeModelLayer(ModelLayers.f_171204_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PhantomModel modelPhantom)) {
          return null;
       } else if (modelPart.equals("root")) {
          return modelPhantom.m_142109_();
       } else {
-         Map<String, String> mapParts = getMapPartFields();
+         Map mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             String name = (String)mapParts.get(modelPart);
             return modelPhantom.m_142109_().getChildModelDeep(name);
@@ -37,12 +38,11 @@ public class ModelAdapterPhantom extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return (String[])getMapPartFields().keySet().toArray(new String[0]);
    }
 
-   private static Map<String, String> getMapPartFields() {
+   private static Map getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -60,9 +60,8 @@ public class ModelAdapterPhantom extends ModelAdapter {
       }
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PhantomRenderer render = new PhantomRenderer(renderManager.getContext());
       render.f_115290_ = (PhantomModel)modelBase;
       render.f_114477_ = shadowSize;

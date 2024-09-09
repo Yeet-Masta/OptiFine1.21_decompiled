@@ -2,24 +2,24 @@ package net.optifine.texture;
 
 import java.util.Set;
 import java.util.function.Predicate;
-import net.minecraft.client.renderer.texture.atlas.SpriteSource.Output;
-import net.minecraft.client.renderer.texture.atlas.SpriteSource.SpriteSupplier;
+import net.minecraft.client.renderer.texture.atlas.SpriteSource;
+import net.minecraft.resources.ResourceLocation;
 
-public class SpriteSourceCollector implements Output {
-   private Set<net.minecraft.resources.ResourceLocation> spriteNames;
+public class SpriteSourceCollector implements SpriteSource.Output {
+   private Set spriteNames;
 
-   public SpriteSourceCollector(Set<net.minecraft.resources.ResourceLocation> spriteNames) {
+   public SpriteSourceCollector(Set spriteNames) {
       this.spriteNames = spriteNames;
    }
 
-   public void m_260840_(net.minecraft.resources.ResourceLocation locIn, SpriteSupplier supplierIn) {
+   public void m_260840_(ResourceLocation locIn, SpriteSource.SpriteSupplier supplierIn) {
       this.spriteNames.add(locIn);
    }
 
-   public void m_261187_(Predicate<net.minecraft.resources.ResourceLocation> checkIn) {
+   public void m_261187_(Predicate checkIn) {
    }
 
-   public Set<net.minecraft.resources.ResourceLocation> getSpriteNames() {
+   public Set getSpriteNames() {
       return this.spriteNames;
    }
 }

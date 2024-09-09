@@ -10,14 +10,15 @@ public class Program {
    private final int index;
    private final String name;
    private final ProgramStage programStage;
-   private final net.optifine.shaders.Program programBackup;
+   private final Program programBackup;
    private ComputeProgram[] computePrograms;
    private GlAlphaState alphaState;
    private GlBlendState blendState;
    private GlBlendState[] blendStatesColorIndexed;
    private RenderScale renderScale;
    private final Boolean[] buffersFlip = new Boolean[16];
-   private int id;
+   // $FF: renamed from: id int
+   private int field_46;
    private int ref;
    private String[] drawBufSettings;
    private DrawBuffers drawBuffers;
@@ -28,7 +29,7 @@ public class Program {
    private DynamicDimension drawSize;
    private GlBlendState[] blendStatesIndexed;
 
-   public Program(int index, String name, ProgramStage programStage, net.optifine.shaders.Program programBackup) {
+   public Program(int index, String name, ProgramStage programStage, Program programBackup) {
       this.index = index;
       this.name = name;
       this.programStage = programStage;
@@ -49,11 +50,11 @@ public class Program {
       this.blendState = null;
       this.blendStatesColorIndexed = null;
       this.renderScale = null;
-      Arrays.fill(this.buffersFlip, null);
+      Arrays.fill(this.buffersFlip, (Object)null);
    }
 
    public void resetId() {
-      this.id = 0;
+      this.field_46 = 0;
       this.ref = 0;
    }
 
@@ -67,10 +68,11 @@ public class Program {
       if (this.drawBuffersCustom == null) {
          this.drawBuffersCustom = new DrawBuffers(this.name, 16, 8);
       }
+
    }
 
-   public void copyFrom(net.optifine.shaders.Program p) {
-      this.id = p.getId();
+   public void copyFrom(Program p) {
+      this.field_46 = p.getId();
       this.alphaState = p.getAlphaState();
       this.blendState = p.getBlendState();
       this.blendStatesColorIndexed = p.blendStatesColorIndexed;
@@ -96,12 +98,12 @@ public class Program {
       return this.programStage;
    }
 
-   public net.optifine.shaders.Program getProgramBackup() {
+   public Program getProgramBackup() {
       return this.programBackup;
    }
 
    public int getId() {
-      return this.id;
+      return this.field_46;
    }
 
    public int getRef() {
@@ -157,7 +159,7 @@ public class Program {
    }
 
    public void setId(int id) {
-      this.id = id;
+      this.field_46 = id;
    }
 
    public void setRef(int ref) {
@@ -221,11 +223,11 @@ public class Program {
    }
 
    public String getRealProgramName() {
-      if (this.id == 0) {
+      if (this.field_46 == 0) {
          return "none";
       } else {
-         net.optifine.shaders.Program p;
-         for (p = this; p.getRef() != this.id; p = p.getProgramBackup()) {
+         Program p;
+         for(p = this; p.getRef() != this.field_46; p = p.getProgramBackup()) {
             if (p.getProgramBackup() == null || p.getProgramBackup() == p) {
                return "unknown";
             }
@@ -256,6 +258,7 @@ public class Program {
    }
 
    public String toString() {
-      return "name: " + this.name + ", id: " + this.id + ", ref: " + this.ref + ", real: " + this.getRealProgramName();
+      String var10000 = this.name;
+      return "name: " + var10000 + ", id: " + this.field_46 + ", ref: " + this.ref + ", real: " + this.getRealProgramName();
    }
 }

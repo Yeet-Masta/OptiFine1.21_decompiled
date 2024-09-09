@@ -4,7 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -12,6 +18,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DirtPathBlock;
 import net.minecraft.world.level.block.GrassBlock;
 import net.minecraft.world.level.block.MyceliumBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.model.BlockModelUtils;
 import net.optifine.util.PropertiesOrdered;
 import net.optifine.util.RandomUtils;
@@ -27,24 +34,24 @@ public class BetterGrass {
    private static boolean betterMyceliumSnow = true;
    private static boolean betterPodzolSnow = true;
    private static boolean grassMultilayer = false;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteGrass = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteGrassSide = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteDirtPath = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteDirtPathSide = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteMycelium = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spritePodzol = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteCrimsonNylium = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteWarpedNylium = null;
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite spriteSnow = null;
+   private static TextureAtlasSprite spriteGrass = null;
+   private static TextureAtlasSprite spriteGrassSide = null;
+   private static TextureAtlasSprite spriteDirtPath = null;
+   private static TextureAtlasSprite spriteDirtPathSide = null;
+   private static TextureAtlasSprite spriteMycelium = null;
+   private static TextureAtlasSprite spritePodzol = null;
+   private static TextureAtlasSprite spriteCrimsonNylium = null;
+   private static TextureAtlasSprite spriteWarpedNylium = null;
+   private static TextureAtlasSprite spriteSnow = null;
    private static boolean spritesLoaded = false;
-   private static net.minecraft.client.resources.model.BakedModel modelCubeGrass = null;
-   private static net.minecraft.client.resources.model.BakedModel modelDirtPath = null;
-   private static net.minecraft.client.resources.model.BakedModel modelCubeDirtPath = null;
-   private static net.minecraft.client.resources.model.BakedModel modelCubeMycelium = null;
-   private static net.minecraft.client.resources.model.BakedModel modelCubePodzol = null;
-   private static net.minecraft.client.resources.model.BakedModel modelCubeCrimsonNylium = null;
-   private static net.minecraft.client.resources.model.BakedModel modelCubeWarpedNylium = null;
-   private static net.minecraft.client.resources.model.BakedModel modelCubeSnow = null;
+   private static BakedModel modelCubeGrass = null;
+   private static BakedModel modelDirtPath = null;
+   private static BakedModel modelCubeDirtPath = null;
+   private static BakedModel modelCubeMycelium = null;
+   private static BakedModel modelCubePodzol = null;
+   private static BakedModel modelCubeCrimsonNylium = null;
+   private static BakedModel modelCubeWarpedNylium = null;
+   private static BakedModel modelCubeSnow = null;
    private static boolean modelsLoaded = false;
    private static final String TEXTURE_GRASS_DEFAULT = "block/grass_block_top";
    private static final String TEXTURE_GRASS_SIDE_DEFAULT = "block/grass_block_side";
@@ -57,7 +64,7 @@ public class BetterGrass {
    private static final String TEXTURE_SNOW_DEFAULT = "block/snow";
    private static final RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
 
-   public static void updateIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   public static void updateIcons(TextureAtlas textureMap) {
       spritesLoaded = false;
       modelsLoaded = false;
       loadProperties(textureMap);
@@ -65,24 +72,24 @@ public class BetterGrass {
 
    public static void update() {
       if (spritesLoaded) {
-         modelCubeGrass = BlockModelUtils.makeModelCube(spriteGrass, 0);
+         modelCubeGrass = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteGrass, 0);
          if (grassMultilayer) {
-            net.minecraft.client.resources.model.BakedModel modelCubeGrassSide = BlockModelUtils.makeModelCube(spriteGrassSide, -1);
+            BakedModel modelCubeGrassSide = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteGrassSide, -1);
             modelCubeGrass = BlockModelUtils.joinModelsCube(modelCubeGrassSide, modelCubeGrass);
          }
 
          modelDirtPath = BlockModelUtils.makeModel("dirt_path", spriteDirtPathSide, spriteDirtPath);
-         modelCubeDirtPath = BlockModelUtils.makeModelCube(spriteDirtPath, -1);
-         modelCubeMycelium = BlockModelUtils.makeModelCube(spriteMycelium, -1);
-         modelCubePodzol = BlockModelUtils.makeModelCube(spritePodzol, 0);
-         modelCubeCrimsonNylium = BlockModelUtils.makeModelCube(spriteCrimsonNylium, -1);
-         modelCubeWarpedNylium = BlockModelUtils.makeModelCube(spriteWarpedNylium, -1);
-         modelCubeSnow = BlockModelUtils.makeModelCube(spriteSnow, -1);
+         modelCubeDirtPath = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteDirtPath, -1);
+         modelCubeMycelium = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteMycelium, -1);
+         modelCubePodzol = BlockModelUtils.makeModelCube((TextureAtlasSprite)spritePodzol, 0);
+         modelCubeCrimsonNylium = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteCrimsonNylium, -1);
+         modelCubeWarpedNylium = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteWarpedNylium, -1);
+         modelCubeSnow = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteSnow, -1);
          modelsLoaded = true;
       }
    }
 
-   private static void loadProperties(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   private static void loadProperties(TextureAtlas textureMap) {
       betterGrass = true;
       betterDirtPath = true;
       betterMycelium = true;
@@ -92,20 +99,20 @@ public class BetterGrass {
       betterGrassSnow = true;
       betterMyceliumSnow = true;
       betterPodzolSnow = true;
-      spriteGrass = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/grass_block_top"));
-      spriteGrassSide = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/grass_block_side"));
-      spriteDirtPath = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/dirt_path_top"));
-      spriteDirtPathSide = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/dirt_path_side"));
-      spriteMycelium = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/mycelium_top"));
-      spritePodzol = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/podzol_top"));
-      spriteCrimsonNylium = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/crimson_nylium"));
-      spriteWarpedNylium = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/warped_nylium"));
-      spriteSnow = textureMap.registerSprite(new net.minecraft.resources.ResourceLocation("block/snow"));
+      spriteGrass = textureMap.registerSprite(new ResourceLocation("block/grass_block_top"));
+      spriteGrassSide = textureMap.registerSprite(new ResourceLocation("block/grass_block_side"));
+      spriteDirtPath = textureMap.registerSprite(new ResourceLocation("block/dirt_path_top"));
+      spriteDirtPathSide = textureMap.registerSprite(new ResourceLocation("block/dirt_path_side"));
+      spriteMycelium = textureMap.registerSprite(new ResourceLocation("block/mycelium_top"));
+      spritePodzol = textureMap.registerSprite(new ResourceLocation("block/podzol_top"));
+      spriteCrimsonNylium = textureMap.registerSprite(new ResourceLocation("block/crimson_nylium"));
+      spriteWarpedNylium = textureMap.registerSprite(new ResourceLocation("block/warped_nylium"));
+      spriteSnow = textureMap.registerSprite(new ResourceLocation("block/snow"));
       spritesLoaded = true;
       String name = "optifine/bettergrass.properties";
 
       try {
-         net.minecraft.resources.ResourceLocation locFile = new net.minecraft.resources.ResourceLocation(name);
+         ResourceLocation locFile = new ResourceLocation(name);
          if (!Config.hasResource(locFile)) {
             return;
          }
@@ -147,9 +154,10 @@ public class BetterGrass {
       } catch (IOException var6) {
          Config.warn("Error reading: " + name + ", " + var6.getClass().getName() + ": " + var6.getMessage());
       }
+
    }
 
-   public static void refreshIcons(net.minecraft.client.renderer.texture.TextureAtlas textureMap) {
+   public static void refreshIcons(TextureAtlas textureMap) {
       spriteGrass = getSprite(textureMap, spriteGrass.getName());
       spriteGrassSide = getSprite(textureMap, spriteGrassSide.getName());
       spriteDirtPath = getSprite(textureMap, spriteDirtPath.getName());
@@ -161,65 +169,60 @@ public class BetterGrass {
       spriteSnow = getSprite(textureMap, spriteSnow.getName());
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite(
-      net.minecraft.client.renderer.texture.TextureAtlas textureMap, net.minecraft.resources.ResourceLocation loc
-   ) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = textureMap.m_118316_(loc);
-      if (sprite == null || net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.isMisingSprite(sprite)) {
-         Config.warn("Missing BetterGrass sprite: " + loc);
+   private static TextureAtlasSprite getSprite(TextureAtlas textureMap, ResourceLocation loc) {
+      TextureAtlasSprite sprite = textureMap.m_118316_(loc);
+      if (sprite == null || MissingTextureAtlasSprite.isMisingSprite(sprite)) {
+         Config.warn("Missing BetterGrass sprite: " + String.valueOf(loc));
       }
 
       return sprite;
    }
 
-   private static net.minecraft.client.renderer.texture.TextureAtlasSprite registerSprite(
-      Properties props, String key, String textureDefault, net.minecraft.client.renderer.texture.TextureAtlas textureMap
-   ) {
+   private static TextureAtlasSprite registerSprite(Properties props, String key, String textureDefault, TextureAtlas textureMap) {
       String texture = props.getProperty(key);
       if (texture == null) {
          texture = textureDefault;
       }
 
-      net.minecraft.resources.ResourceLocation locPng = new net.minecraft.resources.ResourceLocation("textures/" + texture + ".png");
+      ResourceLocation locPng = new ResourceLocation("textures/" + texture + ".png");
       if (!Config.hasResource(locPng)) {
-         Config.warn("BetterGrass texture not found: " + locPng);
+         Config.warn("BetterGrass texture not found: " + String.valueOf(locPng));
          texture = textureDefault;
       }
 
-      net.minecraft.resources.ResourceLocation locSprite = new net.minecraft.resources.ResourceLocation(texture);
-      return textureMap.registerSprite(locSprite);
+      ResourceLocation locSprite = new ResourceLocation(texture);
+      TextureAtlasSprite sprite = textureMap.registerSprite(locSprite);
+      return sprite;
    }
 
-   public static List getFaceQuads(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
-      if (facing == net.minecraft.core.Direction.UP || facing == net.minecraft.core.Direction.DOWN) {
-         return quads;
-      } else if (!modelsLoaded) {
-         return quads;
-      } else {
-         Block block = blockState.m_60734_();
-         if (block instanceof MyceliumBlock) {
-            return getFaceQuadsMycelium(blockAccess, blockState, blockPos, facing, quads);
-         } else if (block instanceof DirtPathBlock) {
-            return getFaceQuadsDirtPath(blockAccess, blockState, blockPos, facing, quads);
-         } else if (block == Blocks.f_50599_) {
-            return getFaceQuadsPodzol(blockAccess, blockState, blockPos, facing, quads);
-         } else if (block == Blocks.f_50699_) {
-            return getFaceQuadsCrimsonNylium(blockAccess, blockState, blockPos, facing, quads);
-         } else if (block == Blocks.f_50690_) {
-            return getFaceQuadsWarpedNylium(blockAccess, blockState, blockPos, facing, quads);
-         } else if (block == Blocks.f_50493_) {
-            return getFaceQuadsDirt(blockAccess, blockState, blockPos, facing, quads);
+   public static List getFaceQuads(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
+      if (facing != Direction.field_61 && facing != Direction.DOWN) {
+         if (!modelsLoaded) {
+            return quads;
          } else {
-            return block instanceof GrassBlock ? getFaceQuadsGrass(blockAccess, blockState, blockPos, facing, quads) : quads;
+            Block block = blockState.m_60734_();
+            if (block instanceof MyceliumBlock) {
+               return getFaceQuadsMycelium(blockAccess, blockState, blockPos, facing, quads);
+            } else if (block instanceof DirtPathBlock) {
+               return getFaceQuadsDirtPath(blockAccess, blockState, blockPos, facing, quads);
+            } else if (block == Blocks.f_50599_) {
+               return getFaceQuadsPodzol(blockAccess, blockState, blockPos, facing, quads);
+            } else if (block == Blocks.f_50699_) {
+               return getFaceQuadsCrimsonNylium(blockAccess, blockState, blockPos, facing, quads);
+            } else if (block == Blocks.f_50690_) {
+               return getFaceQuadsWarpedNylium(blockAccess, blockState, blockPos, facing, quads);
+            } else if (block == Blocks.f_50493_) {
+               return getFaceQuadsDirt(blockAccess, blockState, blockPos, facing, quads);
+            } else {
+               return block instanceof GrassBlock ? getFaceQuadsGrass(blockAccess, blockState, blockPos, facing, quads) : quads;
+            }
          }
+      } else {
+         return quads;
       }
    }
 
-   private static List getFaceQuadsMycelium(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
+   private static List getFaceQuadsMycelium(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
       Block blockUp = blockAccess.m_8055_(blockPos.m_7494_()).m_60734_();
       boolean snowy = blockUp == Blocks.f_50127_ || blockUp == Blocks.f_50125_;
       if (Config.isBetterGrassFancy()) {
@@ -241,9 +244,7 @@ public class BetterGrass {
       return quads;
    }
 
-   private static List getFaceQuadsDirtPath(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
+   private static List getFaceQuadsDirtPath(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
       if (!betterDirtPath) {
          return quads;
       } else if (Config.isBetterGrassFancy()) {
@@ -253,10 +254,8 @@ public class BetterGrass {
       }
    }
 
-   private static List getFaceQuadsPodzol(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
-      Block blockTop = getBlockAt(blockPos, net.minecraft.core.Direction.UP, blockAccess);
+   private static List getFaceQuadsPodzol(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
+      Block blockTop = getBlockAt(blockPos, Direction.field_61, blockAccess);
       boolean snowy = blockTop == Blocks.f_50127_ || blockTop == Blocks.f_50125_;
       if (Config.isBetterGrassFancy()) {
          if (snowy) {
@@ -265,7 +264,7 @@ public class BetterGrass {
             }
          } else if (betterPodzol) {
             BlockPos posSide = blockPos.m_7495_().m_121945_(facing);
-            net.minecraft.world.level.block.state.BlockState stateSide = blockAccess.m_8055_(posSide);
+            BlockState stateSide = blockAccess.m_8055_(posSide);
             if (stateSide.m_60734_() == Blocks.f_50599_) {
                return modelCubePodzol.m_213637_(blockState, facing, RANDOM);
             }
@@ -281,9 +280,7 @@ public class BetterGrass {
       return quads;
    }
 
-   private static List getFaceQuadsCrimsonNylium(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
+   private static List getFaceQuadsCrimsonNylium(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
       if (!betterCrimsonNylium) {
          return quads;
       } else if (Config.isBetterGrassFancy()) {
@@ -293,9 +290,7 @@ public class BetterGrass {
       }
    }
 
-   private static List getFaceQuadsWarpedNylium(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
+   private static List getFaceQuadsWarpedNylium(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
       if (!betterWarpedNylium) {
          return quads;
       } else if (Config.isBetterGrassFancy()) {
@@ -305,18 +300,12 @@ public class BetterGrass {
       }
    }
 
-   private static List getFaceQuadsDirt(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
-      Block blockTop = getBlockAt(blockPos, net.minecraft.core.Direction.UP, blockAccess);
-      return blockTop == Blocks.f_152481_ && betterDirtPath && getBlockAt(blockPos, facing, blockAccess) == Blocks.f_152481_
-         ? modelCubeDirtPath.m_213637_(blockState, facing, RANDOM)
-         : quads;
+   private static List getFaceQuadsDirt(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
+      Block blockTop = getBlockAt(blockPos, Direction.field_61, blockAccess);
+      return blockTop == Blocks.f_152481_ && betterDirtPath && getBlockAt(blockPos, facing, blockAccess) == Blocks.f_152481_ ? modelCubeDirtPath.m_213637_(blockState, facing, RANDOM) : quads;
    }
 
-   private static List getFaceQuadsGrass(
-      BlockGetter blockAccess, net.minecraft.world.level.block.state.BlockState blockState, BlockPos blockPos, net.minecraft.core.Direction facing, List quads
-   ) {
+   private static List getFaceQuadsGrass(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
       Block blockUp = blockAccess.m_8055_(blockPos.m_7494_()).m_60734_();
       boolean snowy = blockUp == Blocks.f_50127_ || blockUp == Blocks.f_50125_;
       if (Config.isBetterGrassFancy()) {
@@ -338,9 +327,10 @@ public class BetterGrass {
       return quads;
    }
 
-   private static Block getBlockAt(BlockPos blockPos, net.minecraft.core.Direction facing, BlockGetter blockAccess) {
+   private static Block getBlockAt(BlockPos blockPos, Direction facing, BlockGetter blockAccess) {
       BlockPos pos = blockPos.m_121945_(facing);
-      return blockAccess.m_8055_(pos).m_60734_();
+      Block block = blockAccess.m_8055_(pos).m_60734_();
+      return block;
    }
 
    private static boolean getBoolean(Properties props, String key, boolean def) {

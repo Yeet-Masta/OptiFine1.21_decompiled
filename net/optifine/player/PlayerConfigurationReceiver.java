@@ -12,7 +12,6 @@ public class PlayerConfigurationReceiver implements IFileDownloadListener {
       this.player = player;
    }
 
-   @Override
    public void fileDownloadFinished(String url, byte[] bytes, Throwable exception) {
       if (bytes != null) {
          try {
@@ -28,6 +27,7 @@ public class PlayerConfigurationReceiver implements IFileDownloadListener {
          } catch (Exception var9) {
             Config.dbg("Error parsing configuration: " + url + ", " + var9.getClass().getName() + ": " + var9.getMessage());
          }
+
       }
    }
 }

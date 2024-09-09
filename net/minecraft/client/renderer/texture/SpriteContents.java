@@ -1,6 +1,7 @@
 package net.minecraft.client.renderer.texture;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -9,11 +10,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
+import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
+import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 import net.minecraftforge.client.textures.ForgeTextureMetadata;
 import net.optifine.SmartAnimations;
@@ -22,44 +27,34 @@ import net.optifine.texture.IColorBlender;
 import net.optifine.util.TextureUtils;
 import org.slf4j.Logger;
 
-public class SpriteContents implements net.minecraft.client.renderer.texture.Stitcher.Entry, AutoCloseable {
+public class SpriteContents implements Stitcher.Entry, AutoCloseable {
    private static final Logger f_243663_ = LogUtils.getLogger();
-   private final net.minecraft.resources.ResourceLocation f_243877_;
+   private final ResourceLocation f_243877_;
    int f_244302_;
    int f_244600_;
-   private com.mojang.blaze3d.platform.NativeImage f_243904_;
-   com.mojang.blaze3d.platform.NativeImage[] f_243731_;
+   private NativeImage f_243904_;
+   NativeImage[] f_243731_;
    @Nullable
-   private final net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture f_244575_;
+   private final AnimatedTexture f_244575_;
    private final ResourceMetadata f_290652_;
-   private double scaleFactor = 1.0;
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite sprite;
+   private double scaleFactor;
+   private TextureAtlasSprite sprite;
    public final ForgeTextureMetadata forgeMeta;
 
-   public SpriteContents(
-      net.minecraft.resources.ResourceLocation nameIn, FrameSize sizeIn, com.mojang.blaze3d.platform.NativeImage imageIn, ResourceMetadata metadataIn
-   ) {
-      this(nameIn, sizeIn, imageIn, metadataIn, null);
+   public SpriteContents(ResourceLocation nameIn, FrameSize sizeIn, NativeImage imageIn, ResourceMetadata metadataIn) {
+      this(nameIn, sizeIn, imageIn, metadataIn, (ForgeTextureMetadata)null);
    }
 
-   public SpriteContents(
-      net.minecraft.resources.ResourceLocation nameIn,
-      FrameSize sizeIn,
-      com.mojang.blaze3d.platform.NativeImage imageIn,
-      ResourceMetadata metadataIn,
-      ForgeTextureMetadata forgeMeta
-   ) {
+   public SpriteContents(ResourceLocation nameIn, FrameSize sizeIn, NativeImage imageIn, ResourceMetadata metadataIn, ForgeTextureMetadata forgeMeta) {
+      this.scaleFactor = 1.0;
       this.f_243877_ = nameIn;
       this.f_244302_ = sizeIn.f_244129_();
       this.f_244600_ = sizeIn.f_244503_();
       this.f_290652_ = metadataIn;
-      net.minecraft.client.resources.metadata.animation.AnimationMetadataSection animationmetadatasection = (net.minecraft.client.resources.metadata.animation.AnimationMetadataSection)metadataIn.m_214059_(
-            net.minecraft.client.resources.metadata.animation.AnimationMetadataSection.f_119011_
-         )
-         .orElse(net.minecraft.client.resources.metadata.animation.AnimationMetadataSection.f_119012_);
+      AnimationMetadataSection animationmetadatasection = (AnimationMetadataSection)metadataIn.m_214059_(AnimationMetadataSection.f_119011_).orElse(AnimationMetadataSection.f_119012_);
       this.f_244575_ = this.m_247391_(sizeIn, imageIn.m_84982_(), imageIn.m_85084_(), animationmetadatasection);
       this.f_243904_ = imageIn;
-      this.f_243731_ = new com.mojang.blaze3d.platform.NativeImage[]{this.f_243904_};
+      this.f_243731_ = new NativeImage[]{this.f_243904_};
       this.forgeMeta = forgeMeta;
    }
 
@@ -69,7 +64,7 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
          colorBlender = this.sprite.getTextureAtlas().getShadersColorBlender(this.sprite.spriteShadersType);
          if (this.sprite.spriteShadersType == null) {
             if (!this.f_243877_.m_135815_().endsWith("_leaves")) {
-               net.minecraft.client.renderer.texture.TextureAtlasSprite.fixTransparentColor(this.f_243904_);
+               TextureAtlasSprite.fixTransparentColor(this.f_243904_);
                this.f_243731_[0] = this.f_243904_;
             }
 
@@ -80,9 +75,9 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
       }
 
       try {
-         this.f_243731_ = net.minecraft.client.renderer.texture.MipmapGenerator.generateMipLevels(this.f_243731_, mipmapLevelIn, colorBlender);
+         this.f_243731_ = MipmapGenerator.generateMipLevels(this.f_243731_, mipmapLevelIn, (IColorBlender)colorBlender);
       } catch (Throwable var7) {
-         net.minecraft.CrashReport crashreport = net.minecraft.CrashReport.m_127521_(var7, "Generating mipmaps for frame");
+         CrashReport crashreport = CrashReport.m_127521_(var7, "Generating mipmaps for frame");
          CrashReportCategory crashreportcategory = crashreport.m_127514_("Sprite being mipmapped");
          crashreportcategory.m_128165_("First frame", () -> {
             StringBuilder stringbuilder = new StringBuilder();
@@ -95,8 +90,12 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
          });
          CrashReportCategory crashreportcategory1 = crashreport.m_127514_("Frame being iterated");
          crashreportcategory1.m_128159_("Sprite name", this.f_243877_);
-         crashreportcategory1.m_128165_("Sprite size", () -> this.f_244302_ + " x " + this.f_244600_);
-         crashreportcategory1.m_128165_("Sprite frames", () -> this.m_245088_() + " frames");
+         crashreportcategory1.m_128165_("Sprite size", () -> {
+            return this.f_244302_ + " x " + this.f_244600_;
+         });
+         crashreportcategory1.m_128165_("Sprite frames", () -> {
+            return this.m_245088_() + " frames";
+         });
          crashreportcategory1.m_128159_("Mipmap levels", mipmapLevelIn);
          throw new ReportedException(crashreport);
       }
@@ -107,24 +106,25 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
    }
 
    @Nullable
-   private net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture m_247391_(
-      FrameSize frameSizeIn, int widthIn, int heightIn, net.minecraft.client.resources.metadata.animation.AnimationMetadataSection metadataIn
-   ) {
+   private AnimatedTexture m_247391_(FrameSize frameSizeIn, int widthIn, int heightIn, AnimationMetadataSection metadataIn) {
       int i = widthIn / frameSizeIn.f_244129_();
       int j = heightIn / frameSizeIn.f_244503_();
       int k = i * j;
-      List<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> list = new ArrayList();
-      metadataIn.m_174861_((indexIn, timeIn) -> list.add(new net.minecraft.client.renderer.texture.SpriteContents.FrameInfo(indexIn, timeIn)));
+      List list = new ArrayList();
+      metadataIn.m_174861_((indexIn, timeIn) -> {
+         list.add(new FrameInfo(indexIn, timeIn));
+      });
+      int i1;
       if (list.isEmpty()) {
-         for (int l = 0; l < k; l++) {
-            list.add(new net.minecraft.client.renderer.texture.SpriteContents.FrameInfo(l, metadataIn.m_119030_()));
+         for(i1 = 0; i1 < k; ++i1) {
+            list.add(new FrameInfo(i1, metadataIn.m_119030_()));
          }
       } else {
-         int i1 = 0;
+         i1 = 0;
          IntSet intset = new IntOpenHashSet();
 
-         for (Iterator<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> iterator = list.iterator(); iterator.hasNext(); i1++) {
-            net.minecraft.client.renderer.texture.SpriteContents.FrameInfo spritecontents$frameinfo = (net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)iterator.next();
+         for(Iterator iterator = list.iterator(); iterator.hasNext(); ++i1) {
+            FrameInfo spritecontents$frameinfo = (FrameInfo)iterator.next();
             boolean flag = true;
             if (spritecontents$frameinfo.f_244553_ <= 0) {
                f_243663_.warn("Invalid frame duration on sprite {} frame {}: {}", new Object[]{this.f_243877_, i1, spritecontents$frameinfo.f_244553_});
@@ -143,36 +143,33 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
             }
          }
 
-         int[] aint = IntStream.range(0, k).filter(indexIn -> !intset.contains(indexIn)).toArray();
+         int[] aint = IntStream.range(0, k).filter((indexIn) -> {
+            return !intset.contains(indexIn);
+         }).toArray();
          if (aint.length > 0) {
             f_243663_.warn("Unused frames in sprite {}: {}", this.f_243877_, Arrays.toString(aint));
          }
       }
 
-      return list.size() <= 1
-         ? null
-         : new net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture(ImmutableList.copyOf(list), i, metadataIn.m_119036_());
+      return list.size() <= 1 ? null : new AnimatedTexture(ImmutableList.copyOf(list), i, metadataIn.m_119036_());
    }
 
-   void m_247381_(int xIn, int yIn, int xOffsetIn, int yOffsetIn, com.mojang.blaze3d.platform.NativeImage[] framesIn) {
-      for (int i = 0; i < this.f_243731_.length && this.f_244302_ >> i > 0 && this.f_244600_ >> i > 0; i++) {
-         framesIn[i]
-            .m_85003_(i, xIn >> i, yIn >> i, xOffsetIn >> i, yOffsetIn >> i, this.f_244302_ >> i, this.f_244600_ >> i, this.f_243731_.length > 1, false);
+   void m_247381_(int xIn, int yIn, int xOffsetIn, int yOffsetIn, NativeImage[] framesIn) {
+      for(int i = 0; i < this.f_243731_.length && this.f_244302_ >> i > 0 && this.f_244600_ >> i > 0; ++i) {
+         framesIn[i].m_85003_(i, xIn >> i, yIn >> i, xOffsetIn >> i, yOffsetIn >> i, this.f_244302_ >> i, this.f_244600_ >> i, this.f_243731_.length > 1, false);
       }
+
    }
 
-   @Override
    public int m_246492_() {
       return this.f_244302_;
    }
 
-   @Override
    public int m_245330_() {
       return this.f_244600_;
    }
 
-   @Override
-   public net.minecraft.resources.ResourceLocation m_246162_() {
+   public ResourceLocation m_246162_() {
       return this.f_243877_;
    }
 
@@ -181,7 +178,7 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
    }
 
    @Nullable
-   public net.minecraft.client.renderer.texture.SpriteTicker m_246786_() {
+   public SpriteTicker m_246786_() {
       return this.f_244575_ != null ? this.f_244575_.m_246690_() : null;
    }
 
@@ -190,13 +187,19 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
    }
 
    public void close() {
-      for (com.mojang.blaze3d.platform.NativeImage nativeimage : this.f_243731_) {
+      NativeImage[] var1 = this.f_243731_;
+      int var2 = var1.length;
+
+      for(int var3 = 0; var3 < var2; ++var3) {
+         NativeImage nativeimage = var1[var3];
          nativeimage.close();
       }
+
    }
 
    public String toString() {
-      return "SpriteContents{name=" + this.f_243877_ + ", frameCount=" + this.m_245088_() + ", height=" + this.f_244600_ + ", width=" + this.f_244302_ + "}";
+      String var10000 = String.valueOf(this.f_243877_);
+      return "SpriteContents{name=" + var10000 + ", frameCount=" + this.m_245088_() + ", height=" + this.f_244600_ + ", width=" + this.f_244302_ + "}";
    }
 
    public boolean m_245970_(int frameIndexIn, int xIn, int yIn) {
@@ -207,7 +210,7 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
          j = yIn + this.f_244575_.m_246436_(frameIndexIn) * this.f_244600_;
       }
 
-      return (this.f_243904_.m_84985_(i, j) >> 24 & 0xFF) == 0;
+      return (this.f_243904_.m_84985_(i, j) >> 24 & 255) == 0;
    }
 
    public void m_246850_(int xIn, int yIn) {
@@ -216,6 +219,7 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
       } else {
          this.m_247381_(xIn, yIn, 0, 0, this.f_243731_);
       }
+
    }
 
    public int getSpriteWidth() {
@@ -226,7 +230,7 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
       return this.f_244600_;
    }
 
-   public net.minecraft.resources.ResourceLocation getSpriteLocation() {
+   public ResourceLocation getSpriteLocation() {
       return this.f_243877_;
    }
 
@@ -249,37 +253,38 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
    public void rescale() {
       if (this.scaleFactor > 1.0) {
          int widthScaled = (int)Math.round((double)this.f_243904_.m_84982_() * this.scaleFactor);
-         com.mojang.blaze3d.platform.NativeImage imageScaled = TextureUtils.scaleImage(this.f_243904_, widthScaled);
+         NativeImage imageScaled = TextureUtils.scaleImage(this.f_243904_, widthScaled);
          if (imageScaled != this.f_243904_) {
             this.f_243904_.close();
             this.f_243904_ = imageScaled;
             this.f_243731_[0] = this.f_243904_;
          }
       }
+
    }
 
-   public net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture getAnimatedTexture() {
+   public AnimatedTexture getAnimatedTexture() {
       return this.f_244575_;
    }
 
-   public com.mojang.blaze3d.platform.NativeImage getOriginalImage() {
+   public NativeImage getOriginalImage() {
       return this.f_243904_;
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite() {
+   public TextureAtlasSprite getSprite() {
       return this.sprite;
    }
 
-   public void setSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+   public void setSprite(TextureAtlasSprite sprite) {
       this.sprite = sprite;
    }
 
    class AnimatedTexture {
-      final List<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> f_243714_;
+      final List f_243714_;
       final int f_244229_;
       final boolean f_244317_;
 
-      AnimatedTexture(final List<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> framesIn, final int rowSizeIn, final boolean interpolateIn) {
+      AnimatedTexture(final List framesIn, final int rowSizeIn, final boolean interpolateIn) {
          this.f_243714_ = framesIn;
          this.f_244229_ = rowSizeIn;
          this.f_244317_ = interpolateIn;
@@ -299,16 +304,31 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
          SpriteContents.this.m_247381_(xIn, yIn, i, j, SpriteContents.this.f_243731_);
       }
 
-      public net.minecraft.client.renderer.texture.SpriteTicker m_246690_() {
-         return SpriteContents.this.new Ticker(this, this.f_244317_ ? SpriteContents.this.new InterpolationData() : null);
+      public SpriteTicker m_246690_() {
+         Ticker var10000 = new Ticker;
+         SpriteContents var10002 = SpriteContents.this;
+         Objects.requireNonNull(var10002);
+         InterpolationData var10004;
+         if (this.f_244317_) {
+            SpriteContents var10006 = SpriteContents.this;
+            Objects.requireNonNull(var10006);
+            var10004 = var10006.new InterpolationData();
+         } else {
+            var10004 = null;
+         }
+
+         var10000.<init>(this, var10004);
+         return var10000;
       }
 
       public void m_247129_(int xIn, int yIn) {
-         this.m_245074_(xIn, yIn, ((net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)this.f_243714_.get(0)).f_243751_);
+         this.m_245074_(xIn, yIn, ((FrameInfo)this.f_243714_.get(0)).f_243751_);
       }
 
       public IntStream m_246130_() {
-         return this.f_243714_.stream().mapToInt(infoIn -> infoIn.f_243751_).distinct();
+         return this.f_243714_.stream().mapToInt((infoIn) -> {
+            return infoIn.f_243751_;
+         }).distinct();
       }
    }
 
@@ -322,104 +342,33 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
       }
    }
 
-   final class InterpolationData implements AutoCloseable {
-      private final com.mojang.blaze3d.platform.NativeImage[] f_244527_ = new com.mojang.blaze3d.platform.NativeImage[SpriteContents.this.f_243731_.length];
-
-      InterpolationData() {
-         for (int i = 0; i < this.f_244527_.length; i++) {
-            int j = SpriteContents.this.f_244302_ >> i;
-            int k = SpriteContents.this.f_244600_ >> i;
-            j = Math.max(1, j);
-            k = Math.max(1, k);
-            this.f_244527_[i] = new com.mojang.blaze3d.platform.NativeImage(j, k, false);
-         }
-      }
-
-      void m_245152_(int xIn, int yIn, net.minecraft.client.renderer.texture.SpriteContents.Ticker tickerIn) {
-         net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture spritecontents$animatedtexture = tickerIn.f_243921_;
-         List<net.minecraft.client.renderer.texture.SpriteContents.FrameInfo> list = spritecontents$animatedtexture.f_243714_;
-         net.minecraft.client.renderer.texture.SpriteContents.FrameInfo spritecontents$frameinfo = (net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)list.get(
-            tickerIn.f_244631_
-         );
-         double d0 = 1.0 - (double)tickerIn.f_244511_ / (double)spritecontents$frameinfo.f_244553_;
-         int i = spritecontents$frameinfo.f_243751_;
-         int j = ((net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)list.get((tickerIn.f_244631_ + 1) % list.size())).f_243751_;
-         if (i != j) {
-            for (int k = 0; k < this.f_244527_.length; k++) {
-               int l = SpriteContents.this.f_244302_ >> k;
-               int i1 = SpriteContents.this.f_244600_ >> k;
-               if (l >= 1 && i1 >= 1) {
-                  for (int j1 = 0; j1 < i1; j1++) {
-                     for (int k1 = 0; k1 < l; k1++) {
-                        int l1 = this.m_246491_(spritecontents$animatedtexture, i, k, k1, j1);
-                        int i2 = this.m_246491_(spritecontents$animatedtexture, j, k, k1, j1);
-                        int j2 = this.m_247111_(d0, l1 >> 16 & 0xFF, i2 >> 16 & 0xFF);
-                        int k2 = this.m_247111_(d0, l1 >> 8 & 0xFF, i2 >> 8 & 0xFF);
-                        int l2 = this.m_247111_(d0, l1 & 0xFF, i2 & 0xFF);
-                        this.f_244527_[k].m_84988_(k1, j1, l1 & 0xFF000000 | j2 << 16 | k2 << 8 | l2);
-                     }
-                  }
-               }
-            }
-
-            SpriteContents.this.m_247381_(xIn, yIn, 0, 0, this.f_244527_);
-         }
-      }
-
-      private int m_246491_(
-         net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture textureIn, int frameIndexIn, int mipmapLevelIn, int xIn, int yIn
-      ) {
-         return SpriteContents.this.f_243731_[mipmapLevelIn]
-            .m_84985_(
-               xIn + (textureIn.m_245080_(frameIndexIn) * SpriteContents.this.f_244302_ >> mipmapLevelIn),
-               yIn + (textureIn.m_246436_(frameIndexIn) * SpriteContents.this.f_244600_ >> mipmapLevelIn)
-            );
-      }
-
-      private int m_247111_(double k, int a, int b) {
-         return (int)(k * (double)a + (1.0 - k) * (double)b);
-      }
-
-      public void close() {
-         for (com.mojang.blaze3d.platform.NativeImage nativeimage : this.f_244527_) {
-            nativeimage.close();
-         }
-      }
-   }
-
-   class Ticker implements net.minecraft.client.renderer.texture.SpriteTicker {
+   class Ticker implements SpriteTicker {
       int f_244631_;
       int f_244511_;
-      final net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture f_243921_;
+      final AnimatedTexture f_243921_;
       @Nullable
-      private final net.minecraft.client.renderer.texture.SpriteContents.InterpolationData f_244570_;
+      private final InterpolationData f_244570_;
       protected boolean animationActive = false;
-      protected net.minecraft.client.renderer.texture.TextureAtlasSprite sprite;
+      protected TextureAtlasSprite sprite;
 
-      Ticker(
-         @Nullable final net.minecraft.client.renderer.texture.SpriteContents.AnimatedTexture infoIn,
-         final net.minecraft.client.renderer.texture.SpriteContents.InterpolationData dataIn
-      ) {
+      Ticker(@Nullable final AnimatedTexture infoIn, final InterpolationData dataIn) {
          this.f_243921_ = infoIn;
          this.f_244570_ = dataIn;
       }
 
-      @Override
       public void m_247697_(int xIn, int yIn) {
          this.animationActive = SmartAnimations.isActive() ? SmartAnimations.isSpriteRendered(this.sprite) : true;
          if (this.f_243921_.f_243714_.size() <= 1) {
             this.animationActive = false;
          }
 
-         this.f_244511_++;
-         net.minecraft.client.renderer.texture.SpriteContents.FrameInfo spritecontents$frameinfo = (net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)this.f_243921_
-            .f_243714_
-            .get(this.f_244631_);
+         ++this.f_244511_;
+         FrameInfo spritecontents$frameinfo = (FrameInfo)this.f_243921_.f_243714_.get(this.f_244631_);
          if (this.f_244511_ >= spritecontents$frameinfo.f_244553_) {
             int i = spritecontents$frameinfo.f_243751_;
             this.f_244631_ = (this.f_244631_ + 1) % this.f_243921_.f_243714_.size();
             this.f_244511_ = 0;
-            int j = ((net.minecraft.client.renderer.texture.SpriteContents.FrameInfo)this.f_243921_.f_243714_.get(this.f_244631_)).f_243751_;
+            int j = ((FrameInfo)this.f_243921_.f_243714_.get(this.f_244631_)).f_243751_;
             if (!this.animationActive) {
                return;
             }
@@ -433,32 +382,99 @@ public class SpriteContents implements net.minecraft.client.renderer.texture.Sti
             }
 
             if (!RenderSystem.isOnRenderThread()) {
-               RenderSystem.recordRenderCall(() -> this.f_244570_.m_245152_(xIn, yIn, this));
+               RenderSystem.recordRenderCall(() -> {
+                  this.f_244570_.m_245152_(xIn, yIn, this);
+               });
             } else {
                this.f_244570_.m_245152_(xIn, yIn, this);
             }
          }
+
       }
 
-      @Override
       public void close() {
          if (this.f_244570_ != null) {
             this.f_244570_.close();
          }
+
       }
 
-      @Override
-      public net.minecraft.client.renderer.texture.TextureAtlasSprite getSprite() {
+      public TextureAtlasSprite getSprite() {
          return this.sprite;
       }
 
-      @Override
-      public void setSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
+      public void setSprite(TextureAtlasSprite sprite) {
          this.sprite = sprite;
       }
 
       public String toString() {
          return "animation:" + SpriteContents.this.toString();
+      }
+   }
+
+   final class InterpolationData implements AutoCloseable {
+      private final NativeImage[] f_244527_;
+
+      InterpolationData() {
+         this.f_244527_ = new NativeImage[SpriteContents.this.f_243731_.length];
+
+         for(int i = 0; i < this.f_244527_.length; ++i) {
+            int j = SpriteContents.this.f_244302_ >> i;
+            int k = SpriteContents.this.f_244600_ >> i;
+            j = Math.max(1, j);
+            k = Math.max(1, k);
+            this.f_244527_[i] = new NativeImage(j, k, false);
+         }
+
+      }
+
+      void m_245152_(int xIn, int yIn, Ticker tickerIn) {
+         AnimatedTexture spritecontents$animatedtexture = tickerIn.f_243921_;
+         List list = spritecontents$animatedtexture.f_243714_;
+         FrameInfo spritecontents$frameinfo = (FrameInfo)list.get(tickerIn.f_244631_);
+         double d0 = 1.0 - (double)tickerIn.f_244511_ / (double)spritecontents$frameinfo.f_244553_;
+         int i = spritecontents$frameinfo.f_243751_;
+         int j = ((FrameInfo)list.get((tickerIn.f_244631_ + 1) % list.size())).f_243751_;
+         if (i != j) {
+            for(int k = 0; k < this.f_244527_.length; ++k) {
+               int l = SpriteContents.this.f_244302_ >> k;
+               int i1 = SpriteContents.this.f_244600_ >> k;
+               if (l >= 1 && i1 >= 1) {
+                  for(int j1 = 0; j1 < i1; ++j1) {
+                     for(int k1 = 0; k1 < l; ++k1) {
+                        int l1 = this.m_246491_(spritecontents$animatedtexture, i, k, k1, j1);
+                        int i2 = this.m_246491_(spritecontents$animatedtexture, j, k, k1, j1);
+                        int j2 = this.m_247111_(d0, l1 >> 16 & 255, i2 >> 16 & 255);
+                        int k2 = this.m_247111_(d0, l1 >> 8 & 255, i2 >> 8 & 255);
+                        int l2 = this.m_247111_(d0, l1 & 255, i2 & 255);
+                        this.f_244527_[k].m_84988_(k1, j1, l1 & -16777216 | j2 << 16 | k2 << 8 | l2);
+                     }
+                  }
+               }
+            }
+
+            SpriteContents.this.m_247381_(xIn, yIn, 0, 0, this.f_244527_);
+         }
+
+      }
+
+      private int m_246491_(AnimatedTexture textureIn, int frameIndexIn, int mipmapLevelIn, int xIn, int yIn) {
+         return SpriteContents.this.f_243731_[mipmapLevelIn].m_84985_(xIn + (textureIn.m_245080_(frameIndexIn) * SpriteContents.this.f_244302_ >> mipmapLevelIn), yIn + (textureIn.m_246436_(frameIndexIn) * SpriteContents.this.f_244600_ >> mipmapLevelIn));
+      }
+
+      private int m_247111_(double k, int a, int b) {
+         return (int)(k * (double)a + (1.0 - k) * (double)b);
+      }
+
+      public void close() {
+         NativeImage[] var1 = this.f_244527_;
+         int var2 = var1.length;
+
+         for(int var3 = 0; var3 < var2; ++var3) {
+            NativeImage nativeimage = var1[var3];
+            nativeimage.close();
+         }
+
       }
    }
 }

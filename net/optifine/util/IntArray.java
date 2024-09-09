@@ -1,5 +1,7 @@
 package net.optifine.util;
 
+import net.minecraft.util.Mth;
+
 public class IntArray {
    private int[] array = null;
    private int position = 0;
@@ -12,10 +14,11 @@ public class IntArray {
    public void put(int x) {
       this.checkPutIndex(this.position);
       this.array[this.position] = x;
-      this.position++;
+      ++this.position;
       if (this.limit < this.position) {
          this.limit = this.position;
       }
+
    }
 
    public void put(int pos, int x) {
@@ -24,6 +27,7 @@ public class IntArray {
       if (this.limit < pos) {
          this.limit = pos;
       }
+
    }
 
    public void position(int pos) {
@@ -34,19 +38,20 @@ public class IntArray {
       this.checkPutIndex(this.position + ints.length - 1);
       int len = ints.length;
 
-      for (int i = 0; i < len; i++) {
+      for(int i = 0; i < len; ++i) {
          this.array[this.position] = ints[i];
-         this.position++;
+         ++this.position;
       }
 
       if (this.limit < this.position) {
          this.limit = this.position;
       }
+
    }
 
    private void checkPutIndex(int index) {
       if (index >= this.array.length) {
-         int sizeNew = net.minecraft.util.Mth.m_14125_(index + 1);
+         int sizeNew = Mth.m_14125_(index + 1);
          int[] arrayNew = new int[sizeNew];
          System.arraycopy(this.array, 0, arrayNew, 0, this.array.length);
          this.array = arrayNew;

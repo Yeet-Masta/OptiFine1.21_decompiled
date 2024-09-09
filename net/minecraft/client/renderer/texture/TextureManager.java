@@ -15,16 +15,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.PreparableReloadListener.PreparationBarrier;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.optifine.Config;
 import net.optifine.EmissiveTextures;
@@ -35,56 +38,54 @@ import org.slf4j.Logger;
 
 public class TextureManager implements PreparableReloadListener, Tickable, AutoCloseable {
    private static final Logger f_118467_ = LogUtils.getLogger();
-   public static final net.minecraft.resources.ResourceLocation f_118466_ = net.minecraft.resources.ResourceLocation.m_340282_("");
-   private final Map<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.AbstractTexture> f_118468_ = Maps.newHashMap();
-   private final Set<Tickable> f_118469_ = Sets.newHashSet();
-   private final Map<String, Integer> f_118470_ = Maps.newHashMap();
+   public static final ResourceLocation f_118466_ = ResourceLocation.m_340282_("");
+   private final Map f_118468_ = Maps.newHashMap();
+   private final Set f_118469_ = Sets.newHashSet();
+   private final Map f_118470_ = Maps.newHashMap();
    private final ResourceManager f_118471_;
-   private Int2ObjectMap<net.minecraft.client.renderer.texture.AbstractTexture> mapTexturesById = new Int2ObjectOpenHashMap();
-   private net.minecraft.client.renderer.texture.AbstractTexture mojangLogoTexture;
+   private Int2ObjectMap mapTexturesById = new Int2ObjectOpenHashMap();
+   private AbstractTexture mojangLogoTexture;
 
    public TextureManager(ResourceManager resourceManager) {
       this.f_118471_ = resourceManager;
    }
 
-   public void m_174784_(net.minecraft.resources.ResourceLocation resource) {
+   public void m_174784_(ResourceLocation resource) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> this.m_118519_(resource));
+         RenderSystem.recordRenderCall(() -> {
+            this.m_118519_(resource);
+         });
       } else {
          this.m_118519_(resource);
       }
+
    }
 
-   private void m_118519_(net.minecraft.resources.ResourceLocation resource) {
-      net.minecraft.client.renderer.texture.AbstractTexture abstracttexture = (net.minecraft.client.renderer.texture.AbstractTexture)this.f_118468_
-         .get(resource);
+   private void m_118519_(ResourceLocation resource) {
+      AbstractTexture abstracttexture = (AbstractTexture)this.f_118468_.get(resource);
       if (abstracttexture == null) {
-         abstracttexture = new net.minecraft.client.renderer.texture.SimpleTexture(resource);
-         this.m_118495_(resource, abstracttexture);
+         abstracttexture = new SimpleTexture(resource);
+         this.m_118495_(resource, (AbstractTexture)abstracttexture);
       }
 
       if (Config.isShaders()) {
-         ShadersTex.bindTexture(abstracttexture);
+         ShadersTex.bindTexture((AbstractTexture)abstracttexture);
       } else {
-         abstracttexture.m_117966_();
+         ((AbstractTexture)abstracttexture).m_117966_();
       }
+
    }
 
-   public void m_118495_(net.minecraft.resources.ResourceLocation textureLocation, net.minecraft.client.renderer.texture.AbstractTexture textureObj) {
-      if (Reflector.MinecraftForge.exists()
-         && this.mojangLogoTexture == null
-         && textureLocation.equals(net.minecraft.client.gui.screens.LoadingOverlay.f_96160_)) {
-         f_118467_.info("Keep logo texture for ForgeLoadingOverlay: " + textureObj);
+   public void m_118495_(ResourceLocation textureLocation, AbstractTexture textureObj) {
+      if (Reflector.MinecraftForge.exists() && this.mojangLogoTexture == null && textureLocation.equals(LoadingOverlay.f_96160_)) {
+         f_118467_.info("Keep logo texture for ForgeLoadingOverlay: " + String.valueOf(textureObj));
          this.mojangLogoTexture = textureObj;
       }
 
       textureObj = this.m_118515_(textureLocation, textureObj);
-      net.minecraft.client.renderer.texture.AbstractTexture abstracttexture = (net.minecraft.client.renderer.texture.AbstractTexture)this.f_118468_
-         .put(textureLocation, textureObj);
+      AbstractTexture abstracttexture = (AbstractTexture)this.f_118468_.put(textureLocation, textureObj);
       if (abstracttexture != textureObj) {
-         if (abstracttexture != null
-            && abstracttexture != net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118080_()
-            && abstracttexture != this.mojangLogoTexture) {
+         if (abstracttexture != null && abstracttexture != MissingTextureAtlasSprite.m_118080_() && abstracttexture != this.mojangLogoTexture) {
             this.m_118508_(textureLocation, abstracttexture);
          }
 
@@ -97,10 +98,11 @@ public class TextureManager implements PreparableReloadListener, Tickable, AutoC
       if (textureId > 0) {
          this.mapTexturesById.put(textureId, textureObj);
       }
+
    }
 
-   private void m_118508_(net.minecraft.resources.ResourceLocation locationIn, net.minecraft.client.renderer.texture.AbstractTexture textureIn) {
-      if (textureIn != net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118080_()) {
+   private void m_118508_(ResourceLocation locationIn, AbstractTexture textureIn) {
+      if (textureIn != MissingTextureAtlasSprite.m_118080_()) {
          this.f_118469_.remove(textureIn);
 
          try {
@@ -113,46 +115,45 @@ public class TextureManager implements PreparableReloadListener, Tickable, AutoC
       textureIn.m_117964_();
    }
 
-   private net.minecraft.client.renderer.texture.AbstractTexture m_118515_(
-      net.minecraft.resources.ResourceLocation locationIn, net.minecraft.client.renderer.texture.AbstractTexture textureIn
-   ) {
+   private AbstractTexture m_118515_(ResourceLocation locationIn, AbstractTexture textureIn) {
       try {
          textureIn.m_6704_(this.f_118471_);
          return textureIn;
       } catch (IOException var6) {
          if (locationIn != f_118466_) {
             f_118467_.warn("Failed to load texture: {}", locationIn);
-            f_118467_.warn(var6.getClass().getName() + ": " + var6.getMessage());
+            Logger var10000 = f_118467_;
+            String var10001 = var6.getClass().getName();
+            var10000.warn(var10001 + ": " + var6.getMessage());
          }
 
-         return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118080_();
+         return MissingTextureAtlasSprite.m_118080_();
       } catch (Throwable var7) {
-         net.minecraft.CrashReport crashreport = net.minecraft.CrashReport.m_127521_(var7, "Registering texture");
+         CrashReport crashreport = CrashReport.m_127521_(var7, "Registering texture");
          CrashReportCategory crashreportcategory = crashreport.m_127514_("Resource location being registered");
          crashreportcategory.m_128159_("Resource location", locationIn);
-         crashreportcategory.m_128165_("Texture object class", () -> textureIn.getClass().getName());
+         crashreportcategory.m_128165_("Texture object class", () -> {
+            return textureIn.getClass().getName();
+         });
          throw new ReportedException(crashreport);
       }
    }
 
-   public net.minecraft.client.renderer.texture.AbstractTexture m_118506_(net.minecraft.resources.ResourceLocation textureLocation) {
-      net.minecraft.client.renderer.texture.AbstractTexture abstracttexture = (net.minecraft.client.renderer.texture.AbstractTexture)this.f_118468_
-         .get(textureLocation);
+   public AbstractTexture m_118506_(ResourceLocation textureLocation) {
+      AbstractTexture abstracttexture = (AbstractTexture)this.f_118468_.get(textureLocation);
       if (abstracttexture == null) {
-         abstracttexture = new net.minecraft.client.renderer.texture.SimpleTexture(textureLocation);
-         this.m_118495_(textureLocation, abstracttexture);
+         abstracttexture = new SimpleTexture(textureLocation);
+         this.m_118495_(textureLocation, (AbstractTexture)abstracttexture);
       }
 
-      return abstracttexture;
+      return (AbstractTexture)abstracttexture;
    }
 
-   public net.minecraft.client.renderer.texture.AbstractTexture m_174786_(
-      net.minecraft.resources.ResourceLocation textureLocation, net.minecraft.client.renderer.texture.AbstractTexture textureDefault
-   ) {
-      return (net.minecraft.client.renderer.texture.AbstractTexture)this.f_118468_.getOrDefault(textureLocation, textureDefault);
+   public AbstractTexture m_174786_(ResourceLocation textureLocation, AbstractTexture textureDefault) {
+      return (AbstractTexture)this.f_118468_.getOrDefault(textureLocation, textureDefault);
    }
 
-   public net.minecraft.resources.ResourceLocation m_118490_(String name, net.minecraft.client.renderer.texture.DynamicTexture texture) {
+   public ResourceLocation m_118490_(String name, DynamicTexture texture) {
       Integer integer = (Integer)this.f_118470_.get(name);
       if (integer == null) {
          integer = 1;
@@ -161,41 +162,47 @@ public class TextureManager implements PreparableReloadListener, Tickable, AutoC
       }
 
       this.f_118470_.put(name, integer);
-      net.minecraft.resources.ResourceLocation resourcelocation = net.minecraft.resources.ResourceLocation.m_340282_(
-         String.format(Locale.ROOT, "dynamic/%s_%d", name, integer)
-      );
+      ResourceLocation resourcelocation = ResourceLocation.m_340282_(String.format(Locale.ROOT, "dynamic/%s_%d", name, integer));
       this.m_118495_(resourcelocation, texture);
       return resourcelocation;
    }
 
-   public CompletableFuture<Void> m_118501_(net.minecraft.resources.ResourceLocation textureLocation, Executor executor) {
+   public CompletableFuture m_118501_(ResourceLocation textureLocation, Executor executor) {
       if (!this.f_118468_.containsKey(textureLocation)) {
          PreloadedTexture preloadedtexture = new PreloadedTexture(this.f_118471_, textureLocation, executor);
          this.f_118468_.put(textureLocation, preloadedtexture);
-         return preloadedtexture.m_118105_()
-            .thenRunAsync(() -> this.m_118495_(textureLocation, preloadedtexture), net.minecraft.client.renderer.texture.TextureManager::m_118488_);
+         return preloadedtexture.m_118105_().thenRunAsync(() -> {
+            this.m_118495_(textureLocation, preloadedtexture);
+         }, TextureManager::m_118488_);
       } else {
-         return CompletableFuture.completedFuture(null);
+         return CompletableFuture.completedFuture((Object)null);
       }
    }
 
    private static void m_118488_(Runnable runnableIn) {
-      Minecraft.m_91087_().execute(() -> RenderSystem.recordRenderCall(runnableIn::run));
+      Minecraft.m_91087_().execute(() -> {
+         Objects.requireNonNull(runnableIn);
+         RenderSystem.recordRenderCall(runnableIn::run);
+      });
    }
 
    public void m_7673_() {
-      for (Tickable tickable : this.f_118469_) {
+      Iterator var1 = this.f_118469_.iterator();
+
+      while(var1.hasNext()) {
+         Tickable tickable = (Tickable)var1.next();
          tickable.m_7673_();
       }
+
    }
 
-   public void m_118513_(net.minecraft.resources.ResourceLocation textureLocation) {
-      net.minecraft.client.renderer.texture.AbstractTexture abstracttexture = (net.minecraft.client.renderer.texture.AbstractTexture)this.f_118468_
-         .remove(textureLocation);
+   public void m_118513_(ResourceLocation textureLocation) {
+      AbstractTexture abstracttexture = (AbstractTexture)this.f_118468_.remove(textureLocation);
       if (abstracttexture != null) {
          this.f_118468_.remove(textureLocation);
          this.m_118508_(textureLocation, abstracttexture);
       }
+
    }
 
    public void close() {
@@ -206,70 +213,73 @@ public class TextureManager implements PreparableReloadListener, Tickable, AutoC
       this.mapTexturesById.clear();
    }
 
-   public CompletableFuture<Void> m_5540_(
-      PreparationBarrier stage,
-      ResourceManager resourceManager,
-      ProfilerFiller preparationsProfiler,
-      ProfilerFiller reloadProfiler,
-      Executor backgroundExecutor,
-      Executor gameExecutor
-   ) {
+   public CompletableFuture m_5540_(PreparableReloadListener.PreparationBarrier stage, ResourceManager resourceManager, ProfilerFiller preparationsProfiler, ProfilerFiller reloadProfiler, Executor backgroundExecutor, Executor gameExecutor) {
       Config.dbg("*** Reloading textures ***");
       Config.log("Resource packs: " + Config.getResourcePackNames());
       Iterator it = this.f_118468_.keySet().iterator();
 
-      while (it.hasNext()) {
-         net.minecraft.resources.ResourceLocation loc = (net.minecraft.resources.ResourceLocation)it.next();
-         String path = loc.m_135815_();
-         if (path.startsWith("optifine/") || EmissiveTextures.isEmissive(loc)) {
-            net.minecraft.client.renderer.texture.AbstractTexture tex = (net.minecraft.client.renderer.texture.AbstractTexture)this.f_118468_.get(loc);
-            if (tex instanceof net.minecraft.client.renderer.texture.AbstractTexture) {
-               tex.m_117964_();
+      while(true) {
+         ResourceLocation loc;
+         String path;
+         do {
+            if (!it.hasNext()) {
+               RandomEntities.update();
+               EmissiveTextures.update();
+               CompletableFuture completablefuture = new CompletableFuture();
+               CompletableFuture var10000 = TitleScreen.m_96754_(this, backgroundExecutor);
+               Objects.requireNonNull(stage);
+               var10000.thenCompose(stage::m_6769_).thenAcceptAsync((voidIn) -> {
+                  MissingTextureAtlasSprite.m_118080_();
+                  AddRealmPopupScreen.m_338814_(this.f_118471_);
+                  Set entries = new HashSet(this.f_118468_.entrySet());
+                  Iterator iterator = entries.iterator();
+
+                  while(true) {
+                     while(iterator.hasNext()) {
+                        Map.Entry entry = (Map.Entry)iterator.next();
+                        ResourceLocation resourcelocation = (ResourceLocation)entry.getKey();
+                        AbstractTexture abstracttexture = (AbstractTexture)entry.getValue();
+                        if (abstracttexture == MissingTextureAtlasSprite.m_118080_() && !resourcelocation.equals(MissingTextureAtlasSprite.m_118071_())) {
+                           iterator.remove();
+                        } else {
+                           abstracttexture.m_6479_(this, resourceManager, resourcelocation, gameExecutor);
+                        }
+                     }
+
+                     Minecraft.m_91087_().m_6937_(() -> {
+                        completablefuture.complete((Object)null);
+                     });
+                     return;
+                  }
+               }, (runnableIn) -> {
+                  Objects.requireNonNull(runnableIn);
+                  RenderSystem.recordRenderCall(runnableIn::run);
+               });
+               return completablefuture;
             }
 
-            it.remove();
+            loc = (ResourceLocation)it.next();
+            path = loc.m_135815_();
+         } while(!path.startsWith("optifine/") && !EmissiveTextures.isEmissive(loc));
+
+         AbstractTexture tex = (AbstractTexture)this.f_118468_.get(loc);
+         if (tex instanceof AbstractTexture) {
+            tex.m_117964_();
          }
+
+         it.remove();
       }
-
-      RandomEntities.update();
-      EmissiveTextures.update();
-      CompletableFuture<Void> completablefuture = new CompletableFuture();
-      net.minecraft.client.gui.screens.TitleScreen.m_96754_(this, backgroundExecutor)
-         .thenCompose(stage::m_6769_)
-         .thenAcceptAsync(
-            voidIn -> {
-               net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118080_();
-               AddRealmPopupScreen.m_338814_(this.f_118471_);
-               Set<Entry<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.AbstractTexture>> entries = new HashSet(
-                  this.f_118468_.entrySet()
-               );
-               Iterator<Entry<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.AbstractTexture>> iterator = entries.iterator();
-
-               while (iterator.hasNext()) {
-                  Entry<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.AbstractTexture> entry = (Entry<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.AbstractTexture>)iterator.next();
-                  net.minecraft.resources.ResourceLocation resourcelocation = (net.minecraft.resources.ResourceLocation)entry.getKey();
-                  net.minecraft.client.renderer.texture.AbstractTexture abstracttexture = (net.minecraft.client.renderer.texture.AbstractTexture)entry.getValue();
-                  if (abstracttexture == net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118080_()
-                     && !resourcelocation.equals(net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118071_())) {
-                     iterator.remove();
-                  } else {
-                     abstracttexture.m_6479_(this, resourceManager, resourcelocation, gameExecutor);
-                  }
-               }
-
-               Minecraft.m_91087_().m_6937_(() -> completablefuture.complete(null));
-            },
-            runnableIn -> RenderSystem.recordRenderCall(runnableIn::run)
-         );
-      return completablefuture;
    }
 
    public void m_276085_(Path pathIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> this.m_276083_(pathIn));
+         RenderSystem.recordRenderCall(() -> {
+            this.m_276083_(pathIn);
+         });
       } else {
          this.m_276083_(pathIn);
       }
+
    }
 
    private void m_276083_(Path pathIn) {
@@ -288,11 +298,12 @@ public class TextureManager implements PreparableReloadListener, Tickable, AutoC
                f_118467_.error("Failed to dump texture {}", locIn, var5);
             }
          }
+
       });
    }
 
-   public net.minecraft.client.renderer.texture.AbstractTexture getTextureById(int id) {
-      net.minecraft.client.renderer.texture.AbstractTexture tex = (net.minecraft.client.renderer.texture.AbstractTexture)this.mapTexturesById.get(id);
+   public AbstractTexture getTextureById(int id) {
+      AbstractTexture tex = (AbstractTexture)this.mapTexturesById.get(id);
       if (tex != null && tex.m_117963_() != id) {
          this.mapTexturesById.remove(id);
          this.mapTexturesById.put(tex.m_117963_(), tex);
@@ -302,11 +313,11 @@ public class TextureManager implements PreparableReloadListener, Tickable, AutoC
       return tex;
    }
 
-   public Collection<net.minecraft.client.renderer.texture.AbstractTexture> getTextures() {
+   public Collection getTextures() {
       return this.f_118468_.values();
    }
 
-   public Collection<net.minecraft.resources.ResourceLocation> getTextureLocations() {
+   public Collection getTextureLocations() {
       return this.f_118468_.keySet();
    }
 }

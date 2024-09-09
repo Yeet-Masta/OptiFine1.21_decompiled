@@ -26,6 +26,8 @@ import javax.swing.JOptionPane;
 public class Utils {
    public static final String MAC_OS_HOME_PREFIX = "Library/Application Support";
    private static final char[] hexTable = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+   // $FF: synthetic field
+   private static volatile int[] $SWITCH_TABLE$optifine$Utils$OS;
 
    private Utils() {
    }
@@ -64,20 +66,20 @@ public class Utils {
       }
    }
 
-   public static Utils.OS getPlatform() {
+   public static class_3 getPlatform() {
       String osName = System.getProperty("os.name").toLowerCase();
       if (osName.contains("win")) {
-         return Utils.OS.WINDOWS;
+         return Utils.class_3.WINDOWS;
       } else if (osName.contains("mac")) {
-         return Utils.OS.MACOS;
+         return Utils.class_3.MACOS;
       } else if (osName.contains("solaris")) {
-         return Utils.OS.SOLARIS;
+         return Utils.class_3.SOLARIS;
       } else if (osName.contains("sunos")) {
-         return Utils.OS.SOLARIS;
+         return Utils.class_3.SOLARIS;
       } else if (osName.contains("linux")) {
-         return Utils.OS.LINUX;
+         return Utils.class_3.LINUX;
       } else {
-         return osName.contains("unix") ? Utils.OS.LINUX : Utils.OS.UNKNOWN;
+         return osName.contains("unix") ? Utils.class_3.LINUX : Utils.class_3.UNKNOWN;
       }
    }
 
@@ -86,10 +88,10 @@ public class Utils {
    }
 
    public static int find(byte[] buf, int index, byte[] pattern) {
-      for (int i = index; i < buf.length - pattern.length; i++) {
+      for(int i = index; i < buf.length - pattern.length; ++i) {
          boolean found = true;
 
-         for (int pos = 0; pos < pattern.length; pos++) {
+         for(int pos = 0; pos < pattern.length; ++pos) {
             if (pattern[pos] != buf[i + pos]) {
                found = false;
                break;
@@ -108,11 +110,12 @@ public class Utils {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       byte[] buf = new byte[1024];
 
-      while (true) {
+      while(true) {
          int len = is.read(buf);
          if (len < 0) {
             is.close();
-            return baos.toByteArray();
+            byte[] bytes = baos.toByteArray();
+            return bytes;
          }
 
          baos.write(buf, 0, len);
@@ -127,12 +130,13 @@ public class Utils {
       List list = new ArrayList();
       StringTokenizer tok = new StringTokenizer(str, delim);
 
-      while (tok.hasMoreTokens()) {
+      while(tok.hasMoreTokens()) {
          String token = tok.nextToken();
          list.add(token);
       }
 
-      return (String[])list.toArray(new String[list.size()]);
+      String[] tokens = (String[])list.toArray(new String[list.size()]);
+      return tokens;
    }
 
    public static String getExceptionStackTrace(Throwable e) {
@@ -163,7 +167,7 @@ public class Utils {
    public static void copyAll(InputStream is, OutputStream os) throws IOException {
       byte[] buf = new byte[1024];
 
-      while (true) {
+      while(true) {
          int len = is.read(buf);
          if (len < 0) {
             return;
@@ -174,11 +178,11 @@ public class Utils {
    }
 
    public static void showMessage(String msg) {
-      JOptionPane.showMessageDialog(null, msg, "OptiFine", 1);
+      JOptionPane.showMessageDialog((Component)null, msg, "OptiFine", 1);
    }
 
    public static void showErrorMessage(String msg) {
-      JOptionPane.showMessageDialog(null, msg, "Error", 0);
+      JOptionPane.showMessageDialog((Component)null, msg, "Error", 0);
    }
 
    public static String readFile(File file) throws IOException {
@@ -195,7 +199,7 @@ public class Utils {
       BufferedReader br = new BufferedReader(inr);
       StringBuffer sb = new StringBuffer();
 
-      while (true) {
+      while(true) {
          String line = br.readLine();
          if (line == null) {
             br.close();
@@ -211,7 +215,8 @@ public class Utils {
 
    public static String[] readLines(InputStream in, String encoding) throws IOException {
       String str = readText(in, encoding);
-      return tokenize(str, "\n\r");
+      String[] strs = tokenize(str, "\n\r");
+      return strs;
    }
 
    public static void centerWindow(Component c, Component par) {
@@ -245,7 +250,7 @@ public class Utils {
       } else {
          StringBuffer buf = new StringBuffer();
 
-         for (int i = 0; i < bytes.length; i++) {
+         for(int i = 0; i < bytes.length; ++i) {
             byte b = bytes[i];
             buf.append(hexTable[b >> 4 & 15]);
             buf.append(hexTable[b & 15]);
@@ -261,7 +266,7 @@ public class Utils {
       } else {
          StringBuffer buf = new StringBuffer();
 
-         for (int i = 0; i < arr.length; i++) {
+         for(int i = 0; i < arr.length; ++i) {
             Object val = arr[i];
             if (i > 0) {
                buf.append(", ");
@@ -277,7 +282,7 @@ public class Utils {
                   Object[] valObjArr = (Object[])val;
                   buf.append(arrayToCommaSeparatedString(valObjArr));
                } else {
-                  for (int ai = 0; ai < Array.getLength(val); ai++) {
+                  for(int ai = 0; ai < Array.getLength(val); ++ai) {
                      if (ai > 0) {
                         buf.append(", ");
                      }
@@ -310,7 +315,7 @@ public class Utils {
       if (str != null && prefixes != null) {
          int strLen = str.length();
 
-         for (int i = 0; i < prefixes.length; i++) {
+         for(int i = 0; i < prefixes.length; ++i) {
             String prefix = prefixes[i];
             str = removePrefix(str, prefix);
             if (str.length() != strLen) {
@@ -340,7 +345,7 @@ public class Utils {
       if (str != null && suffixes != null) {
          int strLen = str.length();
 
-         for (int i = 0; i < suffixes.length; i++) {
+         for(int i = 0; i < suffixes.length; ++i) {
             String suffix = suffixes[i];
             str = removeSuffix(str, suffix);
             if (str.length() != strLen) {
@@ -400,7 +405,7 @@ public class Utils {
 
             StringTokenizer tok = new StringTokenizer(mask, wildCharStr);
 
-            while (tok.hasMoreElements()) {
+            while(tok.hasMoreElements()) {
                tokens.add(tok.nextToken());
             }
 
@@ -418,7 +423,7 @@ public class Utils {
                } else {
                   int currPos = 0;
 
-                  for (int i = 0; i < tokens.size(); i++) {
+                  for(int i = 0; i < tokens.size(); ++i) {
                      String token = (String)tokens.get(i);
                      if (token.length() > 0) {
                         int foundPos = str.indexOf(token, currPos);
@@ -477,7 +482,8 @@ public class Utils {
    public static Object[] removeObjectFromArray(Object[] arr, Object obj) {
       List list = new ArrayList(Arrays.asList(arr));
       list.remove(obj);
-      return collectionToArray(list, arr.getClass().getComponentType());
+      Object[] newArr = collectionToArray(list, arr.getClass().getComponentType());
+      return newArr;
    }
 
    public static Object[] collectionToArray(Collection coll, Class elementClass) {
@@ -493,7 +499,45 @@ public class Utils {
       }
    }
 
-   public static enum OS {
+   // $FF: synthetic method
+   static int[] $SWITCH_TABLE$optifine$Utils$OS() {
+      int[] var10000 = $SWITCH_TABLE$optifine$Utils$OS;
+      if (var10000 != null) {
+         return var10000;
+      } else {
+         int[] var0 = new int[Utils.class_3.values().length];
+
+         try {
+            var0[Utils.class_3.LINUX.ordinal()] = 1;
+         } catch (NoSuchFieldError var5) {
+         }
+
+         try {
+            var0[Utils.class_3.MACOS.ordinal()] = 4;
+         } catch (NoSuchFieldError var4) {
+         }
+
+         try {
+            var0[Utils.class_3.SOLARIS.ordinal()] = 2;
+         } catch (NoSuchFieldError var3) {
+         }
+
+         try {
+            var0[Utils.class_3.UNKNOWN.ordinal()] = 5;
+         } catch (NoSuchFieldError var2) {
+         }
+
+         try {
+            var0[Utils.class_3.WINDOWS.ordinal()] = 3;
+         } catch (NoSuchFieldError var1) {
+         }
+
+         $SWITCH_TABLE$optifine$Utils$OS = var0;
+         return var0;
+      }
+   }
+
+   public static enum class_3 {
       LINUX,
       SOLARIS,
       WINDOWS,

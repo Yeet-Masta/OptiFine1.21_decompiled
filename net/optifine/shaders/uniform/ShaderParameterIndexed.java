@@ -21,18 +21,22 @@ public class ShaderParameterIndexed implements IExpressionFloat {
       this.index2 = index2;
    }
 
-   @Override
    public float eval() {
       return this.type.eval(this.index1, this.index2);
    }
 
    public String toString() {
       if (this.type.getIndexNames1() == null) {
-         return this.type + "";
+         return "" + String.valueOf(this.type);
       } else {
-         return this.type.getIndexNames2() == null
-            ? this.type + "." + this.type.getIndexNames1()[this.index1]
-            : this.type + "." + this.type.getIndexNames1()[this.index1] + "." + this.type.getIndexNames2()[this.index2];
+         String var10000;
+         if (this.type.getIndexNames2() == null) {
+            var10000 = String.valueOf(this.type);
+            return var10000 + "." + this.type.getIndexNames1()[this.index1];
+         } else {
+            var10000 = String.valueOf(this.type);
+            return var10000 + "." + this.type.getIndexNames1()[this.index1] + "." + this.type.getIndexNames2()[this.index2];
+         }
       }
    }
 }

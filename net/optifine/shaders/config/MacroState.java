@@ -20,9 +20,9 @@ import net.optifine.expr.ParseException;
 
 public class MacroState {
    private boolean active = true;
-   private Deque<Boolean> dequeState = new ArrayDeque();
-   private Deque<Boolean> dequeResolved = new ArrayDeque();
-   private Map<String, String> mapMacroValues = new HashMap();
+   private Deque dequeState = new ArrayDeque();
+   private Deque dequeResolved = new ArrayDeque();
+   private Map mapMacroValues = new HashMap();
    public static final Pattern PATTERN_DIRECTIVE = Pattern.compile("\\s*#\\s*(\\w+)\\s*(.*)");
    private static final Pattern PATTERN_DEFINED = Pattern.compile("defined\\s+(\\w+)");
    private static final Pattern PATTERN_DEFINED_FUNC = Pattern.compile("defined\\s*\\(\\s*(\\w+)\\s*\\)");
@@ -31,11 +31,12 @@ public class MacroState {
    private static final String UNDEF = "undef";
    private static final String IFDEF = "ifdef";
    private static final String IFNDEF = "ifndef";
-   private static final String IF = "if";
+   // $FF: renamed from: IF java.lang.String
+   private static final String field_64 = "if";
    private static final String ELSE = "else";
    private static final String ELIF = "elif";
    private static final String ENDIF = "endif";
-   private static final List<String> MACRO_NAMES = Arrays.asList("define", "undef", "ifdef", "ifndef", "if", "else", "elif", "endif");
+   private static final List MACRO_NAMES = Arrays.asList("define", "undef", "ifdef", "ifndef", "if", "else", "elif", "endif");
 
    public boolean processLine(String line) {
       Matcher m = PATTERN_DIRECTIVE.matcher(line);
@@ -74,39 +75,45 @@ public class MacroState {
          this.mapMacroValues.put(macro, rest);
       } else if (name.equals("undef")) {
          this.mapMacroValues.remove(macro);
-      } else if (name.equals("ifdef")) {
-         boolean act = this.mapMacroValues.containsKey(macro);
-         this.dequeState.add(act);
-         this.dequeResolved.add(act);
-      } else if (name.equals("ifndef")) {
-         boolean act = !this.mapMacroValues.containsKey(macro);
-         this.dequeState.add(act);
-         this.dequeResolved.add(act);
-      } else if (name.equals("if")) {
-         boolean act = this.eval(param);
-         this.dequeState.add(act);
-         this.dequeResolved.add(act);
-      } else if (!this.dequeState.isEmpty()) {
-         if (name.equals("elif")) {
-            boolean lastState = (Boolean)this.dequeState.removeLast();
-            boolean lastResolved = (Boolean)this.dequeResolved.removeLast();
-            if (lastResolved) {
-               this.dequeState.add(false);
-               this.dequeResolved.add(lastResolved);
-            } else {
-               boolean act = this.eval(param);
+      } else {
+         boolean lastState;
+         if (name.equals("ifdef")) {
+            lastState = this.mapMacroValues.containsKey(macro);
+            this.dequeState.add(lastState);
+            this.dequeResolved.add(lastState);
+         } else if (name.equals("ifndef")) {
+            lastState = !this.mapMacroValues.containsKey(macro);
+            this.dequeState.add(lastState);
+            this.dequeResolved.add(lastState);
+         } else if (name.equals("if")) {
+            lastState = this.eval(param);
+            this.dequeState.add(lastState);
+            this.dequeResolved.add(lastState);
+         } else if (!this.dequeState.isEmpty()) {
+            boolean lastResolved;
+            boolean act;
+            if (name.equals("elif")) {
+               lastState = (Boolean)this.dequeState.removeLast();
+               lastResolved = (Boolean)this.dequeResolved.removeLast();
+               if (lastResolved) {
+                  this.dequeState.add(false);
+                  this.dequeResolved.add(lastResolved);
+               } else {
+                  act = this.eval(param);
+                  this.dequeState.add(act);
+                  this.dequeResolved.add(act);
+               }
+
+            } else if (name.equals("else")) {
+               lastState = (Boolean)this.dequeState.removeLast();
+               lastResolved = (Boolean)this.dequeResolved.removeLast();
+               act = !lastResolved;
                this.dequeState.add(act);
-               this.dequeResolved.add(act);
+               this.dequeResolved.add(true);
+            } else if (name.equals("endif")) {
+               this.dequeState.removeLast();
+               this.dequeResolved.removeLast();
             }
-         } else if (name.equals("else")) {
-            boolean lastState = (Boolean)this.dequeState.removeLast();
-            boolean lastResolved = (Boolean)this.dequeResolved.removeLast();
-            boolean act = !lastResolved;
-            this.dequeState.add(act);
-            this.dequeResolved.add(true);
-         } else if (name.equals("endif")) {
-            this.dequeState.removeLast();
-            this.dequeResolved.removeLast();
          }
       }
    }
@@ -119,30 +126,38 @@ public class MacroState {
       boolean replaced = false;
       int count = 0;
 
+      label68:
       do {
          replaced = false;
          Matcher mmn = PATTERN_MACRO.matcher(str);
 
-         while (mmn.find()) {
-            String match = mmn.group();
-            if (match.length() > 0) {
-               char ch = match.charAt(0);
-               if ((Character.isLetter(ch) || ch == '_') && this.mapMacroValues.containsKey(match)) {
-                  String val = (String)this.mapMacroValues.get(match);
-                  if (val == null) {
-                     val = "1";
+         String match;
+         char ch;
+         do {
+            do {
+               do {
+                  if (!mmn.find()) {
+                     continue label68;
                   }
 
-                  int start = mmn.start();
-                  int end = mmn.end();
-                  str = str.substring(0, start) + " " + val + " " + str.substring(end);
-                  replaced = true;
-                  count++;
-                  break;
-               }
-            }
+                  match = mmn.group();
+               } while(match.length() <= 0);
+
+               ch = match.charAt(0);
+            } while(!Character.isLetter(ch) && ch != '_');
+         } while(!this.mapMacroValues.containsKey(match));
+
+         String val = (String)this.mapMacroValues.get(match);
+         if (val == null) {
+            val = "1";
          }
-      } while (replaced && count < 100);
+
+         int start = mmn.start();
+         int end = mmn.end();
+         str = str.substring(0, start) + " " + val + " " + str.substring(end);
+         replaced = true;
+         ++count;
+      } while(replaced && count < 100);
 
       if (count >= 100) {
          Config.warn("Too many iterations: " + count + ", when resolving: " + str);
@@ -154,13 +169,15 @@ public class MacroState {
             IExpression expr = ep.parse(str);
             if (expr.getExpressionType() == ExpressionType.BOOL) {
                IExpressionBool exprBool = (IExpressionBool)expr;
-               return exprBool.eval();
+               boolean ret = exprBool.eval();
+               return ret;
             } else if (expr.getExpressionType() == ExpressionType.FLOAT) {
                IExpressionFloat exprFloat = (IExpressionFloat)expr;
                float val = exprFloat.eval();
-               return val != 0.0F;
+               boolean ret = val != 0.0F;
+               return ret;
             } else {
-               throw new ParseException("Not a boolean or float expression: " + expr.getExpressionType());
+               throw new ParseException("Not a boolean or float expression: " + String.valueOf(expr.getExpressionType()));
             }
          } catch (ParseException var12) {
             Config.warn("Invalid macro expression: " + str);

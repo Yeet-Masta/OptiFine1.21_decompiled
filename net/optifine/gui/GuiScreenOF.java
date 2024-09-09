@@ -1,8 +1,12 @@
 package net.optifine.gui;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,18 +15,23 @@ import net.minecraft.util.FormattedCharSequence;
 import net.optifine.util.GuiUtils;
 
 public class GuiScreenOF extends Screen {
-   protected net.minecraft.client.gui.Font fontRenderer = Minecraft.m_91087_().f_91062_;
-   protected boolean mousePressed = false;
-   protected net.minecraft.client.Options settings = Minecraft.m_91087_().f_91066_;
+   protected Font fontRenderer;
+   protected boolean mousePressed;
+   protected Options settings;
 
    public GuiScreenOF(Component title) {
       super(title);
+      this.fontRenderer = Minecraft.m_91087_().f_91062_;
+      this.mousePressed = false;
+      this.settings = Minecraft.m_91087_().f_91066_;
    }
 
-   public List<AbstractWidget> getButtonList() {
-      List<AbstractWidget> buttons = new ArrayList();
+   public List getButtonList() {
+      List buttons = new ArrayList();
+      Iterator var2 = this.m_6702_().iterator();
 
-      for (GuiEventListener gel : this.m_6702_()) {
+      while(var2.hasNext()) {
+         GuiEventListener gel = (GuiEventListener)var2.next();
          if (gel instanceof AbstractWidget) {
             buttons.add((AbstractWidget)gel);
          }
@@ -42,8 +51,11 @@ public class GuiScreenOF extends Screen {
       this.mousePressed = true;
       AbstractWidget btn = getSelectedButton((int)mouseX, (int)mouseY, this.getButtonList());
       if (btn != null && btn.f_93623_) {
-         if (mouseButton == 1 && btn instanceof IOptionControl ioc && ioc.getControlOption() == this.settings.GUI_SCALE) {
-            btn.m_7435_(super.f_96541_.m_91106_());
+         if (mouseButton == 1 && btn instanceof IOptionControl) {
+            IOptionControl ioc = (IOptionControl)btn;
+            if (ioc.getControlOption() == this.settings.GUI_SCALE) {
+               btn.m_7435_(super.f_96541_.m_91106_());
+            }
          }
 
          if (mouseButton == 0) {
@@ -75,9 +87,7 @@ public class GuiScreenOF extends Screen {
       } else {
          this.mousePressed = false;
          this.m_7897_(false);
-         return this.m_7222_() != null && this.m_7222_().m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_)
-            ? true
-            : super.m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_);
+         return this.m_7222_() != null && this.m_7222_().m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_) ? true : super.m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_);
       }
    }
 
@@ -85,8 +95,8 @@ public class GuiScreenOF extends Screen {
       return !this.mousePressed ? false : super.m_7979_(p_mouseDragged_1_, p_mouseDragged_3_, p_mouseDragged_5_, p_mouseDragged_6_, p_mouseDragged_8_);
    }
 
-   public static AbstractWidget getSelectedButton(int x, int y, List<AbstractWidget> listButtons) {
-      for (int i = 0; i < listButtons.size(); i++) {
+   public static AbstractWidget getSelectedButton(int x, int y, List listButtons) {
+      for(int i = 0; i < listButtons.size(); ++i) {
          AbstractWidget btn = (AbstractWidget)listButtons.get(i);
          if (btn.f_93624_) {
             int btnWidth = GuiUtils.getWidth(btn);
@@ -100,32 +110,19 @@ public class GuiScreenOF extends Screen {
       return null;
    }
 
-   public static void drawString(
-      net.minecraft.client.gui.GuiGraphics graphicsIn, net.minecraft.client.gui.Font fontRendererIn, String textIn, int xIn, int yIn, int colorIn
-   ) {
+   public static void drawString(GuiGraphics graphicsIn, Font fontRendererIn, String textIn, int xIn, int yIn, int colorIn) {
       graphicsIn.m_280137_(fontRendererIn, textIn, xIn, yIn, colorIn);
    }
 
-   public static void drawCenteredString(
-      net.minecraft.client.gui.GuiGraphics graphicsIn,
-      net.minecraft.client.gui.Font fontRendererIn,
-      FormattedCharSequence textIn,
-      int xIn,
-      int yIn,
-      int colorIn
-   ) {
+   public static void drawCenteredString(GuiGraphics graphicsIn, Font fontRendererIn, FormattedCharSequence textIn, int xIn, int yIn, int colorIn) {
       graphicsIn.m_280364_(fontRendererIn, textIn, xIn, yIn, colorIn);
    }
 
-   public static void drawCenteredString(
-      net.minecraft.client.gui.GuiGraphics graphicsIn, net.minecraft.client.gui.Font fontRendererIn, String textIn, int xIn, int yIn, int colorIn
-   ) {
+   public static void drawCenteredString(GuiGraphics graphicsIn, Font fontRendererIn, String textIn, int xIn, int yIn, int colorIn) {
       graphicsIn.m_280137_(fontRendererIn, textIn, xIn, yIn, colorIn);
    }
 
-   public static void drawCenteredString(
-      net.minecraft.client.gui.GuiGraphics graphicsIn, net.minecraft.client.gui.Font fontRendererIn, Component textIn, int xIn, int yIn, int colorIn
-   ) {
+   public static void drawCenteredString(GuiGraphics graphicsIn, Font fontRendererIn, Component textIn, int xIn, int yIn, int colorIn) {
       graphicsIn.m_280653_(fontRendererIn, textIn, xIn, yIn, colorIn);
    }
 }

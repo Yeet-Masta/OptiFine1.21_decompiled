@@ -36,7 +36,7 @@ public class BlockAlias {
    }
 
    public boolean matches(int id, int metadata) {
-      for (int i = 0; i < this.matchBlocks.length; i++) {
+      for(int i = 0; i < this.matchBlocks.length; ++i) {
          MatchBlock matchBlock = this.matchBlocks[i];
          if (matchBlock.matches(id, metadata)) {
             return true;
@@ -47,32 +47,35 @@ public class BlockAlias {
    }
 
    public int[] getMatchBlockIds() {
-      Set<Integer> blockIdSet = new HashSet();
+      Set blockIdSet = new HashSet();
 
-      for (int i = 0; i < this.matchBlocks.length; i++) {
+      for(int i = 0; i < this.matchBlocks.length; ++i) {
          MatchBlock matchBlock = this.matchBlocks[i];
          int blockId = matchBlock.getBlockId();
          blockIdSet.add(blockId);
       }
 
       Integer[] blockIdsArr = (Integer[])blockIdSet.toArray(new Integer[blockIdSet.size()]);
-      return Config.toPrimitive(blockIdsArr);
+      int[] blockIds = Config.toPrimitive(blockIdsArr);
+      return blockIds;
    }
 
    public MatchBlock[] getMatchBlocks(int matchBlockId) {
-      List<MatchBlock> listMatchBlock = new ArrayList();
+      List listMatchBlock = new ArrayList();
 
-      for (int i = 0; i < this.matchBlocks.length; i++) {
+      for(int i = 0; i < this.matchBlocks.length; ++i) {
          MatchBlock mb = this.matchBlocks[i];
          if (mb.getBlockId() == matchBlockId) {
             listMatchBlock.add(mb);
          }
       }
 
-      return (MatchBlock[])listMatchBlock.toArray(new MatchBlock[listMatchBlock.size()]);
+      MatchBlock[] mbs = (MatchBlock[])listMatchBlock.toArray(new MatchBlock[listMatchBlock.size()]);
+      return mbs;
    }
 
    public String toString() {
-      return "block." + this.aliasBlockId + ":" + this.aliasMetadata + "=" + Config.arrayToString((Object[])this.matchBlocks);
+      int var10000 = this.aliasBlockId;
+      return "block." + var10000 + ":" + this.aliasMetadata + "=" + Config.arrayToString((Object[])this.matchBlocks);
    }
 }

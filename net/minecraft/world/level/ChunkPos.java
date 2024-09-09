@@ -1,6 +1,6 @@
 package net.minecraft.world.level;
 
-import java.util.Spliterators.AbstractSpliterator;
+import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -11,7 +11,7 @@ import net.minecraft.core.SectionPos;
 public class ChunkPos {
    private static final int f_199440_ = 1056;
    public static final long f_45577_ = m_45589_(1875066, 1875066);
-   public static final net.minecraft.world.level.ChunkPos f_186419_ = new net.minecraft.world.level.ChunkPos(0, 0);
+   public static final ChunkPos f_186419_ = new ChunkPos(0, 0);
    private static final long f_151375_ = 32L;
    private static final long f_151376_ = 4294967295L;
    private static final int f_151377_ = 5;
@@ -40,12 +40,12 @@ public class ChunkPos {
       this.f_45579_ = (int)(longIn >> 32);
    }
 
-   public static net.minecraft.world.level.ChunkPos m_220337_(int regionX, int regionZ) {
-      return new net.minecraft.world.level.ChunkPos(regionX << 5, regionZ << 5);
+   public static ChunkPos m_220337_(int regionX, int regionZ) {
+      return new ChunkPos(regionX << 5, regionZ << 5);
    }
 
-   public static net.minecraft.world.level.ChunkPos m_220340_(int regionX, int regionZ) {
-      return new net.minecraft.world.level.ChunkPos((regionX << 5) + 31, (regionZ << 5) + 31);
+   public static ChunkPos m_220340_(int regionX, int regionZ) {
+      return new ChunkPos((regionX << 5) + 31, (regionZ << 5) + 31);
    }
 
    public long m_45588_() {
@@ -87,9 +87,15 @@ public class ChunkPos {
       if (this == p_equals_1_) {
          return true;
       } else {
-         return p_equals_1_ instanceof net.minecraft.world.level.ChunkPos chunkpos
-            ? this.f_45578_ == chunkpos.f_45578_ && this.f_45579_ == chunkpos.f_45579_
-            : false;
+         boolean var10000;
+         if (p_equals_1_ instanceof ChunkPos) {
+            ChunkPos chunkpos = (ChunkPos)p_equals_1_;
+            var10000 = this.f_45578_ == chunkpos.f_45578_ && this.f_45579_ == chunkpos.f_45579_;
+         } else {
+            var10000 = false;
+         }
+
+         return var10000;
       }
    }
 
@@ -157,7 +163,7 @@ public class ChunkPos {
       return new BlockPos(this.m_45604_(), 0, this.m_45605_());
    }
 
-   public int m_45594_(net.minecraft.world.level.ChunkPos chunkPosIn) {
+   public int m_45594_(ChunkPos chunkPosIn) {
       return this.m_340425_(chunkPosIn.f_45578_, chunkPosIn.f_45579_);
    }
 
@@ -165,7 +171,7 @@ public class ChunkPos {
       return Math.max(Math.abs(this.f_45578_ - x), Math.abs(this.f_45579_ - z));
    }
 
-   public int m_293627_(net.minecraft.world.level.ChunkPos chunkPosIn) {
+   public int m_293627_(ChunkPos chunkPosIn) {
       return this.m_292874_(chunkPosIn.f_45578_, chunkPosIn.f_45579_);
    }
 
@@ -179,25 +185,20 @@ public class ChunkPos {
       return i * i + j * j;
    }
 
-   public static Stream<net.minecraft.world.level.ChunkPos> m_45596_(net.minecraft.world.level.ChunkPos center, int radius) {
-      return m_45599_(
-         new net.minecraft.world.level.ChunkPos(center.f_45578_ - radius, center.f_45579_ - radius),
-         new net.minecraft.world.level.ChunkPos(center.f_45578_ + radius, center.f_45579_ + radius)
-      );
+   public static Stream m_45596_(ChunkPos center, int radius) {
+      return m_45599_(new ChunkPos(center.f_45578_ - radius, center.f_45579_ - radius), new ChunkPos(center.f_45578_ + radius, center.f_45579_ + radius));
    }
 
-   public static Stream<net.minecraft.world.level.ChunkPos> m_45599_(
-      final net.minecraft.world.level.ChunkPos start, final net.minecraft.world.level.ChunkPos end
-   ) {
+   public static Stream m_45599_(final ChunkPos start, final ChunkPos end) {
       int i = Math.abs(start.f_45578_ - end.f_45578_) + 1;
       int j = Math.abs(start.f_45579_ - end.f_45579_) + 1;
       final int k = start.f_45578_ < end.f_45578_ ? 1 : -1;
       final int l = start.f_45579_ < end.f_45579_ ? 1 : -1;
-      return StreamSupport.stream(new AbstractSpliterator<net.minecraft.world.level.ChunkPos>((long)(i * j), 64) {
+      return StreamSupport.stream(new Spliterators.AbstractSpliterator((long)(i * j), 64) {
          @Nullable
-         private net.minecraft.world.level.ChunkPos f_45621_;
+         private ChunkPos f_45621_;
 
-         public boolean tryAdvance(Consumer<? super net.minecraft.world.level.ChunkPos> p_tryAdvance_1_) {
+         public boolean tryAdvance(Consumer p_tryAdvance_1_) {
             if (this.f_45621_ == null) {
                this.f_45621_ = start;
             } else {
@@ -208,9 +209,9 @@ public class ChunkPos {
                      return false;
                   }
 
-                  this.f_45621_ = new net.minecraft.world.level.ChunkPos(start.f_45578_, j1 + l);
+                  this.f_45621_ = new ChunkPos(start.f_45578_, j1 + l);
                } else {
-                  this.f_45621_ = new net.minecraft.world.level.ChunkPos(i1 + k, j1);
+                  this.f_45621_ = new ChunkPos(i1 + k, j1);
                }
             }
 

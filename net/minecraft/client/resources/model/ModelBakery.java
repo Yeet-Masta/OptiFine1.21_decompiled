@@ -12,22 +12,29 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
+import net.minecraft.Util;
 import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.FaceBakery;
 import net.minecraft.client.renderer.block.model.ItemModelGenerator;
-import net.minecraft.client.resources.model.BlockStateModelLoader.LoadedJson;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.FileToIdConverter;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.optifine.Config;
@@ -37,79 +44,43 @@ import net.optifine.util.TextureUtils;
 import org.slf4j.Logger;
 
 public class ModelBakery {
-   public static final net.minecraft.client.resources.model.Material f_119219_ = new net.minecraft.client.resources.model.Material(
-      net.minecraft.client.renderer.texture.TextureAtlas.f_118259_, net.minecraft.resources.ResourceLocation.m_340282_("block/fire_0")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119220_ = new net.minecraft.client.resources.model.Material(
-      net.minecraft.client.renderer.texture.TextureAtlas.f_118259_, net.minecraft.resources.ResourceLocation.m_340282_("block/fire_1")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119221_ = new net.minecraft.client.resources.model.Material(
-      net.minecraft.client.renderer.texture.TextureAtlas.f_118259_, net.minecraft.resources.ResourceLocation.m_340282_("block/lava_flow")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119222_ = new net.minecraft.client.resources.model.Material(
-      net.minecraft.client.renderer.texture.TextureAtlas.f_118259_, net.minecraft.resources.ResourceLocation.m_340282_("block/water_flow")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119223_ = new net.minecraft.client.resources.model.Material(
-      net.minecraft.client.renderer.texture.TextureAtlas.f_118259_, net.minecraft.resources.ResourceLocation.m_340282_("block/water_overlay")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119224_ = new net.minecraft.client.resources.model.Material(
-      Sheets.f_110737_, net.minecraft.resources.ResourceLocation.m_340282_("entity/banner_base")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119225_ = new net.minecraft.client.resources.model.Material(
-      Sheets.f_110738_, net.minecraft.resources.ResourceLocation.m_340282_("entity/shield_base")
-   );
-   public static final net.minecraft.client.resources.model.Material f_119226_ = new net.minecraft.client.resources.model.Material(
-      Sheets.f_110738_, net.minecraft.resources.ResourceLocation.m_340282_("entity/shield_base_nopattern")
-   );
+   public static final Material f_119219_;
+   public static final Material f_119220_;
+   public static final Material f_119221_;
+   public static final Material f_119222_;
+   public static final Material f_119223_;
+   public static final Material f_119224_;
+   public static final Material f_119225_;
+   public static final Material f_119226_;
    public static final int f_174875_ = 10;
-   public static final List<net.minecraft.resources.ResourceLocation> f_119227_ = (List<net.minecraft.resources.ResourceLocation>)IntStream.range(0, 10)
-      .mapToObj(indexIn -> net.minecraft.resources.ResourceLocation.m_340282_("block/destroy_stage_" + indexIn))
-      .collect(Collectors.toList());
-   public static final List<net.minecraft.resources.ResourceLocation> f_119228_ = (List<net.minecraft.resources.ResourceLocation>)f_119227_.stream()
-      .map(locationIn -> locationIn.m_247266_(pathIn -> "textures/" + pathIn + ".png"))
-      .collect(Collectors.toList());
-   public static final List<net.minecraft.client.renderer.RenderType> f_119229_ = (List<net.minecraft.client.renderer.RenderType>)f_119228_.stream()
-      .map(net.minecraft.client.renderer.RenderType::m_110494_)
-      .collect(Collectors.toList());
-   private static final Logger f_119235_ = LogUtils.getLogger();
+   public static final List f_119227_;
+   public static final List f_119228_;
+   public static final List f_119229_;
+   private static final Logger f_119235_;
    private static final String f_174878_ = "builtin/";
    private static final String f_174879_ = "builtin/generated";
    private static final String f_174880_ = "builtin/entity";
    private static final String f_174881_ = "missing";
-   public static final net.minecraft.resources.ResourceLocation f_119230_ = net.minecraft.resources.ResourceLocation.m_340282_("builtin/missing");
-   public static final ModelResourceLocation f_336634_ = new ModelResourceLocation(f_119230_, "missing");
-   public static final FileToIdConverter f_244378_ = FileToIdConverter.m_246568_("models");
+   public static final ResourceLocation f_119230_;
+   public static final ModelResourceLocation f_336634_;
+   public static final FileToIdConverter f_244378_;
    @VisibleForTesting
-   public static final String f_119231_ = ("{    'textures': {       'particle': '"
-         + net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118071_().m_135815_()
-         + "',       'missingno': '"
-         + net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118071_().m_135815_()
-         + "'    },    'elements': [         {  'from': [ 0, 0, 0 ],            'to': [ 16, 16, 16 ],            'faces': {                'down':  { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'down',  'texture': '#missingno' },                'up':    { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'up',    'texture': '#missingno' },                'north': { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'north', 'texture': '#missingno' },                'south': { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'south', 'texture': '#missingno' },                'west':  { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'west',  'texture': '#missingno' },                'east':  { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'east',  'texture': '#missingno' }            }        }    ]}")
-      .replace('\'', '"');
-   private static final Map<String, String> f_119237_ = Map.of("missing", f_119231_);
-   public static final BlockModel f_119232_ = net.minecraft.Util.m_137469_(
-      BlockModel.m_111463_("{\"gui_light\": \"front\"}"), modelIn -> modelIn.f_111416_ = "generation marker"
-   );
-   public static final BlockModel f_119233_ = net.minecraft.Util.m_137469_(
-      BlockModel.m_111463_("{\"gui_light\": \"side\"}"), modelIn -> modelIn.f_111416_ = "block entity marker"
-   );
-   static final ItemModelGenerator f_119241_ = new ItemModelGenerator();
-   private final Map<net.minecraft.resources.ResourceLocation, BlockModel> f_244132_;
-   private final Set<net.minecraft.resources.ResourceLocation> f_119210_ = new HashSet();
-   private final Map<net.minecraft.resources.ResourceLocation, UnbakedModel> f_119212_ = new HashMap();
-   final Map<net.minecraft.client.resources.model.ModelBakery.BakedCacheKey, net.minecraft.client.resources.model.BakedModel> f_119213_ = new HashMap();
-   private final Map<ModelResourceLocation, UnbakedModel> f_119214_ = new HashMap();
-   private final Map<ModelResourceLocation, net.minecraft.client.resources.model.BakedModel> f_119215_ = new HashMap();
+   public static final String f_119231_;
+   private static final Map f_119237_;
+   public static final BlockModel f_119232_;
+   public static final BlockModel f_119233_;
+   static final ItemModelGenerator f_119241_;
+   private final Map f_244132_;
+   private final Set f_119210_ = new HashSet();
+   private final Map f_119212_ = new HashMap();
+   final Map f_119213_ = new HashMap();
+   private final Map f_119214_ = new HashMap();
+   private final Map f_119215_ = new HashMap();
    private final UnbakedModel f_336931_;
-   private final Object2IntMap<net.minecraft.world.level.block.state.BlockState> f_119218_;
-   public Map<net.minecraft.resources.ResourceLocation, UnbakedModel> mapUnbakedModels;
+   private final Object2IntMap f_119218_;
+   public Map mapUnbakedModels;
 
-   public ModelBakery(
-      BlockColors blockColorsIn,
-      ProfilerFiller profilerIn,
-      Map<net.minecraft.resources.ResourceLocation, BlockModel> modelResourcesIn,
-      Map<net.minecraft.resources.ResourceLocation, List<LoadedJson>> blockStateResourcesIn
-   ) {
+   public ModelBakery(BlockColors blockColorsIn, ProfilerFiller profilerIn, Map modelResourcesIn, Map blockStateResourcesIn) {
       this.f_244132_ = new HashMap(modelResourcesIn);
       profilerIn.m_6180_("missing_model");
 
@@ -125,33 +96,39 @@ public class ModelBakery {
       blockstatemodelloader.m_338905_();
       this.f_119218_ = blockstatemodelloader.m_338779_();
       profilerIn.m_6182_("items");
+      Iterator var6 = BuiltInRegistries.f_257033_.m_6566_().iterator();
 
-      for (net.minecraft.resources.ResourceLocation resourcelocation : BuiltInRegistries.f_257033_.m_6566_()) {
+      while(var6.hasNext()) {
+         ResourceLocation resourcelocation = (ResourceLocation)var6.next();
          this.m_339007_(resourcelocation);
       }
 
       profilerIn.m_6182_("special");
-      this.m_338793_(net.minecraft.client.renderer.entity.ItemRenderer.f_244055_);
-      this.m_338793_(net.minecraft.client.renderer.entity.ItemRenderer.f_243706_);
-      Set<ModelResourceLocation> additionalModels = Sets.newHashSet();
-      Reflector.ForgeHooksClient_onRegisterAdditionalModels.call(additionalModels);
+      this.m_338793_(ItemRenderer.f_244055_);
+      this.m_338793_(ItemRenderer.f_243706_);
+      Set additionalModels = Sets.newHashSet();
+      Reflector.ForgeHooksClient_onRegisterAdditionalModels.call((Object)additionalModels);
+      Iterator var11 = additionalModels.iterator();
 
-      for (ModelResourceLocation rl : additionalModels) {
+      while(var11.hasNext()) {
+         ModelResourceLocation rl = (ModelResourceLocation)var11.next();
          this.m_338699_(rl, this.m_119341_(rl.f_336625_()));
       }
 
       this.mapUnbakedModels = this.f_119212_;
       TextureUtils.registerCustomModels(this);
-      this.f_119214_.values().forEach(modelIn -> modelIn.m_5500_(this::m_119341_));
+      this.f_119214_.values().forEach((modelIn) -> {
+         modelIn.m_5500_(this::m_119341_);
+      });
       profilerIn.m_7238_();
    }
 
-   public void m_245909_(net.minecraft.client.resources.model.ModelBakery.TextureGetter funcIn) {
+   public void m_245909_(TextureGetter funcIn) {
       this.f_119214_.forEach((locIn, modelIn) -> {
-         net.minecraft.client.resources.model.BakedModel bakedmodel = null;
+         BakedModel bakedmodel = null;
 
          try {
-            bakedmodel = new net.minecraft.client.resources.model.ModelBakery.ModelBakerImpl(funcIn, locIn).m_339454_(modelIn, BlockModelRotation.X0_Y0);
+            bakedmodel = (new ModelBakerImpl(funcIn, locIn)).m_339454_(modelIn, BlockModelRotation.X0_Y0);
          } catch (Exception var6) {
             f_119235_.warn("Unable to bake model: '{}': {}", locIn, var6);
          }
@@ -159,19 +136,20 @@ public class ModelBakery {
          if (bakedmodel != null) {
             this.f_119215_.put(locIn, bakedmodel);
          }
+
       });
    }
 
-   public UnbakedModel m_119341_(net.minecraft.resources.ResourceLocation modelLocation) {
+   public UnbakedModel m_119341_(ResourceLocation modelLocation) {
       if (this.f_119212_.containsKey(modelLocation)) {
          return (UnbakedModel)this.f_119212_.get(modelLocation);
       } else if (this.f_119210_.contains(modelLocation)) {
-         throw new IllegalStateException("Circular reference while loading " + modelLocation);
+         throw new IllegalStateException("Circular reference while loading " + String.valueOf(modelLocation));
       } else {
          this.f_119210_.add(modelLocation);
 
-         while (!this.f_119210_.isEmpty()) {
-            net.minecraft.resources.ResourceLocation resourcelocation = (net.minecraft.resources.ResourceLocation)this.f_119210_.iterator().next();
+         while(!this.f_119210_.isEmpty()) {
+            ResourceLocation resourcelocation = (ResourceLocation)this.f_119210_.iterator().next();
 
             try {
                if (!this.f_119212_.containsKey(resourcelocation)) {
@@ -181,7 +159,9 @@ public class ModelBakery {
                }
             } catch (Exception var7) {
                f_119235_.warn("Unable to load model: '{}' referenced from: {}", resourcelocation, modelLocation);
-               f_119235_.warn(var7.getClass().getName() + ": " + var7.getMessage());
+               Logger var10000 = f_119235_;
+               String var10001 = var7.getClass().getName();
+               var10000.warn(var10001 + ": " + var7.getMessage());
                this.f_119212_.put(resourcelocation, this.f_336931_);
             } finally {
                this.f_119210_.remove(resourcelocation);
@@ -192,9 +172,9 @@ public class ModelBakery {
       }
    }
 
-   public void m_339007_(net.minecraft.resources.ResourceLocation locationIn) {
+   public void m_339007_(ResourceLocation locationIn) {
       ModelResourceLocation modelresourcelocation = ModelResourceLocation.m_340229_(locationIn);
-      net.minecraft.resources.ResourceLocation resourcelocation = locationIn.m_246208_("item/");
+      ResourceLocation resourcelocation = locationIn.m_246208_("item/");
       String path = locationIn.m_135815_();
       if (path.startsWith("optifine/") || path.startsWith("item/")) {
          resourcelocation = locationIn.m_246208_("");
@@ -205,13 +185,16 @@ public class ModelBakery {
    }
 
    private void m_338793_(ModelResourceLocation locationIn) {
-      net.minecraft.resources.ResourceLocation resourcelocation = locationIn.f_336625_().m_246208_("item/");
+      ResourceLocation resourcelocation = locationIn.f_336625_().m_246208_("item/");
       UnbakedModel unbakedmodel = this.m_119341_(resourcelocation);
       this.m_340411_(locationIn, unbakedmodel);
    }
 
    private void m_340411_(ModelResourceLocation locationIn, UnbakedModel modelIn) {
-      for (net.minecraft.resources.ResourceLocation resourcelocation : modelIn.m_7970_()) {
+      Iterator var3 = modelIn.m_7970_().iterator();
+
+      while(var3.hasNext()) {
+         ResourceLocation resourcelocation = (ResourceLocation)var3.next();
          this.m_119341_(resourcelocation);
       }
 
@@ -222,7 +205,7 @@ public class ModelBakery {
       this.f_119214_.put(locationIn, modelIn);
    }
 
-   private BlockModel m_119364_(net.minecraft.resources.ResourceLocation location) throws IOException {
+   private BlockModel m_119364_(ResourceLocation location) throws IOException {
       String s = location.m_135815_();
       if ("builtin/generated".equals(s)) {
          return f_119232_;
@@ -240,7 +223,7 @@ public class ModelBakery {
             return blockmodel1;
          }
       } else {
-         net.minecraft.resources.ResourceLocation resourcelocation = this.getModelLocation(location);
+         ResourceLocation resourcelocation = this.getModelLocation(location);
          BlockModel blockmodel = (BlockModel)this.f_244132_.get(resourcelocation);
          if (blockmodel == null) {
             blockmodel = this.loadBlockModel(resourcelocation);
@@ -260,19 +243,19 @@ public class ModelBakery {
       }
    }
 
-   public Map<ModelResourceLocation, net.minecraft.client.resources.model.BakedModel> m_119251_() {
+   public Map m_119251_() {
       return this.f_119215_;
    }
 
-   public Object2IntMap<net.minecraft.world.level.block.state.BlockState> m_119355_() {
+   public Object2IntMap m_119355_() {
       return this.f_119218_;
    }
 
-   private net.minecraft.resources.ResourceLocation getModelLocation(net.minecraft.resources.ResourceLocation location) {
+   private ResourceLocation getModelLocation(ResourceLocation location) {
       String path = location.m_135815_();
       if (path.startsWith("optifine/")) {
          if (!path.endsWith(".json")) {
-            location = new net.minecraft.resources.ResourceLocation(location.m_135827_(), path + ".json");
+            location = new ResourceLocation(location.m_135827_(), path + ".json");
          }
 
          return location;
@@ -282,41 +265,36 @@ public class ModelBakery {
    }
 
    public static void fixModelLocations(BlockModel modelBlock, String basePath) {
-      net.minecraft.resources.ResourceLocation parentLocFixed = fixModelLocation(
-         net.minecraft.client.renderer.block.model.FaceBakery.getParentLocation(modelBlock), basePath
-      );
-      if (parentLocFixed != net.minecraft.client.renderer.block.model.FaceBakery.getParentLocation(modelBlock)) {
-         net.minecraft.client.renderer.block.model.FaceBakery.setParentLocation(modelBlock, parentLocFixed);
+      ResourceLocation parentLocFixed = fixModelLocation(FaceBakery.getParentLocation(modelBlock), basePath);
+      if (parentLocFixed != FaceBakery.getParentLocation(modelBlock)) {
+         FaceBakery.setParentLocation(modelBlock, parentLocFixed);
       }
 
-      if (net.minecraft.client.renderer.block.model.FaceBakery.getTextures(modelBlock) != null) {
-         for (Entry<String, Either<net.minecraft.client.resources.model.Material, String>> entry : net.minecraft.client.renderer.block.model.FaceBakery.getTextures(
-               modelBlock
-            )
-            .entrySet()) {
-            Either<net.minecraft.client.resources.model.Material, String> value = (Either<net.minecraft.client.resources.model.Material, String>)entry.getValue();
-            Optional<net.minecraft.client.resources.model.Material> optionalMaterial = value.left();
+      if (FaceBakery.getTextures(modelBlock) != null) {
+         Iterator it = FaceBakery.getTextures(modelBlock).entrySet().iterator();
+
+         while(it.hasNext()) {
+            Map.Entry entry = (Map.Entry)it.next();
+            Either value = (Either)entry.getValue();
+            Optional optionalMaterial = value.left();
             if (optionalMaterial.isPresent()) {
-               net.minecraft.client.resources.model.Material material = (net.minecraft.client.resources.model.Material)optionalMaterial.get();
-               net.minecraft.resources.ResourceLocation textureLocation = material.m_119203_();
+               Material material = (Material)optionalMaterial.get();
+               ResourceLocation textureLocation = material.m_119203_();
                String path = textureLocation.m_135815_();
                String pathFixed = fixResourcePath(path, basePath);
                if (!pathFixed.equals(path)) {
-                  net.minecraft.resources.ResourceLocation textureLocationFixed = new net.minecraft.resources.ResourceLocation(
-                     textureLocation.m_135827_(), pathFixed
-                  );
-                  net.minecraft.client.resources.model.Material materialFixed = new net.minecraft.client.resources.model.Material(
-                     material.m_119193_(), textureLocationFixed
-                  );
-                  Either<net.minecraft.client.resources.model.Material, String> valueFixed = Either.left(materialFixed);
+                  ResourceLocation textureLocationFixed = new ResourceLocation(textureLocation.m_135827_(), pathFixed);
+                  Material materialFixed = new Material(material.m_119193_(), textureLocationFixed);
+                  Either valueFixed = Either.left(materialFixed);
                   entry.setValue(valueFixed);
                }
             }
          }
       }
+
    }
 
-   public static net.minecraft.resources.ResourceLocation fixModelLocation(net.minecraft.resources.ResourceLocation loc, String basePath) {
+   public static ResourceLocation fixModelLocation(ResourceLocation loc, String basePath) {
       if (loc != null && basePath != null) {
          if (!loc.m_135827_().equals("minecraft")) {
             return loc;
@@ -324,7 +302,7 @@ public class ModelBakery {
             String path = loc.m_135815_();
             String pathFixed = fixResourcePath(path, basePath);
             if (pathFixed != path) {
-               loc = new net.minecraft.resources.ResourceLocation(loc.m_135827_(), pathFixed);
+               loc = new ResourceLocation(loc.m_135827_(), pathFixed);
             }
 
             return loc;
@@ -337,80 +315,125 @@ public class ModelBakery {
    private static String fixResourcePath(String path, String basePath) {
       path = TextureUtils.fixResourcePath(path, basePath);
       path = StrUtils.removeSuffix(path, ".json");
-      return StrUtils.removeSuffix(path, ".png");
+      path = StrUtils.removeSuffix(path, ".png");
+      return path;
    }
 
-   public BlockModel loadBlockModel(net.minecraft.resources.ResourceLocation locJson) {
+   public BlockModel loadBlockModel(ResourceLocation locJson) {
       try {
          Resource res = Config.getResource(locJson);
          Reader reader = res.m_215508_();
-         return BlockModel.m_111461_(reader);
+         BlockModel bm = BlockModel.m_111461_(reader);
+         return bm;
       } catch (Exception var5) {
-         Config.warn("Error loading model: " + locJson);
-         Config.warn(var5.getClass().getName() + ": " + var5.getMessage());
+         Config.warn("Error loading model: " + String.valueOf(locJson));
+         String var10000 = var5.getClass().getName();
+         Config.warn(var10000 + ": " + var5.getMessage());
          return null;
       }
    }
 
-   static record BakedCacheKey(net.minecraft.resources.ResourceLocation f_243934_, Transformation f_243798_, boolean f_243915_) {
+   static {
+      f_119219_ = new Material(TextureAtlas.f_118259_, ResourceLocation.m_340282_("block/fire_0"));
+      f_119220_ = new Material(TextureAtlas.f_118259_, ResourceLocation.m_340282_("block/fire_1"));
+      f_119221_ = new Material(TextureAtlas.f_118259_, ResourceLocation.m_340282_("block/lava_flow"));
+      f_119222_ = new Material(TextureAtlas.f_118259_, ResourceLocation.m_340282_("block/water_flow"));
+      f_119223_ = new Material(TextureAtlas.f_118259_, ResourceLocation.m_340282_("block/water_overlay"));
+      f_119224_ = new Material(Sheets.f_110737_, ResourceLocation.m_340282_("entity/banner_base"));
+      f_119225_ = new Material(Sheets.f_110738_, ResourceLocation.m_340282_("entity/shield_base"));
+      f_119226_ = new Material(Sheets.f_110738_, ResourceLocation.m_340282_("entity/shield_base_nopattern"));
+      f_119227_ = (List)IntStream.range(0, 10).mapToObj((indexIn) -> {
+         return ResourceLocation.m_340282_("block/destroy_stage_" + indexIn);
+      }).collect(Collectors.toList());
+      f_119228_ = (List)f_119227_.stream().map((locationIn) -> {
+         return locationIn.m_247266_((pathIn) -> {
+            return "textures/" + pathIn + ".png";
+         });
+      }).collect(Collectors.toList());
+      f_119229_ = (List)f_119228_.stream().map(RenderType::m_110494_).collect(Collectors.toList());
+      f_119235_ = LogUtils.getLogger();
+      f_119230_ = ResourceLocation.m_340282_("builtin/missing");
+      f_336634_ = new ModelResourceLocation(f_119230_, "missing");
+      f_244378_ = FileToIdConverter.m_246568_("models");
+      f_119231_ = ("{    'textures': {       'particle': '" + MissingTextureAtlasSprite.m_118071_().m_135815_() + "',       'missingno': '" + MissingTextureAtlasSprite.m_118071_().m_135815_() + "'    },    'elements': [         {  'from': [ 0, 0, 0 ],            'to': [ 16, 16, 16 ],            'faces': {                'down':  { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'down',  'texture': '#missingno' },                'up':    { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'up',    'texture': '#missingno' },                'north': { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'north', 'texture': '#missingno' },                'south': { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'south', 'texture': '#missingno' },                'west':  { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'west',  'texture': '#missingno' },                'east':  { 'uv': [ 0, 0, 16, 16 ], 'cullface': 'east',  'texture': '#missingno' }            }        }    ]}").replace('\'', '"');
+      f_119237_ = Map.of("missing", f_119231_);
+      f_119232_ = (BlockModel)Util.m_137469_(BlockModel.m_111463_("{\"gui_light\": \"front\"}"), (modelIn) -> {
+         modelIn.f_111416_ = "generation marker";
+      });
+      f_119233_ = (BlockModel)Util.m_137469_(BlockModel.m_111463_("{\"gui_light\": \"side\"}"), (modelIn) -> {
+         modelIn.f_111416_ = "block entity marker";
+      });
+      f_119241_ = new ItemModelGenerator();
    }
 
-   class ModelBakerImpl implements net.minecraft.client.resources.model.ModelBaker {
-      private final Function<net.minecraft.client.resources.model.Material, net.minecraft.client.renderer.texture.TextureAtlasSprite> f_243920_;
+   @FunctionalInterface
+   public interface TextureGetter {
+      TextureAtlasSprite m_338804_(ModelResourceLocation var1, Material var2);
+   }
 
-      ModelBakerImpl(final net.minecraft.client.resources.model.ModelBakery.TextureGetter funcIn, final ModelResourceLocation locIn) {
-         this.f_243920_ = materialIn -> funcIn.m_338804_(locIn, materialIn);
+   class ModelBakerImpl implements ModelBaker {
+      private final Function f_243920_;
+
+      ModelBakerImpl(final TextureGetter funcIn, final ModelResourceLocation locIn) {
+         this.f_243920_ = (materialIn) -> {
+            return funcIn.m_338804_(locIn, materialIn);
+         };
       }
 
-      @Override
-      public UnbakedModel m_245361_(net.minecraft.resources.ResourceLocation locIn) {
+      public UnbakedModel m_245361_(ResourceLocation locIn) {
          return ModelBakery.this.m_119341_(locIn);
       }
 
-      @Override
-      public Function<net.minecraft.client.resources.model.Material, net.minecraft.client.renderer.texture.TextureAtlasSprite> getModelTextureGetter() {
+      public Function getModelTextureGetter() {
          return this.f_243920_;
       }
 
-      @Override
-      public net.minecraft.client.resources.model.BakedModel m_245240_(net.minecraft.resources.ResourceLocation locIn, ModelState stateIn) {
+      public BakedModel m_245240_(ResourceLocation locIn, ModelState stateIn) {
          return this.bake(locIn, stateIn, this.f_243920_);
       }
 
-      public net.minecraft.client.resources.model.BakedModel bake(
-         net.minecraft.resources.ResourceLocation locIn,
-         ModelState stateIn,
-         Function<net.minecraft.client.resources.model.Material, net.minecraft.client.renderer.texture.TextureAtlasSprite> sprites
-      ) {
-         net.minecraft.client.resources.model.ModelBakery.BakedCacheKey modelbakery$bakedcachekey = new net.minecraft.client.resources.model.ModelBakery.BakedCacheKey(
-            locIn, stateIn.m_6189_(), stateIn.m_7538_()
-         );
-         net.minecraft.client.resources.model.BakedModel bakedmodel = (net.minecraft.client.resources.model.BakedModel)ModelBakery.this.f_119213_
-            .get(modelbakery$bakedcachekey);
+      public BakedModel bake(ResourceLocation locIn, ModelState stateIn, Function sprites) {
+         BakedCacheKey modelbakery$bakedcachekey = new BakedCacheKey(locIn, stateIn.m_6189_(), stateIn.m_7538_());
+         BakedModel bakedmodel = (BakedModel)ModelBakery.this.f_119213_.get(modelbakery$bakedcachekey);
          if (bakedmodel != null) {
             return bakedmodel;
          } else {
             UnbakedModel unbakedmodel = this.m_245361_(locIn);
-            net.minecraft.client.resources.model.BakedModel bakedmodel1 = this.m_339454_(unbakedmodel, stateIn);
+            BakedModel bakedmodel1 = this.m_339454_(unbakedmodel, stateIn);
             ModelBakery.this.f_119213_.put(modelbakery$bakedcachekey, bakedmodel1);
             return bakedmodel1;
          }
       }
 
       @Nullable
-      net.minecraft.client.resources.model.BakedModel m_339454_(UnbakedModel modelIn, ModelState stateIn) {
-         if (modelIn instanceof BlockModel blockmodel && blockmodel.m_111490_() == net.minecraft.client.resources.model.ModelBakery.f_119232_) {
-            return net.minecraft.client.resources.model.ModelBakery.f_119241_
-               .m_111670_(this.f_243920_, blockmodel)
-               .m_111449_(this, blockmodel, this.f_243920_, stateIn, false);
+      BakedModel m_339454_(UnbakedModel modelIn, ModelState stateIn) {
+         if (modelIn instanceof BlockModel blockmodel) {
+            if (blockmodel.m_111490_() == ModelBakery.f_119232_) {
+               return ModelBakery.f_119241_.m_111670_(this.f_243920_, blockmodel).m_111449_(this, blockmodel, this.f_243920_, stateIn, false);
+            }
          }
 
          return modelIn.m_7611_(this, this.f_243920_, stateIn);
       }
    }
 
-   @FunctionalInterface
-   public interface TextureGetter {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite m_338804_(ModelResourceLocation var1, net.minecraft.client.resources.model.Material var2);
+   static record BakedCacheKey(ResourceLocation f_243934_, Transformation f_243798_, boolean f_243915_) {
+      BakedCacheKey(ResourceLocation id, Transformation transformation, boolean isUvLocked) {
+         this.f_243934_ = id;
+         this.f_243798_ = transformation;
+         this.f_243915_ = isUvLocked;
+      }
+
+      public ResourceLocation f_243934_() {
+         return this.f_243934_;
+      }
+
+      public Transformation f_243798_() {
+         return this.f_243798_;
+      }
+
+      public boolean f_243915_() {
+         return this.f_243915_;
+      }
    }
 }

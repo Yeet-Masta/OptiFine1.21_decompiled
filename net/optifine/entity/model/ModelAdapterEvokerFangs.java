@@ -2,7 +2,10 @@ package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EvokerFangsModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EvokerFangsRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -13,13 +16,11 @@ public class ModelAdapterEvokerFangs extends ModelAdapter {
       super(EntityType.f_20569_, "evoker_fangs", 0.0F, new String[]{"evocation_fangs"});
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new EvokerFangsModel(bakeModelLayer(ModelLayers.f_171147_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof EvokerFangsModel modelEvokerFangs)) {
          return null;
       } else if (modelPart.equals("base")) {
@@ -33,14 +34,12 @@ public class ModelAdapterEvokerFangs extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"base", "upper_jaw", "lower_jaw", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       EvokerFangsRenderer render = new EvokerFangsRenderer(renderManager.getContext());
       if (!Reflector.RenderEvokerFangs_model.exists()) {
          Config.warn("Field not found: RenderEvokerFangs.model");

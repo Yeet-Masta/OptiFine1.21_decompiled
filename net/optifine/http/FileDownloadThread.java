@@ -14,10 +14,11 @@ public class FileDownloadThread extends Thread {
    public void run() {
       try {
          byte[] bytes = HttpPipeline.get(this.urlString, Minecraft.m_91087_().m_91096_());
-         this.listener.fileDownloadFinished(this.urlString, bytes, null);
+         this.listener.fileDownloadFinished(this.urlString, bytes, (Throwable)null);
       } catch (Exception var2) {
-         this.listener.fileDownloadFinished(this.urlString, null, var2);
+         this.listener.fileDownloadFinished(this.urlString, (byte[])null, var2);
       }
+
    }
 
    public String getUrlString() {

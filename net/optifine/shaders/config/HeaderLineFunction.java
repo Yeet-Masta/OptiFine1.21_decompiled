@@ -14,12 +14,10 @@ public class HeaderLineFunction extends HeaderLine {
       this.patternLine = Pattern.compile("^\\s*\\w+\\s+" + name + "\\s*\\(.*\\).*$", 32);
    }
 
-   @Override
    public String getText() {
       return this.text;
    }
 
-   @Override
    public boolean matches(String line) {
       if (!line.contains(this.name)) {
          return false;
@@ -29,7 +27,6 @@ public class HeaderLineFunction extends HeaderLine {
       }
    }
 
-   @Override
    public String removeFrom(String line) {
       return null;
    }

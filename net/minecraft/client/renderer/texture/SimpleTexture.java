@@ -1,5 +1,6 @@
 package net.minecraft.client.renderer.texture;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.annotation.Nullable;
 import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.optifine.Config;
@@ -15,22 +17,21 @@ import net.optifine.EmissiveTextures;
 import net.optifine.shaders.ShadersTex;
 import org.slf4j.Logger;
 
-public class SimpleTexture extends net.minecraft.client.renderer.texture.AbstractTexture {
+public class SimpleTexture extends AbstractTexture {
    static final Logger f_118130_ = LogUtils.getLogger();
-   protected final net.minecraft.resources.ResourceLocation f_118129_;
+   protected final ResourceLocation f_118129_;
    private ResourceManager resourceManager;
-   public net.minecraft.resources.ResourceLocation locationEmissive;
+   public ResourceLocation locationEmissive;
    public boolean isEmissive;
    public long size;
 
-   public SimpleTexture(net.minecraft.resources.ResourceLocation textureResourceLocation) {
+   public SimpleTexture(ResourceLocation textureResourceLocation) {
       this.f_118129_ = textureResourceLocation;
    }
 
-   @Override
    public void m_6704_(ResourceManager manager) throws IOException {
       this.resourceManager = manager;
-      net.minecraft.client.renderer.texture.SimpleTexture.TextureImage simpletexture$textureimage = this.m_6335_(manager);
+      TextureImage simpletexture$textureimage = this.m_6335_(manager);
       simpletexture$textureimage.m_118159_();
       TextureMetadataSection texturemetadatasection = simpletexture$textureimage.m_118154_();
       boolean flag;
@@ -43,15 +44,18 @@ public class SimpleTexture extends net.minecraft.client.renderer.texture.Abstrac
          flag1 = false;
       }
 
-      com.mojang.blaze3d.platform.NativeImage nativeimage = simpletexture$textureimage.m_118158_();
+      NativeImage nativeimage = simpletexture$textureimage.m_118158_();
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> this.m_118136_(nativeimage, flag, flag1));
+         RenderSystem.recordRenderCall(() -> {
+            this.m_118136_(nativeimage, flag, flag1);
+         });
       } else {
          this.m_118136_(nativeimage, flag, flag1);
       }
+
    }
 
-   private void m_118136_(com.mojang.blaze3d.platform.NativeImage imageIn, boolean blurIn, boolean clampIn) {
+   private void m_118136_(NativeImage imageIn, boolean blurIn, boolean clampIn) {
       TextureUtil.prepareImage(this.m_117963_(), 0, imageIn.m_84982_(), imageIn.m_85084_());
       imageIn.m_85013_(0, 0, 0, 0, 0, imageIn.m_84982_(), imageIn.m_85084_(), blurIn, clampIn, false, true);
       if (Config.isShaders()) {
@@ -65,15 +69,15 @@ public class SimpleTexture extends net.minecraft.client.renderer.texture.Abstrac
       this.size = imageIn.getSize();
    }
 
-   protected net.minecraft.client.renderer.texture.SimpleTexture.TextureImage m_6335_(ResourceManager resourceManager) {
-      return net.minecraft.client.renderer.texture.SimpleTexture.TextureImage.m_118155_(resourceManager, this.f_118129_);
+   protected TextureImage m_6335_(ResourceManager resourceManager) {
+      return SimpleTexture.TextureImage.m_118155_(resourceManager, this.f_118129_);
    }
 
    protected static class TextureImage implements Closeable {
       @Nullable
       private final TextureMetadataSection f_118146_;
       @Nullable
-      private final com.mojang.blaze3d.platform.NativeImage f_118147_;
+      private final NativeImage f_118147_;
       @Nullable
       private final IOException f_118148_;
 
@@ -83,22 +87,20 @@ public class SimpleTexture extends net.minecraft.client.renderer.texture.Abstrac
          this.f_118147_ = null;
       }
 
-      public TextureImage(@Nullable TextureMetadataSection metadataIn, com.mojang.blaze3d.platform.NativeImage imageIn) {
+      public TextureImage(@Nullable TextureMetadataSection metadataIn, NativeImage imageIn) {
          this.f_118148_ = null;
          this.f_118146_ = metadataIn;
          this.f_118147_ = imageIn;
       }
 
-      public static net.minecraft.client.renderer.texture.SimpleTexture.TextureImage m_118155_(
-         ResourceManager resourceManagerIn, net.minecraft.resources.ResourceLocation locationIn
-      ) {
+      public static TextureImage m_118155_(ResourceManager resourceManagerIn, ResourceLocation locationIn) {
          try {
             Resource resource = resourceManagerIn.m_215593_(locationIn);
             InputStream inputstream = resource.m_215507_();
 
-            com.mojang.blaze3d.platform.NativeImage nativeimage;
+            NativeImage nativeimage;
             try {
-               nativeimage = com.mojang.blaze3d.platform.NativeImage.m_85058_(inputstream);
+               nativeimage = NativeImage.m_85058_(inputstream);
             } catch (Throwable var9) {
                if (inputstream != null) {
                   try {
@@ -118,14 +120,14 @@ public class SimpleTexture extends net.minecraft.client.renderer.texture.Abstrac
             TextureMetadataSection texturemetadatasection = null;
 
             try {
-               texturemetadatasection = (TextureMetadataSection)resource.m_215509_().m_214059_(TextureMetadataSection.f_119108_).orElse(null);
+               texturemetadatasection = (TextureMetadataSection)resource.m_215509_().m_214059_(TextureMetadataSection.f_119108_).orElse((Object)null);
             } catch (RuntimeException var8) {
-               net.minecraft.client.renderer.texture.SimpleTexture.f_118130_.warn("Failed reading metadata of: {}", locationIn, var8);
+               SimpleTexture.f_118130_.warn("Failed reading metadata of: {}", locationIn, var8);
             }
 
-            return new net.minecraft.client.renderer.texture.SimpleTexture.TextureImage(texturemetadatasection, nativeimage);
+            return new TextureImage(texturemetadatasection, nativeimage);
          } catch (IOException var10) {
-            return new net.minecraft.client.renderer.texture.SimpleTexture.TextureImage(var10);
+            return new TextureImage(var10);
          }
       }
 
@@ -134,7 +136,7 @@ public class SimpleTexture extends net.minecraft.client.renderer.texture.Abstrac
          return this.f_118146_;
       }
 
-      public com.mojang.blaze3d.platform.NativeImage m_118158_() throws IOException {
+      public NativeImage m_118158_() throws IOException {
          if (this.f_118148_ != null) {
             throw this.f_118148_;
          } else {
@@ -146,6 +148,7 @@ public class SimpleTexture extends net.minecraft.client.renderer.texture.Abstrac
          if (this.f_118147_ != null) {
             this.f_118147_.close();
          }
+
       }
 
       public void m_118159_() throws IOException {

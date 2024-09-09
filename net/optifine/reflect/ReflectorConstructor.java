@@ -28,7 +28,8 @@ public class ReflectorConstructor implements IResolvable {
             try {
                this.targetConstructor = findConstructor(cls, this.parameterTypes);
                if (this.targetConstructor == null) {
-                  Log.dbg("(Reflector) Constructor not present: " + cls.getName() + ", params: " + ArrayUtils.arrayToString((Object[])this.parameterTypes));
+                  String var10000 = cls.getName();
+                  Log.dbg("(Reflector) Constructor not present: " + var10000 + ", params: " + ArrayUtils.arrayToString((Object[])this.parameterTypes));
                }
 
                if (this.targetConstructor != null) {
@@ -46,7 +47,7 @@ public class ReflectorConstructor implements IResolvable {
    private static Constructor findConstructor(Class cls, Class[] paramTypes) {
       Constructor[] cs = cls.getDeclaredConstructors();
 
-      for (int i = 0; i < cs.length; i++) {
+      for(int i = 0; i < cs.length; ++i) {
          Constructor c = cs[i];
          Class[] types = c.getParameterTypes();
          if (Reflector.matchesTypes(paramTypes, types)) {
@@ -58,7 +59,11 @@ public class ReflectorConstructor implements IResolvable {
    }
 
    public boolean exists() {
-      return this.checked ? this.targetConstructor != null : this.getTargetConstructor() != null;
+      if (this.checked) {
+         return this.targetConstructor != null;
+      } else {
+         return this.getTargetConstructor() != null;
+      }
    }
 
    public void deactivate() {
@@ -70,7 +75,6 @@ public class ReflectorConstructor implements IResolvable {
       return Reflector.newInstance(this, params);
    }
 
-   @Override
    public void resolve() {
       Constructor c = this.getTargetConstructor();
    }

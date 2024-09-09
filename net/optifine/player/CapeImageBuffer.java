@@ -1,11 +1,15 @@
 package net.optifine.player;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.resources.ResourceLocation;
+
 public class CapeImageBuffer implements Runnable {
-   private net.minecraft.client.player.AbstractClientPlayer player;
-   private net.minecraft.resources.ResourceLocation resourceLocation;
+   private AbstractClientPlayer player;
+   private ResourceLocation resourceLocation;
    private boolean elytraOfCape;
 
-   public CapeImageBuffer(net.minecraft.client.player.AbstractClientPlayer player, net.minecraft.resources.ResourceLocation resourceLocation) {
+   public CapeImageBuffer(AbstractClientPlayer player, ResourceLocation resourceLocation) {
       this.player = player;
       this.resourceLocation = resourceLocation;
    }
@@ -13,8 +17,8 @@ public class CapeImageBuffer implements Runnable {
    public void run() {
    }
 
-   public com.mojang.blaze3d.platform.NativeImage parseUserSkin(com.mojang.blaze3d.platform.NativeImage imageRaw) {
-      com.mojang.blaze3d.platform.NativeImage image = CapeUtils.parseCape(imageRaw);
+   public NativeImage parseUserSkin(NativeImage imageRaw) {
+      NativeImage image = CapeUtils.parseCape(imageRaw);
       this.elytraOfCape = CapeUtils.isElytraCape(imageRaw, image);
       return image;
    }

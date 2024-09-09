@@ -5,18 +5,19 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 public class ItemList {
-   private String sp = ",";
+   // $FF: renamed from: sp java.lang.String
+   private String field_18 = ",";
    List items = new ArrayList();
 
    public ItemList() {
    }
 
    public ItemList(String s) {
-      this.split(s, this.sp, this.items);
+      this.split(s, this.field_18, this.items);
    }
 
    public ItemList(String s, String sp) {
-      this.sp = s;
+      this.field_18 = s;
       this.split(s, sp, this.items);
    }
 
@@ -37,20 +38,22 @@ public class ItemList {
          if (isMultiToken) {
             StringTokenizer tokens = new StringTokenizer(s, sp);
 
-            while (tokens.hasMoreTokens()) {
+            while(tokens.hasMoreTokens()) {
                append.add(tokens.nextToken().trim());
             }
          } else {
             this.split(s, sp, append);
          }
+
       }
    }
 
    public void split(String s, String sp, List append) {
       if (s != null && sp != null) {
          int pos = 0;
-         int prevPos = 0;
+         int prevPos = false;
 
+         int prevPos;
          do {
             prevPos = pos;
             pos = s.indexOf(sp, pos);
@@ -58,16 +61,16 @@ public class ItemList {
                break;
             }
 
-            append.add(s.substring(pos, pos).trim());
+            append.add(s.substring(prevPos, pos).trim());
             pos += sp.length();
-         } while (pos != -1);
+         } while(pos != -1);
 
          append.add(s.substring(prevPos).trim());
       }
    }
 
    public void setSP(String sp) {
-      this.sp = sp;
+      this.field_18 = sp;
    }
 
    public void add(int i, String item) {
@@ -87,7 +90,7 @@ public class ItemList {
    }
 
    public void addAll(String s) {
-      this.split(s, this.sp, this.items);
+      this.split(s, this.field_18, this.items);
    }
 
    public void addAll(String s, String sp) {
@@ -107,13 +110,13 @@ public class ItemList {
    }
 
    public String toString() {
-      return this.toString(this.sp);
+      return this.toString(this.field_18);
    }
 
    public String toString(String sp) {
       StringBuffer sb = new StringBuffer();
 
-      for (int i = 0; i < this.items.size(); i++) {
+      for(int i = 0; i < this.items.size(); ++i) {
          if (i == 0) {
             sb.append(this.items.get(i));
          } else {
@@ -130,7 +133,7 @@ public class ItemList {
    }
 
    public void reset() {
-      this.sp = ",";
+      this.field_18 = ",";
       this.items.clear();
    }
 }

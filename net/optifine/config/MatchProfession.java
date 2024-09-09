@@ -8,7 +8,7 @@ public class MatchProfession {
    private int[] levels;
 
    public MatchProfession(VillagerProfession profession) {
-      this(profession, null);
+      this(profession, (int[])null);
    }
 
    public MatchProfession(VillagerProfession profession, int level) {
@@ -21,7 +21,11 @@ public class MatchProfession {
    }
 
    public boolean matches(VillagerProfession prof, int lev) {
-      return this.profession != prof ? false : this.levels == null || Config.equalsOne(lev, this.levels);
+      if (this.profession != prof) {
+         return false;
+      } else {
+         return this.levels == null || Config.equalsOne(lev, this.levels);
+      }
    }
 
    private boolean hasLevel(int lev) {
@@ -52,7 +56,7 @@ public class MatchProfession {
       if (mps == null) {
          return false;
       } else {
-         for (int i = 0; i < mps.length; i++) {
+         for(int i = 0; i < mps.length; ++i) {
             MatchProfession mp = mps[i];
             if (mp.matches(prof, level)) {
                return true;
@@ -64,6 +68,11 @@ public class MatchProfession {
    }
 
    public String toString() {
-      return this.levels == null ? this.profession + "" : this.profession + ":" + Config.arrayToString(this.levels);
+      if (this.levels == null) {
+         return "" + String.valueOf(this.profession);
+      } else {
+         String var10000 = String.valueOf(this.profession);
+         return var10000 + ":" + Config.arrayToString(this.levels);
+      }
    }
 }

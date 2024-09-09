@@ -1,6 +1,8 @@
 package net.optifine.config;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Pattern;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
@@ -99,7 +101,7 @@ public class NbtTagValue {
       } else if (value.startsWith("exists:")) {
          this.type = 6;
          value = value.substring("exists:".length());
-         Boolean valB = Config.parseBoolean(value, null);
+         Boolean valB = Config.parseBoolean(value, (Boolean)null);
          if (Config.isFalse(valB)) {
             this.negative = !this.negative;
          }
@@ -122,7 +124,11 @@ public class NbtTagValue {
    }
 
    public boolean matches(CompoundTag nbt) {
-      return this.negative ? !this.matchesCompound(nbt) : this.matchesCompound(nbt);
+      if (this.negative) {
+         return !this.matchesCompound(nbt);
+      } else {
+         return this.matchesCompound(nbt);
+      }
    }
 
    public boolean matchesCompound(CompoundTag nbt) {
@@ -131,26 +137,36 @@ public class NbtTagValue {
       } else {
          Tag tagBase = nbt;
 
-         for (int i = 0; i < this.parents.length; i++) {
+         for(int i = 0; i < this.parents.length; ++i) {
             String tag = this.parents[i];
-            tagBase = getChildTag(tagBase, tag);
+            tagBase = getChildTag((Tag)tagBase, tag);
             if (tagBase == null) {
                return false;
             }
          }
 
          if (this.name.equals("*")) {
-            return this.matchesAnyChild(tagBase);
+            return this.matchesAnyChild((Tag)tagBase);
          } else {
-            tagBase = getChildTag(tagBase, this.name);
-            return tagBase == null ? false : this.matchesBase(tagBase);
+            Tag tagBase = getChildTag((Tag)tagBase, this.name);
+            if (tagBase == null) {
+               return false;
+            } else if (this.matchesBase(tagBase)) {
+               return true;
+            } else {
+               return false;
+            }
          }
       }
    }
 
    private boolean matchesAnyChild(Tag tagBase) {
       if (tagBase instanceof CompoundTag tagCompound) {
-         for (String key : tagCompound.m_128431_()) {
+         Set nbtKeySet = tagCompound.m_128431_();
+         Iterator it = nbtKeySet.iterator();
+
+         while(it.hasNext()) {
+            String key = (String)it.next();
             Tag nbtBase = tagCompound.m_128423_(key);
             if (this.matchesBase(nbtBase)) {
                return true;
@@ -161,7 +177,7 @@ public class NbtTagValue {
       if (tagBase instanceof ListTag tagList) {
          int count = tagList.size();
 
-         for (int i = 0; i < count; i++) {
+         for(int i = 0; i < count; ++i) {
             Tag nbtBase = tagList.get(i);
             if (this.matchesBase(nbtBase)) {
                return true;
@@ -258,21 +274,35 @@ public class NbtTagValue {
    private static String getNbtString(Tag nbtBase, int format) {
       if (nbtBase == null) {
          return null;
-      } else if (!(nbtBase instanceof StringTag nbtString)) {
-         if (nbtBase instanceof IntTag i) {
-            return format == 1 ? "#" + StrUtils.fillLeft(Integer.toHexString(i.m_7047_()), 6, '0') : Integer.toString(i.m_7047_());
-         } else if (nbtBase instanceof ByteTag b) {
+      } else if (!(nbtBase instanceof StringTag)) {
+         if (nbtBase instanceof IntTag) {
+            IntTag i = (IntTag)nbtBase;
+            if (format == 1) {
+               String var10000 = Integer.toHexString(i.m_7047_());
+               return "#" + StrUtils.fillLeft(var10000, 6, '0');
+            } else {
+               return Integer.toString(i.m_7047_());
+            }
+         } else if (nbtBase instanceof ByteTag) {
+            ByteTag b = (ByteTag)nbtBase;
             return Byte.toString(b.m_7063_());
-         } else if (nbtBase instanceof ShortTag s) {
+         } else if (nbtBase instanceof ShortTag) {
+            ShortTag s = (ShortTag)nbtBase;
             return Short.toString(s.m_7053_());
-         } else if (nbtBase instanceof LongTag l) {
+         } else if (nbtBase instanceof LongTag) {
+            LongTag l = (LongTag)nbtBase;
             return Long.toString(l.m_7046_());
-         } else if (nbtBase instanceof FloatTag f) {
+         } else if (nbtBase instanceof FloatTag) {
+            FloatTag f = (FloatTag)nbtBase;
             return Float.toString(f.m_7057_());
+         } else if (nbtBase instanceof DoubleTag) {
+            DoubleTag d = (DoubleTag)nbtBase;
+            return Double.toString(d.m_7061_());
          } else {
-            return nbtBase instanceof DoubleTag d ? Double.toString(d.m_7061_()) : nbtBase.toString();
+            return nbtBase.toString();
          }
       } else {
+         StringTag nbtString = (StringTag)nbtBase;
          String text = nbtString.m_7916_();
          if (text.startsWith("{") && text.endsWith("}")) {
             text = getMergedJsonText(text);
@@ -289,18 +319,26 @@ public class NbtTagValue {
    private static int getNbtInt(Tag nbtBase, int defVal) {
       if (nbtBase == null) {
          return defVal;
-      } else if (nbtBase instanceof IntTag i) {
+      } else if (nbtBase instanceof IntTag) {
+         IntTag i = (IntTag)nbtBase;
          return i.m_7047_();
-      } else if (nbtBase instanceof ByteTag b) {
+      } else if (nbtBase instanceof ByteTag) {
+         ByteTag b = (ByteTag)nbtBase;
          return b.m_7063_();
-      } else if (nbtBase instanceof ShortTag s) {
+      } else if (nbtBase instanceof ShortTag) {
+         ShortTag s = (ShortTag)nbtBase;
          return s.m_7053_();
-      } else if (nbtBase instanceof LongTag l) {
+      } else if (nbtBase instanceof LongTag) {
+         LongTag l = (LongTag)nbtBase;
          return (int)l.m_7046_();
-      } else if (nbtBase instanceof FloatTag f) {
+      } else if (nbtBase instanceof FloatTag) {
+         FloatTag f = (FloatTag)nbtBase;
          return (int)f.m_7057_();
+      } else if (nbtBase instanceof DoubleTag) {
+         DoubleTag d = (DoubleTag)nbtBase;
+         return (int)d.m_7061_();
       } else {
-         return nbtBase instanceof DoubleTag d ? (int)d.m_7061_() : defVal;
+         return defVal;
       }
    }
 
@@ -309,7 +347,7 @@ public class NbtTagValue {
       String TOKEN_TEXT = "\"text\":\"";
       int pos = -1;
 
-      while (true) {
+      while(true) {
          pos = text.indexOf(TOKEN_TEXT, pos + 1);
          if (pos < 0) {
             return sb.toString();
@@ -326,7 +364,7 @@ public class NbtTagValue {
       StringBuilder sb = new StringBuilder();
       boolean escapeMode = false;
 
-      for (int i = pos; i < text.length(); i++) {
+      for(int i = pos; i < text.length(); ++i) {
          char ch = text.charAt(i);
          if (escapeMode) {
             if (ch == 'b') {
@@ -361,7 +399,7 @@ public class NbtTagValue {
    public String toString() {
       StringBuffer sb = new StringBuffer();
 
-      for (int i = 0; i < this.parents.length; i++) {
+      for(int i = 0; i < this.parents.length; ++i) {
          String parent = this.parents[i];
          if (i > 0) {
             sb.append(".");

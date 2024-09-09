@@ -1,8 +1,11 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.TridentModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ThrownTridentRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -13,17 +16,15 @@ public class ModelAdapterTrident extends ModelAdapter {
       super(EntityType.f_20487_, "trident", 0.0F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new TridentModel(bakeModelLayer(ModelLayers.f_171255_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof TridentModel modelTrident)) {
          return null;
       } else {
-         net.minecraft.client.model.geom.ModelPart root = (net.minecraft.client.model.geom.ModelPart)Reflector.ModelTrident_root.getValue(modelTrident);
+         ModelPart root = (ModelPart)Reflector.ModelTrident_root.getValue(modelTrident);
          if (root != null) {
             if (modelPart.equals("body")) {
                return root.getChildModelDeep("pole");
@@ -50,14 +51,12 @@ public class ModelAdapterTrident extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "base", "left_spike", "middle_spike", "right_spike", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ThrownTridentRenderer render = new ThrownTridentRenderer(renderManager.getContext());
       if (!Reflector.RenderTrident_modelTrident.exists()) {
          Config.warn("Field not found: RenderTrident.modelTrident");

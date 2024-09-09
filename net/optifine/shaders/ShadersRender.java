@@ -2,22 +2,42 @@ package net.optifine.shaders;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.blockentity.SignRenderer;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.TheEndPortalBlockEntity;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.optifine.Config;
 import net.optifine.Lagometer;
 import net.optifine.reflect.Reflector;
@@ -34,14 +54,12 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 public class ShadersRender {
-   private static final net.minecraft.resources.ResourceLocation END_PORTAL_TEXTURE = new net.minecraft.resources.ResourceLocation(
-      "textures/entity/end_portal.png"
-   );
+   private static final ResourceLocation END_PORTAL_TEXTURE = new ResourceLocation("textures/entity/end_portal.png");
    public static boolean frustumTerrainShadowChanged = false;
    public static boolean frustumEntitiesShadowChanged = false;
    public static int countEntitiesRenderedShadow;
    public static int countTileEntitiesRenderedShadow;
-   private static Map<String, List<Entity>> mapEntityLists = new HashMap();
+   private static Map mapEntityLists = new HashMap();
 
    public static void setFrustrumPosition(ICamera frustum, double x, double y, double z) {
       frustum.setCameraPosition(x, y, z);
@@ -53,6 +71,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTerrain);
          Shaders.setRenderStage(RenderStage.TERRAIN_SOLID);
       }
+
    }
 
    public static void beginTerrainCutoutMipped() {
@@ -60,6 +79,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTerrain);
          Shaders.setRenderStage(RenderStage.TERRAIN_CUTOUT_MIPPED);
       }
+
    }
 
    public static void beginTerrainCutout() {
@@ -67,6 +87,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTerrain);
          Shaders.setRenderStage(RenderStage.TERRAIN_CUTOUT);
       }
+
    }
 
    public static void endTerrain() {
@@ -74,6 +95,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTexturedLit);
          Shaders.setRenderStage(RenderStage.NONE);
       }
+
    }
 
    public static void beginTranslucent() {
@@ -81,6 +103,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramWater);
          Shaders.setRenderStage(RenderStage.TERRAIN_TRANSLUCENT);
       }
+
    }
 
    public static void endTranslucent() {
@@ -88,23 +111,24 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTexturedLit);
          Shaders.setRenderStage(RenderStage.NONE);
       }
+
    }
 
    public static void beginTripwire() {
       if (Shaders.isRenderingWorld) {
          Shaders.setRenderStage(RenderStage.TRIPWIRE);
       }
+
    }
 
    public static void endTripwire() {
       if (Shaders.isRenderingWorld) {
          Shaders.setRenderStage(RenderStage.NONE);
       }
+
    }
 
-   public static void renderHand0(
-      net.minecraft.client.renderer.GameRenderer er, Matrix4f viewIn, net.minecraft.client.Camera activeRenderInfo, float partialTicks
-   ) {
+   public static void renderHand0(GameRenderer er, Matrix4f viewIn, Camera activeRenderInfo, float partialTicks) {
       if (!Shaders.isShadowPass) {
          boolean blockTranslucentMain = Shaders.isItemToRenderMainTranslucent();
          boolean blockTranslucentOff = Shaders.isItemToRenderOffTranslucent();
@@ -118,11 +142,10 @@ public class ShadersRender {
             Shaders.setSkipRenderHands(false, false);
          }
       }
+
    }
 
-   public static void renderHand1(
-      net.minecraft.client.renderer.GameRenderer er, Matrix4f viewIn, net.minecraft.client.Camera activeRenderInfo, float partialTicks
-   ) {
+   public static void renderHand1(GameRenderer er, Matrix4f viewIn, Camera activeRenderInfo, float partialTicks) {
       if (!Shaders.isShadowPass && !Shaders.isBothHandsRendered()) {
          Shaders.readCenterDepth();
          GlStateManager._enableBlend();
@@ -133,17 +156,10 @@ public class ShadersRender {
          Shaders.setHandsRendered(true, true);
          Shaders.setSkipRenderHands(false, false);
       }
+
    }
 
-   public static void renderItemFP(
-      net.minecraft.client.renderer.ItemInHandRenderer itemRenderer,
-      float partialTicks,
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn,
-      net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferIn,
-      LocalPlayer playerEntityIn,
-      int combinedLightIn,
-      boolean renderTranslucent
-   ) {
+   public static void renderItemFP(ItemInHandRenderer itemRenderer, float partialTicks, PoseStack matrixStackIn, MultiBufferSource.BufferSource bufferIn, LocalPlayer playerEntityIn, int combinedLightIn, boolean renderTranslucent) {
       Config.getEntityRenderDispatcher().setRenderedEntity(playerEntityIn);
       GlStateManager._depthMask(true);
       if (renderTranslucent) {
@@ -160,17 +176,16 @@ public class ShadersRender {
 
       GlStateManager._depthFunc(515);
       itemRenderer.m_109314_(partialTicks, matrixStackIn, bufferIn, playerEntityIn, combinedLightIn);
-      Config.getEntityRenderDispatcher().setRenderedEntity(null);
+      Config.getEntityRenderDispatcher().setRenderedEntity((Entity)null);
    }
 
-   public static void renderFPOverlay(
-      net.minecraft.client.renderer.GameRenderer er, Matrix4f viewIn, net.minecraft.client.Camera activeRenderInfo, float partialTicks
-   ) {
+   public static void renderFPOverlay(GameRenderer er, Matrix4f viewIn, Camera activeRenderInfo, float partialTicks) {
       if (!Shaders.isShadowPass) {
          Shaders.beginFPOverlay();
          er.renderHand(activeRenderInfo, partialTicks, viewIn, false, true, false);
          Shaders.endFPOverlay();
       }
+
    }
 
    public static void beginBlockDamage() {
@@ -182,6 +197,7 @@ public class ShadersRender {
             GlStateManager._depthMask(false);
          }
       }
+
    }
 
    public static void endBlockDamage() {
@@ -190,6 +206,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTexturedLit);
          Shaders.setRenderStage(RenderStage.NONE);
       }
+
    }
 
    public static void beginOutline() {
@@ -197,6 +214,7 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramBasic);
          Shaders.setRenderStage(RenderStage.OUTLINE);
       }
+
    }
 
    public static void endOutline() {
@@ -204,27 +222,28 @@ public class ShadersRender {
          Shaders.useProgram(Shaders.ProgramTexturedLit);
          Shaders.setRenderStage(RenderStage.NONE);
       }
+
    }
 
    public static void beginDebug() {
       if (Shaders.isRenderingWorld) {
          Shaders.setRenderStage(RenderStage.DEBUG);
       }
+
    }
 
    public static void endDebug() {
       if (Shaders.isRenderingWorld) {
          Shaders.setRenderStage(RenderStage.NONE);
       }
+
    }
 
-   public static void renderShadowMap(
-      net.minecraft.client.renderer.GameRenderer entityRenderer, net.minecraft.client.Camera activeRenderInfo, int pass, float partialTicks
-   ) {
+   public static void renderShadowMap(GameRenderer entityRenderer, Camera activeRenderInfo, int pass, float partialTicks) {
       if (Shaders.hasShadowMap) {
          Minecraft mc = Minecraft.m_91087_();
          mc.m_91307_().m_6182_("shadow pass");
-         net.minecraft.client.renderer.LevelRenderer renderGlobal = mc.f_91060_;
+         LevelRenderer renderGlobal = mc.f_91060_;
          Shaders.isShadowPass = true;
          Shaders.updateProjectionMatrix();
          Shaders.checkGLError("pre shadow");
@@ -236,7 +255,7 @@ public class ShadersRender {
          Shaders.checkGLError("shadow bind sfb");
          mc.m_91307_().m_6182_("shadow camera");
          updateActiveRenderInfo(activeRenderInfo, mc, partialTicks);
-         com.mojang.blaze3d.vertex.PoseStack matrixStack = new com.mojang.blaze3d.vertex.PoseStack();
+         PoseStack matrixStack = new PoseStack();
          Shaders.setCameraShadow(matrixStack, activeRenderInfo, partialTicks);
          Matrix4f projectionMatrix = RenderSystem.getProjectionMatrix();
          Matrix4f viewMatrix = matrixStack.m_85850_().m_252922_();
@@ -253,7 +272,7 @@ public class ShadersRender {
          GlStateManager._clearColor(1.0F, 1.0F, 1.0F, 1.0F);
          GlStateManager.clear(256);
 
-         for (int i = 0; i < Shaders.usedShadowColorBuffers; i++) {
+         for(int i = 0; i < Shaders.usedShadowColorBuffers; ++i) {
             if (Shaders.shadowBuffersClear[i]) {
                Vector4f col = Shaders.shadowBuffersClearColor[i];
                if (col != null) {
@@ -270,9 +289,9 @@ public class ShadersRender {
          Shaders.sfb.setDrawBuffers();
          Shaders.checkGLError("shadow clear");
          mc.m_91307_().m_6182_("shadow frustum");
-         net.minecraft.client.renderer.culling.Frustum frustum = makeShadowFrustum(activeRenderInfo, partialTicks);
+         Frustum frustum = makeShadowFrustum(activeRenderInfo, partialTicks);
          mc.m_91307_().m_6182_("shadow culling");
-         net.minecraft.world.phys.Vec3 cameraPos = activeRenderInfo.m_90583_();
+         Vec3 cameraPos = activeRenderInfo.m_90583_();
          frustum.m_113002_(cameraPos.f_82479_, cameraPos.f_82480_, cameraPos.f_82481_);
          GlStateManager._enableDepthTest();
          GlStateManager._depthFunc(515);
@@ -281,7 +300,7 @@ public class ShadersRender {
          GlStateManager.lockCull(new GlCullState(false));
          GlStateManager.lockBlend(new GlBlendState(false));
          mc.m_91307_().m_6182_("shadow prepareterrain");
-         mc.m_91097_().m_174784_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_);
+         mc.m_91097_().m_174784_(TextureAtlas.f_118259_);
          mc.m_91307_().m_6182_("shadow setupterrain");
          renderGlobal.setShadowRenderInfos(true);
          Lagometer.timerVisibility.start();
@@ -303,166 +322,195 @@ public class ShadersRender {
             GlStateManager.enableAlphaTest();
             renderGlobal.m_293111_(RenderTypes.CUTOUT_MIPPED, x, y, z, viewMatrix, projectionMatrix);
             Shaders.checkGLError("shadow terrain cutoutmipped");
-            mc.m_91097_().m_118506_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_).m_117960_(false, false);
+            mc.m_91097_().m_118506_(TextureAtlas.f_118259_).m_117960_(false, false);
             renderGlobal.m_293111_(RenderTypes.CUTOUT, x, y, z, viewMatrix, projectionMatrix);
-            mc.m_91097_().m_118506_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_).restoreLastBlurMipmap();
+            mc.m_91097_().m_118506_(TextureAtlas.f_118259_).restoreLastBlurMipmap();
             Shaders.checkGLError("shadow terrain cutout");
          }
 
          mc.m_91307_().m_6182_("shadow entities");
          countEntitiesRenderedShadow = 0;
          countTileEntitiesRenderedShadow = 0;
-         net.minecraft.world.TickRateManager tickRateManager = mc.f_91073_.m_304826_();
+         TickRateManager tickRateManager = mc.f_91073_.m_304826_();
          float frozenPartialTicks = tickRateManager.m_305915_() ? partialTicks : 1.0F;
-         net.minecraft.client.renderer.LevelRenderer wr = mc.f_91060_;
-         net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = mc.m_91290_();
-         net.minecraft.client.renderer.MultiBufferSource.BufferSource irendertypebuffer = wr.getRenderTypeTextures().m_110104_();
+         LevelRenderer wr = mc.f_91060_;
+         EntityRenderDispatcher renderManager = mc.m_91290_();
+         MultiBufferSource.BufferSource irendertypebuffer = wr.getRenderTypeTextures().m_110104_();
          boolean playerShadowPass = Shaders.isShadowPass && !mc.f_91074_.m_5833_();
          int minWorldY = mc.f_91073_.m_141937_();
          int maxWorldY = mc.f_91073_.m_151558_();
+         Iterable entities = Shaders.isRenderShadowEntities() ? Shaders.getCurrentWorld().m_104735_() : Collections.EMPTY_LIST;
+         Iterator var28 = ((Iterable)entities).iterator();
 
-         for (Entity entity : Shaders.isRenderShadowEntities() ? Shaders.getCurrentWorld().m_104735_() : Collections.EMPTY_LIST) {
-            if (wr.shouldRenderEntity(entity, minWorldY, maxWorldY)
-               && (renderManager.m_114397_(entity, frustum, x, y, z) || entity.m_20367_(mc.f_91074_))
-               && (
-                  entity != activeRenderInfo.m_90592_()
-                     || playerShadowPass
-                     || activeRenderInfo.m_90594_()
-                     || activeRenderInfo.m_90592_() instanceof LivingEntity && ((LivingEntity)activeRenderInfo.m_90592_()).m_5803_()
-               )
-               && (!(entity instanceof LocalPlayer) || activeRenderInfo.m_90592_() == entity)) {
-               String key = entity.getClass().getName();
-               List<Entity> listEntities = (List<Entity>)mapEntityLists.get(key);
-               if (listEntities == null) {
-                  listEntities = new ArrayList();
-                  mapEntityLists.put(key, listEntities);
-               }
+         while(true) {
+            Entity entity;
+            do {
+               do {
+                  do {
+                     do {
+                        if (!var28.hasNext()) {
+                           Collection entityLists = mapEntityLists.values();
+                           Iterator var42 = entityLists.iterator();
 
-               listEntities.add(entity);
+                           while(var42.hasNext()) {
+                              List entityList = (List)var42.next();
+                              Iterator var46 = entityList.iterator();
+
+                              while(var46.hasNext()) {
+                                 Entity entity = (Entity)var46.next();
+                                 ++countEntitiesRenderedShadow;
+                                 Shaders.nextEntity(entity);
+                                 float entityPartialTicks = tickRateManager.m_305579_(entity) ? frozenPartialTicks : partialTicks;
+                                 wr.m_109517_(entity, x, y, z, entityPartialTicks, matrixStack, irendertypebuffer);
+                              }
+
+                              entityList.clear();
+                           }
+
+                           irendertypebuffer.m_173043_();
+                           wr.m_109588_(matrixStack);
+                           irendertypebuffer.m_109912_(RenderType.m_110446_(TextureAtlas.f_118259_));
+                           irendertypebuffer.m_109912_(RenderType.m_110452_(TextureAtlas.f_118259_));
+                           irendertypebuffer.m_109912_(RenderType.m_110458_(TextureAtlas.f_118259_));
+                           irendertypebuffer.m_109912_(RenderType.m_110476_(TextureAtlas.f_118259_));
+                           Shaders.endEntities();
+                           Shaders.beginBlockEntities();
+                           SignRenderer.updateTextRenderDistance();
+                           boolean forgeRenderBoundingBox = Reflector.IForgeBlockEntity_getRenderBoundingBox.exists();
+                           Frustum camera = frustum;
+                           float blockEntityPartialTicks = tickRateManager.m_306363_() ? frozenPartialTicks : partialTicks;
+                           List renderInfosTileEntities = Shaders.isRenderShadowBlockEntities() ? wr.getRenderInfosTileEntities() : Collections.EMPTY_LIST;
+                           Iterator var49 = renderInfosTileEntities.iterator();
+
+                           label125:
+                           while(true) {
+                              List list;
+                              do {
+                                 if (!var49.hasNext()) {
+                                    wr.m_109588_(matrixStack);
+                                    irendertypebuffer.m_109912_(RenderType.m_110451_());
+                                    irendertypebuffer.m_109912_(Sheets.m_110789_());
+                                    irendertypebuffer.m_109912_(Sheets.m_110790_());
+                                    irendertypebuffer.m_109912_(Sheets.m_110785_());
+                                    irendertypebuffer.m_109912_(Sheets.m_110786_());
+                                    irendertypebuffer.m_109912_(Sheets.m_110787_());
+                                    irendertypebuffer.m_109912_(Sheets.m_110788_());
+                                    irendertypebuffer.m_109911_();
+                                    Shaders.endBlockEntities();
+                                    Lagometer.timerTerrain.end();
+                                    Shaders.checkGLError("shadow entities");
+                                    GlStateManager._depthMask(true);
+                                    GlStateManager._disableBlend();
+                                    GlStateManager.unlockCull();
+                                    GlStateManager._enableCull();
+                                    GlStateManager._blendFuncSeparate(770, 771, 1, 0);
+                                    GlStateManager.alphaFunc(516, 0.1F);
+                                    if (Shaders.usedShadowDepthBuffers >= 2) {
+                                       GlStateManager._activeTexture(33989);
+                                       Shaders.checkGLError("pre copy shadow depth");
+                                       GL11.glCopyTexSubImage2D(3553, 0, 0, 0, 0, 0, Shaders.shadowMapWidth, Shaders.shadowMapHeight);
+                                       Shaders.checkGLError("copy shadow depth");
+                                       GlStateManager._activeTexture(33984);
+                                    }
+
+                                    GlStateManager._disableBlend();
+                                    GlStateManager._depthMask(true);
+                                    mc.m_91097_().m_174784_(TextureAtlas.f_118259_);
+                                    Shaders.checkGLError("shadow pre-translucent");
+                                    Shaders.sfb.setDrawBuffers();
+                                    Shaders.checkGLError("shadow drawbuffers pre-translucent");
+                                    Shaders.checkFramebufferStatus("shadow pre-translucent");
+                                    if (Shaders.isRenderShadowTranslucent()) {
+                                       Lagometer.timerTerrain.start();
+                                       mc.m_91307_().m_6182_("shadow translucent");
+                                       renderGlobal.m_293111_(RenderTypes.TRANSLUCENT, x, y, z, viewMatrix, projectionMatrix);
+                                       Shaders.checkGLError("shadow translucent");
+                                       Lagometer.timerTerrain.end();
+                                    }
+
+                                    GlStateManager.unlockBlend();
+                                    GlStateManager._depthMask(true);
+                                    GlStateManager._enableCull();
+                                    GlStateManager._disableBlend();
+                                    GL30.glFlush();
+                                    Shaders.checkGLError("shadow flush");
+                                    Shaders.isShadowPass = false;
+                                    renderGlobal.setShadowRenderInfos(false);
+                                    mc.m_91307_().m_6182_("shadow postprocess");
+                                    if (Shaders.hasGlGenMipmap) {
+                                       Shaders.sfb.generateDepthMipmaps(Shaders.shadowMipmapEnabled);
+                                       Shaders.sfb.generateColorMipmaps(true, Shaders.shadowColorMipmapEnabled);
+                                    }
+
+                                    Shaders.checkGLError("shadow postprocess");
+                                    if (Shaders.hasShadowcompPrograms) {
+                                       Shaders.renderShadowComposites();
+                                    }
+
+                                    Shaders.dfb.bindFramebuffer();
+                                    GlStateManager._viewport(0, 0, Shaders.renderWidth, Shaders.renderHeight);
+                                    GlState.setDrawBuffers((DrawBuffers)null);
+                                    mc.m_91097_().m_174784_(TextureAtlas.f_118259_);
+                                    Shaders.useProgram(Shaders.ProgramTerrain);
+                                    RenderSystem.getModelViewStack().popMatrix();
+                                    RenderSystem.applyModelViewMatrix();
+                                    RenderSystem.setProjectionMatrix(projectionPrev, vertexSortingPrev);
+                                    Shaders.checkGLError("shadow end");
+                                    return;
+                                 }
+
+                                 SectionRenderDispatcher.RenderSection worldrenderer$localrenderinformationcontainer = (SectionRenderDispatcher.RenderSection)var49.next();
+                                 list = worldrenderer$localrenderinformationcontainer.m_293175_().m_293674_();
+                              } while(list.isEmpty());
+
+                              Iterator var36 = list.iterator();
+
+                              while(true) {
+                                 BlockEntity tileentity1;
+                                 AABB aabb;
+                                 do {
+                                    if (!var36.hasNext()) {
+                                       continue label125;
+                                    }
+
+                                    tileentity1 = (BlockEntity)var36.next();
+                                    if (!forgeRenderBoundingBox) {
+                                       break;
+                                    }
+
+                                    aabb = (AABB)Reflector.call(tileentity1, Reflector.IForgeBlockEntity_getRenderBoundingBox);
+                                 } while(aabb != null && !camera.m_113029_(aabb));
+
+                                 ++countTileEntitiesRenderedShadow;
+                                 Shaders.nextBlockEntity(tileentity1);
+                                 BlockPos blockpos3 = tileentity1.m_58899_();
+                                 matrixStack.m_85836_();
+                                 matrixStack.m_85837_((double)blockpos3.m_123341_() - x, (double)blockpos3.m_123342_() - y, (double)blockpos3.m_123343_() - z);
+                                 mc.m_167982_().m_112267_(tileentity1, blockEntityPartialTicks, matrixStack, irendertypebuffer);
+                                 matrixStack.m_85849_();
+                              }
+                           }
+                        }
+
+                        entity = (Entity)var28.next();
+                     } while(!wr.shouldRenderEntity(entity, minWorldY, maxWorldY));
+                  } while(!renderManager.m_114397_(entity, frustum, x, y, z) && !entity.m_20367_(mc.f_91074_));
+               } while(entity == activeRenderInfo.m_90592_() && !playerShadowPass && !activeRenderInfo.m_90594_() && (!(activeRenderInfo.m_90592_() instanceof LivingEntity) || !((LivingEntity)activeRenderInfo.m_90592_()).m_5803_()));
+            } while(entity instanceof LocalPlayer && activeRenderInfo.m_90592_() != entity);
+
+            String key = entity.getClass().getName();
+            List listEntities = (List)mapEntityLists.get(key);
+            if (listEntities == null) {
+               listEntities = new ArrayList();
+               mapEntityLists.put(key, listEntities);
             }
+
+            ((List)listEntities).add(entity);
          }
-
-         for (List<Entity> entityList : mapEntityLists.values()) {
-            for (Entity entityx : entityList) {
-               countEntitiesRenderedShadow++;
-               Shaders.nextEntity(entityx);
-               float entityPartialTicks = tickRateManager.m_305579_(entityx) ? frozenPartialTicks : partialTicks;
-               wr.m_109517_(entityx, x, y, z, entityPartialTicks, matrixStack, irendertypebuffer);
-            }
-
-            entityList.clear();
-         }
-
-         irendertypebuffer.m_173043_();
-         wr.m_109588_(matrixStack);
-         irendertypebuffer.m_109912_(net.minecraft.client.renderer.RenderType.m_110446_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_));
-         irendertypebuffer.m_109912_(net.minecraft.client.renderer.RenderType.m_110452_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_));
-         irendertypebuffer.m_109912_(net.minecraft.client.renderer.RenderType.m_110458_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_));
-         irendertypebuffer.m_109912_(net.minecraft.client.renderer.RenderType.m_110476_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_));
-         Shaders.endEntities();
-         Shaders.beginBlockEntities();
-         net.minecraft.client.renderer.blockentity.SignRenderer.updateTextRenderDistance();
-         boolean forgeRenderBoundingBox = Reflector.IForgeBlockEntity_getRenderBoundingBox.exists();
-         net.minecraft.client.renderer.culling.Frustum camera = frustum;
-         float blockEntityPartialTicks = tickRateManager.m_306363_() ? frozenPartialTicks : partialTicks;
-
-         for (net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection worldrenderer$localrenderinformationcontainer : Shaders.isRenderShadowBlockEntities()
-            ? wr.getRenderInfosTileEntities()
-            : Collections.EMPTY_LIST) {
-            List<net.minecraft.world.level.block.entity.BlockEntity> list = worldrenderer$localrenderinformationcontainer.m_293175_().m_293674_();
-            if (!list.isEmpty()) {
-               for (net.minecraft.world.level.block.entity.BlockEntity tileentity1 : list) {
-                  if (forgeRenderBoundingBox) {
-                     AABB aabb = (AABB)Reflector.call(tileentity1, Reflector.IForgeBlockEntity_getRenderBoundingBox);
-                     if (aabb != null && !camera.m_113029_(aabb)) {
-                        continue;
-                     }
-                  }
-
-                  countTileEntitiesRenderedShadow++;
-                  Shaders.nextBlockEntity(tileentity1);
-                  BlockPos blockpos3 = tileentity1.m_58899_();
-                  matrixStack.m_85836_();
-                  matrixStack.m_85837_((double)blockpos3.m_123341_() - x, (double)blockpos3.m_123342_() - y, (double)blockpos3.m_123343_() - z);
-                  mc.m_167982_().m_112267_(tileentity1, blockEntityPartialTicks, matrixStack, irendertypebuffer);
-                  matrixStack.m_85849_();
-               }
-            }
-         }
-
-         wr.m_109588_(matrixStack);
-         irendertypebuffer.m_109912_(net.minecraft.client.renderer.RenderType.m_110451_());
-         irendertypebuffer.m_109912_(Sheets.m_110789_());
-         irendertypebuffer.m_109912_(Sheets.m_110790_());
-         irendertypebuffer.m_109912_(Sheets.m_110785_());
-         irendertypebuffer.m_109912_(Sheets.m_110786_());
-         irendertypebuffer.m_109912_(Sheets.m_110787_());
-         irendertypebuffer.m_109912_(Sheets.m_110788_());
-         irendertypebuffer.m_109911_();
-         Shaders.endBlockEntities();
-         Lagometer.timerTerrain.end();
-         Shaders.checkGLError("shadow entities");
-         GlStateManager._depthMask(true);
-         GlStateManager._disableBlend();
-         GlStateManager.unlockCull();
-         GlStateManager._enableCull();
-         GlStateManager._blendFuncSeparate(770, 771, 1, 0);
-         GlStateManager.alphaFunc(516, 0.1F);
-         if (Shaders.usedShadowDepthBuffers >= 2) {
-            GlStateManager._activeTexture(33989);
-            Shaders.checkGLError("pre copy shadow depth");
-            GL11.glCopyTexSubImage2D(3553, 0, 0, 0, 0, 0, Shaders.shadowMapWidth, Shaders.shadowMapHeight);
-            Shaders.checkGLError("copy shadow depth");
-            GlStateManager._activeTexture(33984);
-         }
-
-         GlStateManager._disableBlend();
-         GlStateManager._depthMask(true);
-         mc.m_91097_().m_174784_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_);
-         Shaders.checkGLError("shadow pre-translucent");
-         Shaders.sfb.setDrawBuffers();
-         Shaders.checkGLError("shadow drawbuffers pre-translucent");
-         Shaders.checkFramebufferStatus("shadow pre-translucent");
-         if (Shaders.isRenderShadowTranslucent()) {
-            Lagometer.timerTerrain.start();
-            mc.m_91307_().m_6182_("shadow translucent");
-            renderGlobal.m_293111_(RenderTypes.TRANSLUCENT, x, y, z, viewMatrix, projectionMatrix);
-            Shaders.checkGLError("shadow translucent");
-            Lagometer.timerTerrain.end();
-         }
-
-         GlStateManager.unlockBlend();
-         GlStateManager._depthMask(true);
-         GlStateManager._enableCull();
-         GlStateManager._disableBlend();
-         GL30.glFlush();
-         Shaders.checkGLError("shadow flush");
-         Shaders.isShadowPass = false;
-         renderGlobal.setShadowRenderInfos(false);
-         mc.m_91307_().m_6182_("shadow postprocess");
-         if (Shaders.hasGlGenMipmap) {
-            Shaders.sfb.generateDepthMipmaps(Shaders.shadowMipmapEnabled);
-            Shaders.sfb.generateColorMipmaps(true, Shaders.shadowColorMipmapEnabled);
-         }
-
-         Shaders.checkGLError("shadow postprocess");
-         if (Shaders.hasShadowcompPrograms) {
-            Shaders.renderShadowComposites();
-         }
-
-         Shaders.dfb.bindFramebuffer();
-         GlStateManager._viewport(0, 0, Shaders.renderWidth, Shaders.renderHeight);
-         GlState.setDrawBuffers(null);
-         mc.m_91097_().m_174784_(net.minecraft.client.renderer.texture.TextureAtlas.f_118259_);
-         Shaders.useProgram(Shaders.ProgramTerrain);
-         RenderSystem.getModelViewStack().popMatrix();
-         RenderSystem.applyModelViewMatrix();
-         RenderSystem.setProjectionMatrix(projectionPrev, vertexSortingPrev);
-         Shaders.checkGLError("shadow end");
       }
    }
 
-   public static void applyFrustumShadow(net.minecraft.client.renderer.LevelRenderer renderGlobal, net.minecraft.client.renderer.culling.Frustum frustum) {
+   public static void applyFrustumShadow(LevelRenderer renderGlobal, Frustum frustum) {
       Minecraft mc = Config.getMinecraft();
       mc.m_91307_().m_6180_("apply_shadow_frustum");
       int shadowRenderDistance = (int)Shaders.getShadowRenderDistance();
@@ -482,13 +530,13 @@ public class ShadersRender {
       mc.m_91307_().m_7238_();
    }
 
-   public static net.minecraft.client.renderer.culling.Frustum makeShadowFrustum(net.minecraft.client.Camera camera, float partialTicks) {
+   public static Frustum makeShadowFrustum(Camera camera, float partialTicks) {
       if (!Shaders.isShadowCulling()) {
          return new ClippingHelperDummy();
       } else {
          Minecraft mc = Config.getMinecraft();
-         net.minecraft.client.renderer.GameRenderer gameRenderer = Config.getGameRenderer();
-         com.mojang.blaze3d.vertex.PoseStack matrixStackIn = new com.mojang.blaze3d.vertex.PoseStack();
+         GameRenderer gameRenderer = Config.getGameRenderer();
+         PoseStack matrixStackIn = new PoseStack();
          if (Reflector.ForgeHooksClient_onCameraSetup.exists()) {
             Object cameraSetup = Reflector.ForgeHooksClient_onCameraSetup.call(gameRenderer, camera, partialTicks);
             float cameraSetupYaw = Reflector.callFloat(cameraSetup, Reflector.ViewportEvent_ComputeCameraAngles_getYaw);
@@ -501,30 +549,24 @@ public class ShadersRender {
          matrixStackIn.m_252781_(Axis.f_252529_.m_252977_(camera.m_90589_()));
          matrixStackIn.m_252781_(Axis.f_252436_.m_252977_(camera.m_90590_() + 180.0F));
          double fov = gameRenderer.m_109141_(camera, partialTicks, true);
-         double fovProjection = Math.max(fov, (double)mc.f_91066_.m_231837_().m_231551_().intValue());
+         double fovProjection = Math.max(fov, (double)(Integer)mc.f_91066_.m_231837_().m_231551_());
          Matrix4f matrixProjection = gameRenderer.m_253088_(fovProjection);
          Matrix4f matrix4f = matrixStackIn.m_85850_().m_252922_();
-         net.minecraft.world.phys.Vec3 pos = camera.m_90583_();
+         Vec3 pos = camera.m_90583_();
          double x = pos.m_7096_();
          double y = pos.m_7098_();
          double z = pos.m_7094_();
-         net.minecraft.client.renderer.culling.Frustum frustum = new ShadowFrustum(matrix4f, matrixProjection);
+         Frustum frustum = new ShadowFrustum(matrix4f, matrixProjection);
          frustum.m_113002_(x, y, z);
          return frustum;
       }
    }
 
-   public static void updateActiveRenderInfo(net.minecraft.client.Camera activeRenderInfo, Minecraft mc, float partialTicks) {
-      activeRenderInfo.m_90575_(
-         mc.f_91073_,
-         (Entity)(mc.m_91288_() == null ? mc.f_91074_ : mc.m_91288_()),
-         !mc.f_91066_.m_92176_().m_90612_(),
-         mc.f_91066_.m_92176_().m_90613_(),
-         partialTicks
-      );
+   public static void updateActiveRenderInfo(Camera activeRenderInfo, Minecraft mc, float partialTicks) {
+      activeRenderInfo.m_90575_(mc.f_91073_, (Entity)(mc.m_91288_() == null ? mc.f_91074_ : mc.m_91288_()), !mc.f_91066_.m_92176_().m_90612_(), mc.f_91066_.m_92176_().m_90613_(), partialTicks);
    }
 
-   public static void preRenderChunkLayer(net.minecraft.client.renderer.RenderType blockLayerIn) {
+   public static void preRenderChunkLayer(RenderType blockLayerIn) {
       if (blockLayerIn == RenderTypes.SOLID) {
          beginTerrainSolid();
       }
@@ -541,22 +583,24 @@ public class ShadersRender {
          beginTranslucent();
       }
 
-      if (blockLayerIn == net.minecraft.client.renderer.RenderType.m_110503_()) {
+      if (blockLayerIn == RenderType.m_110503_()) {
          beginTripwire();
       }
 
       if (Shaders.isRenderBackFace(blockLayerIn)) {
          GlStateManager._disableCull();
       }
+
    }
 
-   public static void postRenderChunkLayer(net.minecraft.client.renderer.RenderType blockLayerIn) {
+   public static void postRenderChunkLayer(RenderType blockLayerIn) {
       if (Shaders.isRenderBackFace(blockLayerIn)) {
          GlStateManager._enableCull();
       }
+
    }
 
-   public static void preRender(net.minecraft.client.renderer.RenderType renderType) {
+   public static void preRender(RenderType renderType) {
       if (Shaders.isRenderingWorld) {
          if (!Shaders.isShadowPass) {
             if (renderType.isGlint()) {
@@ -565,18 +609,21 @@ public class ShadersRender {
                Shaders.beginSpiderEyes();
             } else if (renderType.getName().equals("crumbling")) {
                beginBlockDamage();
-            } else if (renderType == net.minecraft.client.renderer.RenderType.f_110371_ || renderType == net.minecraft.client.renderer.RenderType.f_173152_) {
+            } else if (renderType != RenderType.f_110371_ && renderType != RenderType.f_173152_) {
+               if (renderType == RenderType.m_110478_()) {
+                  Shaders.beginWaterMask();
+               } else if (renderType.getName().equals("beacon_beam")) {
+                  Shaders.beginBeacon();
+               }
+            } else {
                Shaders.beginLines();
-            } else if (renderType == net.minecraft.client.renderer.RenderType.m_110478_()) {
-               Shaders.beginWaterMask();
-            } else if (renderType.getName().equals("beacon_beam")) {
-               Shaders.beginBeacon();
             }
+
          }
       }
    }
 
-   public static void postRender(net.minecraft.client.renderer.RenderType renderType) {
+   public static void postRender(RenderType renderType) {
       if (Shaders.isRenderingWorld) {
          if (!Shaders.isShadowPass) {
             if (renderType.isGlint()) {
@@ -585,13 +632,16 @@ public class ShadersRender {
                Shaders.endSpiderEyes();
             } else if (renderType.getName().equals("crumbling")) {
                endBlockDamage();
-            } else if (renderType == net.minecraft.client.renderer.RenderType.f_110371_ || renderType == net.minecraft.client.renderer.RenderType.f_173152_) {
+            } else if (renderType != RenderType.f_110371_ && renderType != RenderType.f_173152_) {
+               if (renderType == RenderType.m_110478_()) {
+                  Shaders.endWaterMask();
+               } else if (renderType.getName().equals("beacon_beam")) {
+                  Shaders.endBeacon();
+               }
+            } else {
                Shaders.endLines();
-            } else if (renderType == net.minecraft.client.renderer.RenderType.m_110478_()) {
-               Shaders.endWaterMask();
-            } else if (renderType.getName().equals("beacon_beam")) {
-               Shaders.endBeacon();
             }
+
          }
       }
    }
@@ -604,7 +654,7 @@ public class ShadersRender {
    }
 
    public static void setupArrayPointersVbo() {
-      int vertexSizeI = 18;
+      int vertexSizeI = true;
       enableArrayPointerVbo();
       GL20.glVertexAttribPointer(Shaders.midBlockAttrib, 3, 5120, false, 72, 32L);
       GL20.glVertexAttribPointer(Shaders.midTexCoordAttrib, 2, 5126, false, 72, 36L);
@@ -643,24 +693,17 @@ public class ShadersRender {
       } else {
          Shaders.useProgram(Shaders.ProgramNone);
       }
+
    }
 
-   public static boolean renderEndPortal(
-      TheEndPortalBlockEntity te,
-      float partialTicks,
-      float offset,
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      int combinedLightIn,
-      int combinedOverlayIn
-   ) {
+   public static boolean renderEndPortal(TheEndPortalBlockEntity te, float partialTicks, float offset, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
       if (!Shaders.isShadowPass && Shaders.activeProgram.getId() == 0) {
          return false;
       } else {
-         com.mojang.blaze3d.vertex.PoseStack.Pose matrixEntry = matrixStackIn.m_85850_();
+         PoseStack.Pose matrixEntry = matrixStackIn.m_85850_();
          Matrix4f matrix = matrixEntry.m_252922_();
          Matrix3f matrixNormal = matrixEntry.m_252943_();
-         com.mojang.blaze3d.vertex.VertexConsumer bufferbuilder = bufferIn.m_6299_(net.minecraft.client.renderer.RenderType.m_110446_(END_PORTAL_TEXTURE));
+         VertexConsumer bufferbuilder = bufferIn.m_6299_(RenderType.m_110446_(END_PORTAL_TEXTURE));
          float col = 0.5F;
          float r = col * 0.15F;
          float g = col * 0.3F;
@@ -671,208 +714,95 @@ public class ShadersRender {
          float x = 0.0F;
          float y = 0.0F;
          float z = 0.0F;
-         if (te.m_6665_(net.minecraft.core.Direction.SOUTH)) {
-            Vec3i vec3i = net.minecraft.core.Direction.SOUTH.m_122436_();
-            float xv = (float)vec3i.m_123341_();
-            float yv = (float)vec3i.m_123342_();
-            float zv = (float)vec3i.m_123343_();
-            float xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
-            float yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
-            float zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
-            bufferbuilder.m_339083_(matrix, x, y, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
+         Vec3i vec3i;
+         float xv;
+         float yv;
+         float zv;
+         float xn;
+         float yn;
+         float zn;
+         if (te.m_6665_(Direction.SOUTH)) {
+            vec3i = Direction.SOUTH.m_122436_();
+            xv = (float)vec3i.m_123341_();
+            yv = (float)vec3i.m_123342_();
+            zv = (float)vec3i.m_123343_();
+            xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
+            yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
+            zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
+            bufferbuilder.m_339083_(matrix, x, y, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
          }
 
-         if (te.m_6665_(net.minecraft.core.Direction.NORTH)) {
-            Vec3i vec3i = net.minecraft.core.Direction.NORTH.m_122436_();
-            float xv = (float)vec3i.m_123341_();
-            float yv = (float)vec3i.m_123342_();
-            float zv = (float)vec3i.m_123343_();
-            float xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
-            float yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
-            float zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
-            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
+         if (te.m_6665_(Direction.NORTH)) {
+            vec3i = Direction.NORTH.m_122436_();
+            xv = (float)vec3i.m_123341_();
+            yv = (float)vec3i.m_123342_();
+            zv = (float)vec3i.m_123343_();
+            xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
+            yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
+            zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
+            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y, z).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
          }
 
-         if (te.m_6665_(net.minecraft.core.Direction.EAST)) {
-            Vec3i vec3i = net.minecraft.core.Direction.EAST.m_122436_();
-            float xv = (float)vec3i.m_123341_();
-            float yv = (float)vec3i.m_123342_();
-            float zv = (float)vec3i.m_123343_();
-            float xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
-            float yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
-            float zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
+         if (te.m_6665_(Direction.EAST)) {
+            vec3i = Direction.EAST.m_122436_();
+            xv = (float)vec3i.m_123341_();
+            yv = (float)vec3i.m_123342_();
+            zv = (float)vec3i.m_123343_();
+            xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
+            yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
+            zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y + 1.0F, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
          }
 
-         if (te.m_6665_(net.minecraft.core.Direction.WEST)) {
-            Vec3i vec3i = net.minecraft.core.Direction.WEST.m_122436_();
-            float xv = (float)vec3i.m_123341_();
-            float yv = (float)vec3i.m_123342_();
-            float zv = (float)vec3i.m_123343_();
-            float xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
-            float yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
-            float zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
-            bufferbuilder.m_339083_(matrix, x, y, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
+         if (te.m_6665_(Direction.WEST)) {
+            vec3i = Direction.WEST.m_122436_();
+            xv = (float)vec3i.m_123341_();
+            yv = (float)vec3i.m_123342_();
+            zv = (float)vec3i.m_123343_();
+            xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
+            yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
+            zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
+            bufferbuilder.m_339083_(matrix, x, y, z).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y + 1.0F, z).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
          }
 
-         if (te.m_6665_(net.minecraft.core.Direction.DOWN)) {
-            Vec3i vec3i = net.minecraft.core.Direction.DOWN.m_122436_();
-            float xv = (float)vec3i.m_123341_();
-            float yv = (float)vec3i.m_123342_();
-            float zv = (float)vec3i.m_123343_();
-            float xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
-            float yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
-            float zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
-            bufferbuilder.m_339083_(matrix, x, y, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
+         if (te.m_6665_(Direction.DOWN)) {
+            vec3i = Direction.DOWN.m_122436_();
+            xv = (float)vec3i.m_123341_();
+            yv = (float)vec3i.m_123342_();
+            zv = (float)vec3i.m_123343_();
+            xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
+            yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
+            zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
+            bufferbuilder.m_339083_(matrix, x, y, z).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
          }
 
-         if (te.m_6665_(net.minecraft.core.Direction.UP)) {
-            Vec3i vec3i = net.minecraft.core.Direction.UP.m_122436_();
-            float xv = (float)vec3i.m_123341_();
-            float yv = (float)vec3i.m_123342_();
-            float zv = (float)vec3i.m_123343_();
-            float xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
-            float yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
-            float zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
-            bufferbuilder.m_339083_(matrix, x, y + offset, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y + offset, z + 1.0F)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u0 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x + 1.0F, y + offset, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u1 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
-            bufferbuilder.m_339083_(matrix, x, y + offset, z)
-               .m_340057_(r, g, b, 1.0F)
-               .m_167083_(u1 + du, u0 + du)
-               .m_338943_(combinedOverlayIn)
-               .m_338973_(combinedLightIn)
-               .m_338525_(xn, yn, zn);
+         if (te.m_6665_(Direction.field_61)) {
+            vec3i = Direction.field_61.m_122436_();
+            xv = (float)vec3i.m_123341_();
+            yv = (float)vec3i.m_123342_();
+            zv = (float)vec3i.m_123343_();
+            xn = MathUtils.getTransformX(matrixNormal, xv, yv, zv);
+            yn = MathUtils.getTransformY(matrixNormal, xv, yv, zv);
+            zn = MathUtils.getTransformZ(matrixNormal, xv, yv, zv);
+            bufferbuilder.m_339083_(matrix, x, y + offset, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y + offset, z + 1.0F).m_340057_(r, g, b, 1.0F).m_167083_(u0 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x + 1.0F, y + offset, z).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u1 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
+            bufferbuilder.m_339083_(matrix, x, y + offset, z).m_340057_(r, g, b, 1.0F).m_167083_(u1 + du, u0 + du).m_338943_(combinedOverlayIn).m_338973_(combinedLightIn).m_338525_(xn, yn, zn);
          }
 
          return true;

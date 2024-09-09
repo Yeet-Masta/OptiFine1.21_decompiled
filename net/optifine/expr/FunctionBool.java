@@ -9,12 +9,11 @@ public class FunctionBool implements IExpressionBool {
       this.arguments = arguments;
    }
 
-   @Override
    public boolean eval() {
       return this.type.evalBool(this.arguments);
    }
 
    public String toString() {
-      return this.type + "()";
+      return String.valueOf(this.type) + "()";
    }
 }

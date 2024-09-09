@@ -15,7 +15,7 @@ public class UnsafeUtils {
          try {
             Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
             unsafeField.setAccessible(true);
-            unsafe = (Unsafe)unsafeField.get(null);
+            unsafe = (Unsafe)unsafeField.get((Object)null);
          } catch (Exception var1) {
             var1.printStackTrace();
          }
@@ -26,7 +26,7 @@ public class UnsafeUtils {
 
    public static void setStaticInt(Field field, int value) {
       if (field != null) {
-         if (field.getType() == int.class) {
+         if (field.getType() == Integer.TYPE) {
             if (Modifier.isStatic(field.getModifiers())) {
                Unsafe us = getUnsafe();
                if (us != null) {

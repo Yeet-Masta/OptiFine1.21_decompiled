@@ -3,6 +3,9 @@ package net.optifine.entity.model;
 import java.util.ArrayList;
 import java.util.HashMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.TippableArrowRenderer;
 import net.minecraft.world.entity.EntityType;
 
@@ -15,13 +18,11 @@ public class ModelAdapterArrow extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
-      return new ArrowModel(new net.minecraft.client.model.geom.ModelPart(new ArrayList(), new HashMap()));
+   public Model makeModel() {
+      return new ArrowModel(new ModelPart(new ArrayList(), new HashMap()));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ArrowModel modelArrow)) {
          return null;
       } else {
@@ -29,14 +30,12 @@ public class ModelAdapterArrow extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TippableArrowRenderer render = new TippableArrowRenderer(renderManager.getContext());
       render.model = (ArrowModel)modelBase;
       render.f_114477_ = shadowSize;

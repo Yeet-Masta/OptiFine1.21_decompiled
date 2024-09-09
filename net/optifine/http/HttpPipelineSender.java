@@ -6,7 +6,9 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class HttpPipelineSender extends Thread {
    private HttpPipelineConnection httpPipelineConnection = null;
@@ -24,7 +26,7 @@ public class HttpPipelineSender extends Thread {
       try {
          this.connect();
 
-         while (!Thread.interrupted()) {
+         while(!Thread.interrupted()) {
             hpr = this.httpPipelineConnection.getNextRequestSend();
             HttpRequest req = hpr.getHttpRequest();
             OutputStream out = this.httpPipelineConnection.getOutputStream();
@@ -36,6 +38,7 @@ public class HttpPipelineSender extends Thread {
       } catch (Exception var5) {
          this.httpPipelineConnection.onExceptionSend(hpr, var5);
       }
+
    }
 
    private void connect() throws IOException {
@@ -48,10 +51,14 @@ public class HttpPipelineSender extends Thread {
    }
 
    private void writeRequest(HttpRequest req, OutputStream out) throws IOException {
-      this.write(out, req.getMethod() + " " + req.getFile() + " " + req.getHttp() + "\r\n");
-      Map<String, String> headers = req.getHeaders();
+      String var10002 = req.getMethod();
+      this.write(out, var10002 + " " + req.getFile() + " " + req.getHttp() + "\r\n");
+      Map headers = req.getHeaders();
+      Set keySet = headers.keySet();
+      Iterator it = keySet.iterator();
 
-      for (String key : headers.keySet()) {
+      while(it.hasNext()) {
+         String key = (String)it.next();
          String val = (String)req.getHeaders().get(key);
          this.write(out, key + ": " + val + "\r\n");
       }

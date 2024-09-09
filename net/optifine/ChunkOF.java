@@ -1,6 +1,7 @@
 package net.optifine;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 
@@ -8,7 +9,7 @@ public class ChunkOF extends LevelChunk {
    private boolean hasEntitiesOF;
    private boolean loadedOF;
 
-   public ChunkOF(Level worldIn, net.minecraft.world.level.ChunkPos chunkPosIn) {
+   public ChunkOF(Level worldIn, ChunkPos chunkPosIn) {
       super(worldIn, chunkPosIn);
    }
 

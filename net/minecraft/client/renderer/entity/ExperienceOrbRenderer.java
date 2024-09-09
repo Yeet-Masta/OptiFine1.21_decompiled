@@ -1,36 +1,32 @@
 package net.minecraft.client.renderer.entity;
 
-import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.optifine.Config;
 import net.optifine.CustomColors;
 
-public class ExperienceOrbRenderer extends net.minecraft.client.renderer.entity.EntityRenderer<ExperienceOrb> {
-   private static final net.minecraft.resources.ResourceLocation f_114579_ = net.minecraft.resources.ResourceLocation.m_340282_(
-      "textures/entity/experience_orb.png"
-   );
-   private static final net.minecraft.client.renderer.RenderType f_114580_ = net.minecraft.client.renderer.RenderType.m_110467_(f_114579_);
+public class ExperienceOrbRenderer extends EntityRenderer {
+   private static final ResourceLocation f_114579_ = ResourceLocation.m_340282_("textures/entity/experience_orb.png");
+   private static final RenderType f_114580_;
 
-   public ExperienceOrbRenderer(Context contextIn) {
+   public ExperienceOrbRenderer(EntityRendererProvider.Context contextIn) {
       super(contextIn);
       this.f_114477_ = 0.15F;
       this.f_114478_ = 0.75F;
    }
 
    protected int m_6086_(ExperienceOrb entityIn, BlockPos partialTicks) {
-      return net.minecraft.util.Mth.m_14045_(super.m_6086_(entityIn, partialTicks) + 7, 0, 15);
+      return Mth.m_14045_(super.m_6086_(entityIn, partialTicks) + 7, 0, 15);
    }
 
-   public void m_7392_(
-      ExperienceOrb entityIn,
-      float entityYaw,
-      float partialTicks,
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      int packedLightIn
-   ) {
+   public void m_7392_(ExperienceOrb entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
       matrixStackIn.m_85836_();
       int i = entityIn.m_20802_();
       float f = (float)(i % 4 * 16 + 0) / 64.0F;
@@ -46,24 +42,24 @@ public class ExperienceOrbRenderer extends net.minecraft.client.renderer.entity.
          f8 = CustomColors.getXpOrbTimer(f8);
       }
 
-      int j = (int)((net.minecraft.util.Mth.m_14031_(f8 + 0.0F) + 1.0F) * 0.5F * 255.0F);
-      int k = 255;
-      int l = (int)((net.minecraft.util.Mth.m_14031_(f8 + (float) (Math.PI * 4.0 / 3.0)) + 1.0F) * 0.1F * 255.0F);
+      int j = (int)((Mth.m_14031_(f8 + 0.0F) + 1.0F) * 0.5F * 255.0F);
+      int k = true;
+      int l = (int)((Mth.m_14031_(f8 + 4.1887903F) + 1.0F) * 0.1F * 255.0F);
       matrixStackIn.m_252880_(0.0F, 0.1F, 0.0F);
       matrixStackIn.m_252781_(this.f_114476_.m_253208_());
       float f9 = 0.3F;
       matrixStackIn.m_85841_(0.3F, 0.3F, 0.3F);
-      com.mojang.blaze3d.vertex.VertexConsumer vertexconsumer = bufferIn.m_6299_(f_114580_);
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = matrixStackIn.m_85850_();
+      VertexConsumer vertexconsumer = bufferIn.m_6299_(f_114580_);
+      PoseStack.Pose posestack$pose = matrixStackIn.m_85850_();
       int red = j;
       int green = 255;
       int blue = l;
       if (Config.isCustomColors()) {
          int col = CustomColors.getXpOrbColor(f8);
          if (col >= 0) {
-            red = col >> 16 & 0xFF;
-            green = col >> 8 & 0xFF;
-            blue = col >> 0 & 0xFF;
+            red = col >> 16 & 255;
+            green = col >> 8 & 255;
+            blue = col >> 0 & 255;
          }
       }
 
@@ -75,27 +71,15 @@ public class ExperienceOrbRenderer extends net.minecraft.client.renderer.entity.
       super.m_7392_(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
    }
 
-   private static void m_252863_(
-      com.mojang.blaze3d.vertex.VertexConsumer bufferIn,
-      com.mojang.blaze3d.vertex.PoseStack.Pose matrixStackIn,
-      float x,
-      float y,
-      int red,
-      int green,
-      int blue,
-      float texU,
-      float texV,
-      int packedLight
-   ) {
-      bufferIn.m_338370_(matrixStackIn, x, y, 0.0F)
-         .m_167129_(red, green, blue, 128)
-         .m_167083_(texU, texV)
-         .m_338943_(OverlayTexture.f_118083_)
-         .m_338973_(packedLight)
-         .m_339200_(matrixStackIn, 0.0F, 1.0F, 0.0F);
+   private static void m_252863_(VertexConsumer bufferIn, PoseStack.Pose matrixStackIn, float x, float y, int red, int green, int blue, float texU, float texV, int packedLight) {
+      bufferIn.m_338370_(matrixStackIn, x, y, 0.0F).m_167129_(red, green, blue, 128).m_167083_(texU, texV).m_338943_(OverlayTexture.f_118083_).m_338973_(packedLight).m_339200_(matrixStackIn, 0.0F, 1.0F, 0.0F);
    }
 
-   public net.minecraft.resources.ResourceLocation m_5478_(ExperienceOrb entity) {
+   public ResourceLocation m_5478_(ExperienceOrb entity) {
       return f_114579_;
+   }
+
+   static {
+      f_114580_ = RenderType.m_110467_(f_114579_);
    }
 }

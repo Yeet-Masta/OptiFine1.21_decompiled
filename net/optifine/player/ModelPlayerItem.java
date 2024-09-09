@@ -1,15 +1,15 @@
 package net.optifine.player;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.function.Function;
+import net.minecraft.client.model.Model;
 
-public class ModelPlayerItem extends net.minecraft.client.model.Model {
-   public ModelPlayerItem(Function<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.RenderType> renderTypeIn) {
+public class ModelPlayerItem extends Model {
+   public ModelPlayerItem(Function renderTypeIn) {
       super(renderTypeIn);
    }
 
-   @Override
-   public void m_7695_(
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn, com.mojang.blaze3d.vertex.VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn
-   ) {
+   public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 }

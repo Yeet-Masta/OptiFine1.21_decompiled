@@ -1,9 +1,13 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.VillagerRenderer;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterVillager extends ModelAdapter {
@@ -15,13 +19,11 @@ public class ModelAdapterVillager extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new VillagerModel(bakeModelLayer(ModelLayers.f_171210_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof VillagerModel modelVillager)) {
          return null;
       } else if (modelPart.equals("head")) {
@@ -47,16 +49,13 @@ public class ModelAdapterVillager extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "headwear", "headwear2", "body", "bodywear", "arms", "right_leg", "left_leg", "nose", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.server.packs.resources.ReloadableResourceManager resourceManager = (net.minecraft.server.packs.resources.ReloadableResourceManager)Minecraft.m_91087_()
-         .m_91098_();
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      ReloadableResourceManager resourceManager = (ReloadableResourceManager)Minecraft.m_91087_().m_91098_();
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       VillagerRenderer render = new VillagerRenderer(renderManager.getContext());
       render.f_115290_ = (VillagerModel)modelBase;
       render.f_114477_ = shadowSize;

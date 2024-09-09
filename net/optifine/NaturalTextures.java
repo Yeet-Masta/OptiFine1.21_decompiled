@@ -3,8 +3,13 @@ package net.optifine;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.util.TextureUtils;
 
 public class NaturalTextures {
@@ -16,7 +21,7 @@ public class NaturalTextures {
          String fileName = "optifine/natural.properties";
 
          try {
-            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(fileName);
+            ResourceLocation loc = new ResourceLocation(fileName);
             if (!Config.hasResource(loc)) {
                Config.dbg("NaturalTextures: configuration \"" + fileName + "\" not found");
                return;
@@ -36,9 +41,9 @@ public class NaturalTextures {
             }
 
             int countTextures = 0;
-            net.minecraft.client.renderer.texture.TextureAtlas textureMapBlocks = TextureUtils.getTextureMapBlocks();
+            TextureAtlas textureMapBlocks = TextureUtils.getTextureMapBlocks();
 
-            for (int i = 0; i < configLines.length; i++) {
+            for(int i = 0; i < configLines.length; ++i) {
                String line = configLines[i].trim();
                if (!line.startsWith("#")) {
                   String[] strs = Config.tokenize(line, "=");
@@ -47,7 +52,7 @@ public class NaturalTextures {
                   } else {
                      String key = strs[0].trim();
                      String type = strs[1].trim();
-                     net.minecraft.client.renderer.texture.TextureAtlasSprite ts = textureMapBlocks.getUploadedSprite("minecraft:block/" + key);
+                     TextureAtlasSprite ts = textureMapBlocks.getUploadedSprite("minecraft:block/" + key);
                      if (ts == null) {
                         Config.warn("Natural Textures: Texture not found: \"" + fileName + "\" line: " + line);
                      } else {
@@ -55,19 +60,18 @@ public class NaturalTextures {
                         if (tileNum < 0) {
                            Config.warn("Natural Textures: Invalid \"" + fileName + "\" line: " + line);
                         } else {
-                           if (defaultConfig
-                              && !Config.isFromDefaultResourcePack(new net.minecraft.resources.ResourceLocation("textures/block/" + key + ".png"))) {
+                           if (defaultConfig && !Config.isFromDefaultResourcePack(new ResourceLocation("textures/block/" + key + ".png"))) {
                               return;
                            }
 
                            NaturalProperties props = new NaturalProperties(type);
                            if (props.isValid()) {
-                              while (list.size() <= tileNum) {
-                                 list.add(null);
+                              while(list.size() <= tileNum) {
+                                 list.add((Object)null);
                               }
 
                               list.set(tileNum, props);
-                              countTextures++;
+                              ++countTextures;
                            }
                         }
                      }
@@ -85,16 +89,15 @@ public class NaturalTextures {
          } catch (Exception var19) {
             var19.printStackTrace();
          }
+
       }
    }
 
-   public static net.minecraft.client.renderer.block.model.BakedQuad getNaturalTexture(
-      net.minecraft.world.level.block.state.BlockState stateIn, BlockPos blockPosIn, net.minecraft.client.renderer.block.model.BakedQuad quad
-   ) {
+   public static BakedQuad getNaturalTexture(BlockState stateIn, BlockPos blockPosIn, BakedQuad quad) {
       if (stateIn.m_60734_() instanceof WallBlock) {
          return quad;
       } else {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = quad.m_173410_();
+         TextureAtlasSprite sprite = quad.m_173410_();
          if (sprite == null) {
             return quad;
          } else {
@@ -124,12 +127,17 @@ public class NaturalTextures {
       }
    }
 
-   public static NaturalProperties getNaturalProperties(net.minecraft.client.renderer.texture.TextureAtlasSprite icon) {
-      if (!(icon instanceof net.minecraft.client.renderer.texture.TextureAtlasSprite)) {
+   public static NaturalProperties getNaturalProperties(TextureAtlasSprite icon) {
+      if (!(icon instanceof TextureAtlasSprite)) {
          return null;
       } else {
          int tileNum = icon.getIndexInMap();
-         return tileNum >= 0 && tileNum < propertiesByIndex.length ? propertiesByIndex[tileNum] : null;
+         if (tileNum >= 0 && tileNum < propertiesByIndex.length) {
+            NaturalProperties props = propertiesByIndex[tileNum];
+            return props;
+         } else {
+            return null;
+         }
       }
    }
 }

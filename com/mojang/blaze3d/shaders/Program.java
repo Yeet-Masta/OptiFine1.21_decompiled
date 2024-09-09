@@ -13,11 +13,11 @@ import org.apache.commons.lang3.StringUtils;
 
 public class Program {
    private static final int f_166598_ = 32768;
-   private final com.mojang.blaze3d.shaders.Program.Type f_85535_;
+   private final Type f_85535_;
    private final String f_85536_;
    private int f_85537_;
 
-   protected Program(com.mojang.blaze3d.shaders.Program.Type type, int shaderId, String filename) {
+   protected Program(Type type, int shaderId, String filename) {
       this.f_85535_ = type;
       this.f_85537_ = shaderId;
       this.f_85536_ = filename;
@@ -35,32 +35,29 @@ public class Program {
          this.f_85537_ = -1;
          this.f_85535_.m_85570_().remove(this.f_85536_);
       }
+
    }
 
    public String m_85551_() {
       return this.f_85536_;
    }
 
-   public static com.mojang.blaze3d.shaders.Program m_166604_(
-      com.mojang.blaze3d.shaders.Program.Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn
-   ) throws IOException {
+   public static Program m_166604_(Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn) throws IOException {
       RenderSystem.assertOnRenderThread();
       int i = m_166612_(typeIn, nameIn, inputStreamIn, packNameIn, preprocessorIn);
-      com.mojang.blaze3d.shaders.Program program = new com.mojang.blaze3d.shaders.Program(typeIn, i, nameIn);
+      Program program = new Program(typeIn, i, nameIn);
       typeIn.m_85570_().put(nameIn, program);
       return program;
    }
 
-   protected static int m_166612_(
-      com.mojang.blaze3d.shaders.Program.Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn
-   ) throws IOException {
+   protected static int m_166612_(Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn) throws IOException {
       String s = IOUtils.toString(inputStreamIn, StandardCharsets.UTF_8);
-      if (typeIn == com.mojang.blaze3d.shaders.Program.Type.VERTEX) {
+      if (typeIn == Program.Type.VERTEX) {
          s = s.replace("texelFetch(Sampler2, UV2 / 16, 0)", "texture(Sampler2, (UV2 / 256.0) + (0.5 / 16.0))");
          s = s.replace("minecraft_sample_lightmap(Sampler2, UV2)", "texture(Sampler2, (UV2 / 256.0) + (0.5 / 16.0))");
       }
 
-      if (typeIn == com.mojang.blaze3d.shaders.Program.Type.FRAGMENT) {
+      if (typeIn == Program.Type.FRAGMENT) {
          s = s.replace("(color.a < 0.5)", "(color.a < 0.1)");
       }
 
@@ -90,7 +87,7 @@ public class Program {
       private final String f_85554_;
       private final String f_85555_;
       private final int f_85556_;
-      private final Map<String, com.mojang.blaze3d.shaders.Program> f_85557_ = Maps.newHashMap();
+      private final Map f_85557_ = Maps.newHashMap();
 
       private Type(final String shaderNameIn, final String shaderExtensionIn, final int shaderModeIn) {
          this.f_85554_ = shaderNameIn;
@@ -110,8 +107,13 @@ public class Program {
          return this.f_85556_;
       }
 
-      public Map<String, com.mojang.blaze3d.shaders.Program> m_85570_() {
+      public Map m_85570_() {
          return this.f_85557_;
+      }
+
+      // $FF: synthetic method
+      private static Type[] $values() {
+         return new Type[]{VERTEX, FRAGMENT};
       }
    }
 }

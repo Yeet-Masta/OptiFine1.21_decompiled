@@ -1,6 +1,8 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.entity.EntityType;
 
 public abstract class ModelAdapterBiped extends ModelAdapter {
@@ -8,8 +10,7 @@ public abstract class ModelAdapterBiped extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof HumanoidModel modelBiped)) {
          return null;
       } else if (modelPart.equals("head")) {
@@ -29,7 +30,6 @@ public abstract class ModelAdapterBiped extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "headwear", "body", "left_arm", "right_arm", "left_leg", "right_leg"};
    }

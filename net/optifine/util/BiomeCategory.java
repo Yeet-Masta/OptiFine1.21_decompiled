@@ -30,4 +30,9 @@ public enum BiomeCategory {
    public String getName() {
       return this.name;
    }
+
+   // $FF: synthetic method
+   private static BiomeCategory[] $values() {
+      return new BiomeCategory[]{NONE, TAIGA, EXTREME_HILLS, JUNGLE, MESA, PLAINS, SAVANNA, ICY, THEEND, BEACH, FOREST, OCEAN, DESERT, RIVER, SWAMP, MUSHROOM, NETHER, UNDERGROUND, MOUNTAIN};
+   }
 }

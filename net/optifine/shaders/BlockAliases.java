@@ -7,19 +7,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.optifine.Config;
 import net.optifine.ConnectedProperties;
 import net.optifine.config.ConnectedParser;
@@ -36,9 +39,9 @@ public class BlockAliases {
    private static boolean hasAliasMetadata = false;
    private static PropertiesOrdered blockLayerPropertes = null;
    private static boolean updateOnResourcesReloaded;
-   private static List<List<BlockAlias>> legacyAliases;
+   private static List legacyAliases;
 
-   public static int getAliasBlockId(net.minecraft.world.level.block.state.BlockState blockState) {
+   public static int getAliasBlockId(BlockState blockState) {
       int blockId = blockState.getBlockId();
       int metadata = blockState.getMetadata();
       BlockAlias alias = getBlockAlias(blockId, metadata);
@@ -49,7 +52,7 @@ public class BlockAliases {
       return hasAliasMetadata;
    }
 
-   public static int getAliasMetadata(net.minecraft.world.level.block.state.BlockState blockState) {
+   public static int getAliasMetadata(BlockState blockState) {
       if (!hasAliasMetadata) {
          return 0;
       } else {
@@ -68,7 +71,7 @@ public class BlockAliases {
          if (aliases == null) {
             return null;
          } else {
-            for (int i = 0; i < aliases.length; i++) {
+            for(int i = 0; i < aliases.length; ++i) {
                BlockAlias ba = aliases[i];
                if (ba.matches(blockId, metadata)) {
                   return ba;
@@ -85,8 +88,11 @@ public class BlockAliases {
    public static BlockAlias[] getBlockAliases(int blockId) {
       if (blockAliases == null) {
          return null;
+      } else if (blockId >= 0 && blockId < blockAliases.length) {
+         BlockAlias[] aliases = blockAliases[blockId];
+         return aliases;
       } else {
-         return blockId >= 0 && blockId < blockAliases.length ? blockAliases[blockId] : null;
+         return null;
       }
    }
 
@@ -105,41 +111,42 @@ public class BlockAliases {
                Config.dbg("[Shaders] Delayed loading of block mappings after resources are loaded");
                updateOnResourcesReloaded = true;
             } else {
-               List<List<BlockAlias>> listBlockAliases = new ArrayList();
+               List listBlockAliases = new ArrayList();
                String path = "/shaders/block.properties";
                InputStream in = shaderPack.getResourceAsStream(path);
                if (in != null) {
-                  loadBlockAliases(in, path, listBlockAliases);
+                  loadBlockAliases(in, path, (List)listBlockAliases);
                }
 
-               loadModBlockAliases(listBlockAliases);
-               if (listBlockAliases.size() <= 0) {
+               loadModBlockAliases((List)listBlockAliases);
+               if (((List)listBlockAliases).size() <= 0) {
                   listBlockAliases = getLegacyAliases();
                   hasAliasMetadata = true;
                }
 
-               blockAliases = toBlockAliasArrays(listBlockAliases);
+               blockAliases = toBlockAliasArrays((List)listBlockAliases);
             }
          }
       }
    }
 
-   private static void loadModBlockAliases(List<List<BlockAlias>> listBlockAliases) {
+   private static void loadModBlockAliases(List listBlockAliases) {
       String[] modIds = ReflectorForge.getForgeModIds();
 
-      for (int i = 0; i < modIds.length; i++) {
+      for(int i = 0; i < modIds.length; ++i) {
          String modId = modIds[i];
 
          try {
-            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(modId, "shaders/block.properties");
+            ResourceLocation loc = new ResourceLocation(modId, "shaders/block.properties");
             InputStream in = Config.getResourceStream(loc);
             loadBlockAliases(in, loc.toString(), listBlockAliases);
          } catch (IOException var6) {
          }
       }
+
    }
 
-   private static void loadBlockAliases(InputStream in, String path, List<List<BlockAlias>> listBlockAliases) {
+   private static void loadBlockAliases(InputStream in, String path, List listBlockAliases) {
       if (in != null) {
          try {
             in = MacroProcessor.process(in, path, true);
@@ -148,35 +155,42 @@ public class BlockAliases {
             in.close();
             Config.dbg("[Shaders] Parsing block mappings: " + path);
             ConnectedParser cp = new ConnectedParser("Shaders");
+            Set keys = props.keySet();
+            Iterator it = keys.iterator();
 
-            for (String key : props.keySet()) {
-               String val = props.getProperty(key);
-               if (key.startsWith("layer.")) {
-                  if (blockLayerPropertes == null) {
-                     blockLayerPropertes = new PropertiesOrdered();
-                  }
+            while(true) {
+               while(it.hasNext()) {
+                  String key = (String)it.next();
+                  String val = props.getProperty(key);
+                  if (key.startsWith("layer.")) {
+                     if (blockLayerPropertes == null) {
+                        blockLayerPropertes = new PropertiesOrdered();
+                     }
 
-                  blockLayerPropertes.put(key, val);
-               } else {
-                  String prefix = "block.";
-                  if (!key.startsWith(prefix)) {
-                     Config.warn("[Shaders] Invalid block ID: " + key);
+                     blockLayerPropertes.put(key, val);
                   } else {
-                     String blockIdStr = StrUtils.removePrefix(key, prefix);
-                     int blockId = Config.parseInt(blockIdStr, -1);
-                     if (blockId < 0) {
+                     String prefix = "block.";
+                     if (!key.startsWith(prefix)) {
                         Config.warn("[Shaders] Invalid block ID: " + key);
                      } else {
-                        MatchBlock[] matchBlocks = cp.parseMatchBlocks(val);
-                        if (matchBlocks != null && matchBlocks.length >= 1) {
-                           BlockAlias ba = new BlockAlias(blockId, matchBlocks);
-                           addToList(listBlockAliases, ba);
+                        String blockIdStr = StrUtils.removePrefix(key, prefix);
+                        int blockId = Config.parseInt(blockIdStr, -1);
+                        if (blockId < 0) {
+                           Config.warn("[Shaders] Invalid block ID: " + key);
                         } else {
-                           Config.warn("[Shaders] Invalid block ID mapping: " + key + "=" + val);
+                           MatchBlock[] matchBlocks = cp.parseMatchBlocks(val);
+                           if (matchBlocks != null && matchBlocks.length >= 1) {
+                              BlockAlias ba = new BlockAlias(blockId, matchBlocks);
+                              addToList(listBlockAliases, ba);
+                           } else {
+                              Config.warn("[Shaders] Invalid block ID mapping: " + key + "=" + val);
+                           }
                         }
                      }
                   }
                }
+
+               return;
             }
          } catch (IOException var14) {
             Config.warn("[Shaders] Error reading: " + path);
@@ -184,32 +198,33 @@ public class BlockAliases {
       }
    }
 
-   private static void addToList(List<List<BlockAlias>> blocksAliases, BlockAlias ba) {
+   private static void addToList(List blocksAliases, BlockAlias ba) {
       int[] blockIds = ba.getMatchBlockIds();
 
-      for (int i = 0; i < blockIds.length; i++) {
+      for(int i = 0; i < blockIds.length; ++i) {
          int blockId = blockIds[i];
 
-         while (blockId >= blocksAliases.size()) {
-            blocksAliases.add(null);
+         while(blockId >= blocksAliases.size()) {
+            blocksAliases.add((Object)null);
          }
 
-         List<BlockAlias> blockAliases = (List<BlockAlias>)blocksAliases.get(blockId);
+         List blockAliases = (List)blocksAliases.get(blockId);
          if (blockAliases == null) {
             blockAliases = new ArrayList();
             blocksAliases.set(blockId, blockAliases);
          }
 
          BlockAlias baBlock = new BlockAlias(ba.getAliasBlockId(), ba.getMatchBlocks(blockId));
-         blockAliases.add(baBlock);
+         ((List)blockAliases).add(baBlock);
       }
+
    }
 
-   private static BlockAlias[][] toBlockAliasArrays(List<List<BlockAlias>> listBlocksAliases) {
+   private static BlockAlias[][] toBlockAliasArrays(List listBlocksAliases) {
       BlockAlias[][] bas = new BlockAlias[listBlocksAliases.size()][];
 
-      for (int i = 0; i < bas.length; i++) {
-         List<BlockAlias> listBlockAliases = (List<BlockAlias>)listBlocksAliases.get(i);
+      for(int i = 0; i < bas.length; ++i) {
+         List listBlockAliases = (List)listBlocksAliases.get(i);
          if (listBlockAliases != null) {
             bas[i] = (BlockAlias[])listBlockAliases.toArray(new BlockAlias[listBlockAliases.size()]);
          }
@@ -218,7 +233,7 @@ public class BlockAliases {
       return bas;
    }
 
-   private static List<List<BlockAlias>> getLegacyAliases() {
+   private static List getLegacyAliases() {
       if (legacyAliases == null) {
          legacyAliases = makeLegacyAliases();
       }
@@ -226,12 +241,12 @@ public class BlockAliases {
       return legacyAliases;
    }
 
-   private static List<List<BlockAlias>> makeLegacyAliases() {
+   private static List makeLegacyAliases() {
       try {
          String path = "flattening_ids.txt";
          Config.dbg("Using legacy block aliases: " + path);
-         List<List<BlockAlias>> listAliases = new ArrayList();
-         List<String> listLines = new ArrayList();
+         List listAliases = new ArrayList();
+         List listLines = new ArrayList();
          int countAliases = 0;
          InputStream in = Config.getOptiFineResourceStream("/" + path);
          if (in == null) {
@@ -239,7 +254,7 @@ public class BlockAliases {
          } else {
             String[] lines = Config.readLines(in);
 
-            for (int i = 0; i < lines.length; i++) {
+            for(int i = 0; i < lines.length; ++i) {
                int lineNum = i + 1;
                String line = lines[i];
                if (line.trim().length() > 0) {
@@ -250,21 +265,23 @@ public class BlockAliases {
                         String blockAliasStr = parts[1];
                         String blockStr = parts[2];
                         String prefix = "{Name:'" + blockStr + "'";
-                        List<String> blockLines = (List<String>)listLines.stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toList());
+                        List blockLines = (List)listLines.stream().filter((s) -> {
+                           return s.startsWith(prefix);
+                        }).collect(Collectors.toList());
                         if (blockLines.size() <= 0) {
                            Config.warn("Block not processed: " + line);
                         } else {
-                           for (String lineBlock : blockLines) {
+                           for(Iterator var14 = blockLines.iterator(); var14.hasNext(); ++countAliases) {
+                              String lineBlock = (String)var14.next();
                               String prefixNew = "{Name:'" + blockAliasStr + "'";
                               String lineNew = lineBlock.replace(prefix, prefixNew);
                               listLines.add(lineNew);
                               addLegacyAlias(lineNew, lineNum, listAliases);
-                              countAliases++;
                            }
                         }
                      } else {
                         addLegacyAlias(line, lineNum, listAliases);
-                        countAliases++;
+                        ++countAliases;
                      }
                   }
                }
@@ -274,12 +291,13 @@ public class BlockAliases {
             return listAliases;
          }
       } catch (IOException var18) {
-         Config.warn("Error loading legacy block aliases: " + var18.getClass().getName() + ": " + var18.getMessage());
+         String var10000 = var18.getClass().getName();
+         Config.warn("Error loading legacy block aliases: " + var10000 + ": " + var18.getMessage());
          return new ArrayList();
       }
    }
 
-   private static void addLegacyAlias(String line, int lineNum, List<List<BlockAlias>> listAliases) {
+   private static void addLegacyAlias(String line, int lineNum, List listAliases) {
       String[] parts = Config.tokenize(line, " ");
       if (parts.length != 4) {
          Config.warn("Invalid flattening line: " + line);
@@ -293,22 +311,26 @@ public class BlockAliases {
                JsonParser jp = new JsonParser();
                JsonObject jo = jp.parse(partNew).getAsJsonObject();
                String name = jo.get("Name").getAsString();
-               net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(name);
+               ResourceLocation loc = new ResourceLocation(name);
                Block block = BlockUtils.getBlock(loc);
                if (block == null) {
                   Config.warn("Invalid block name (" + lineNum + "): " + name);
                   return;
                }
 
-               net.minecraft.world.level.block.state.BlockState blockState = block.m_49966_();
-               Collection<net.minecraft.world.level.block.state.properties.Property<?>> stateProperties = blockState.m_61147_();
-               Map<net.minecraft.world.level.block.state.properties.Property, Comparable> mapProperties = new LinkedHashMap();
+               BlockState blockState = block.m_49966_();
+               Collection stateProperties = blockState.m_61147_();
+               Map mapProperties = new LinkedHashMap();
                JsonObject properties = (JsonObject)jo.get("Properties");
                if (properties != null) {
-                  for (Entry<String, JsonElement> entry : properties.entrySet()) {
+                  Set entries = properties.entrySet();
+                  Iterator var18 = entries.iterator();
+
+                  while(var18.hasNext()) {
+                     Map.Entry entry = (Map.Entry)var18.next();
                      String key = (String)entry.getKey();
                      String value = ((JsonElement)entry.getValue()).getAsString();
-                     net.minecraft.world.level.block.state.properties.Property prop = ConnectedProperties.getProperty(key, stateProperties);
+                     Property prop = ConnectedProperties.getProperty(key, stateProperties);
                      if (prop == null) {
                         Config.warn("Invalid property (" + lineNum + "): " + key);
                      } else {
@@ -324,54 +346,70 @@ public class BlockAliases {
 
                int blockId = blockState.getBlockId();
 
-               while (listAliases.size() <= blockId) {
-                  listAliases.add(null);
+               while(listAliases.size() <= blockId) {
+                  listAliases.add((Object)null);
                }
 
-               List<BlockAlias> las = (List<BlockAlias>)listAliases.get(blockId);
+               List las = (List)listAliases.get(blockId);
                if (las == null) {
                   las = new ArrayList(BlockUtils.getMetadataCount(block));
                   listAliases.set(blockId, las);
                }
 
                MatchBlock mb = getMatchBlock(blockState.m_60734_(), blockState.getBlockId(), mapProperties);
-               addBlockAlias(las, blockIdOld, metadataOld, mb);
+               addBlockAlias((List)las, blockIdOld, metadataOld, mb);
             } catch (Exception var24) {
                Config.warn("Error parsing: " + line);
             }
+
          } else {
             Config.warn("Invalid blockID or metadata (" + lineNum + "): " + blockIdOld + ":" + metadataOld);
          }
       }
    }
 
-   private static void addBlockAlias(List<BlockAlias> listBlockAliases, int aliasBlockId, int aliasMetadata, MatchBlock matchBlock) {
-      for (BlockAlias ba : listBlockAliases) {
-         if (ba.getAliasBlockId() == aliasBlockId && ba.getAliasMetadata() == aliasMetadata) {
-            MatchBlock[] mbs = ba.getMatchBlocks();
+   private static void addBlockAlias(List listBlockAliases, int aliasBlockId, int aliasMetadata, MatchBlock matchBlock) {
+      Iterator var4 = listBlockAliases.iterator();
 
-            for (int i = 0; i < mbs.length; i++) {
-               MatchBlock mb = mbs[i];
-               if (mb.getBlockId() == matchBlock.getBlockId()) {
-                  mb.addMetadatas(matchBlock.getMetadatas());
+      while(true) {
+         BlockAlias ba;
+         do {
+            do {
+               if (!var4.hasNext()) {
+                  BlockAlias ba = new BlockAlias(aliasBlockId, aliasMetadata, new MatchBlock[]{matchBlock});
+                  listBlockAliases.add(ba);
                   return;
                }
+
+               ba = (BlockAlias)var4.next();
+            } while(ba.getAliasBlockId() != aliasBlockId);
+         } while(ba.getAliasMetadata() != aliasMetadata);
+
+         MatchBlock[] mbs = ba.getMatchBlocks();
+
+         for(int i = 0; i < mbs.length; ++i) {
+            MatchBlock mb = mbs[i];
+            if (mb.getBlockId() == matchBlock.getBlockId()) {
+               mb.addMetadatas(matchBlock.getMetadatas());
+               return;
             }
          }
       }
-
-      BlockAlias bax = new BlockAlias(aliasBlockId, aliasMetadata, new MatchBlock[]{matchBlock});
-      listBlockAliases.add(bax);
    }
 
-   private static MatchBlock getMatchBlock(Block block, int blockId, Map<net.minecraft.world.level.block.state.properties.Property, Comparable> mapProperties) {
-      List<net.minecraft.world.level.block.state.BlockState> matchingStates = new ArrayList();
-      Collection<net.minecraft.world.level.block.state.properties.Property> props = mapProperties.keySet();
+   private static MatchBlock getMatchBlock(Block block, int blockId, Map mapProperties) {
+      List matchingStates = new ArrayList();
+      Collection props = mapProperties.keySet();
+      List states = BlockUtils.getBlockStates(block);
+      Iterator var6 = states.iterator();
 
-      for (net.minecraft.world.level.block.state.BlockState bs : BlockUtils.getBlockStates(block)) {
+      while(var6.hasNext()) {
+         BlockState bs = (BlockState)var6.next();
          boolean match = true;
+         Iterator var9 = props.iterator();
 
-         for (net.minecraft.world.level.block.state.properties.Property prop : props) {
+         while(var9.hasNext()) {
+            Property prop = (Property)var9.next();
             if (!bs.m_61138_(prop)) {
                match = false;
                break;
@@ -390,33 +428,48 @@ public class BlockAliases {
          }
       }
 
-      Set<Integer> setMetadatas = new LinkedHashSet();
+      Set setMetadatas = new LinkedHashSet();
+      Iterator var14 = matchingStates.iterator();
 
-      for (net.minecraft.world.level.block.state.BlockState bs : matchingStates) {
+      while(var14.hasNext()) {
+         BlockState bs = (BlockState)var14.next();
          setMetadatas.add(bs.getMetadata());
       }
 
       Integer[] metadatas = (Integer[])setMetadatas.toArray(new Integer[setMetadatas.size()]);
       int[] mds = Config.toPrimitive(metadatas);
-      return new MatchBlock(blockId, mds);
+      MatchBlock mb = new MatchBlock(blockId, mds);
+      return mb;
    }
 
    private static void checkLegacyAliases() {
-      for (net.minecraft.resources.ResourceLocation loc : BuiltInRegistries.f_256975_.m_6566_()) {
-         Block block = (Block)BuiltInRegistries.f_256975_.m_7745_(loc);
-         int blockId = block.m_49966_().getBlockId();
-         BlockAlias[] bas = getBlockAliases(blockId);
-         if (bas == null) {
-            Config.warn("Block has no alias: " + block);
-         } else {
-            for (net.minecraft.world.level.block.state.BlockState state : BlockUtils.getBlockStates(block)) {
-               int metadata = state.getMetadata();
-               BlockAlias ba = getBlockAlias(blockId, metadata);
-               if (ba == null) {
-                  Config.warn("State has no alias: " + state);
+      Set locs = BuiltInRegistries.f_256975_.m_6566_();
+      Iterator var1 = locs.iterator();
+
+      while(true) {
+         while(var1.hasNext()) {
+            ResourceLocation loc = (ResourceLocation)var1.next();
+            Block block = (Block)BuiltInRegistries.f_256975_.m_7745_(loc);
+            int blockId = block.m_49966_().getBlockId();
+            BlockAlias[] bas = getBlockAliases(blockId);
+            if (bas == null) {
+               Config.warn("Block has no alias: " + String.valueOf(block));
+            } else {
+               List states = BlockUtils.getBlockStates(block);
+               Iterator var7 = states.iterator();
+
+               while(var7.hasNext()) {
+                  BlockState state = (BlockState)var7.next();
+                  int metadata = state.getMetadata();
+                  BlockAlias ba = getBlockAlias(blockId, metadata);
+                  if (ba == null) {
+                     Config.warn("State has no alias: " + String.valueOf(state));
+                  }
                }
             }
          }
+
+         return;
       }
    }
 
@@ -430,7 +483,7 @@ public class BlockAliases {
       blockLayerPropertes = null;
    }
 
-   public static int getRenderType(net.minecraft.world.level.block.state.BlockState blockState) {
+   public static int getRenderType(BlockState blockState) {
       if (hasAliasMetadata) {
          Block block = blockState.m_60734_();
          if (block instanceof LiquidBlock) {

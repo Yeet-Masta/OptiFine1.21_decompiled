@@ -2,11 +2,11 @@ package net.optifine.util;
 
 import java.util.Optional;
 
-public class Either<L, R> {
-   private Optional<L> left;
-   private Optional<R> right;
+public class Either {
+   private Optional left;
+   private Optional right;
 
-   private Either(Optional<L> leftIn, Optional<R> rightIn) {
+   private Either(Optional leftIn, Optional rightIn) {
       this.left = leftIn;
       this.right = rightIn;
       if (!this.left.isPresent() && !this.right.isPresent()) {
@@ -16,19 +16,19 @@ public class Either<L, R> {
       }
    }
 
-   public Optional<L> getLeft() {
+   public Optional getLeft() {
       return this.left;
    }
 
-   public Optional<R> getRight() {
+   public Optional getRight() {
       return this.right;
    }
 
-   public static <L, R> Either<L, R> makeLeft(L value) {
-      return new Either<>(Optional.of(value), Optional.empty());
+   public static Either makeLeft(Object value) {
+      return new Either(Optional.of(value), Optional.empty());
    }
 
-   public static <L, R> Either makeRight(R value) {
+   public static Either makeRight(Object value) {
       return new Either(Optional.empty(), Optional.of(value));
    }
 }

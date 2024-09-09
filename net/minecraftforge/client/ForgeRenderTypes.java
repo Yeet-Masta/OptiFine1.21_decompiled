@@ -1,27 +1,30 @@
 package net.minecraftforge.client;
 
+import net.minecraft.src.C_4168_;
+import net.minecraft.src.C_5265_;
+
 public class ForgeRenderTypes {
-   public static RenderType getText(ResourceLocation locationIn) {
+   public static C_4168_ getText(C_5265_ locationIn) {
       throw new UnsupportedOperationException();
    }
 
-   public static RenderType getTextIntensity(ResourceLocation locationIn) {
+   public static C_4168_ getTextIntensity(C_5265_ locationIn) {
       throw new UnsupportedOperationException();
    }
 
-   public static RenderType getTextPolygonOffset(ResourceLocation locationIn) {
+   public static C_4168_ getTextPolygonOffset(C_5265_ locationIn) {
       throw new UnsupportedOperationException();
    }
 
-   public static RenderType getTextIntensityPolygonOffset(ResourceLocation locationIn) {
+   public static C_4168_ getTextIntensityPolygonOffset(C_5265_ locationIn) {
       throw new UnsupportedOperationException();
    }
 
-   public static RenderType getTextSeeThrough(ResourceLocation locationIn) {
+   public static C_4168_ getTextSeeThrough(C_5265_ locationIn) {
       throw new UnsupportedOperationException();
    }
 
-   public static RenderType getTextIntensitySeeThrough(ResourceLocation locationIn) {
+   public static C_4168_ getTextIntensitySeeThrough(C_5265_ locationIn) {
       throw new UnsupportedOperationException();
    }
 }

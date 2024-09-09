@@ -19,7 +19,7 @@ public interface BitStorage {
 
    void m_197970_(int[] var1);
 
-   net.minecraft.util.BitStorage m_199833_();
+   BitStorage m_199833_();
 
    default void finish() {
    }

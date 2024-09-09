@@ -12,7 +12,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import io.netty.buffer.ByteBuf;
 import java.lang.reflect.Type;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
@@ -22,13 +21,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.GsonHelper;
 
-public final class ResourceLocation implements Comparable<net.minecraft.resources.ResourceLocation> {
-   public static final Codec<net.minecraft.resources.ResourceLocation> f_135803_ = Codec.STRING
-      .comapFlatMap(net.minecraft.resources.ResourceLocation::m_135837_, net.minecraft.resources.ResourceLocation::toString)
-      .stable();
-   public static final StreamCodec<ByteBuf, net.minecraft.resources.ResourceLocation> f_314488_ = ByteBufCodecs.f_315450_
-      .m_323038_(net.minecraft.resources.ResourceLocation::m_338530_, net.minecraft.resources.ResourceLocation::toString);
-   public static final SimpleCommandExceptionType f_135806_ = new SimpleCommandExceptionType(Component.m_237115_("argument.id.invalid"));
+public final class ResourceLocation implements Comparable {
+   public static final Codec f_135803_;
+   public static final StreamCodec f_314488_;
+   public static final SimpleCommandExceptionType f_135806_;
    public static final char f_179907_ = ':';
    public static final String f_179908_ = "minecraft";
    public static final String f_179909_ = "realms";
@@ -56,33 +52,33 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
       this.defaultNamespace = "minecraft".equals(namespaceIn);
    }
 
-   private static net.minecraft.resources.ResourceLocation m_339033_(String namespaceIn, String pathIn) {
-      return new net.minecraft.resources.ResourceLocation(m_245413_(namespaceIn, pathIn), m_245185_(namespaceIn, pathIn));
+   private static ResourceLocation m_339033_(String namespaceIn, String pathIn) {
+      return new ResourceLocation(m_245413_(namespaceIn, pathIn), m_245185_(namespaceIn, pathIn));
    }
 
-   public static net.minecraft.resources.ResourceLocation m_339182_(String namespaceIn, String pathIn) {
+   public static ResourceLocation m_339182_(String namespaceIn, String pathIn) {
       return m_339033_(namespaceIn, pathIn);
    }
 
-   public static net.minecraft.resources.ResourceLocation m_338530_(String stringIn) {
+   public static ResourceLocation m_338530_(String stringIn) {
       return m_339830_(stringIn, ':');
    }
 
-   public static net.minecraft.resources.ResourceLocation m_340282_(String pathIn) {
-      return new net.minecraft.resources.ResourceLocation("minecraft", m_245185_("minecraft", pathIn));
+   public static ResourceLocation m_340282_(String pathIn) {
+      return new ResourceLocation("minecraft", m_245185_("minecraft", pathIn));
    }
 
    @Nullable
-   public static net.minecraft.resources.ResourceLocation m_135820_(String string) {
+   public static ResourceLocation m_135820_(String string) {
       return m_338964_(string, ':');
    }
 
    @Nullable
-   public static net.minecraft.resources.ResourceLocation m_214293_(String namespaceIn, String pathIn) {
-      return m_135843_(namespaceIn) && m_135841_(pathIn) ? new net.minecraft.resources.ResourceLocation(namespaceIn, pathIn) : null;
+   public static ResourceLocation m_214293_(String namespaceIn, String pathIn) {
+      return m_135843_(namespaceIn) && m_135841_(pathIn) ? new ResourceLocation(namespaceIn, pathIn) : null;
    }
 
-   public static net.minecraft.resources.ResourceLocation m_339830_(String stringIn, char separatorIn) {
+   public static ResourceLocation m_339830_(String stringIn, char separatorIn) {
       int i = stringIn.indexOf(separatorIn);
       if (i >= 0) {
          String s = stringIn.substring(i + 1);
@@ -98,7 +94,7 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
    }
 
    @Nullable
-   public static net.minecraft.resources.ResourceLocation m_338964_(String stringIn, char separatorIn) {
+   public static ResourceLocation m_338964_(String stringIn, char separatorIn) {
       int i = stringIn.indexOf(separatorIn);
       if (i >= 0) {
          String s = stringIn.substring(i + 1);
@@ -106,20 +102,22 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
             return null;
          } else if (i != 0) {
             String s1 = stringIn.substring(0, i);
-            return m_135843_(s1) ? new net.minecraft.resources.ResourceLocation(s1, s) : null;
+            return m_135843_(s1) ? new ResourceLocation(s1, s) : null;
          } else {
-            return new net.minecraft.resources.ResourceLocation("minecraft", s);
+            return new ResourceLocation("minecraft", s);
          }
       } else {
-         return m_135841_(stringIn) ? new net.minecraft.resources.ResourceLocation("minecraft", stringIn) : null;
+         return m_135841_(stringIn) ? new ResourceLocation("minecraft", stringIn) : null;
       }
    }
 
-   public static DataResult<net.minecraft.resources.ResourceLocation> m_135837_(String stringIn) {
+   public static DataResult m_135837_(String stringIn) {
       try {
          return DataResult.success(m_338530_(stringIn));
       } catch (ResourceLocationException var2) {
-         return DataResult.error(() -> "Not a valid resource location: " + stringIn + " " + var2.getMessage());
+         return DataResult.error(() -> {
+            return "Not a valid resource location: " + stringIn + " " + var2.getMessage();
+         });
       }
    }
 
@@ -131,19 +129,19 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
       return this.f_135804_;
    }
 
-   public net.minecraft.resources.ResourceLocation m_247449_(String pathIn) {
-      return new net.minecraft.resources.ResourceLocation(this.f_135804_, m_245185_(this.f_135804_, pathIn));
+   public ResourceLocation m_247449_(String pathIn) {
+      return new ResourceLocation(this.f_135804_, m_245185_(this.f_135804_, pathIn));
    }
 
-   public net.minecraft.resources.ResourceLocation m_247266_(UnaryOperator<String> pathIn) {
+   public ResourceLocation m_247266_(UnaryOperator pathIn) {
       return this.m_247449_((String)pathIn.apply(this.f_135805_));
    }
 
-   public net.minecraft.resources.ResourceLocation m_246208_(String prefixIn) {
+   public ResourceLocation m_246208_(String prefixIn) {
       return this.m_247449_(prefixIn + this.f_135805_);
    }
 
-   public net.minecraft.resources.ResourceLocation m_266382_(String suffixIn) {
+   public ResourceLocation m_266382_(String suffixIn) {
       return this.m_247449_(this.f_135805_ + suffixIn);
    }
 
@@ -155,9 +153,15 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
       if (this == p_equals_1_) {
          return true;
       } else {
-         return p_equals_1_ instanceof net.minecraft.resources.ResourceLocation resourcelocation
-            ? this.f_135804_.equals(resourcelocation.f_135804_) && this.f_135805_.equals(resourcelocation.f_135805_)
-            : false;
+         boolean var10000;
+         if (p_equals_1_ instanceof ResourceLocation) {
+            ResourceLocation resourcelocation = (ResourceLocation)p_equals_1_;
+            var10000 = this.f_135804_.equals(resourcelocation.f_135804_) && this.f_135805_.equals(resourcelocation.f_135805_);
+         } else {
+            var10000 = false;
+         }
+
+         return var10000;
       }
    }
 
@@ -165,7 +169,7 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
       return 31 * this.f_135804_.hashCode() + this.f_135805_.hashCode();
    }
 
-   public int compareTo(net.minecraft.resources.ResourceLocation p_compareTo_1_) {
+   public int compareTo(ResourceLocation p_compareTo_1_) {
       int i = this.f_135805_.compareTo(p_compareTo_1_.f_135805_);
       if (i == 0) {
          i = this.f_135804_.compareTo(p_compareTo_1_.f_135804_);
@@ -197,14 +201,14 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
    private static String m_324283_(StringReader readerIn) {
       int i = readerIn.getCursor();
 
-      while (readerIn.canRead() && m_135816_(readerIn.peek())) {
+      while(readerIn.canRead() && m_135816_(readerIn.peek())) {
          readerIn.skip();
       }
 
       return readerIn.getString().substring(i, readerIn.getCursor());
    }
 
-   public static net.minecraft.resources.ResourceLocation m_135818_(StringReader reader) throws CommandSyntaxException {
+   public static ResourceLocation m_135818_(StringReader reader) throws CommandSyntaxException {
       int i = reader.getCursor();
       String s = m_324283_(reader);
 
@@ -216,7 +220,7 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
       }
    }
 
-   public static net.minecraft.resources.ResourceLocation m_320588_(StringReader readerIn) throws CommandSyntaxException {
+   public static ResourceLocation m_320588_(StringReader readerIn) throws CommandSyntaxException {
       int i = readerIn.getCursor();
       String s = m_324283_(readerIn);
       if (s.isEmpty()) {
@@ -232,17 +236,11 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
    }
 
    public static boolean m_135816_(char charIn) {
-      return charIn >= '0' && charIn <= '9'
-         || charIn >= 'a' && charIn <= 'z'
-         || charIn == '_'
-         || charIn == ':'
-         || charIn == '/'
-         || charIn == '.'
-         || charIn == '-';
+      return charIn >= '0' && charIn <= '9' || charIn >= 'a' && charIn <= 'z' || charIn == '_' || charIn == ':' || charIn == '/' || charIn == '.' || charIn == '-';
    }
 
    public static boolean m_135841_(String pathIn) {
-      for (int i = 0; i < pathIn.length(); i++) {
+      for(int i = 0; i < pathIn.length(); ++i) {
          if (!m_135828_(pathIn.charAt(i))) {
             return false;
          }
@@ -252,7 +250,7 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
    }
 
    public static boolean m_135843_(String namespaceIn) {
-      for (int i = 0; i < namespaceIn.length(); i++) {
+      for(int i = 0; i < namespaceIn.length(); ++i) {
          if (!m_135835_(namespaceIn.charAt(i))) {
             return false;
          }
@@ -289,21 +287,23 @@ public final class ResourceLocation implements Comparable<net.minecraft.resource
       return this.defaultNamespace;
    }
 
-   public int compareNamespaced(net.minecraft.resources.ResourceLocation o) {
+   public int compareNamespaced(ResourceLocation o) {
       int ret = this.f_135804_.compareTo(o.f_135804_);
       return ret != 0 ? ret : this.f_135805_.compareTo(o.f_135805_);
    }
 
-   public static class Serializer
-      implements JsonDeserializer<net.minecraft.resources.ResourceLocation>,
-      JsonSerializer<net.minecraft.resources.ResourceLocation> {
-      public net.minecraft.resources.ResourceLocation deserialize(
-         JsonElement p_deserialize_1_, Type p_deserialize_2_, JsonDeserializationContext p_deserialize_3_
-      ) throws JsonParseException {
-         return net.minecraft.resources.ResourceLocation.m_338530_(GsonHelper.m_13805_(p_deserialize_1_, "location"));
+   static {
+      f_135803_ = Codec.STRING.comapFlatMap(ResourceLocation::m_135837_, ResourceLocation::toString).stable();
+      f_314488_ = ByteBufCodecs.f_315450_.m_323038_(ResourceLocation::m_338530_, ResourceLocation::toString);
+      f_135806_ = new SimpleCommandExceptionType(Component.m_237115_("argument.id.invalid"));
+   }
+
+   public static class Serializer implements JsonDeserializer, JsonSerializer {
+      public ResourceLocation deserialize(JsonElement p_deserialize_1_, Type p_deserialize_2_, JsonDeserializationContext p_deserialize_3_) throws JsonParseException {
+         return ResourceLocation.m_338530_(GsonHelper.m_13805_(p_deserialize_1_, "location"));
       }
 
-      public JsonElement serialize(net.minecraft.resources.ResourceLocation p_serialize_1_, Type p_serialize_2_, JsonSerializationContext p_serialize_3_) {
+      public JsonElement serialize(ResourceLocation p_serialize_1_, Type p_serialize_2_, JsonSerializationContext p_serialize_3_) {
          return new JsonPrimitive(p_serialize_1_.toString());
       }
    }

@@ -1,12 +1,16 @@
 package net.minecraft.client.renderer.chunk;
 
 import javax.annotation.Nullable;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
@@ -18,15 +22,15 @@ public class RenderChunkRegion implements BlockAndTintGetter {
    public static final int f_337092_ = 3;
    private final int f_336971_;
    private final int f_336993_;
-   protected final net.minecraft.client.renderer.chunk.RenderChunk[] f_112905_;
+   protected final RenderChunk[] f_112905_;
    protected final Level f_112908_;
    private SectionPos sectionPos;
 
-   RenderChunkRegion(Level worldIn, int chunkStartXIn, int chunkStartYIn, net.minecraft.client.renderer.chunk.RenderChunk[] chunksIn) {
-      this(worldIn, chunkStartXIn, chunkStartYIn, chunksIn, null);
+   RenderChunkRegion(Level worldIn, int chunkStartXIn, int chunkStartYIn, RenderChunk[] chunksIn) {
+      this(worldIn, chunkStartXIn, chunkStartYIn, chunksIn, (SectionPos)null);
    }
 
-   RenderChunkRegion(Level worldIn, int chunkStartXIn, int chunkStartYIn, net.minecraft.client.renderer.chunk.RenderChunk[] chunksIn, SectionPos sectionPosIn) {
+   RenderChunkRegion(Level worldIn, int chunkStartXIn, int chunkStartYIn, RenderChunk[] chunksIn, SectionPos sectionPosIn) {
       this.f_112908_ = worldIn;
       this.f_336971_ = chunkStartXIn;
       this.f_336993_ = chunkStartYIn;
@@ -34,7 +38,7 @@ public class RenderChunkRegion implements BlockAndTintGetter {
       this.sectionPos = sectionPosIn;
    }
 
-   public net.minecraft.world.level.block.state.BlockState m_8055_(BlockPos pos) {
+   public BlockState m_8055_(BlockPos pos) {
       return this.m_340417_(SectionPos.m_123171_(pos.m_123341_()), SectionPos.m_123171_(pos.m_123343_())).m_200453_(pos);
    }
 
@@ -42,7 +46,7 @@ public class RenderChunkRegion implements BlockAndTintGetter {
       return this.m_340417_(SectionPos.m_123171_(pos.m_123341_()), SectionPos.m_123171_(pos.m_123343_())).m_200453_(pos).m_60819_();
    }
 
-   public float m_7717_(net.minecraft.core.Direction directionIn, boolean shadeIn) {
+   public float m_7717_(Direction directionIn, boolean shadeIn) {
       return this.f_112908_.m_7717_(directionIn, shadeIn);
    }
 
@@ -51,11 +55,11 @@ public class RenderChunkRegion implements BlockAndTintGetter {
    }
 
    @Nullable
-   public net.minecraft.world.level.block.entity.BlockEntity m_7702_(BlockPos pos) {
+   public BlockEntity m_7702_(BlockPos pos) {
       return this.m_340417_(SectionPos.m_123171_(pos.m_123341_()), SectionPos.m_123171_(pos.m_123343_())).m_200451_(pos);
    }
 
-   public net.minecraft.client.renderer.chunk.RenderChunk m_340417_(int x, int z) {
+   public RenderChunk m_340417_(int x, int z) {
       return this.f_112905_[m_339116_(this.f_336971_, this.f_336993_, x, z)];
    }
 
@@ -84,10 +88,11 @@ public class RenderChunkRegion implements BlockAndTintGetter {
    }
 
    public void finish() {
-      for (int i = 0; i < this.f_112905_.length; i++) {
-         net.minecraft.client.renderer.chunk.RenderChunk rc = this.f_112905_[i];
+      for(int i = 0; i < this.f_112905_.length; ++i) {
+         RenderChunk rc = this.f_112905_[i];
          rc.finish();
       }
+
    }
 
    public ChunkCacheOF makeChunkCacheOF() {
@@ -103,10 +108,20 @@ public class RenderChunkRegion implements BlockAndTintGetter {
    }
 
    public float getShade(float normalX, float normalY, float normalZ, boolean shade) {
-      return this.f_112908_ instanceof net.minecraft.client.multiplayer.ClientLevel clientWorld ? clientWorld.getShade(normalX, normalY, normalZ, shade) : 1.0F;
+      if (this.f_112908_ instanceof ClientLevel) {
+         ClientLevel clientWorld = (ClientLevel)this.f_112908_;
+         return clientWorld.getShade(normalX, normalY, normalZ, shade);
+      } else {
+         return 1.0F;
+      }
    }
 
    public ModelDataManager getModelDataManager() {
-      return this.f_112908_ instanceof net.minecraft.client.multiplayer.ClientLevel clientWorld ? clientWorld.getModelDataManager() : null;
+      if (this.f_112908_ instanceof ClientLevel) {
+         ClientLevel clientWorld = (ClientLevel)this.f_112908_;
+         return clientWorld.getModelDataManager();
+      } else {
+         return null;
+      }
    }
 }

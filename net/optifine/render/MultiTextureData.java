@@ -1,12 +1,14 @@
 package net.optifine.render;
 
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.optifine.util.ArrayUtils;
 
 public class MultiTextureData {
    private SpriteRenderData[] spriteRenderDatas;
    private int vertexCount;
-   private net.minecraft.client.renderer.RenderType blockLayer;
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSprites;
+   private RenderType blockLayer;
+   private TextureAtlasSprite[] quadSprites;
    private SpriteRenderData[] spriteRenderDatasSorted;
 
    public MultiTextureData(SpriteRenderData[] spriteRenderDatas) {
@@ -17,9 +19,7 @@ public class MultiTextureData {
       return this.spriteRenderDatas;
    }
 
-   public void setResortParameters(
-      int vertexCountIn, net.minecraft.client.renderer.RenderType blockLayerIn, net.minecraft.client.renderer.texture.TextureAtlasSprite[] quadSpritesIn
-   ) {
+   public void setResortParameters(int vertexCountIn, RenderType blockLayerIn, TextureAtlasSprite[] quadSpritesIn) {
       this.vertexCount = vertexCountIn;
       this.blockLayer = blockLayerIn;
       this.quadSprites = quadSpritesIn;

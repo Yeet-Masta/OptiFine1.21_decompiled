@@ -7,20 +7,27 @@ import java.util.Map;
 public class HttpRequest {
    private String host = null;
    private int port = 0;
-   private Proxy proxy = Proxy.NO_PROXY;
-   private String method = null;
-   private String file = null;
-   private String http = null;
-   private Map<String, String> headers = new LinkedHashMap();
-   private byte[] body = null;
-   private int redirects = 0;
+   private Proxy proxy;
+   private String method;
+   private String file;
+   private String http;
+   private Map headers;
+   private byte[] body;
+   private int redirects;
    public static final String METHOD_GET = "GET";
    public static final String METHOD_HEAD = "HEAD";
    public static final String METHOD_POST = "POST";
    public static final String HTTP_1_0 = "HTTP/1.0";
    public static final String HTTP_1_1 = "HTTP/1.1";
 
-   public HttpRequest(String host, int port, Proxy proxy, String method, String file, String http, Map<String, String> headers, byte[] body) {
+   public HttpRequest(String host, int port, Proxy proxy, String method, String file, String http, Map headers, byte[] body) {
+      this.proxy = Proxy.NO_PROXY;
+      this.method = null;
+      this.file = null;
+      this.http = null;
+      this.headers = new LinkedHashMap();
+      this.body = null;
+      this.redirects = 0;
       this.host = host;
       this.port = port;
       this.proxy = proxy;
@@ -51,7 +58,7 @@ public class HttpRequest {
       return this.http;
    }
 
-   public Map<String, String> getHeaders() {
+   public Map getHeaders() {
       return this.headers;
    }
 

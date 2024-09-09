@@ -8,8 +8,8 @@ import java.util.Set;
 
 public class ShaderProfile {
    private String name = null;
-   private Map<String, String> mapOptionValues = new LinkedHashMap();
-   private Set<String> disabledPrograms = new LinkedHashSet();
+   private Map mapOptionValues = new LinkedHashMap();
+   private Set disabledPrograms = new LinkedHashSet();
 
    public ShaderProfile(String name) {
       this.name = name;
@@ -30,7 +30,7 @@ public class ShaderProfile {
    }
 
    public void applyOptionValues(ShaderOption[] options) {
-      for (int i = 0; i < options.length; i++) {
+      for(int i = 0; i < options.length; ++i) {
          ShaderOption so = options[i];
          String key = so.getName();
          String val = (String)this.mapOptionValues.get(key);
@@ -38,11 +38,13 @@ public class ShaderProfile {
             so.setValue(val);
          }
       }
+
    }
 
    public String[] getOptions() {
-      Set<String> keys = this.mapOptionValues.keySet();
-      return (String[])keys.toArray(new String[keys.size()]);
+      Set keys = this.mapOptionValues.keySet();
+      String[] opts = (String[])keys.toArray(new String[keys.size()]);
+      return opts;
    }
 
    public String getValue(String key) {
@@ -57,11 +59,11 @@ public class ShaderProfile {
       this.disabledPrograms.remove(program);
    }
 
-   public Collection<String> getDisabledPrograms() {
+   public Collection getDisabledPrograms() {
       return new LinkedHashSet(this.disabledPrograms);
    }
 
-   public void addDisabledPrograms(Collection<String> programs) {
+   public void addDisabledPrograms(Collection programs) {
       this.disabledPrograms.addAll(programs);
    }
 

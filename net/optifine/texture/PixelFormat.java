@@ -2,7 +2,8 @@ package net.optifine.texture;
 
 public enum PixelFormat {
    RED(6403),
-   RG(33319),
+   // $FF: renamed from: RG net.optifine.texture.PixelFormat
+   field_66(33319),
    RGB(6407),
    BGR(32992),
    RGBA(6408),
@@ -14,13 +15,19 @@ public enum PixelFormat {
    RGBA_INTEGER(36249),
    BGRA_INTEGER(36251);
 
-   private int id;
+   // $FF: renamed from: id int
+   private int field_67;
 
    private PixelFormat(int id) {
-      this.id = id;
+      this.field_67 = id;
    }
 
    public int getId() {
-      return this.id;
+      return this.field_67;
+   }
+
+   // $FF: synthetic method
+   private static PixelFormat[] $values() {
+      return new PixelFormat[]{RED, field_66, RGB, BGR, RGBA, BGRA, RED_INTEGER, RG_INTEGER, RGB_INTEGER, BGR_INTEGER, RGBA_INTEGER, BGRA_INTEGER};
    }
 }

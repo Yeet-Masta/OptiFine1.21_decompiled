@@ -1,9 +1,11 @@
 package net.minecraftforge.fml.common.registry;
 
-public interface RegistryDelegate<T> {
-   T get();
+import net.minecraft.src.C_5265_;
 
-   ResourceLocation name();
+public interface RegistryDelegate {
+   Object get();
 
-   Class<T> type();
+   C_5265_ name();
+
+   Class type();
 }

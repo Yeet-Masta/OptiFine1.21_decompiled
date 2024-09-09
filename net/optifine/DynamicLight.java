@@ -1,28 +1,32 @@
 package net.optifine;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 public class DynamicLight {
    private Entity entity = null;
    private double offsetY = 0.0;
-   private double lastPosX = -2.1474836E9F;
-   private double lastPosY = -2.1474836E9F;
-   private double lastPosZ = -2.1474836E9F;
+   private double lastPosX = -2.147483648E9;
+   private double lastPosY = -2.147483648E9;
+   private double lastPosZ = -2.147483648E9;
    private int lastLightLevel = 0;
    private long timeCheckMs = 0L;
-   private Set<BlockPos> setLitChunkPos = new HashSet();
-   private MutableBlockPos blockPosMutable = new MutableBlockPos();
+   private Set setLitChunkPos = new HashSet();
+   private BlockPos.MutableBlockPos blockPosMutable = new BlockPos.MutableBlockPos();
 
    public DynamicLight(Entity entity) {
       this.entity = entity;
       this.offsetY = (double)entity.m_20192_();
    }
 
-   public void update(net.minecraft.client.renderer.LevelRenderer renderGlobal) {
+   public void update(LevelRenderer renderGlobal) {
       if (Config.isDynamicLightsFast()) {
          long timeNowMs = System.currentTimeMillis();
          if (timeNowMs < this.timeCheckMs + 500L) {
@@ -45,33 +49,27 @@ public class DynamicLight {
          this.lastPosY = posY;
          this.lastPosZ = posZ;
          this.lastLightLevel = lightLevel;
-         Set<BlockPos> setNewPos = new HashSet();
+         Set setNewPos = new HashSet();
          if (lightLevel > 0) {
-            net.minecraft.core.Direction dirX = (net.minecraft.util.Mth.m_14107_(posX) & 15) >= 8
-               ? net.minecraft.core.Direction.EAST
-               : net.minecraft.core.Direction.WEST;
-            net.minecraft.core.Direction dirY = (net.minecraft.util.Mth.m_14107_(posY) & 15) >= 8
-               ? net.minecraft.core.Direction.UP
-               : net.minecraft.core.Direction.DOWN;
-            net.minecraft.core.Direction dirZ = (net.minecraft.util.Mth.m_14107_(posZ) & 15) >= 8
-               ? net.minecraft.core.Direction.SOUTH
-               : net.minecraft.core.Direction.NORTH;
+            Direction dirX = (Mth.m_14107_(posX) & 15) >= 8 ? Direction.EAST : Direction.WEST;
+            Direction dirY = (Mth.m_14107_(posY) & 15) >= 8 ? Direction.field_61 : Direction.DOWN;
+            Direction dirZ = (Mth.m_14107_(posZ) & 15) >= 8 ? Direction.SOUTH : Direction.NORTH;
             BlockPos chunkPos = BlockPos.m_274561_(posX, posY, posZ);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunk = renderGlobal.getRenderChunk(chunkPos);
+            SectionRenderDispatcher.RenderSection chunk = renderGlobal.getRenderChunk(chunkPos);
             BlockPos chunkPosX = this.getChunkPos(chunk, chunkPos, dirX);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkX = renderGlobal.getRenderChunk(chunkPosX);
+            SectionRenderDispatcher.RenderSection chunkX = renderGlobal.getRenderChunk(chunkPosX);
             BlockPos chunkPosZ = this.getChunkPos(chunk, chunkPos, dirZ);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkZ = renderGlobal.getRenderChunk(chunkPosZ);
+            SectionRenderDispatcher.RenderSection chunkZ = renderGlobal.getRenderChunk(chunkPosZ);
             BlockPos chunkPosXZ = this.getChunkPos(chunkX, chunkPosX, dirZ);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkXZ = renderGlobal.getRenderChunk(chunkPosXZ);
+            SectionRenderDispatcher.RenderSection chunkXZ = renderGlobal.getRenderChunk(chunkPosXZ);
             BlockPos chunkPosY = this.getChunkPos(chunk, chunkPos, dirY);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkY = renderGlobal.getRenderChunk(chunkPosY);
+            SectionRenderDispatcher.RenderSection chunkY = renderGlobal.getRenderChunk(chunkPosY);
             BlockPos chunkPosYX = this.getChunkPos(chunkY, chunkPosY, dirX);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkYX = renderGlobal.getRenderChunk(chunkPosYX);
+            SectionRenderDispatcher.RenderSection chunkYX = renderGlobal.getRenderChunk(chunkPosYX);
             BlockPos chunkPosYZ = this.getChunkPos(chunkY, chunkPosY, dirZ);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkYZ = renderGlobal.getRenderChunk(chunkPosYZ);
+            SectionRenderDispatcher.RenderSection chunkYZ = renderGlobal.getRenderChunk(chunkPosYZ);
             BlockPos chunkPosYXZ = this.getChunkPos(chunkYX, chunkPosYX, dirZ);
-            net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkYXZ = renderGlobal.getRenderChunk(chunkPosYXZ);
+            SectionRenderDispatcher.RenderSection chunkYXZ = renderGlobal.getRenderChunk(chunkPosYXZ);
             this.updateChunkLight(chunk, this.setLitChunkPos, setNewPos);
             this.updateChunkLight(chunkX, this.setLitChunkPos, setNewPos);
             this.updateChunkLight(chunkZ, this.setLitChunkPos, setNewPos);
@@ -87,17 +85,13 @@ public class DynamicLight {
       }
    }
 
-   private BlockPos getChunkPos(
-      net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection renderChunk, BlockPos pos, net.minecraft.core.Direction facing
-   ) {
+   private BlockPos getChunkPos(SectionRenderDispatcher.RenderSection renderChunk, BlockPos pos, Direction facing) {
       return renderChunk != null ? renderChunk.m_292593_(facing) : pos.m_5484_(facing, 16);
    }
 
-   private void updateChunkLight(
-      net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection renderChunk, Set<BlockPos> setPrevPos, Set<BlockPos> setNewPos
-   ) {
+   private void updateChunkLight(SectionRenderDispatcher.RenderSection renderChunk, Set setPrevPos, Set setNewPos) {
       if (renderChunk != null) {
-         net.minecraft.client.renderer.chunk.SectionRenderDispatcher.CompiledSection compiledChunk = renderChunk.m_293175_();
+         SectionRenderDispatcher.CompiledSection compiledChunk = renderChunk.m_293175_();
          if (compiledChunk != null && !compiledChunk.m_295467_()) {
             renderChunk.m_292780_(false);
             renderChunk.setNeedsBackgroundPriorityUpdate(true);
@@ -111,14 +105,19 @@ public class DynamicLight {
          if (setNewPos != null) {
             setNewPos.add(pos);
          }
+
       }
    }
 
-   public void updateLitChunks(net.minecraft.client.renderer.LevelRenderer renderGlobal) {
-      for (BlockPos posOld : this.setLitChunkPos) {
-         net.minecraft.client.renderer.chunk.SectionRenderDispatcher.RenderSection chunkOld = renderGlobal.getRenderChunk(posOld);
-         this.updateChunkLight(chunkOld, null, null);
+   public void updateLitChunks(LevelRenderer renderGlobal) {
+      Iterator it = this.setLitChunkPos.iterator();
+
+      while(it.hasNext()) {
+         BlockPos posOld = (BlockPos)it.next();
+         SectionRenderDispatcher.RenderSection chunkOld = renderGlobal.getRenderChunk(posOld);
+         this.updateChunkLight(chunkOld, (Set)null, (Set)null);
       }
+
    }
 
    public Entity getEntity() {
@@ -146,6 +145,7 @@ public class DynamicLight {
    }
 
    public String toString() {
-      return "Entity: " + this.entity + ", offsetY: " + this.offsetY;
+      String var10000 = String.valueOf(this.entity);
+      return "Entity: " + var10000 + ", offsetY: " + this.offsetY;
    }
 }

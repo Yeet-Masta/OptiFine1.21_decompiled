@@ -1,9 +1,11 @@
 package net.minecraftforge.registries;
 
-public interface IRegistryDelegate<T> {
-   T get();
+import net.minecraft.src.C_5265_;
 
-   ResourceLocation name();
+public interface IRegistryDelegate {
+   Object get();
 
-   Class<T> type();
+   C_5265_ name();
+
+   Class type();
 }

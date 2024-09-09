@@ -1,6 +1,7 @@
 package net.minecraft.client.renderer.texture;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
@@ -15,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,11 +25,14 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
+import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.optifine.Config;
 import net.optifine.EmissiveTextures;
@@ -43,25 +48,27 @@ import net.optifine.util.CounterInt;
 import net.optifine.util.TextureUtils;
 import org.slf4j.Logger;
 
-public class TextureAtlas extends net.minecraft.client.renderer.texture.AbstractTexture implements Dumpable, Tickable {
+public class TextureAtlas extends AbstractTexture implements Dumpable, Tickable {
    private static final Logger f_118261_ = LogUtils.getLogger();
+   /** @deprecated */
    @Deprecated
-   public static final net.minecraft.resources.ResourceLocation f_118259_ = InventoryMenu.f_39692_;
+   public static final ResourceLocation f_118259_;
+   /** @deprecated */
    @Deprecated
-   public static final net.minecraft.resources.ResourceLocation f_118260_ = net.minecraft.resources.ResourceLocation.m_340282_("textures/atlas/particles.png");
-   private List<net.minecraft.client.renderer.texture.SpriteContents> f_118263_ = List.of();
-   private List<net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker> f_118262_ = List.of();
-   private Map<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.TextureAtlasSprite> f_118264_ = Map.of();
+   public static final ResourceLocation f_118260_;
+   private List f_118263_ = List.of();
+   private List f_118262_ = List.of();
+   private Map f_118264_ = Map.of();
    @Nullable
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite f_301625_;
-   private final net.minecraft.resources.ResourceLocation f_118265_;
+   private TextureAtlasSprite f_301625_;
+   private final ResourceLocation f_118265_;
    private final int f_118266_;
    private int f_276067_;
    private int f_276070_;
    private int f_276072_;
-   private Map<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.TextureAtlasSprite> mapRegisteredSprites = new LinkedHashMap();
-   private Map<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.TextureAtlasSprite> mapMissingSprites = new LinkedHashMap();
-   private net.minecraft.client.renderer.texture.TextureAtlasSprite[] iconGrid = null;
+   private Map mapRegisteredSprites = new LinkedHashMap();
+   private Map mapMissingSprites = new LinkedHashMap();
+   private TextureAtlasSprite[] iconGrid = null;
    private int iconGridSize = -1;
    private int iconGridCountX = -1;
    private int iconGridCountY = -1;
@@ -78,7 +85,7 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
    private boolean multiTexture;
    private ITextureFormat textureFormat;
 
-   public TextureAtlas(net.minecraft.resources.ResourceLocation textureLocationIn) {
+   public TextureAtlas(ResourceLocation textureLocationIn) {
       this.f_118265_ = textureLocationIn;
       this.f_118266_ = RenderSystem.maxSupportedTextureSize();
       this.terrain = textureLocationIn.equals(f_118259_);
@@ -87,13 +94,13 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       if (this.terrain) {
          Config.setTextureMap(this);
       }
+
    }
 
-   @Override
    public void m_6704_(ResourceManager manager) {
    }
 
-   public void m_247065_(net.minecraft.client.renderer.texture.SpriteLoader.Preparations sheetDataIn) {
+   public void m_247065_(SpriteLoader.Preparations sheetDataIn) {
       f_118261_.info("Created: {}x{}x{} {}-atlas", new Object[]{sheetDataIn.f_243669_(), sheetDataIn.f_244632_(), sheetDataIn.f_244353_(), this.f_118265_});
       TextureUtil.prepareImage(this.m_117963_(), sheetDataIn.f_244353_(), sheetDataIn.f_243669_(), sheetDataIn.f_244632_());
       this.f_276067_ = sheetDataIn.f_243669_();
@@ -108,29 +115,31 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
 
       this.m_118329_();
       this.f_118264_ = Map.copyOf(sheetDataIn.f_243807_());
-      this.f_301625_ = (net.minecraft.client.renderer.texture.TextureAtlasSprite)this.f_118264_
-         .get(net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.m_118071_());
+      this.f_301625_ = (TextureAtlasSprite)this.f_118264_.get(MissingTextureAtlasSprite.m_118071_());
       if (this.f_301625_ == null) {
-         throw new IllegalStateException("Atlas '" + this.f_118265_ + "' (" + this.f_118264_.size() + " sprites) has no missing texture sprite");
+         String var10002 = String.valueOf(this.f_118265_);
+         throw new IllegalStateException("Atlas '" + var10002 + "' (" + this.f_118264_.size() + " sprites) has no missing texture sprite");
       } else {
-         List<net.minecraft.client.renderer.texture.SpriteContents> list = new ArrayList();
-         List<net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker> list1 = new ArrayList();
+         List list = new ArrayList();
+         List list1 = new ArrayList();
+         Iterator var4 = sheetDataIn.f_243807_().values().iterator();
 
-         for (net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite : sheetDataIn.f_243807_().values()) {
+         while(var4.hasNext()) {
+            TextureAtlasSprite textureatlassprite = (TextureAtlasSprite)var4.next();
             list.add(textureatlassprite.m_245424_());
             textureatlassprite.setTextureAtlas(this);
 
             try {
                textureatlassprite.m_118416_();
             } catch (Throwable var9) {
-               net.minecraft.CrashReport crashreport = net.minecraft.CrashReport.m_127521_(var9, "Stitching texture atlas");
+               CrashReport crashreport = CrashReport.m_127521_(var9, "Stitching texture atlas");
                CrashReportCategory crashreportcategory = crashreport.m_127514_("Texture being stitched together");
                crashreportcategory.m_128159_("Atlas path", this.f_118265_);
                crashreportcategory.m_128159_("Sprite", textureatlassprite);
                throw new ReportedException(crashreport);
             }
 
-            net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker textureatlassprite$ticker = textureatlassprite.m_247406_();
+            TextureAtlasSprite.Ticker textureatlassprite$ticker = textureatlassprite.m_247406_();
             if (textureatlassprite$ticker != null) {
                textureatlassprite.setTicker(textureatlassprite$ticker);
                textureatlassprite.setAnimationIndex(list1.size());
@@ -142,8 +151,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
          this.f_118262_ = List.copyOf(list1);
          TextureUtils.refreshCustomSprites(this);
          Config.log("Animated sprites: " + this.f_118262_.size());
+         Collection listSprites;
+         Iterator it;
+         TextureAtlasSprite tas;
          if (Config.isMultiTexture()) {
-            for (net.minecraft.client.renderer.texture.TextureAtlasSprite tas : sheetDataIn.f_243807_().values()) {
+            listSprites = sheetDataIn.f_243807_().values();
+            it = listSprites.iterator();
+
+            while(it.hasNext()) {
+               tas = (TextureAtlasSprite)it.next();
                uploadMipmapsSingle(tas);
                if (tas.spriteNormal != null) {
                   uploadMipmapsSingle(tas.spriteNormal);
@@ -158,17 +174,21 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
          }
 
          if (Config.isShaders()) {
-            Collection listSprites = sheetDataIn.f_243807_().values();
+            listSprites = sheetDataIn.f_243807_().values();
+            TextureAtlasSprite spriteSpecular;
+            TextureAtlasSprite.Ticker ticker;
             if (Shaders.configNormalMap) {
                GlStateManager._bindTexture(this.getMultiTexID().norm);
+               it = listSprites.iterator();
 
-               for (net.minecraft.client.renderer.texture.TextureAtlasSprite tas : listSprites) {
-                  net.minecraft.client.renderer.texture.TextureAtlasSprite spriteNormal = tas.spriteNormal;
-                  if (spriteNormal != null) {
-                     spriteNormal.m_118416_();
-                     net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker ticker = spriteNormal.m_247406_();
+               while(it.hasNext()) {
+                  tas = (TextureAtlasSprite)it.next();
+                  spriteSpecular = tas.spriteNormal;
+                  if (spriteSpecular != null) {
+                     spriteSpecular.m_118416_();
+                     ticker = spriteSpecular.m_247406_();
                      if (ticker != null) {
-                        spriteNormal.setTicker(ticker);
+                        spriteSpecular.setTicker(ticker);
                      }
                   }
                }
@@ -176,12 +196,14 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
 
             if (Shaders.configSpecularMap) {
                GlStateManager._bindTexture(this.getMultiTexID().spec);
+               it = listSprites.iterator();
 
-               for (net.minecraft.client.renderer.texture.TextureAtlasSprite tasx : listSprites) {
-                  net.minecraft.client.renderer.texture.TextureAtlasSprite spriteSpecular = tasx.spriteSpecular;
+               while(it.hasNext()) {
+                  tas = (TextureAtlasSprite)it.next();
+                  spriteSpecular = tas.spriteSpecular;
                   if (spriteSpecular != null) {
                      spriteSpecular.m_118416_();
-                     net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker ticker = spriteSpecular.m_247406_();
+                     ticker = spriteSpecular.m_247406_();
                      if (ticker != null) {
                         spriteSpecular.setTicker(ticker);
                      }
@@ -195,43 +217,30 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
          Reflector.callVoid(Reflector.ForgeHooksClient_onTextureStitchedPost, this);
          this.updateIconGrid(this.atlasWidth, this.atlasHeight);
          if (Config.equals(System.getProperty("saveTextureMap"), "true")) {
-            Config.dbg("Exporting texture map: " + this.f_118265_);
-            TextureUtils.saveGlTexture(
-               "debug/" + this.f_118265_.m_135815_().replaceAll("/", "_"), this.m_117963_(), this.mipmapLevel, this.atlasWidth, this.atlasHeight
-            );
+            Config.dbg("Exporting texture map: " + String.valueOf(this.f_118265_));
+            TextureUtils.saveGlTexture("debug/" + this.f_118265_.m_135815_().replaceAll("/", "_"), this.m_117963_(), this.mipmapLevel, this.atlasWidth, this.atlasHeight);
             if (this.shaders) {
                if (Shaders.configNormalMap) {
-                  TextureUtils.saveGlTexture(
-                     "debug/" + this.f_118265_.m_135815_().replaceAll("/", "_").replace(".png", "_n.png"),
-                     this.multiTex.norm,
-                     this.mipmapLevel,
-                     this.atlasWidth,
-                     this.atlasHeight
-                  );
+                  TextureUtils.saveGlTexture("debug/" + this.f_118265_.m_135815_().replaceAll("/", "_").replace(".png", "_n.png"), this.multiTex.norm, this.mipmapLevel, this.atlasWidth, this.atlasHeight);
                }
 
                if (Shaders.configSpecularMap) {
-                  TextureUtils.saveGlTexture(
-                     "debug/" + this.f_118265_.m_135815_().replaceAll("/", "_").replace(".png", "_s.png"),
-                     this.multiTex.spec,
-                     this.mipmapLevel,
-                     this.atlasWidth,
-                     this.atlasHeight
-                  );
+                  TextureUtils.saveGlTexture("debug/" + this.f_118265_.m_135815_().replaceAll("/", "_").replace(".png", "_s.png"), this.multiTex.spec, this.mipmapLevel, this.atlasWidth, this.atlasHeight);
                }
 
                GlStateManager._bindTexture(this.m_117963_());
             }
          }
+
       }
    }
 
-   public void preStitch(Set<net.minecraft.resources.ResourceLocation> set, ResourceManager resourceManagerIn, int mipmapLevelIn) {
+   public void preStitch(Set set, ResourceManager resourceManagerIn, int mipmapLevelIn) {
       this.terrain = this.f_118265_.equals(f_118259_);
       this.shaders = Config.isShaders();
       this.multiTexture = Config.isMultiTexture();
       this.mipmapLevel = mipmapLevelIn;
-      Config.dbg("Pre-stitch: " + this.f_118265_);
+      Config.dbg("Pre-stitch: " + String.valueOf(this.f_118265_));
       this.textureFormat = ITextureFormat.readConfiguration();
       this.mapRegisteredSprites.clear();
       this.mapMissingSprites.clear();
@@ -240,7 +249,7 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       TextureUtils.registerCustomSpriteLocations(this.m_118330_(), set);
       TextureUtils.registerCustomSprites(this);
       set.addAll(this.mapRegisteredSprites.keySet());
-      Set<net.minecraft.resources.ResourceLocation> locsEmissive = newHashSet(set, this.mapRegisteredSprites.keySet());
+      Set locsEmissive = newHashSet(set, this.mapRegisteredSprites.keySet());
       EmissiveTextures.updateIcons(this, locsEmissive);
       set.addAll(this.mapRegisteredSprites.keySet());
       if (this.mipmapLevel >= 4) {
@@ -252,37 +261,25 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       this.iconGridSize = minSpriteSize;
    }
 
-   public void m_276079_(net.minecraft.resources.ResourceLocation locIn, Path pathIn) throws IOException {
+   public void m_276079_(ResourceLocation locIn, Path pathIn) throws IOException {
       String s = locIn.m_179910_();
       TextureUtil.writeAsPNG(pathIn, s, this.m_117963_(), this.f_276072_, this.f_276067_, this.f_276070_);
       m_260988_(pathIn, s, this.f_118264_);
    }
 
-   private static void m_260988_(
-      Path pathIn, String nameIn, Map<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.TextureAtlasSprite> mapIn
-   ) {
+   private static void m_260988_(Path pathIn, String nameIn, Map mapIn) {
       Path path = pathIn.resolve(nameIn + ".txt");
 
       try {
          Writer writer = Files.newBufferedWriter(path);
 
          try {
-            for (Entry<net.minecraft.resources.ResourceLocation, net.minecraft.client.renderer.texture.TextureAtlasSprite> entry : mapIn.entrySet()
-               .stream()
-               .sorted(Entry.comparingByKey())
-               .toList()) {
-               net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite = (net.minecraft.client.renderer.texture.TextureAtlasSprite)entry.getValue();
-               writer.write(
-                  String.format(
-                     Locale.ROOT,
-                     "%s\tx=%d\ty=%d\tw=%d\th=%d%n",
-                     entry.getKey(),
-                     textureatlassprite.m_174743_(),
-                     textureatlassprite.m_174744_(),
-                     textureatlassprite.m_245424_().m_246492_(),
-                     textureatlassprite.m_245424_().m_245330_()
-                  )
-               );
+            Iterator var5 = mapIn.entrySet().stream().sorted(Entry.comparingByKey()).toList().iterator();
+
+            while(var5.hasNext()) {
+               Map.Entry entry = (Map.Entry)var5.next();
+               TextureAtlasSprite textureatlassprite = (TextureAtlasSprite)entry.getValue();
+               writer.write(String.format(Locale.ROOT, "%s\tx=%d\ty=%d\tw=%d\th=%d%n", entry.getKey(), textureatlassprite.m_174743_(), textureatlassprite.m_174744_(), textureatlassprite.m_245424_().m_246492_(), textureatlassprite.m_245424_().m_245330_()));
             }
          } catch (Throwable var9) {
             if (writer != null) {
@@ -302,6 +299,7 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       } catch (IOException var10) {
          f_118261_.warn("Failed to write file {}", path, var10);
       }
+
    }
 
    public void m_118270_() {
@@ -312,21 +310,25 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       }
 
       int countActive = 0;
+      Iterator var4 = this.f_118262_.iterator();
 
-      for (net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker textureatlassprite$ticker : this.f_118262_) {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite = textureatlassprite$ticker.getSprite();
-         if (textureatlassprite != null) {
-            if (this.isAnimationEnabled(textureatlassprite)) {
+      TextureAtlasSprite.Ticker textureatlassprite$ticker;
+      TextureAtlasSprite ts;
+      while(var4.hasNext()) {
+         textureatlassprite$ticker = (TextureAtlasSprite.Ticker)var4.next();
+         ts = textureatlassprite$ticker.getSprite();
+         if (ts != null) {
+            if (this.isAnimationEnabled(ts)) {
                textureatlassprite$ticker.m_245385_();
-               if (textureatlassprite.isAnimationActive()) {
-                  countActive++;
+               if (ts.isAnimationActive()) {
+                  ++countActive;
                }
 
-               if (textureatlassprite.spriteNormal != null) {
+               if (ts.spriteNormal != null) {
                   hasNormal = true;
                }
 
-               if (textureatlassprite.spriteSpecular != null) {
+               if (ts.spriteSpecular != null) {
                   hasSpecular = true;
                }
             }
@@ -338,16 +340,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       if (Config.isShaders()) {
          if (hasNormal) {
             GlStateManager._bindTexture(this.getMultiTexID().norm);
+            var4 = this.f_118262_.iterator();
 
-            for (net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker textureatlassprite$tickerx : this.f_118262_) {
-               net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite = textureatlassprite$tickerx.getSprite();
-               if (textureatlassprite != null
-                  && textureatlassprite.spriteNormal != null
-                  && this.isAnimationEnabled(textureatlassprite)
-                  && textureatlassprite.isAnimationActive()) {
-                  textureatlassprite.spriteNormal.updateAnimation();
-                  if (textureatlassprite.spriteNormal.isAnimationActive()) {
-                     countActive++;
+            while(var4.hasNext()) {
+               textureatlassprite$ticker = (TextureAtlasSprite.Ticker)var4.next();
+               ts = textureatlassprite$ticker.getSprite();
+               if (ts != null && ts.spriteNormal != null && this.isAnimationEnabled(ts) && ts.isAnimationActive()) {
+                  ts.spriteNormal.updateAnimation();
+                  if (ts.spriteNormal.isAnimationActive()) {
+                     ++countActive;
                   }
                }
             }
@@ -355,16 +356,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
 
          if (hasSpecular) {
             GlStateManager._bindTexture(this.getMultiTexID().spec);
+            var4 = this.f_118262_.iterator();
 
-            for (net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker textureatlassprite$tickerxx : this.f_118262_) {
-               net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite = textureatlassprite$tickerxx.getSprite();
-               if (textureatlassprite != null
-                  && textureatlassprite.spriteSpecular != null
-                  && this.isAnimationEnabled(textureatlassprite)
-                  && textureatlassprite.isAnimationActive()) {
-                  textureatlassprite.spriteSpecular.updateAnimation();
-                  if (textureatlassprite.spriteSpecular.isAnimationActive()) {
-                     countActive++;
+            while(var4.hasNext()) {
+               textureatlassprite$ticker = (TextureAtlasSprite.Ticker)var4.next();
+               ts = textureatlassprite$ticker.getSprite();
+               if (ts != null && ts.spriteSpecular != null && this.isAnimationEnabled(ts) && ts.isAnimationActive()) {
+                  ts.spriteSpecular.updateAnimation();
+                  if (ts.spriteSpecular.isAnimationActive()) {
+                     ++countActive;
                   }
                }
             }
@@ -376,8 +376,11 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       }
 
       if (Config.isMultiTexture()) {
-         for (net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker textureatlassprite$tickerxxx : this.f_118262_) {
-            net.minecraft.client.renderer.texture.TextureAtlasSprite ts = textureatlassprite$tickerxxx.getSprite();
+         var4 = this.f_118262_.iterator();
+
+         while(var4.hasNext()) {
+            textureatlassprite$ticker = (TextureAtlasSprite.Ticker)var4.next();
+            ts = textureatlassprite$ticker.getSprite();
             if (ts != null && this.isAnimationEnabled(ts) && ts.isAnimationActive()) {
                countActive += updateAnimationSingle(ts);
                if (ts.spriteNormal != null) {
@@ -404,6 +407,7 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
             SmartAnimations.resetSpritesRendered(this);
          }
       }
+
    }
 
    public void m_7673_() {
@@ -412,11 +416,11 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       } else {
          this.m_118270_();
       }
+
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite m_118316_(net.minecraft.resources.ResourceLocation location) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite textureatlassprite = (net.minecraft.client.renderer.texture.TextureAtlasSprite)this.f_118264_
-         .getOrDefault(location, this.f_301625_);
+   public TextureAtlasSprite m_118316_(ResourceLocation location) {
+      TextureAtlasSprite textureatlassprite = (TextureAtlasSprite)this.f_118264_.getOrDefault(location, this.f_301625_);
       if (textureatlassprite == null) {
          throw new IllegalStateException("Tried to lookup sprite, but atlas is not initialized");
       } else {
@@ -426,7 +430,10 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
 
    public void m_118329_() {
       if (this.multiTexture) {
-         for (net.minecraft.client.renderer.texture.TextureAtlasSprite ts : this.f_118264_.values()) {
+         Iterator it = this.f_118264_.values().iterator();
+
+         while(it.hasNext()) {
+            TextureAtlasSprite ts = (TextureAtlasSprite)it.next();
             ts.deleteSpriteTexture();
             if (ts.spriteNormal != null) {
                ts.spriteNormal.deleteSpriteTexture();
@@ -438,15 +445,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
          }
       }
 
-      this.f_118263_.forEach(net.minecraft.client.renderer.texture.SpriteContents::close);
-      this.f_118262_.forEach(net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker::close);
+      this.f_118263_.forEach(SpriteContents::close);
+      this.f_118262_.forEach(TextureAtlasSprite.Ticker::close);
       this.f_118263_ = List.of();
       this.f_118262_ = List.of();
       this.f_118264_ = Map.of();
       this.f_301625_ = null;
    }
 
-   public net.minecraft.resources.ResourceLocation m_118330_() {
+   public ResourceLocation m_118330_() {
       return this.f_118265_;
    }
 
@@ -462,11 +469,11 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return this.f_276070_;
    }
 
-   public void m_247255_(net.minecraft.client.renderer.texture.SpriteLoader.Preparations preparationsIn) {
+   public void m_247255_(SpriteLoader.Preparations preparationsIn) {
       this.m_117960_(false, preparationsIn.f_244353_() > 0);
    }
 
-   public static boolean isAbsoluteLocation(net.minecraft.resources.ResourceLocation loc) {
+   public static boolean isAbsoluteLocation(ResourceLocation loc) {
       String path = loc.m_135815_();
       return isAbsoluteLocationPath(path);
    }
@@ -476,49 +483,59 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return path.startsWith("optifine/");
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getRegisteredSprite(String name) {
-      net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(name);
+   public TextureAtlasSprite getRegisteredSprite(String name) {
+      ResourceLocation loc = new ResourceLocation(name);
       return this.getRegisteredSprite(loc);
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getRegisteredSprite(net.minecraft.resources.ResourceLocation loc) {
-      return (net.minecraft.client.renderer.texture.TextureAtlasSprite)this.mapRegisteredSprites.get(loc);
+   public TextureAtlasSprite getRegisteredSprite(ResourceLocation loc) {
+      return (TextureAtlasSprite)this.mapRegisteredSprites.get(loc);
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getUploadedSprite(String name) {
-      net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(name);
+   public TextureAtlasSprite getUploadedSprite(String name) {
+      ResourceLocation loc = new ResourceLocation(name);
       return this.getUploadedSprite(loc);
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getUploadedSprite(net.minecraft.resources.ResourceLocation loc) {
-      return (net.minecraft.client.renderer.texture.TextureAtlasSprite)this.f_118264_.get(loc);
+   public TextureAtlasSprite getUploadedSprite(ResourceLocation loc) {
+      return (TextureAtlasSprite)this.f_118264_.get(loc);
    }
 
-   private boolean isAnimationEnabled(net.minecraft.client.renderer.texture.TextureAtlasSprite ts) {
+   private boolean isAnimationEnabled(TextureAtlasSprite ts) {
       if (!this.terrain) {
          return true;
-      } else if (ts == TextureUtils.iconWaterStill || ts == TextureUtils.iconWaterFlow) {
-         return Config.isAnimatedWater();
-      } else if (ts == TextureUtils.iconLavaStill || ts == TextureUtils.iconLavaFlow) {
-         return Config.isAnimatedLava();
-      } else if (ts == TextureUtils.iconFireLayer0 || ts == TextureUtils.iconFireLayer1) {
-         return Config.isAnimatedFire();
-      } else if (ts == TextureUtils.iconSoulFireLayer0 || ts == TextureUtils.iconSoulFireLayer1) {
-         return Config.isAnimatedFire();
-      } else if (ts == TextureUtils.iconCampFire || ts == TextureUtils.iconCampFireLogLit) {
-         return Config.isAnimatedFire();
-      } else if (ts == TextureUtils.iconSoulCampFire || ts == TextureUtils.iconSoulCampFireLogLit) {
-         return Config.isAnimatedFire();
+      } else if (ts != TextureUtils.iconWaterStill && ts != TextureUtils.iconWaterFlow) {
+         if (ts != TextureUtils.iconLavaStill && ts != TextureUtils.iconLavaFlow) {
+            if (ts != TextureUtils.iconFireLayer0 && ts != TextureUtils.iconFireLayer1) {
+               if (ts != TextureUtils.iconSoulFireLayer0 && ts != TextureUtils.iconSoulFireLayer1) {
+                  if (ts != TextureUtils.iconCampFire && ts != TextureUtils.iconCampFireLogLit) {
+                     if (ts != TextureUtils.iconSoulCampFire && ts != TextureUtils.iconSoulCampFireLogLit) {
+                        return ts == TextureUtils.iconPortal ? Config.isAnimatedPortal() : Config.isAnimatedTerrain();
+                     } else {
+                        return Config.isAnimatedFire();
+                     }
+                  } else {
+                     return Config.isAnimatedFire();
+                  }
+               } else {
+                  return Config.isAnimatedFire();
+               }
+            } else {
+               return Config.isAnimatedFire();
+            }
+         } else {
+            return Config.isAnimatedLava();
+         }
       } else {
-         return ts == TextureUtils.iconPortal ? Config.isAnimatedPortal() : Config.isAnimatedTerrain();
+         return Config.isAnimatedWater();
       }
    }
 
-   private static void uploadMipmapsSingle(net.minecraft.client.renderer.texture.TextureAtlasSprite tas) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite ss = tas.spriteSingle;
+   private static void uploadMipmapsSingle(TextureAtlasSprite tas) {
+      TextureAtlasSprite ss = tas.spriteSingle;
       if (ss != null) {
          ss.setAnimationIndex(tas.getAnimationIndex());
-         net.minecraft.client.renderer.texture.TextureAtlasSprite.Ticker ticker = ss.m_247406_();
+         TextureAtlasSprite.Ticker ticker = ss.m_247406_();
          if (ticker != null) {
             ss.setTicker(ticker);
          }
@@ -528,19 +545,21 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
          try {
             ss.m_118416_();
          } catch (Exception var4) {
-            Config.dbg("Error uploading sprite single: " + ss + ", parent: " + tas);
+            String var10000 = String.valueOf(ss);
+            Config.dbg("Error uploading sprite single: " + var10000 + ", parent: " + String.valueOf(tas));
             var4.printStackTrace();
          }
       }
+
    }
 
-   private static int updateAnimationSingle(net.minecraft.client.renderer.texture.TextureAtlasSprite tas) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite spriteSingle = tas.spriteSingle;
+   private static int updateAnimationSingle(TextureAtlasSprite tas) {
+      TextureAtlasSprite spriteSingle = tas.spriteSingle;
       if (spriteSingle != null) {
          tas.bindSpriteTexture();
-         com.mojang.blaze3d.platform.NativeImage.setUpdateBlurMipmap(false);
+         NativeImage.setUpdateBlurMipmap(false);
          spriteSingle.updateAnimation();
-         com.mojang.blaze3d.platform.NativeImage.setUpdateBlurMipmap(true);
+         NativeImage.setUpdateBlurMipmap(true);
          if (spriteSingle.isAnimationActive()) {
             return 1;
          }
@@ -553,18 +572,18 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return this.counterIndexInMap.getValue();
    }
 
-   private int detectMaxMipmapLevel(Set<net.minecraft.resources.ResourceLocation> setSpriteLocations, ResourceManager rm) {
+   private int detectMaxMipmapLevel(Set setSpriteLocations, ResourceManager rm) {
       int minSize = this.detectMinimumSpriteSize(setSpriteLocations, rm, 20);
       if (minSize < 16) {
          minSize = 16;
       }
 
-      minSize = net.minecraft.util.Mth.m_14125_(minSize);
+      minSize = Mth.m_14125_(minSize);
       if (minSize > 16) {
          Config.log("Sprite size: " + minSize);
       }
 
-      int minLevel = net.minecraft.util.Mth.m_14173_(minSize);
+      int minLevel = Mth.m_14173_(minSize);
       if (minLevel < 4) {
          minLevel = 4;
       }
@@ -572,11 +591,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return minLevel;
    }
 
-   private int detectMinimumSpriteSize(Set<net.minecraft.resources.ResourceLocation> setSpriteLocations, ResourceManager rm, int percentScale) {
+   private int detectMinimumSpriteSize(Set setSpriteLocations, ResourceManager rm, int percentScale) {
       Map mapSizeCounts = new HashMap();
+      Iterator it = setSpriteLocations.iterator();
 
-      for (net.minecraft.resources.ResourceLocation loc : setSpriteLocations) {
-         net.minecraft.resources.ResourceLocation locComplete = this.getSpritePath(loc);
+      int width2;
+      int count;
+      while(it.hasNext()) {
+         ResourceLocation loc = (ResourceLocation)it.next();
+         ResourceLocation locComplete = this.getSpritePath(loc);
 
          try {
             Resource res = rm.m_215593_(locComplete);
@@ -587,11 +610,11 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
                   in.close();
                   if (dim != null) {
                      int width = dim.width;
-                     int width2 = net.minecraft.util.Mth.m_14125_(width);
+                     width2 = Mth.m_14125_(width);
                      if (!mapSizeCounts.containsKey(width2)) {
                         mapSizeCounts.put(width2, 1);
                      } else {
-                        int count = (Integer)mapSizeCounts.get(width2);
+                        count = (Integer)mapSizeCounts.get(width2);
                         mapSizeCounts.put(width2, count + 1);
                      }
                   }
@@ -605,26 +628,30 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       Set setSizes = mapSizeCounts.keySet();
       Set setSizesSorted = new TreeSet(setSizes);
 
-      for (int size : setSizesSorted) {
-         int count = (Integer)mapSizeCounts.get(size);
-         countSprites += count;
+      int countScale;
+      int countScaleMax;
+      for(Iterator it = setSizesSorted.iterator(); it.hasNext(); countSprites += countScaleMax) {
+         countScale = (Integer)it.next();
+         countScaleMax = (Integer)mapSizeCounts.get(countScale);
       }
 
       int minSize = 16;
-      int countScale = 0;
-      int countScaleMax = countSprites * percentScale / 100;
+      countScale = 0;
+      countScaleMax = countSprites * percentScale / 100;
+      Iterator it = setSizesSorted.iterator();
 
-      for (int size : setSizesSorted) {
-         int count = (Integer)mapSizeCounts.get(size);
-         countScale += count;
-         if (size > minSize) {
-            minSize = size;
-         }
-
-         if (countScale > countScaleMax) {
+      do {
+         if (!it.hasNext()) {
             return minSize;
          }
-      }
+
+         width2 = (Integer)it.next();
+         count = (Integer)mapSizeCounts.get(width2);
+         countScale += count;
+         if (width2 > minSize) {
+            minSize = width2;
+         }
+      } while(countScale <= countScaleMax);
 
       return minSize;
    }
@@ -644,7 +671,8 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       } else {
          int widthNew = Math.max(info.f_244129_(), minSpriteSize);
          int heightNew = Math.max(info.f_244503_(), minSpriteSize);
-         return new FrameSize(widthNew, heightNew);
+         FrameSize infoNew = new FrameSize(widthNew, heightNew);
+         return infoNew;
       }
    }
 
@@ -661,11 +689,13 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       if (this.iconGridSize > 0) {
          this.iconGridCountX = sheetWidth / this.iconGridSize;
          this.iconGridCountY = sheetHeight / this.iconGridSize;
-         this.iconGrid = new net.minecraft.client.renderer.texture.TextureAtlasSprite[this.iconGridCountX * this.iconGridCountY];
+         this.iconGrid = new TextureAtlasSprite[this.iconGridCountX * this.iconGridCountY];
          this.iconGridSizeU = 1.0 / (double)this.iconGridCountX;
          this.iconGridSizeV = 1.0 / (double)this.iconGridCountY;
+         Iterator it = this.f_118264_.values().iterator();
 
-         for (net.minecraft.client.renderer.texture.TextureAtlasSprite ts : this.f_118264_.values()) {
+         while(it.hasNext()) {
+            TextureAtlasSprite ts = (TextureAtlasSprite)it.next();
             double deltaU = 0.5 / (double)sheetWidth;
             double deltaV = 0.5 / (double)sheetHeight;
             double uMin = (double)Math.min(ts.m_118409_(), ts.m_118410_()) + deltaU;
@@ -677,25 +707,26 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
             int iuMax = (int)(uMax / this.iconGridSizeU);
             int ivMax = (int)(vMax / this.iconGridSizeV);
 
-            for (int iu = iuMin; iu <= iuMax; iu++) {
+            for(int iu = iuMin; iu <= iuMax; ++iu) {
                if (iu >= 0 && iu < this.iconGridCountX) {
-                  for (int iv = ivMin; iv <= ivMax; iv++) {
+                  for(int iv = ivMin; iv <= ivMax; ++iv) {
                      if (iv >= 0 && iv < this.iconGridCountX) {
                         int index = iv * this.iconGridCountX + iu;
                         this.iconGrid[index] = ts;
                      } else {
-                        Config.warn("Invalid grid V: " + iv + ", icon: " + ts.getName());
+                        Config.warn("Invalid grid V: " + iv + ", icon: " + String.valueOf(ts.getName()));
                      }
                   }
                } else {
-                  Config.warn("Invalid grid U: " + iu + ", icon: " + ts.getName());
+                  Config.warn("Invalid grid U: " + iu + ", icon: " + String.valueOf(ts.getName()));
                }
             }
          }
+
       }
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite getIconByUV(double u, double v) {
+   public TextureAtlasSprite getIconByUV(double u, double v) {
       if (this.iconGrid == null) {
          return null;
       } else {
@@ -718,16 +749,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return this.iconGridSize;
    }
 
-   public net.minecraft.client.renderer.texture.TextureAtlasSprite registerSprite(net.minecraft.resources.ResourceLocation location) {
+   public TextureAtlasSprite registerSprite(ResourceLocation location) {
       if (location == null) {
          throw new IllegalArgumentException("Location cannot be null!");
       } else {
-         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = (net.minecraft.client.renderer.texture.TextureAtlasSprite)this.mapRegisteredSprites
-            .get(location);
+         TextureAtlasSprite sprite = (TextureAtlasSprite)this.mapRegisteredSprites.get(location);
          if (sprite != null) {
             return sprite;
          } else {
-            sprite = new net.minecraft.client.renderer.texture.TextureAtlasSprite(this.f_118265_, location);
+            sprite = new TextureAtlasSprite(this.f_118265_, location);
             sprite.setTextureAtlas(this);
             this.mapRegisteredSprites.put(location, sprite);
             sprite.updateIndexInMap(this.counterIndexInMap);
@@ -736,11 +766,11 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       }
    }
 
-   public Collection<net.minecraft.client.renderer.texture.TextureAtlasSprite> getRegisteredSprites() {
+   public Collection getRegisteredSprites() {
       return Collections.unmodifiableCollection(this.mapRegisteredSprites.values());
    }
 
-   public Collection<net.minecraft.resources.ResourceLocation> getRegisteredSpriteNames() {
+   public Collection getRegisteredSpriteNames() {
       return Collections.unmodifiableCollection(this.mapRegisteredSprites.keySet());
    }
 
@@ -752,16 +782,15 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return this.counterIndexInMap;
    }
 
-   private void onSpriteMissing(net.minecraft.resources.ResourceLocation loc) {
-      net.minecraft.client.renderer.texture.TextureAtlasSprite sprite = (net.minecraft.client.renderer.texture.TextureAtlasSprite)this.mapRegisteredSprites
-         .get(loc);
+   private void onSpriteMissing(ResourceLocation loc) {
+      TextureAtlasSprite sprite = (TextureAtlasSprite)this.mapRegisteredSprites.get(loc);
       if (sprite != null) {
          this.mapMissingSprites.put(loc, sprite);
       }
    }
 
-   private static <T> Set<T> newHashSet(Set<T> set1, Set<T> set2) {
-      Set<T> set = new HashSet();
+   private static Set newHashSet(Set set1, Set set2) {
+      Set set = new HashSet();
       set.addAll(set1);
       set.addAll(set2);
       return set;
@@ -803,17 +832,20 @@ public class TextureAtlas extends net.minecraft.client.renderer.texture.Abstract
       return this.isTextureBlend(ShadersTextureType.SPECULAR);
    }
 
-   public net.minecraft.resources.ResourceLocation getSpritePath(net.minecraft.resources.ResourceLocation location) {
-      return isAbsoluteLocation(location)
-         ? new net.minecraft.resources.ResourceLocation(location.m_135827_(), location.m_135815_() + ".png")
-         : new net.minecraft.resources.ResourceLocation(location.m_135827_(), String.format(Locale.ROOT, "textures/%s%s", location.m_135815_(), ".png"));
+   public ResourceLocation getSpritePath(ResourceLocation location) {
+      return isAbsoluteLocation(location) ? new ResourceLocation(location.m_135827_(), location.m_135815_() + ".png") : new ResourceLocation(location.m_135827_(), String.format(Locale.ROOT, "textures/%s%s", location.m_135815_(), ".png"));
    }
 
    public String toString() {
-      return this.f_118265_ + "";
+      return "" + String.valueOf(this.f_118265_);
    }
 
-   public Set<net.minecraft.resources.ResourceLocation> getTextureLocations() {
+   public Set getTextureLocations() {
       return Collections.unmodifiableSet(this.f_118264_.keySet());
+   }
+
+   static {
+      f_118259_ = InventoryMenu.f_39692_;
+      f_118260_ = ResourceLocation.m_340282_("textures/atlas/particles.png");
    }
 }

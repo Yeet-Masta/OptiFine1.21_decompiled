@@ -1,11 +1,18 @@
 package net.optifine;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -14,6 +21,7 @@ import net.optifine.config.BiomeId;
 import net.optifine.config.ConnectedParser;
 import net.optifine.config.Matches;
 import net.optifine.config.RangeListInt;
+import net.optifine.render.Blender;
 import net.optifine.util.MathUtils;
 import net.optifine.util.NumUtils;
 import net.optifine.util.SmoothFloat;
@@ -65,13 +73,13 @@ public class CustomSkyLayer {
       this.endFadeIn = this.parseTime(props.getProperty("endFadeIn"));
       this.startFadeOut = this.parseTime(props.getProperty("startFadeOut"));
       this.endFadeOut = this.parseTime(props.getProperty("endFadeOut"));
-      this.blend = net.optifine.render.Blender.parseBlend(props.getProperty("blend"));
+      this.blend = Blender.parseBlend(props.getProperty("blend"));
       this.rotate = this.parseBoolean(props.getProperty("rotate"), true);
       this.speed = this.parseFloat(props.getProperty("speed"), 1.0F);
       this.axis = this.parseAxis(props.getProperty("axis"), DEFAULT_AXIS);
       this.days = cp.parseRangeListInt(props.getProperty("days"));
       this.daysLoop = cp.parseInt(props.getProperty("daysLoop"), 8);
-      List<String> weatherList = this.parseWeatherList(props.getProperty("weather", "clear"));
+      List weatherList = this.parseWeatherList(props.getProperty("weather", "clear"));
       this.weatherClear = weatherList.contains("clear");
       this.weatherRain = weatherList.contains("rain");
       this.weatherThunder = weatherList.contains("thunder");
@@ -80,12 +88,12 @@ public class CustomSkyLayer {
       this.transition = this.parseFloat(props.getProperty("transition"), 1.0F);
    }
 
-   private List<String> parseWeatherList(String str) {
-      List<String> weatherAllowedList = Arrays.asList("clear", "rain", "thunder");
-      List<String> weatherList = new ArrayList();
+   private List parseWeatherList(String str) {
+      List weatherAllowedList = Arrays.asList("clear", "rain", "thunder");
+      List weatherList = new ArrayList();
       String[] weatherStrs = Config.tokenize(str, " ");
 
-      for (int i = 0; i < weatherStrs.length; i++) {
+      for(int i = 0; i < weatherStrs.length; ++i) {
          String token = weatherStrs[i];
          if (!weatherAllowedList.contains(token)) {
             Config.warn("Unknown weather: " + token);
@@ -116,7 +124,8 @@ public class CustomSkyLayer {
                   hour += 24;
                }
 
-               return hour * 1000 + (int)((double)min / 60.0 * 1000.0);
+               int time = hour * 1000 + (int)((double)min / 60.0 * 1000.0);
+               return time;
             } else {
                Config.warn("Invalid time: " + str);
                return -1;
@@ -163,7 +172,7 @@ public class CustomSkyLayer {
          } else {
             float[] fs = new float[3];
 
-            for (int i = 0; i < strs.length; i++) {
+            for(int i = 0; i < strs.length; ++i) {
                fs[i] = Config.parseFloat(strs[i], Float.MIN_VALUE);
                if (fs[i] == Float.MIN_VALUE) {
                   Config.warn("Invalid axis: " + str);
@@ -178,7 +187,8 @@ public class CustomSkyLayer {
                Config.warn("Invalid axis values: " + str);
                return defVal;
             } else {
-               return new float[]{az, ay, -ax};
+               float[] as = new float[]{az, ay, -ax};
+               return as;
             }
          }
       }
@@ -230,20 +240,18 @@ public class CustomSkyLayer {
    }
 
    private int normalizeTime(int timeMc) {
-      while (timeMc >= 24000) {
+      while(timeMc >= 24000) {
          timeMc -= 24000;
       }
 
-      while (timeMc < 0) {
+      while(timeMc < 0) {
          timeMc += 24000;
       }
 
       return timeMc;
    }
 
-   public void render(
-      Level world, com.mojang.blaze3d.vertex.PoseStack matrixStackIn, int timeOfDay, float celestialAngle, float rainStrength, float thunderStrength
-   ) {
+   public void render(Level world, PoseStack matrixStackIn, int timeOfDay, float celestialAngle, float rainStrength, float thunderStrength) {
       float positionBrightness = this.getPositionBrightness(world);
       float weatherBrightness = this.getWeatherBrightness(rainStrength, thunderStrength);
       float fadeBrightness = this.getFadeBrightness(timeOfDay);
@@ -251,7 +259,7 @@ public class CustomSkyLayer {
       brightness = Config.limit(brightness, 0.0F, 1.0F);
       if (!(brightness < 1.0E-4F)) {
          RenderSystem.setShaderTexture(0, this.textureId);
-         net.optifine.render.Blender.setupBlend(this.blend, brightness);
+         Blender.setupBlend(this.blend, brightness);
          matrixStackIn.m_85836_();
          if (this.rotate) {
             float angleDayStart = 0.0F;
@@ -265,7 +273,7 @@ public class CustomSkyLayer {
             matrixStackIn.rotateDeg(360.0F * (angleDayStart + celestialAngle * this.speed), this.axis[0], this.axis[1], this.axis[2]);
          }
 
-         com.mojang.blaze3d.vertex.Tesselator tess = com.mojang.blaze3d.vertex.Tesselator.m_85913_();
+         Tesselator tess = Tesselator.m_85913_();
          matrixStackIn.rotateDegXp(90.0F);
          matrixStackIn.rotateDegZp(-90.0F);
          this.renderSide(matrixStackIn, tess, 4);
@@ -296,7 +304,8 @@ public class CustomSkyLayer {
             this.smoothPositionBrightness = new SmoothFloat(positionBrightness, this.transition);
          }
 
-         return this.smoothPositionBrightness.getSmoothValue(positionBrightness);
+         positionBrightness = this.smoothPositionBrightness.getSmoothValue(positionBrightness);
+         return positionBrightness;
       }
    }
 
@@ -337,41 +346,42 @@ public class CustomSkyLayer {
          weatherBrightness += thunderStrength;
       }
 
-      return NumUtils.limit(weatherBrightness, 0.0F, 1.0F);
+      weatherBrightness = NumUtils.limit(weatherBrightness, 0.0F, 1.0F);
+      return weatherBrightness;
    }
 
    private float getFadeBrightness(int timeOfDay) {
+      int timeFadeOut;
+      int timeDiff;
       if (this.timeBetween(timeOfDay, this.startFadeIn, this.endFadeIn)) {
-         int timeFadeIn = this.normalizeTime(this.endFadeIn - this.startFadeIn);
-         int timeDiff = this.normalizeTime(timeOfDay - this.startFadeIn);
-         return (float)timeDiff / (float)timeFadeIn;
+         timeFadeOut = this.normalizeTime(this.endFadeIn - this.startFadeIn);
+         timeDiff = this.normalizeTime(timeOfDay - this.startFadeIn);
+         return (float)timeDiff / (float)timeFadeOut;
       } else if (this.timeBetween(timeOfDay, this.endFadeIn, this.startFadeOut)) {
          return 1.0F;
       } else if (this.timeBetween(timeOfDay, this.startFadeOut, this.endFadeOut)) {
-         int timeFadeOut = this.normalizeTime(this.endFadeOut - this.startFadeOut);
-         int timeDiff = this.normalizeTime(timeOfDay - this.startFadeOut);
+         timeFadeOut = this.normalizeTime(this.endFadeOut - this.startFadeOut);
+         timeDiff = this.normalizeTime(timeOfDay - this.startFadeOut);
          return 1.0F - (float)timeDiff / (float)timeFadeOut;
       } else {
          return 0.0F;
       }
    }
 
-   private void renderSide(com.mojang.blaze3d.vertex.PoseStack matrixStackIn, com.mojang.blaze3d.vertex.Tesselator tess, int side) {
+   private void renderSide(PoseStack matrixStackIn, Tesselator tess, int side) {
       float tx = (float)(side % 3) / 3.0F;
       float ty = (float)(side / 3) / 2.0F;
       Matrix4f matrix4f = matrixStackIn.m_85850_().m_252922_();
-      RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::m_172817_);
-      com.mojang.blaze3d.vertex.BufferBuilder wr = tess.m_339075_(
-         com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.f_85817_
-      );
+      RenderSystem.setShader(GameRenderer::m_172817_);
+      BufferBuilder wr = tess.m_339075_(VertexFormat.Mode.QUADS, DefaultVertexFormat.f_85817_);
       this.addVertex(matrix4f, wr, -100.0F, -100.0F, -100.0F, tx, ty);
       this.addVertex(matrix4f, wr, -100.0F, -100.0F, 100.0F, tx, ty + 0.5F);
       this.addVertex(matrix4f, wr, 100.0F, -100.0F, 100.0F, tx + 0.33333334F, ty + 0.5F);
       this.addVertex(matrix4f, wr, 100.0F, -100.0F, -100.0F, tx + 0.33333334F, ty);
-      com.mojang.blaze3d.vertex.BufferUploader.m_231202_(wr.m_339905_());
+      BufferUploader.m_231202_(wr.m_339905_());
    }
 
-   private void addVertex(Matrix4f matrix4f, com.mojang.blaze3d.vertex.BufferBuilder buffer, float x, float y, float z, float u, float v) {
+   private void addVertex(Matrix4f matrix4f, BufferBuilder buffer, float x, float y, float z, float u, float v) {
       float xt = MathUtils.getTransformX(matrix4f, x, y, z);
       float yt = MathUtils.getTransformY(matrix4f, x, y, z);
       float zt = MathUtils.getTransformZ(matrix4f, x, y, z);
@@ -389,10 +399,9 @@ public class CustomSkyLayer {
       } else {
          if (this.days != null) {
             long time = world.m_46468_();
-            long timeShift = time - (long)this.startFadeIn;
 
-            while (timeShift < 0L) {
-               timeShift += (long)(24000 * this.daysLoop);
+            long timeShift;
+            for(timeShift = time - (long)this.startFadeIn; timeShift < 0L; timeShift += (long)(24000 * this.daysLoop)) {
             }
 
             int day = (int)(timeShift / 24000L);
@@ -407,7 +416,11 @@ public class CustomSkyLayer {
    }
 
    private boolean timeBetween(int timeOfDay, int timeStart, int timeEnd) {
-      return timeStart <= timeEnd ? timeOfDay >= timeStart && timeOfDay <= timeEnd : timeOfDay >= timeStart || timeOfDay <= timeEnd;
+      if (timeStart <= timeEnd) {
+         return timeOfDay >= timeStart && timeOfDay <= timeEnd;
+      } else {
+         return timeOfDay >= timeStart || timeOfDay <= timeEnd;
+      }
    }
 
    public String toString() {

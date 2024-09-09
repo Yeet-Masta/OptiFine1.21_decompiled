@@ -3,10 +3,10 @@ package net.optifine.util;
 import java.util.ArrayList;
 
 public class CompactArrayList {
-   private ArrayList list = null;
-   private int initialCapacity = 0;
-   private float loadFactor = 1.0F;
-   private int countValid = 0;
+   private ArrayList list;
+   private int initialCapacity;
+   private float loadFactor;
+   private int countValid;
 
    public CompactArrayList() {
       this(10, 0.75F);
@@ -17,6 +17,10 @@ public class CompactArrayList {
    }
 
    public CompactArrayList(int initialCapacity, float loadFactor) {
+      this.list = null;
+      this.initialCapacity = 0;
+      this.loadFactor = 1.0F;
+      this.countValid = 0;
       this.list = new ArrayList(initialCapacity);
       this.initialCapacity = initialCapacity;
       this.loadFactor = loadFactor;
@@ -24,7 +28,7 @@ public class CompactArrayList {
 
    public void add(int index, Object element) {
       if (element != null) {
-         this.countValid++;
+         ++this.countValid;
       }
 
       this.list.add(index, element);
@@ -32,7 +36,7 @@ public class CompactArrayList {
 
    public boolean add(Object element) {
       if (element != null) {
-         this.countValid++;
+         ++this.countValid;
       }
 
       return this.list.add(element);
@@ -42,11 +46,11 @@ public class CompactArrayList {
       Object oldElement = this.list.set(index, element);
       if (element != oldElement) {
          if (oldElement == null) {
-            this.countValid++;
+            ++this.countValid;
          }
 
          if (element == null) {
-            this.countValid--;
+            --this.countValid;
          }
       }
 
@@ -56,7 +60,7 @@ public class CompactArrayList {
    public Object remove(int index) {
       Object oldElement = this.list.remove(index);
       if (oldElement != null) {
-         this.countValid--;
+         --this.countValid;
       }
 
       return oldElement;
@@ -75,20 +79,22 @@ public class CompactArrayList {
          if (!(currentLoadFactor > this.loadFactor)) {
             int dstIndex = 0;
 
-            for (int srcIndex = 0; srcIndex < this.list.size(); srcIndex++) {
+            int srcIndex;
+            for(srcIndex = 0; srcIndex < this.list.size(); ++srcIndex) {
                Object wr = this.list.get(srcIndex);
                if (wr != null) {
                   if (srcIndex != dstIndex) {
                      this.list.set(dstIndex, wr);
                   }
 
-                  dstIndex++;
+                  ++dstIndex;
                }
             }
 
-            for (int i = this.list.size() - 1; i >= dstIndex; i--) {
-               this.list.remove(i);
+            for(srcIndex = this.list.size() - 1; srcIndex >= dstIndex; --srcIndex) {
+               this.list.remove(srcIndex);
             }
+
          }
       }
    }

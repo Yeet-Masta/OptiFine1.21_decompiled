@@ -1,21 +1,22 @@
 package net.optifine;
 
-public class ComparableVersion implements Comparable<ComparableVersion> {
+public class ComparableVersion implements Comparable {
    private int[] elements;
 
    public ComparableVersion(String ver) {
       String[] parts = Config.tokenize(ver, ".");
       this.elements = new int[parts.length];
 
-      for (int i = 0; i < parts.length; i++) {
+      for(int i = 0; i < parts.length; ++i) {
          String part = parts[i];
          int elem = Config.parseInt(part, -1);
          this.elements[i] = elem;
       }
+
    }
 
    public int compareTo(ComparableVersion cv) {
-      for (int i = 0; i < this.elements.length && i < cv.elements.length; i++) {
+      for(int i = 0; i < this.elements.length && i < cv.elements.length; ++i) {
          if (this.elements[i] != cv.elements[i]) {
             return this.elements[i] - cv.elements[i];
          }

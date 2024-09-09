@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import com.mojang.math.MatrixUtil;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import net.minecraft.Util;
 import net.minecraftforge.client.extensions.IForgePoseStack;
 import net.optifine.util.MathUtils;
 import org.joml.Matrix3f;
@@ -13,11 +14,11 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public class PoseStack implements IForgePoseStack {
-   Deque<com.mojang.blaze3d.vertex.PoseStack.Pose> freeEntries = new ArrayDeque();
-   private final Deque<com.mojang.blaze3d.vertex.PoseStack.Pose> f_85834_ = net.minecraft.Util.m_137469_(Queues.newArrayDeque(), dequeIn -> {
+   Deque freeEntries = new ArrayDeque();
+   private final Deque f_85834_ = (Deque)Util.m_137469_(Queues.newArrayDeque(), (dequeIn) -> {
       Matrix4f matrix4f = new Matrix4f();
       Matrix3f matrix3f = new Matrix3f();
-      dequeIn.add(new com.mojang.blaze3d.vertex.PoseStack.Pose(matrix4f, matrix3f));
+      dequeIn.add(new Pose(matrix4f, matrix3f));
    });
 
    public void m_85837_(double x, double y, double z) {
@@ -25,55 +26,60 @@ public class PoseStack implements IForgePoseStack {
    }
 
    public void m_252880_(float x, float y, float z) {
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+      Pose posestack$pose = (Pose)this.f_85834_.getLast();
       posestack$pose.f_85852_.translate(x, y, z);
    }
 
    public void m_85841_(float x, float y, float z) {
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+      Pose posestack$pose = (Pose)this.f_85834_.getLast();
       posestack$pose.f_85852_.scale(x, y, z);
-      if (Math.abs(x) != Math.abs(y) || Math.abs(y) != Math.abs(z)) {
+      if (Math.abs(x) == Math.abs(y) && Math.abs(y) == Math.abs(z)) {
+         if (x < 0.0F || y < 0.0F || z < 0.0F) {
+            posestack$pose.f_85853_.scale(Math.signum(x), Math.signum(y), Math.signum(z));
+         }
+      } else {
          posestack$pose.f_85853_.scale(1.0F / x, 1.0F / y, 1.0F / z);
          posestack$pose.f_317074_ = false;
-      } else if (x < 0.0F || y < 0.0F || z < 0.0F) {
-         posestack$pose.f_85853_.scale(Math.signum(x), Math.signum(y), Math.signum(z));
       }
+
    }
 
    public void m_252781_(Quaternionf quaternionIn) {
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+      Pose posestack$pose = (Pose)this.f_85834_.getLast();
       posestack$pose.f_85852_.rotate(quaternionIn);
       posestack$pose.f_85853_.rotate(quaternionIn);
    }
 
    public void m_272245_(Quaternionf quatIn, float xIn, float yIn, float zIn) {
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+      Pose posestack$pose = (Pose)this.f_85834_.getLast();
       posestack$pose.f_85852_.rotateAround(quatIn, xIn, yIn, zIn);
       posestack$pose.f_85853_.rotate(quatIn);
    }
 
    public void m_85836_() {
-      com.mojang.blaze3d.vertex.PoseStack.Pose entry = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.freeEntries.pollLast();
+      Pose entry = (Pose)this.freeEntries.pollLast();
       if (entry != null) {
-         com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+         Pose posestack$pose = (Pose)this.f_85834_.getLast();
          entry.f_85852_.set(posestack$pose.f_85852_);
          entry.f_85853_.set(posestack$pose.f_85853_);
          entry.f_317074_ = posestack$pose.f_317074_;
          this.f_85834_.addLast(entry);
       } else {
-         this.f_85834_.addLast(new com.mojang.blaze3d.vertex.PoseStack.Pose((com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast()));
+         this.f_85834_.addLast(new Pose((Pose)this.f_85834_.getLast()));
       }
+
    }
 
    public void m_85849_() {
-      com.mojang.blaze3d.vertex.PoseStack.Pose entry = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.removeLast();
+      Pose entry = (Pose)this.f_85834_.removeLast();
       if (entry != null) {
          this.freeEntries.add(entry);
       }
+
    }
 
-   public com.mojang.blaze3d.vertex.PoseStack.Pose m_85850_() {
-      return (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+   public Pose m_85850_() {
+      return (Pose)this.f_85834_.getLast();
    }
 
    public boolean m_85851_() {
@@ -115,18 +121,19 @@ public class PoseStack implements IForgePoseStack {
    }
 
    public String toString() {
-      return this.m_85850_().toString() + "Depth: " + this.f_85834_.size();
+      String var10000 = this.m_85850_().toString();
+      return var10000 + "Depth: " + this.f_85834_.size();
    }
 
    public void m_166856_() {
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+      Pose posestack$pose = (Pose)this.f_85834_.getLast();
       posestack$pose.f_85852_.identity();
       posestack$pose.f_85853_.identity();
       posestack$pose.f_317074_ = true;
    }
 
    public void m_318714_(Matrix4f matrixIn) {
-      com.mojang.blaze3d.vertex.PoseStack.Pose posestack$pose = (com.mojang.blaze3d.vertex.PoseStack.Pose)this.f_85834_.getLast();
+      Pose posestack$pose = (Pose)this.f_85834_.getLast();
       posestack$pose.f_85852_.mul(matrixIn);
       if (!MatrixUtil.m_321551_(matrixIn)) {
          if (MatrixUtil.m_319661_(matrixIn)) {
@@ -135,6 +142,7 @@ public class PoseStack implements IForgePoseStack {
             posestack$pose.m_319145_();
          }
       }
+
    }
 
    public static final class Pose {
@@ -147,7 +155,7 @@ public class PoseStack implements IForgePoseStack {
          this.f_85853_ = normalIn;
       }
 
-      Pose(com.mojang.blaze3d.vertex.PoseStack.Pose poseIn) {
+      Pose(Pose poseIn) {
          this.f_85852_ = new Matrix4f(poseIn.f_85852_);
          this.f_85853_ = new Matrix3f(poseIn.f_85853_);
          this.f_317074_ = poseIn.f_317074_;
@@ -175,12 +183,13 @@ public class PoseStack implements IForgePoseStack {
          return this.f_317074_ ? vector3f : vector3f.normalize();
       }
 
-      public com.mojang.blaze3d.vertex.PoseStack.Pose m_323639_() {
-         return new com.mojang.blaze3d.vertex.PoseStack.Pose(this);
+      public Pose m_323639_() {
+         return new Pose(this);
       }
 
       public String toString() {
-         return this.f_85852_.toString() + this.f_85853_.toString();
+         String var10000 = this.f_85852_.toString();
+         return var10000 + this.f_85853_.toString();
       }
    }
 }

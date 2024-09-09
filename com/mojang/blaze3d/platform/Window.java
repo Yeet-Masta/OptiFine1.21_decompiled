@@ -10,10 +10,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
-import java.util.function.LongSupplier;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.SilentInitException;
@@ -28,7 +24,6 @@ import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWImage;
-import org.lwjgl.glfw.GLFWImage.Buffer;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -47,7 +42,7 @@ public final class Window implements AutoCloseable {
    private int f_85351_;
    private int f_85352_;
    private int f_85353_;
-   private Optional<VideoMode> f_85354_;
+   private Optional f_85354_;
    private boolean f_85355_;
    private boolean f_85356_;
    private int f_85357_;
@@ -70,7 +65,7 @@ public final class Window implements AutoCloseable {
       this.m_85451_();
       this.m_85403_("Pre startup");
       this.f_85347_ = p_i85371_1_;
-      Optional<VideoMode> optional = VideoMode.m_85333_(videoModeName);
+      Optional optional = VideoMode.m_85333_(videoModeName);
       if (optional.isPresent()) {
          this.f_85354_ = optional;
       } else if (p_i85371_3_.f_84007_.isPresent() && p_i85371_3_.f_84008_.isPresent()) {
@@ -80,7 +75,7 @@ public final class Window implements AutoCloseable {
       }
 
       this.f_85356_ = this.f_85355_ = p_i85371_3_.f_84009_;
-      com.mojang.blaze3d.platform.Monitor monitor = p_i85371_2_.m_85271_(GLFW.glfwGetPrimaryMonitor());
+      Monitor monitor = p_i85371_2_.m_85271_(GLFW.glfwGetPrimaryMonitor());
       this.f_85352_ = this.f_85359_ = p_i85371_3_.f_84005_ > 0 ? p_i85371_3_.f_84005_ : 1;
       this.f_85353_ = this.f_85360_ = p_i85371_3_.f_84006_ > 0 ? p_i85371_3_.f_84006_ : 1;
       GLFW.glfwDefaultWindowHints();
@@ -96,13 +91,15 @@ public final class Window implements AutoCloseable {
       GLFW.glfwWindowHint(139270, 1);
       long handleForge = 0L;
       if (Reflector.ImmediateWindowHandler_setupMinecraftWindow.exists()) {
-         handleForge = Reflector.ImmediateWindowHandler_setupMinecraftWindow
-            .callLong(
-               (IntSupplier)() -> this.f_85359_,
-               (IntSupplier)() -> this.f_85360_,
-               (Supplier)() -> titleIn,
-               (LongSupplier)() -> this.f_85355_ && monitor != null ? monitor.m_84954_() : 0L
-            );
+         handleForge = Reflector.ImmediateWindowHandler_setupMinecraftWindow.callLong(() -> {
+            return this.f_85359_;
+         }, () -> {
+            return this.f_85360_;
+         }, () -> {
+            return titleIn;
+         }, () -> {
+            return this.f_85355_ && monitor != null ? monitor.m_84954_() : 0L;
+         });
          if (Config.isAntialiasing()) {
             GLFW.glfwDestroyWindow(handleForge);
             handleForge = 0L;
@@ -115,15 +112,15 @@ public final class Window implements AutoCloseable {
          this.f_85349_ = GLFW.glfwCreateWindow(this.f_85359_, this.f_85360_, titleIn, this.f_85355_ && monitor != null ? monitor.m_84954_() : 0L, 0L);
       }
 
-      if (handleForge == 0L
-         || !Reflector.ImmediateWindowHandler_positionWindow
-            .callBoolean(
-               Optional.ofNullable(monitor),
-               (IntConsumer)w -> this.f_85359_ = this.f_85352_ = w,
-               (IntConsumer)h -> this.f_85360_ = this.f_85353_ = h,
-               (IntConsumer)x -> this.f_85357_ = this.f_85350_ = x,
-               (IntConsumer)y -> this.f_85358_ = this.f_85351_ = y
-            )) {
+      if (handleForge == 0L || !Reflector.ImmediateWindowHandler_positionWindow.callBoolean(Optional.ofNullable(monitor), (w) -> {
+         this.f_85359_ = this.f_85352_ = w;
+      }, (h) -> {
+         this.f_85360_ = this.f_85353_ = h;
+      }, (x) -> {
+         this.f_85357_ = this.f_85350_ = x;
+      }, (y) -> {
+         this.f_85358_ = this.f_85351_ = y;
+      })) {
          if (monitor != null) {
             VideoMode videomode = monitor.m_84948_(this.f_85355_ ? this.f_85354_ : Optional.empty());
             this.f_85350_ = this.f_85357_ = monitor.m_84951_() + videomode.m_85332_() / 2 - this.f_85359_ / 2;
@@ -152,16 +149,31 @@ public final class Window implements AutoCloseable {
 
    public static String m_340634_() {
       int i = GLFW.glfwGetPlatform();
+      String var10000;
+      switch (i) {
+         case 0:
+            var10000 = "<error>";
+            break;
+         case 393217:
+            var10000 = "win32";
+            break;
+         case 393218:
+            var10000 = "cocoa";
+            break;
+         case 393219:
+            var10000 = "wayland";
+            break;
+         case 393220:
+            var10000 = "x11";
+            break;
+         case 393221:
+            var10000 = "null";
+            break;
+         default:
+            var10000 = String.format(Locale.ROOT, "unknown (%08X)", i);
+      }
 
-      return switch (i) {
-         case 0 -> "<error>";
-         case 393217 -> "win32";
-         case 393218 -> "cocoa";
-         case 393219 -> "wayland";
-         case 393220 -> "x11";
-         case 393221 -> "null";
-         default -> String.format(Locale.ROOT, "unknown (%08X)", i);
-      };
+      return var10000;
    }
 
    public int m_85377_() {
@@ -173,7 +185,7 @@ public final class Window implements AutoCloseable {
       return GLX._shouldClose(this);
    }
 
-   public static void m_85407_(BiConsumer<Integer, String> errorHandlerIn) {
+   public static void m_85407_(BiConsumer errorHandlerIn) {
       MemoryStack memorystack = MemoryStack.stackPush();
 
       try {
@@ -199,6 +211,7 @@ public final class Window implements AutoCloseable {
       if (memorystack != null) {
          memorystack.close();
       }
+
    }
 
    public void m_280655_(PackResources resourcesIn, IconSet iconSetIn) throws IOException {
@@ -206,19 +219,19 @@ public final class Window implements AutoCloseable {
       switch (i) {
          case 393217:
          case 393220:
-            List<IoSupplier<InputStream>> list = iconSetIn.m_280284_(resourcesIn);
-            List<ByteBuffer> list1 = new ArrayList(list.size());
+            List list = iconSetIn.m_280284_(resourcesIn);
+            List list1 = new ArrayList(list.size());
 
             try {
                MemoryStack memorystack = MemoryStack.stackPush();
 
                try {
-                  Buffer buffer = GLFWImage.malloc(list.size(), memorystack);
+                  GLFWImage.Buffer buffer = GLFWImage.malloc(list.size(), memorystack);
 
-                  for (int j = 0; j < list.size(); j++) {
-                     try (com.mojang.blaze3d.platform.NativeImage nativeimage = com.mojang.blaze3d.platform.NativeImage.m_85058_(
-                           (InputStream)((IoSupplier)list.get(j)).m_247737_()
-                        )) {
+                  for(int j = 0; j < list.size(); ++j) {
+                     NativeImage nativeimage = NativeImage.m_85058_((InputStream)((IoSupplier)list.get(j)).m_247737_());
+
+                     try {
                         ByteBuffer bytebuffer = MemoryUtil.memAlloc(nativeimage.m_84982_() * nativeimage.m_85084_() * 4);
                         list1.add(bytebuffer);
                         bytebuffer.asIntBuffer().put(nativeimage.m_266370_());
@@ -226,10 +239,24 @@ public final class Window implements AutoCloseable {
                         buffer.width(nativeimage.m_84982_());
                         buffer.height(nativeimage.m_85084_());
                         buffer.pixels(bytebuffer);
+                     } catch (Throwable var20) {
+                        if (nativeimage != null) {
+                           try {
+                              nativeimage.close();
+                           } catch (Throwable var19) {
+                              var20.addSuppressed(var19);
+                           }
+                        }
+
+                        throw var20;
+                     }
+
+                     if (nativeimage != null) {
+                        nativeimage.close();
                      }
                   }
 
-                  GLFW.glfwSetWindowIcon(this.f_85349_, (Buffer)buffer.position(0));
+                  GLFW.glfwSetWindowIcon(this.f_85349_, (GLFWImage.Buffer)buffer.position(0));
                } catch (Throwable var21) {
                   if (memorystack != null) {
                      try {
@@ -257,6 +284,7 @@ public final class Window implements AutoCloseable {
          default:
             f_85345_.warn("Not setting icon for unrecognized platform: {}", i);
       }
+
    }
 
    public void m_85403_(String renderPhaseIn) {
@@ -268,18 +296,17 @@ public final class Window implements AutoCloseable {
       if (renderPhaseIn.equals("Render")) {
          GpuFrameTimer.startRender();
       }
+
    }
 
    private void m_85451_() {
-      GLFW.glfwSetErrorCallback(com.mojang.blaze3d.platform.Window::m_85412_);
+      GLFW.glfwSetErrorCallback(Window::m_85412_);
    }
 
    private static void m_85412_(int error, long description) {
       String s = "GLFW error " + error + ": " + MemoryUtil.memUTF8(description);
-      TinyFileDialogs.tinyfd_messageBox(
-         "Minecraft", s + ".\n\nPlease make sure you have up-to-date drivers (see aka.ms/mcdriver for instructions).", "ok", "error", false
-      );
-      throw new com.mojang.blaze3d.platform.Window.WindowInitFailed(s);
+      TinyFileDialogs.tinyfd_messageBox("Minecraft", s + ".\n\nPlease make sure you have up-to-date drivers (see aka.ms/mcdriver for instructions).", "ok", "error", false);
+      throw new WindowInitFailed(s);
    }
 
    public void m_85382_(int error, long description) {
@@ -331,6 +358,7 @@ public final class Window implements AutoCloseable {
             }
          }
       }
+
    }
 
    private void m_85452_() {
@@ -340,8 +368,13 @@ public final class Window implements AutoCloseable {
       this.f_85361_ = aint[0] > 0 ? aint[0] : 1;
       this.f_85362_ = aint1[0] > 0 ? aint1[0] : 1;
       if (this.f_85362_ == 0 || this.f_85361_ == 0) {
-         Reflector.ImmediateWindowHandler_updateFBSize.call((IntConsumer)w -> this.f_85361_ = w, (IntConsumer)h -> this.f_85362_ = h);
+         Reflector.ImmediateWindowHandler_updateFBSize.call((w) -> {
+            this.f_85361_ = w;
+         }, (h) -> {
+            this.f_85362_ = h;
+         });
       }
+
    }
 
    private void m_85427_(long windowPointer, int windowWidthIn, int windowHeightIn) {
@@ -353,12 +386,14 @@ public final class Window implements AutoCloseable {
       if (windowPointer == this.f_85349_) {
          this.f_85347_.m_7440_(hasFocus);
       }
+
    }
 
    private void m_85419_(long windowPointer, boolean enterIn) {
       if (enterIn) {
          this.f_85347_.m_5740_();
       }
+
    }
 
    public void m_85380_(int limitIn) {
@@ -366,7 +401,7 @@ public final class Window implements AutoCloseable {
    }
 
    public int m_85434_() {
-      if (Minecraft.m_91087_().f_91066_.m_231817_().m_231551_()) {
+      if ((Boolean)Minecraft.m_91087_().f_91066_.m_231817_().m_231551_()) {
          return 260;
       } else {
          return this.f_85368_ <= 0 ? 260 : this.f_85368_;
@@ -380,18 +415,20 @@ public final class Window implements AutoCloseable {
          this.f_85356_ = this.f_85355_;
          this.m_85431_(this.f_85369_);
       }
+
    }
 
-   public Optional<VideoMode> m_85436_() {
+   public Optional m_85436_() {
       return this.f_85354_;
    }
 
-   public void m_85405_(Optional<VideoMode> fullscreenModeIn) {
+   public void m_85405_(Optional fullscreenModeIn) {
       boolean flag = !fullscreenModeIn.equals(this.f_85354_);
       this.f_85354_ = fullscreenModeIn;
       if (flag) {
          this.f_85367_ = true;
       }
+
    }
 
    public void m_85437_() {
@@ -400,12 +437,13 @@ public final class Window implements AutoCloseable {
          this.m_85453_();
          this.f_85347_.m_5741_();
       }
+
    }
 
    private void m_85453_() {
       boolean flag = GLFW.glfwGetWindowMonitor(this.f_85349_) != 0L;
       if (this.f_85355_) {
-         com.mojang.blaze3d.platform.Monitor monitor = this.f_85348_.m_85276_(this);
+         Monitor monitor = this.f_85348_.m_85276_(this);
          if (monitor == null) {
             f_85345_.warn("Failed to find suitable monitor for fullscreen mode");
             this.f_85355_ = false;
@@ -438,6 +476,7 @@ public final class Window implements AutoCloseable {
          this.f_85360_ = this.f_85353_;
          GLFW.glfwSetWindowMonitor(this.f_85349_, 0L, this.f_85357_, this.f_85358_, this.f_85359_, this.f_85360_, -1);
       }
+
    }
 
    public void m_85438_() {
@@ -462,17 +501,16 @@ public final class Window implements AutoCloseable {
       } catch (Exception var3) {
          f_85345_.error("Couldn't toggle fullscreen", var3);
       }
+
    }
 
    public int m_85385_(int guiScaleIn, boolean forceUnicode) {
-      int i = 1;
-
-      while (i != guiScaleIn && i < this.f_85361_ && i < this.f_85362_ && this.f_85361_ / (i + 1) >= 320 && this.f_85362_ / (i + 1) >= 240) {
-         i++;
+      int i;
+      for(i = 1; i != guiScaleIn && i < this.f_85361_ && i < this.f_85362_ && this.f_85361_ / (i + 1) >= 320 && this.f_85362_ / (i + 1) >= 240; ++i) {
       }
 
       if (forceUnicode && i % 2 != 0) {
-         i++;
+         ++i;
       }
 
       return i;
@@ -543,7 +581,7 @@ public final class Window implements AutoCloseable {
    }
 
    @Nullable
-   public com.mojang.blaze3d.platform.Monitor m_85450_() {
+   public Monitor m_85450_() {
       return this.f_85348_.m_85276_(this);
    }
 

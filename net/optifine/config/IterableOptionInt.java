@@ -2,6 +2,7 @@ package net.optifine.config;
 
 import java.util.function.ObjIntConsumer;
 import java.util.function.ToIntFunction;
+import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
 import net.optifine.Config;
 import net.optifine.Lang;
@@ -9,17 +10,11 @@ import net.optifine.Lang;
 public class IterableOptionInt extends IteratableOptionOF implements IPersitentOption {
    private String resourceKey;
    private OptionValueInt[] values;
-   private ToIntFunction<net.minecraft.client.Options> getter;
-   private ObjIntConsumer<net.minecraft.client.Options> setter;
+   private ToIntFunction getter;
+   private ObjIntConsumer setter;
    private String saveKey;
 
-   public IterableOptionInt(
-      String resourceKey,
-      OptionValueInt[] values,
-      ToIntFunction<net.minecraft.client.Options> getter,
-      ObjIntConsumer<net.minecraft.client.Options> setter,
-      String saveKey
-   ) {
+   public IterableOptionInt(String resourceKey, OptionValueInt[] values, ToIntFunction getter, ObjIntConsumer setter, String saveKey) {
       super(resourceKey);
       this.resourceKey = resourceKey;
       this.values = values;
@@ -28,9 +23,8 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       this.saveKey = saveKey;
    }
 
-   @Override
    public void nextOptionValue(int dirIn) {
-      net.minecraft.client.Options opts = this.getOptions();
+      Options opts = this.getOptions();
       int value = this.getter.applyAsInt(opts);
       int index = this.getValueIndex(value);
       int indexNext = index + dirIn;
@@ -42,9 +36,8 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       this.setter.accept(opts, valueNext);
    }
 
-   @Override
    public Component getOptionText() {
-      net.minecraft.client.Options opts = this.getOptions();
+      Options opts = this.getOptions();
       String optionLabel = Lang.get(this.resourceKey) + ": ";
       int value = this.getter.applyAsInt(opts);
       OptionValueInt optionValue = this.getOptionValue(value);
@@ -58,13 +51,11 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       }
    }
 
-   @Override
    public String getSaveKey() {
       return this.saveKey;
    }
 
-   @Override
-   public void loadValue(net.minecraft.client.Options opts, String s) {
+   public void loadValue(Options opts, String s) {
       int val = Config.parseInt(s, -1);
       if (this.getOptionValue(val) == null) {
          val = this.values[0].getValue();
@@ -73,8 +64,7 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       this.setter.accept(opts, val);
    }
 
-   @Override
-   public String getSaveText(net.minecraft.client.Options opts) {
+   public String getSaveText(Options opts) {
       int value = this.getter.applyAsInt(opts);
       return Integer.toString(value);
    }
@@ -85,7 +75,7 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
    }
 
    private int getValueIndex(int value) {
-      for (int i = 0; i < this.values.length; i++) {
+      for(int i = 0; i < this.values.length; ++i) {
          OptionValueInt ovi = this.values[i];
          if (ovi.getValue() == value) {
             return i;

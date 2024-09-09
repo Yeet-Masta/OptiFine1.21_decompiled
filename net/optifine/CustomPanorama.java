@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+import net.minecraft.resources.ResourceLocation;
 import net.optifine.util.MathUtils;
 import net.optifine.util.PropertiesOrdered;
 
@@ -34,31 +35,32 @@ public class CustomPanorama {
             props = new PropertiesOrdered();
          }
 
-         CustomPanoramaProperties cpp = new CustomPanoramaProperties(folder, props);
+         CustomPanoramaProperties cpp = new CustomPanoramaProperties(folder, (Properties)props);
          customPanoramaProperties = cpp;
       }
    }
 
    private static String[] getPanoramaFolders() {
-      List<String> listFolders = new ArrayList();
+      List listFolders = new ArrayList();
       listFolders.add("textures/gui/title/background");
 
-      for (int i = 0; i < 100; i++) {
+      for(int i = 0; i < 100; ++i) {
          String folder = "optifine/gui/background" + i;
          String path = folder + "/panorama_0.png";
-         net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(path);
+         ResourceLocation loc = new ResourceLocation(path);
          if (Config.hasResource(loc)) {
             listFolders.add(folder);
          }
       }
 
-      return (String[])listFolders.toArray(new String[listFolders.size()]);
+      String[] folders = (String[])listFolders.toArray(new String[listFolders.size()]);
+      return folders;
    }
 
    private static Properties[] getPanoramaProperties(String[] folders) {
       Properties[] propsArr = new Properties[folders.length];
 
-      for (int i = 0; i < folders.length; i++) {
+      for(int i = 0; i < folders.length; ++i) {
          String folder = folders[i];
          if (i == 0) {
             folder = "optifine/gui";
@@ -66,7 +68,7 @@ public class CustomPanorama {
             Config.dbg("CustomPanorama: " + folder);
          }
 
-         net.minecraft.resources.ResourceLocation propLoc = new net.minecraft.resources.ResourceLocation(folder + "/background.properties");
+         ResourceLocation propLoc = new ResourceLocation(folder + "/background.properties");
 
          try {
             InputStream in = Config.getResourceStream(propLoc);
@@ -87,7 +89,7 @@ public class CustomPanorama {
    private static int[] getWeights(Properties[] properties) {
       int[] weights = new int[properties.length];
 
-      for (int i = 0; i < weights.length; i++) {
+      for(int i = 0; i < weights.length; ++i) {
          Properties prop = properties[i];
          if (prop == null) {
             prop = properties[0];
@@ -96,7 +98,7 @@ public class CustomPanorama {
          if (prop == null) {
             weights[i] = 1;
          } else {
-            String str = prop.getProperty("weight", null);
+            String str = prop.getProperty("weight", (String)null);
             weights[i] = Config.parseInt(str, 1);
          }
       }
@@ -109,7 +111,7 @@ public class CustomPanorama {
       int r = random.nextInt(sumWeights);
       int sum = 0;
 
-      for (int i = 0; i < weights.length; i++) {
+      for(int i = 0; i < weights.length; ++i) {
          sum += weights[i];
          if (sum > r) {
             return i;

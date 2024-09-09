@@ -30,14 +30,15 @@ public class ShaderParser {
          if (ma.matches()) {
             return new ShaderLine(ShaderLine.Type.ATTRIBUTE, ma.group(1), "", line);
          } else {
+            Matcher mci;
             if (shaderType == ShaderType.VERTEX) {
-               Matcher mi = PATTERN_IN.matcher(line);
-               if (mi.matches()) {
-                  return new ShaderLine(ShaderLine.Type.ATTRIBUTE, mi.group(1), "", line);
+               mci = PATTERN_IN.matcher(line);
+               if (mci.matches()) {
+                  return new ShaderLine(ShaderLine.Type.ATTRIBUTE, mci.group(1), "", line);
                }
             }
 
-            Matcher mci = PATTERN_CONST_INT.matcher(line);
+            mci = PATTERN_CONST_INT.matcher(line);
             if (mci.matches()) {
                return new ShaderLine(ShaderLine.Type.CONST_INT, mci.group(1), mci.group(2), line);
             } else {
@@ -105,19 +106,11 @@ public class ShaderParser {
    }
 
    public static int getShadowColorIndex(String uniform) {
-      byte var2 = -1;
-      switch (uniform.hashCode()) {
-         case -1560188349:
-            if (uniform.equals("shadowcolor")) {
-               var2 = 0;
-            }
+      switch (uniform) {
+         case "shadowcolor":
+            return 0;
          default:
-            switch (var2) {
-               case 0:
-                  return 0;
-               default:
-                  return getIndex(uniform, "shadowcolor", 0, 1);
-            }
+            return getIndex(uniform, "shadowcolor", 0, 1);
       }
    }
 
@@ -145,7 +138,7 @@ public class ShaderParser {
          str = str.trim();
          String[] strs = new String[str.length()];
 
-         for (int i = 0; i < strs.length; i++) {
+         for(int i = 0; i < strs.length; ++i) {
             strs[i] = String.valueOf(str.charAt(i));
          }
 
@@ -158,7 +151,8 @@ public class ShaderParser {
          return null;
       } else {
          str = str.trim();
-         return Config.tokenize(str, ",");
+         String[] strs = Config.tokenize(str, ",");
+         return strs;
       }
    }
 
@@ -168,7 +162,7 @@ public class ShaderParser {
       int z = 1;
       String[] parts = Config.tokenize(value, ",");
 
-      for (int i = 0; i < parts.length; i++) {
+      for(int i = 0; i < parts.length; ++i) {
          String part = parts[i];
          String[] tokens = Config.tokenize(part, "=");
          if (tokens.length == 2) {
@@ -193,6 +187,10 @@ public class ShaderParser {
          }
       }
 
-      return x == 1 && y == 1 && z == 1 ? null : new Vec3i(x, y, z);
+      if (x == 1 && y == 1 && z == 1) {
+         return null;
+      } else {
+         return new Vec3i(x, y, z);
+      }
    }
 }

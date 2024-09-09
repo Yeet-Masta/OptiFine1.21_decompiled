@@ -3,6 +3,7 @@ package net.optifine;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import javax.imageio.ImageIO;
+import net.minecraft.client.Options;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.optifine.util.PropertiesOrdered;
@@ -38,15 +41,16 @@ public class TextureAnimations {
       if (textureAnimations != null && Config.isAnimatedTextures()) {
          int countActive = 0;
 
-         for (int i = 0; i < textureAnimations.length; i++) {
-            TextureAnimation anim = textureAnimations[i];
+         int frameCount;
+         for(frameCount = 0; frameCount < textureAnimations.length; ++frameCount) {
+            TextureAnimation anim = textureAnimations[frameCount];
             anim.updateTexture();
             if (anim.isActive()) {
-               countActive++;
+               ++countActive;
             }
          }
 
-         int frameCount = Config.getMinecraft().f_91060_.getFrameCount();
+         frameCount = Config.getMinecraft().f_91060_.getFrameCount();
          if (frameCount != frameCountAnimations) {
             countAnimationsActive = countActive;
             frameCountAnimations = frameCount;
@@ -55,6 +59,7 @@ public class TextureAnimations {
          if (SmartAnimations.isActive()) {
             SmartAnimations.resetTexturesRendered();
          }
+
       } else {
          countAnimationsActive = 0;
       }
@@ -63,7 +68,7 @@ public class TextureAnimations {
    private static TextureAnimation[] getTextureAnimations(PackResources[] rps) {
       List list = new ArrayList();
 
-      for (int i = 0; i < rps.length; i++) {
+      for(int i = 0; i < rps.length; ++i) {
          PackResources rp = rps[i];
          TextureAnimation[] tas = getTextureAnimations(rp);
          if (tas != null) {
@@ -71,29 +76,30 @@ public class TextureAnimations {
          }
       }
 
-      return (TextureAnimation[])list.toArray(new TextureAnimation[list.size()]);
+      TextureAnimation[] anims = (TextureAnimation[])list.toArray(new TextureAnimation[list.size()]);
+      return anims;
    }
 
    private static TextureAnimation[] getTextureAnimations(PackResources rp) {
-      String[] animPropNames = ResUtils.collectFiles(rp, "optifine/anim/", ".properties", null);
+      String[] animPropNames = ResUtils.collectFiles(rp, (String)"optifine/anim/", (String)".properties", (String[])null);
       if (animPropNames.length <= 0) {
          return null;
       } else {
          List list = new ArrayList();
 
-         for (int i = 0; i < animPropNames.length; i++) {
+         for(int i = 0; i < animPropNames.length; ++i) {
             String propName = animPropNames[i];
             Config.dbg("Texture animation: " + propName);
 
             try {
-               net.minecraft.resources.ResourceLocation propLoc = new net.minecraft.resources.ResourceLocation(propName);
+               ResourceLocation propLoc = new ResourceLocation(propName);
                InputStream in = Config.getResourceStream(rp, PackType.CLIENT_RESOURCES, propLoc);
                Properties props = new PropertiesOrdered();
                props.load(in);
                in.close();
                TextureAnimation anim = makeTextureAnimation(props, propLoc);
                if (anim != null) {
-                  net.minecraft.resources.ResourceLocation locDstTex = new net.minecraft.resources.ResourceLocation(anim.getDstTex());
+                  ResourceLocation locDstTex = new ResourceLocation(anim.getDstTex());
                   if (!Config.hasResource(rp, locDstTex)) {
                      Config.dbg("Skipped: " + propName + ", target texture not loaded from same resource pack");
                   } else {
@@ -107,64 +113,66 @@ public class TextureAnimations {
             }
          }
 
-         return (TextureAnimation[])list.toArray(new TextureAnimation[list.size()]);
+         TextureAnimation[] anims = (TextureAnimation[])list.toArray(new TextureAnimation[list.size()]);
+         return anims;
       }
    }
 
-   private static TextureAnimation makeTextureAnimation(Properties props, net.minecraft.resources.ResourceLocation propLoc) {
+   private static TextureAnimation makeTextureAnimation(Properties props, ResourceLocation propLoc) {
       String texFrom = props.getProperty("from");
       String texTo = props.getProperty("to");
       int x = Config.parseInt(props.getProperty("x"), -1);
       int y = Config.parseInt(props.getProperty("y"), -1);
       int width = Config.parseInt(props.getProperty("w"), -1);
       int height = Config.parseInt(props.getProperty("h"), -1);
-      if (texFrom == null || texTo == null) {
-         Config.warn("TextureAnimation: Source or target texture not specified");
-         return null;
-      } else if (x >= 0 && y >= 0 && width >= 0 && height >= 0) {
-         texFrom = texFrom.trim();
-         texTo = texTo.trim();
-         String basePath = TextureUtils.getBasePath(propLoc.m_135815_());
-         texFrom = TextureUtils.fixResourcePath(texFrom, basePath);
-         texTo = TextureUtils.fixResourcePath(texTo, basePath);
-         byte[] imageBytes = getCustomTextureData(texFrom, width);
-         if (imageBytes == null) {
-            Config.warn("TextureAnimation: Source texture not found: " + texTo);
-            return null;
-         } else {
-            int countPixels = imageBytes.length / 4;
-            int countFrames = countPixels / (width * height);
-            int countPixelsAllFrames = countFrames * width * height;
-            if (countPixels != countPixelsAllFrames) {
-               Config.warn(
-                  "TextureAnimation: Source texture has invalid number of frames: " + texFrom + ", frames: " + (float)countPixels / (float)(width * height)
-               );
+      if (texFrom != null && texTo != null) {
+         if (x >= 0 && y >= 0 && width >= 0 && height >= 0) {
+            texFrom = texFrom.trim();
+            texTo = texTo.trim();
+            String basePath = TextureUtils.getBasePath(propLoc.m_135815_());
+            texFrom = TextureUtils.fixResourcePath(texFrom, basePath);
+            texTo = TextureUtils.fixResourcePath(texTo, basePath);
+            byte[] imageBytes = getCustomTextureData(texFrom, width);
+            if (imageBytes == null) {
+               Config.warn("TextureAnimation: Source texture not found: " + texTo);
                return null;
             } else {
-               net.minecraft.resources.ResourceLocation locTexTo = new net.minecraft.resources.ResourceLocation(texTo);
+               int countPixels = imageBytes.length / 4;
+               int countFrames = countPixels / (width * height);
+               int countPixelsAllFrames = countFrames * width * height;
+               if (countPixels != countPixelsAllFrames) {
+                  Config.warn("TextureAnimation: Source texture has invalid number of frames: " + texFrom + ", frames: " + (float)countPixels / (float)(width * height));
+                  return null;
+               } else {
+                  ResourceLocation locTexTo = new ResourceLocation(texTo);
 
-               try {
-                  InputStream inTexTo = Config.getResourceStream(locTexTo);
-                  if (inTexTo == null) {
+                  try {
+                     InputStream inTexTo = Config.getResourceStream(locTexTo);
+                     if (inTexTo == null) {
+                        Config.warn("TextureAnimation: Target texture not found: " + texTo);
+                        return null;
+                     } else {
+                        BufferedImage imgTexTo = readTextureImage(inTexTo);
+                        if (x + width <= imgTexTo.getWidth() && y + height <= imgTexTo.getHeight()) {
+                           TextureAnimation anim = new TextureAnimation(texFrom, imageBytes, texTo, locTexTo, x, y, width, height, props);
+                           return anim;
+                        } else {
+                           Config.warn("TextureAnimation: Animation coordinates are outside the target texture: " + texTo);
+                           return null;
+                        }
+                     }
+                  } catch (IOException var17) {
                      Config.warn("TextureAnimation: Target texture not found: " + texTo);
                      return null;
-                  } else {
-                     BufferedImage imgTexTo = readTextureImage(inTexTo);
-                     if (x + width <= imgTexTo.getWidth() && y + height <= imgTexTo.getHeight()) {
-                        return new TextureAnimation(texFrom, imageBytes, texTo, locTexTo, x, y, width, height, props);
-                     } else {
-                        Config.warn("TextureAnimation: Animation coordinates are outside the target texture: " + texTo);
-                        return null;
-                     }
                   }
-               } catch (IOException var17) {
-                  Config.warn("TextureAnimation: Target texture not found: " + texTo);
-                  return null;
                }
             }
+         } else {
+            Config.warn("TextureAnimation: Invalid coordinates");
+            return null;
          }
       } else {
-         Config.warn("TextureAnimation: Invalid coordinates");
+         Config.warn("TextureAnimation: Source or target texture not specified");
          return null;
       }
    }
@@ -179,10 +187,10 @@ public class TextureAnimations {
    }
 
    private static byte[] loadImage(String name, int targetWidth) {
-      net.minecraft.client.Options options = Config.getGameSettings();
+      Options options = Config.getGameSettings();
 
       try {
-         net.minecraft.resources.ResourceLocation locRes = new net.minecraft.resources.ResourceLocation(name);
+         ResourceLocation locRes = new ResourceLocation(name);
          InputStream in = Config.getResourceStream(locRes);
          if (in == null) {
             return null;
@@ -204,11 +212,11 @@ public class TextureAnimations {
                byte[] byteBuf = new byte[width * height * 4];
                image.getRGB(0, 0, width, height, ai, 0, width);
 
-               for (int l = 0; l < ai.length; l++) {
-                  int alpha = ai[l] >> 24 & 0xFF;
-                  int red = ai[l] >> 16 & 0xFF;
-                  int green = ai[l] >> 8 & 0xFF;
-                  int blue = ai[l] & 0xFF;
+               for(int l = 0; l < ai.length; ++l) {
+                  int alpha = ai[l] >> 24 & 255;
+                  int red = ai[l] >> 16 & 255;
+                  int green = ai[l] >> 8 & 255;
+                  int blue = ai[l] & 255;
                   byteBuf[l * 4 + 0] = (byte)red;
                   byteBuf[l * 4 + 1] = (byte)green;
                   byteBuf[l * 4 + 2] = (byte)blue;
@@ -236,7 +244,7 @@ public class TextureAnimations {
       BufferedImage scaledImage = new BufferedImage(width, height, 2);
       Graphics2D gr = scaledImage.createGraphics();
       gr.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-      gr.drawImage(image, 0, 0, width, height, null);
+      gr.drawImage(image, 0, 0, width, height, (ImageObserver)null);
       return scaledImage;
    }
 

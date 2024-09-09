@@ -5,22 +5,23 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32C;
 
 public class GpuFrameTimer {
-   private static boolean timerQuerySupported = GL.getCapabilities().GL_ARB_timer_query;
-   private static long lastTimeCpuNs = 0L;
-   private static long frameTimeCpuNs = 0L;
-   private static GpuFrameTimer.TimerQuery timerQuery;
-   private static long frameTimeGpuNs = 0L;
-   private static long lastTimeActiveMs = 0L;
+   private static boolean timerQuerySupported;
+   private static long lastTimeCpuNs;
+   private static long frameTimeCpuNs;
+   private static TimerQuery timerQuery;
+   private static long frameTimeGpuNs;
+   private static long lastTimeActiveMs;
 
    public static void startRender() {
+      long timeCpuNs;
       if (timerQuery != null && timerQuery.hasResult()) {
-         long frameTimeNs = timerQuery.getResult();
-         frameTimeGpuNs = (frameTimeGpuNs + frameTimeNs) / 2L;
+         timeCpuNs = timerQuery.getResult();
+         frameTimeGpuNs = (frameTimeGpuNs + timeCpuNs) / 2L;
          timerQuery = null;
       }
 
       if (System.currentTimeMillis() <= lastTimeActiveMs + 1000L) {
-         long timeCpuNs = System.nanoTime();
+         timeCpuNs = System.nanoTime();
          if (lastTimeCpuNs != 0L) {
             long frameTimeNs = timeCpuNs - lastTimeCpuNs;
             frameTimeCpuNs = (frameTimeCpuNs + frameTimeNs) / 2L;
@@ -28,9 +29,10 @@ public class GpuFrameTimer {
 
          lastTimeCpuNs = timeCpuNs;
          if (timerQuery == null && timerQuerySupported) {
-            timerQuery = new GpuFrameTimer.TimerQuery();
+            timerQuery = new TimerQuery();
             timerQuery.start();
          }
+
       }
    }
 
@@ -38,11 +40,20 @@ public class GpuFrameTimer {
       if (timerQuery != null) {
          timerQuery.finish();
       }
+
    }
 
    public static double getGpuLoad() {
       lastTimeActiveMs = System.currentTimeMillis();
       return (double)Math.max(frameTimeGpuNs, 0L) / Math.max((double)frameTimeCpuNs, 1.0);
+   }
+
+   static {
+      timerQuerySupported = GL.getCapabilities().GL_ARB_timer_query;
+      lastTimeCpuNs = 0L;
+      frameTimeCpuNs = 0L;
+      frameTimeGpuNs = 0L;
+      lastTimeActiveMs = 0L;
    }
 
    private static class TimerQuery {

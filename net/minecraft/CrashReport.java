@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletionException;
@@ -23,10 +24,10 @@ import org.slf4j.Logger;
 
 public class CrashReport {
    private static final Logger f_127499_ = LogUtils.getLogger();
-   private static final DateTimeFormatter f_241641_ = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
+   private static final DateTimeFormatter f_241641_;
    private final String f_127500_;
    private final Throwable f_127501_;
-   private final List<CrashReportCategory> f_127503_ = Lists.newArrayList();
+   private final List f_127503_ = Lists.newArrayList();
    @Nullable
    private Path f_127504_;
    private boolean f_127505_ = true;
@@ -67,8 +68,11 @@ public class CrashReport {
             builder.append(Reflector.CrashReportExtender_generateEnhancedStackTraceSTE.callString1(this.f_127506_));
          } else {
             builder.append("Stacktrace:\n");
+            StackTraceElement[] var2 = this.f_127506_;
+            int var3 = var2.length;
 
-            for (StackTraceElement stacktraceelement : this.f_127506_) {
+            for(int var4 = 0; var4 < var3; ++var4) {
+               StackTraceElement stacktraceelement = var2[var4];
                builder.append("\t").append("at ").append(stacktraceelement);
                builder.append("\n");
             }
@@ -77,12 +81,15 @@ public class CrashReport {
          }
       }
 
-      for (CrashReportCategory crashreportcategory : this.f_127503_) {
+      Iterator var6 = this.f_127503_.iterator();
+
+      while(var6.hasNext()) {
+         CrashReportCategory crashreportcategory = (CrashReportCategory)var6.next();
          crashreportcategory.m_128168_(builder);
          builder.append("\n\n");
       }
 
-      Reflector.CrashReportExtender_extendSystemReport.call(this.f_178624_);
+      Reflector.CrashReportExtender_extendSystemReport.call((Object)this.f_178624_);
       this.f_178624_.m_143525_(builder);
    }
 
@@ -90,7 +97,7 @@ public class CrashReport {
       StringWriter stringwriter = null;
       PrintWriter printwriter = null;
       Throwable throwable = this.f_127501_;
-      if (throwable.getMessage() == null) {
+      if (((Throwable)throwable).getMessage() == null) {
          if (throwable instanceof NullPointerException) {
             throwable = new NullPointerException(this.f_127500_);
          } else if (throwable instanceof StackOverflowError) {
@@ -99,7 +106,7 @@ public class CrashReport {
             throwable = new OutOfMemoryError(this.f_127500_);
          }
 
-         throwable.setStackTrace(this.f_127501_.getStackTrace());
+         ((Throwable)throwable).setStackTrace(this.f_127501_.getStackTrace());
       }
 
       try {
@@ -114,7 +121,7 @@ public class CrashReport {
       try {
          stringwriter = new StringWriter();
          printwriter = new PrintWriter(stringwriter);
-         throwable.printStackTrace(printwriter);
+         ((Throwable)throwable).printStackTrace(printwriter);
          s = stringwriter.toString();
       } finally {
          IOUtils.closeQuietly(stringwriter);
@@ -124,7 +131,7 @@ public class CrashReport {
       return s;
    }
 
-   public String m_339571_(ReportType typeIn, List<String> headerIn) {
+   public String m_339571_(ReportType typeIn, List headerIn) {
       if (!this.reported) {
          this.reported = true;
          CrashReporter.onCrashReport(this, this.f_178624_);
@@ -141,7 +148,7 @@ public class CrashReport {
       stringbuilder.append(this.m_127525_());
       stringbuilder.append("\n\nA detailed walkthrough of the error, its code path and all known details is as follows:\n");
 
-      for (int i = 0; i < 87; i++) {
+      for(int i = 0; i < 87; ++i) {
          stringbuilder.append("-");
       }
 
@@ -159,7 +166,7 @@ public class CrashReport {
       return this.f_127504_;
    }
 
-   public boolean m_127512_(Path pathIn, ReportType typeIn, List<String> headerIn) {
+   public boolean m_127512_(Path pathIn, ReportType typeIn, List headerIn) {
       if (this.f_127504_ != null) {
          return false;
       } else {
@@ -246,16 +253,16 @@ public class CrashReport {
       return crashreportcategory;
    }
 
-   public static net.minecraft.CrashReport m_127521_(Throwable causeIn, String descriptionIn) {
-      while (causeIn instanceof CompletionException && causeIn.getCause() != null) {
+   public static CrashReport m_127521_(Throwable causeIn, String descriptionIn) {
+      while(causeIn instanceof CompletionException && causeIn.getCause() != null) {
          causeIn = causeIn.getCause();
       }
 
-      net.minecraft.CrashReport crashreport;
+      CrashReport crashreport;
       if (causeIn instanceof ReportedException reportedexception) {
          crashreport = reportedexception.m_134761_();
       } else {
-         crashreport = new net.minecraft.CrashReport(descriptionIn, causeIn);
+         crashreport = new CrashReport(descriptionIn, causeIn);
       }
 
       return crashreport;
@@ -263,6 +270,10 @@ public class CrashReport {
 
    public static void m_127529_() {
       MemoryReserve.m_182327_();
-      new net.minecraft.CrashReport("Don't panic!", new Throwable()).m_127526_(ReportType.f_337619_);
+      (new CrashReport("Don't panic!", new Throwable())).m_127526_(ReportType.f_337619_);
+   }
+
+   static {
+      f_241641_ = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
    }
 }

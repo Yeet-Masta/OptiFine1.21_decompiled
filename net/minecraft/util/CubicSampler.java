@@ -1,5 +1,6 @@
 package net.minecraft.util;
 
+import net.minecraft.world.phys.Vec3;
 import net.optifine.Vec3M;
 
 public class CubicSampler {
@@ -10,29 +11,29 @@ public class CubicSampler {
    private CubicSampler() {
    }
 
-   public static net.minecraft.world.phys.Vec3 m_130038_(net.minecraft.world.phys.Vec3 vectorIn, net.minecraft.util.CubicSampler.Vec3Fetcher fetcherIn) {
+   public static Vec3 m_130038_(Vec3 vectorIn, Vec3Fetcher fetcherIn) {
       if (vectorIn instanceof Vec3M vec3m) {
          return sampleM(vec3m, fetcherIn);
       } else {
-         int i = net.minecraft.util.Mth.m_14107_(vectorIn.m_7096_());
-         int j = net.minecraft.util.Mth.m_14107_(vectorIn.m_7098_());
-         int k = net.minecraft.util.Mth.m_14107_(vectorIn.m_7094_());
+         int i = Mth.m_14107_(vectorIn.m_7096_());
+         int j = Mth.m_14107_(vectorIn.m_7098_());
+         int k = Mth.m_14107_(vectorIn.m_7094_());
          double d0 = vectorIn.m_7096_() - (double)i;
          double d1 = vectorIn.m_7098_() - (double)j;
          double d2 = vectorIn.m_7094_() - (double)k;
          double d3 = 0.0;
-         net.minecraft.world.phys.Vec3 vec3 = net.minecraft.world.phys.Vec3.f_82478_;
+         Vec3 vec3 = Vec3.f_82478_;
 
-         for (int l = 0; l < 6; l++) {
-            double d4 = net.minecraft.util.Mth.m_14139_(d0, f_130036_[l + 1], f_130036_[l]);
+         for(int l = 0; l < 6; ++l) {
+            double d4 = Mth.m_14139_(d0, f_130036_[l + 1], f_130036_[l]);
             int i1 = i - 2 + l;
 
-            for (int j1 = 0; j1 < 6; j1++) {
-               double d5 = net.minecraft.util.Mth.m_14139_(d1, f_130036_[j1 + 1], f_130036_[j1]);
+            for(int j1 = 0; j1 < 6; ++j1) {
+               double d5 = Mth.m_14139_(d1, f_130036_[j1 + 1], f_130036_[j1]);
                int k1 = j - 2 + j1;
 
-               for (int l1 = 0; l1 < 6; l1++) {
-                  double d6 = net.minecraft.util.Mth.m_14139_(d2, f_130036_[l1 + 1], f_130036_[l1]);
+               for(int l1 = 0; l1 < 6; ++l1) {
+                  double d6 = Mth.m_14139_(d2, f_130036_[l1 + 1], f_130036_[l1]);
                   int i2 = k - 2 + l1;
                   double d7 = d4 * d5 * d6;
                   d3 += d7;
@@ -45,30 +46,30 @@ public class CubicSampler {
       }
    }
 
-   public static Vec3M sampleM(net.minecraft.world.phys.Vec3 vectorIn, net.minecraft.util.CubicSampler.Vec3Fetcher fetcherIn) {
-      int x0 = net.minecraft.util.Mth.m_14107_(vectorIn.m_7096_());
-      int y0 = net.minecraft.util.Mth.m_14107_(vectorIn.m_7098_());
-      int z0 = net.minecraft.util.Mth.m_14107_(vectorIn.m_7094_());
+   public static Vec3M sampleM(Vec3 vectorIn, Vec3Fetcher fetcherIn) {
+      int x0 = Mth.m_14107_(vectorIn.m_7096_());
+      int y0 = Mth.m_14107_(vectorIn.m_7098_());
+      int z0 = Mth.m_14107_(vectorIn.m_7094_());
       double dx = vectorIn.m_7096_() - (double)x0;
       double dy = vectorIn.m_7098_() - (double)y0;
       double dz = vectorIn.m_7094_() - (double)z0;
       double stSum = 0.0;
       Vec3M vecSum = new Vec3M(0.0, 0.0, 0.0);
 
-      for (int kx = 0; kx < 6; kx++) {
-         double sx = net.minecraft.util.Mth.m_14139_(dx, f_130036_[kx + 1], f_130036_[kx]);
+      for(int kx = 0; kx < 6; ++kx) {
+         double sx = Mth.m_14139_(dx, f_130036_[kx + 1], f_130036_[kx]);
          int x = x0 - 2 + kx;
 
-         for (int ky = 0; ky < 6; ky++) {
-            double sy = net.minecraft.util.Mth.m_14139_(dy, f_130036_[ky + 1], f_130036_[ky]);
+         for(int ky = 0; ky < 6; ++ky) {
+            double sy = Mth.m_14139_(dy, f_130036_[ky + 1], f_130036_[ky]);
             int y = y0 - 2 + ky;
 
-            for (int kz = 0; kz < 6; kz++) {
-               double sz = net.minecraft.util.Mth.m_14139_(dz, f_130036_[kz + 1], f_130036_[kz]);
+            for(int kz = 0; kz < 6; ++kz) {
+               double sz = Mth.m_14139_(dz, f_130036_[kz + 1], f_130036_[kz]);
                int z = z0 - 2 + kz;
                double st = sx * sy * sz;
                stSum += st;
-               net.minecraft.world.phys.Vec3 vecCol = fetcherIn.m_130041_(x, y, z);
+               Vec3 vecCol = fetcherIn.m_130041_(x, y, z);
                vecCol = vecCol.m_82490_(st);
                vecSum = vecSum.add(vecCol);
             }
@@ -80,6 +81,6 @@ public class CubicSampler {
 
    @FunctionalInterface
    public interface Vec3Fetcher {
-      net.minecraft.world.phys.Vec3 m_130041_(int var1, int var2, int var3);
+      Vec3 m_130041_(int var1, int var2, int var3);
    }
 }

@@ -23,7 +23,7 @@ public class Frustum {
       this.m_253155_(matrixIn, projectionIn);
    }
 
-   public Frustum(net.minecraft.client.renderer.culling.Frustum frustumIn) {
+   public Frustum(Frustum frustumIn) {
       this.f_252531_.set(frustumIn.f_252406_);
       this.f_252406_.set(frustumIn.f_252406_);
       this.f_112996_ = frustumIn.f_112996_;
@@ -35,7 +35,7 @@ public class Frustum {
       System.arraycopy(frustumIn.frustum, 0, this.frustum, 0, frustumIn.frustum.length);
    }
 
-   public net.minecraft.client.renderer.culling.Frustum m_194441_(int stepIn) {
+   public Frustum m_194441_(int stepIn) {
       double d0 = Math.floor(this.f_112996_ / (double)stepIn) * (double)stepIn;
       double d1 = Math.floor(this.f_112997_ / (double)stepIn) * (double)stepIn;
       double d2 = Math.floor(this.f_112998_ / (double)stepIn) * (double)stepIn;
@@ -43,21 +43,9 @@ public class Frustum {
       double d4 = Math.ceil(this.f_112997_ / (double)stepIn) * (double)stepIn;
       int count = 0;
 
-      for (double d5 = Math.ceil(this.f_112998_ / (double)stepIn) * (double)stepIn;
-         this.f_252531_
-               .intersectAab(
-                  (float)(d0 - this.f_112996_),
-                  (float)(d1 - this.f_112997_),
-                  (float)(d2 - this.f_112998_),
-                  (float)(d3 - this.f_112996_),
-                  (float)(d4 - this.f_112997_),
-                  (float)(d5 - this.f_112998_)
-               )
-            != -2;
-         this.f_112998_ = this.f_112998_ - (double)(this.f_194438_.z() * 4.0F)
-      ) {
-         this.f_112996_ = this.f_112996_ - (double)(this.f_194438_.x() * 4.0F);
-         this.f_112997_ = this.f_112997_ - (double)(this.f_194438_.y() * 4.0F);
+      for(double d5 = Math.ceil(this.f_112998_ / (double)stepIn) * (double)stepIn; this.f_252531_.intersectAab((float)(d0 - this.f_112996_), (float)(d1 - this.f_112997_), (float)(d2 - this.f_112998_), (float)(d3 - this.f_112996_), (float)(d4 - this.f_112997_), (float)(d5 - this.f_112998_)) != -2; this.f_112998_ -= (double)(this.f_194438_.z() * 4.0F)) {
+         this.f_112996_ -= (double)(this.f_194438_.x() * 4.0F);
+         this.f_112997_ -= (double)(this.f_194438_.y() * 4.0F);
          if (count++ > 10) {
             break;
          }
@@ -76,7 +64,7 @@ public class Frustum {
       projectionIn.mul(matrixIn, this.f_252406_);
       this.f_252531_.set(this.f_252406_);
       this.f_194438_ = this.f_252406_.transformTranspose(new Vector4f(0.0F, 0.0F, 1.0F, 0.0F));
-      Matrix4f matrix4f = new Matrix4f(this.f_252406_).transpose();
+      Matrix4f matrix4f = (new Matrix4f(this.f_252406_)).transpose();
       this.setFrustumPlane(matrix4f, -1, 0, 0, 0);
       this.setFrustumPlane(matrix4f, 1, 0, 0, 1);
       this.setFrustumPlane(matrix4f, 0, -1, 0, 2);
@@ -86,9 +74,7 @@ public class Frustum {
    }
 
    public boolean m_113029_(AABB aabbIn) {
-      return aabbIn == IForgeBlockEntity.INFINITE_EXTENT_AABB
-         ? true
-         : this.m_113006_(aabbIn.f_82288_, aabbIn.f_82289_, aabbIn.f_82290_, aabbIn.f_82291_, aabbIn.f_82292_, aabbIn.f_82293_);
+      return aabbIn == IForgeBlockEntity.INFINITE_EXTENT_AABB ? true : this.m_113006_(aabbIn.f_82288_, aabbIn.f_82289_, aabbIn.f_82290_, aabbIn.f_82291_, aabbIn.f_82292_, aabbIn.f_82293_);
    }
 
    private boolean m_113006_(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
@@ -106,20 +92,13 @@ public class Frustum {
    }
 
    private boolean isBoxInFrustumRaw(float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
-      for (int i = 0; i < 6; i++) {
+      for(int i = 0; i < 6; ++i) {
          Vector4f vector4f = this.frustum[i];
          float x = vector4f.x();
          float y = vector4f.y();
          float z = vector4f.z();
          float w = vector4f.w();
-         if (x * minX + y * minY + z * minZ + w <= 0.0F
-            && x * maxX + y * minY + z * minZ + w <= 0.0F
-            && x * minX + y * maxY + z * minZ + w <= 0.0F
-            && x * maxX + y * maxY + z * minZ + w <= 0.0F
-            && x * minX + y * minY + z * maxZ + w <= 0.0F
-            && x * maxX + y * minY + z * maxZ + w <= 0.0F
-            && x * minX + y * maxY + z * maxZ + w <= 0.0F
-            && x * maxX + y * maxY + z * maxZ + w <= 0.0F) {
+         if (x * minX + y * minY + z * minZ + w <= 0.0F && x * maxX + y * minY + z * minZ + w <= 0.0F && x * minX + y * maxY + z * minZ + w <= 0.0F && x * maxX + y * maxY + z * minZ + w <= 0.0F && x * minX + y * minY + z * maxZ + w <= 0.0F && x * maxX + y * minY + z * maxZ + w <= 0.0F && x * minX + y * maxY + z * maxZ + w <= 0.0F && x * maxX + y * maxY + z * maxZ + w <= 0.0F) {
             return false;
          }
       }
@@ -138,31 +117,17 @@ public class Frustum {
          float maxYf = (float)maxY;
          float maxZf = (float)maxZ;
 
-         for (int i = 0; i < 6; i++) {
+         for(int i = 0; i < 6; ++i) {
             Vector4f frustumi = this.frustum[i];
             float x = frustumi.x();
             float y = frustumi.y();
             float z = frustumi.z();
             float w = frustumi.w();
             if (i < 4) {
-               if (x * minXf + y * minYf + z * minZf + w <= 0.0F
-                  || x * maxXf + y * minYf + z * minZf + w <= 0.0F
-                  || x * minXf + y * maxYf + z * minZf + w <= 0.0F
-                  || x * maxXf + y * maxYf + z * minZf + w <= 0.0F
-                  || x * minXf + y * minYf + z * maxZf + w <= 0.0F
-                  || x * maxXf + y * minYf + z * maxZf + w <= 0.0F
-                  || x * minXf + y * maxYf + z * maxZf + w <= 0.0F
-                  || x * maxXf + y * maxYf + z * maxZf + w <= 0.0F) {
+               if (x * minXf + y * minYf + z * minZf + w <= 0.0F || x * maxXf + y * minYf + z * minZf + w <= 0.0F || x * minXf + y * maxYf + z * minZf + w <= 0.0F || x * maxXf + y * maxYf + z * minZf + w <= 0.0F || x * minXf + y * minYf + z * maxZf + w <= 0.0F || x * maxXf + y * minYf + z * maxZf + w <= 0.0F || x * minXf + y * maxYf + z * maxZf + w <= 0.0F || x * maxXf + y * maxYf + z * maxZf + w <= 0.0F) {
                   return false;
                }
-            } else if (x * minXf + y * minYf + z * minZf + w <= 0.0F
-               && x * maxXf + y * minYf + z * minZf + w <= 0.0F
-               && x * minXf + y * maxYf + z * minZf + w <= 0.0F
-               && x * maxXf + y * maxYf + z * minZf + w <= 0.0F
-               && x * minXf + y * minYf + z * maxZf + w <= 0.0F
-               && x * maxXf + y * minYf + z * maxZf + w <= 0.0F
-               && x * minXf + y * maxYf + z * maxZf + w <= 0.0F
-               && x * maxXf + y * maxYf + z * maxZf + w <= 0.0F) {
+            } else if (x * minXf + y * minYf + z * minZf + w <= 0.0F && x * maxXf + y * minYf + z * minZf + w <= 0.0F && x * minXf + y * maxYf + z * minZf + w <= 0.0F && x * maxXf + y * maxYf + z * minZf + w <= 0.0F && x * minXf + y * minYf + z * maxZf + w <= 0.0F && x * maxXf + y * minYf + z * maxZf + w <= 0.0F && x * minXf + y * maxYf + z * maxZf + w <= 0.0F && x * maxXf + y * maxYf + z * maxZf + w <= 0.0F) {
                return false;
             }
          }

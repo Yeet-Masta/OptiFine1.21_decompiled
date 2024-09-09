@@ -4,16 +4,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HorseModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.HorseRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterHorse extends ModelAdapter {
-   private static Map<String, Integer> mapParts = makeMapParts();
-   private static Map<String, String> mapPartsNeck = makeMapPartsNeck();
-   private static Map<String, String> mapPartsHead = makeMapPartsHead();
-   private static Map<String, String> mapPartsBody = makeMapPartsBody();
+   private static Map mapParts = makeMapParts();
+   private static Map mapPartsNeck = makeMapPartsNeck();
+   private static Map mapPartsHead = makeMapPartsHead();
+   private static Map mapPartsBody = makeMapPartsBody();
 
    public ModelAdapterHorse() {
       super(EntityType.f_20457_, "horse", 0.75F);
@@ -23,66 +26,43 @@ public class ModelAdapterHorse extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new HorseModel(bakeModelLayer(ModelLayers.f_171186_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof HorseModel modelHorse)) {
          return null;
       } else if (mapParts.containsKey(modelPart)) {
          int index = (Integer)mapParts.get(modelPart);
-         return (net.minecraft.client.model.geom.ModelPart)Reflector.getFieldValue(modelHorse, Reflector.ModelHorse_ModelRenderers, index);
-      } else if (mapPartsNeck.containsKey(modelPart)) {
-         net.minecraft.client.model.geom.ModelPart modelNeck = this.getModelRenderer(modelHorse, "neck");
-         String name = (String)mapPartsNeck.get(modelPart);
-         return modelNeck.m_171324_(name);
-      } else if (mapPartsHead.containsKey(modelPart)) {
-         net.minecraft.client.model.geom.ModelPart modelHead = this.getModelRenderer(modelHorse, "head");
-         String name = (String)mapPartsHead.get(modelPart);
-         return modelHead.m_171324_(name);
-      } else if (mapPartsBody.containsKey(modelPart)) {
-         net.minecraft.client.model.geom.ModelPart modelBody = this.getModelRenderer(modelHorse, "body");
-         String name = (String)mapPartsBody.get(modelPart);
-         return modelBody.m_171324_(name);
+         return (ModelPart)Reflector.getFieldValue(modelHorse, Reflector.ModelHorse_ModelRenderers, index);
       } else {
-         return null;
+         ModelPart modelBody;
+         String name;
+         if (mapPartsNeck.containsKey(modelPart)) {
+            modelBody = this.getModelRenderer(modelHorse, "neck");
+            name = (String)mapPartsNeck.get(modelPart);
+            return modelBody.m_171324_(name);
+         } else if (mapPartsHead.containsKey(modelPart)) {
+            modelBody = this.getModelRenderer(modelHorse, "head");
+            name = (String)mapPartsHead.get(modelPart);
+            return modelBody.m_171324_(name);
+         } else if (mapPartsBody.containsKey(modelPart)) {
+            modelBody = this.getModelRenderer(modelHorse, "body");
+            name = (String)mapPartsBody.get(modelPart);
+            return modelBody.m_171324_(name);
+         } else {
+            return null;
+         }
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
-      return new String[]{
-         "body",
-         "neck",
-         "back_left_leg",
-         "back_right_leg",
-         "front_left_leg",
-         "front_right_leg",
-         "child_back_left_leg",
-         "child_back_right_leg",
-         "child_front_left_leg",
-         "child_front_right_leg",
-         "tail",
-         "saddle",
-         "head",
-         "mane",
-         "mouth",
-         "left_ear",
-         "right_ear",
-         "left_bit",
-         "right_bit",
-         "left_rein",
-         "right_rein",
-         "headpiece",
-         "noseband"
-      };
+      return new String[]{"body", "neck", "back_left_leg", "back_right_leg", "front_left_leg", "front_right_leg", "child_back_left_leg", "child_back_right_leg", "child_front_left_leg", "child_front_right_leg", "tail", "saddle", "head", "mane", "mouth", "left_ear", "right_ear", "left_bit", "right_bit", "left_rein", "right_rein", "headpiece", "noseband"};
    }
 
-   private static Map<String, Integer> makeMapParts() {
-      Map<String, Integer> map = new LinkedHashMap();
+   private static Map makeMapParts() {
+      Map map = new LinkedHashMap();
       map.put("body", 0);
       map.put("neck", 1);
       map.put("back_right_leg", 2);
@@ -96,8 +76,8 @@ public class ModelAdapterHorse extends ModelAdapter {
       return map;
    }
 
-   private static Map<String, String> makeMapPartsNeck() {
-      Map<String, String> map = new LinkedHashMap();
+   private static Map makeMapPartsNeck() {
+      Map map = new LinkedHashMap();
       map.put("head", "head");
       map.put("mane", "mane");
       map.put("mouth", "upper_mouth");
@@ -110,24 +90,23 @@ public class ModelAdapterHorse extends ModelAdapter {
       return map;
    }
 
-   private static Map<String, String> makeMapPartsBody() {
-      Map<String, String> map = new LinkedHashMap();
+   private static Map makeMapPartsBody() {
+      Map map = new LinkedHashMap();
       map.put("tail", "tail");
       map.put("saddle", "saddle");
       return map;
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       HorseRenderer render = new HorseRenderer(renderManager.getContext());
       render.f_115290_ = (HorseModel)modelBase;
       render.f_114477_ = shadowSize;
       return render;
    }
 
-   private static Map<String, String> makeMapPartsHead() {
-      Map<String, String> map = new LinkedHashMap();
+   private static Map makeMapPartsHead() {
+      Map map = new LinkedHashMap();
       map.put("left_ear", "left_ear");
       map.put("right_ear", "right_ear");
       return map;

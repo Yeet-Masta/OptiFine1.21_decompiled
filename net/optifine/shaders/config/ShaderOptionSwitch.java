@@ -14,12 +14,10 @@ public class ShaderOptionSwitch extends ShaderOption {
       super(name, description, value, new String[]{"false", "true"}, value, path);
    }
 
-   @Override
    public String getSourceLine() {
       return isTrue(this.getValue()) ? "#define " + this.getName() + " // Shader option ON" : "//#define " + this.getName() + " // Shader option OFF";
    }
 
-   @Override
    public String getValueText(String val) {
       String valTextRes = super.getValueText(val);
       if (valTextRes != val) {
@@ -29,9 +27,8 @@ public class ShaderOptionSwitch extends ShaderOption {
       }
    }
 
-   @Override
    public String getValueColor(String val) {
-      return isTrue(val) ? "\u00a7a" : "\u00a7c";
+      return isTrue(val) ? "§a" : "§c";
    }
 
    public static ShaderOption parseOption(String line, String path) {
@@ -54,7 +51,6 @@ public class ShaderOptionSwitch extends ShaderOption {
       }
    }
 
-   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_DEFINE.matcher(line);
       if (!m.matches()) {
@@ -65,12 +61,10 @@ public class ShaderOptionSwitch extends ShaderOption {
       }
    }
 
-   @Override
    public boolean checkUsed() {
       return true;
    }
 
-   @Override
    public boolean isUsedInLine(String line) {
       Matcher mif = PATTERN_IFDEF.matcher(line);
       if (mif.matches()) {

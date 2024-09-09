@@ -1,11 +1,17 @@
 package net.optifine.entity.model;
 
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HorseModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.HorseRenderer;
+import net.minecraft.client.renderer.entity.layers.HorseArmorLayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.horse.Horse;
 import net.optifine.Config;
 
 public class ModelAdapterHorseArmor extends ModelAdapterHorse {
@@ -13,40 +19,37 @@ public class ModelAdapterHorseArmor extends ModelAdapterHorse {
       super(EntityType.f_20457_, "horse_armor", 0.75F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new HorseModel(bakeModelLayer(ModelLayers.f_171187_));
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       HorseRenderer customRenderer = new HorseRenderer(renderManager.getContext());
       customRenderer.f_115290_ = new HorseModel(bakeModelLayer(ModelLayers.f_171187_));
       customRenderer.f_114477_ = 0.75F;
-      net.minecraft.client.renderer.entity.EntityRenderer render = rendererCache.get(EntityType.f_20457_, index, () -> customRenderer);
+      EntityRenderer render = rendererCache.get(EntityType.f_20457_, index, () -> {
+         return customRenderer;
+      });
       if (!(render instanceof HorseRenderer renderHorse)) {
-         Config.warn("Not a HorseRenderer: " + render);
+         Config.warn("Not a HorseRenderer: " + String.valueOf(render));
          return null;
       } else {
-         net.minecraft.client.renderer.entity.layers.HorseArmorLayer layer = new net.minecraft.client.renderer.entity.layers.HorseArmorLayer(
-            renderHorse, renderManager.getContext().m_174027_()
-         );
-         layer.f_117017_ = (HorseModel<Horse>)modelBase;
-         renderHorse.removeLayers(net.minecraft.client.renderer.entity.layers.HorseArmorLayer.class);
+         HorseArmorLayer layer = new HorseArmorLayer(renderHorse, renderManager.getContext().m_174027_());
+         layer.f_117017_ = (HorseModel)modelBase;
+         renderHorse.removeLayers(HorseArmorLayer.class);
          renderHorse.m_115326_(layer);
          return renderHorse;
       }
    }
 
-   @Override
-   public boolean setTextureLocation(IEntityRenderer er, net.minecraft.resources.ResourceLocation textureLocation) {
+   public boolean setTextureLocation(IEntityRenderer er, ResourceLocation textureLocation) {
       HorseRenderer renderer = (HorseRenderer)er;
+      List layers = renderer.getLayers(HorseArmorLayer.class);
 
-      for (net.minecraft.client.renderer.entity.layers.HorseArmorLayer layer : renderer.getLayers(
-         net.minecraft.client.renderer.entity.layers.HorseArmorLayer.class
-      )) {
-         layer.customTextureLocation = textureLocation;
+      HorseArmorLayer layer;
+      for(Iterator var5 = layers.iterator(); var5.hasNext(); layer.customTextureLocation = textureLocation) {
+         layer = (HorseArmorLayer)var5.next();
       }
 
       return true;

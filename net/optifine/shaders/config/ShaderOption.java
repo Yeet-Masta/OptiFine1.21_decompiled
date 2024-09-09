@@ -15,9 +15,9 @@ public abstract class ShaderOption {
    private String[] paths = null;
    private boolean enabled = true;
    private boolean visible = true;
-   public static final String COLOR_GREEN = "\u00a7a";
-   public static final String COLOR_RED = "\u00a7c";
-   public static final String COLOR_BLUE = "\u00a79";
+   public static final String COLOR_GREEN = "§a";
+   public static final String COLOR_RED = "§c";
+   public static final String COLOR_BLUE = "§9";
 
    public ShaderOption(String name, String description, String value, String[] values, String valueDefault, String path) {
       this.name = name;
@@ -28,6 +28,7 @@ public abstract class ShaderOption {
       if (path != null) {
          this.paths = new String[]{path};
       }
+
    }
 
    public String getName() {
@@ -41,7 +42,8 @@ public abstract class ShaderOption {
    public String getDescriptionText() {
       String desc = Config.normalize(this.description);
       desc = StrUtils.removePrefix(desc, "//");
-      return Shaders.translate("option." + this.getName() + ".comment", desc);
+      desc = Shaders.translate("option." + this.getName() + ".comment", desc);
+      return desc;
    }
 
    public void setDescription(String description) {
@@ -87,7 +89,7 @@ public abstract class ShaderOption {
    }
 
    private static int getIndex(String str, String[] strs) {
-      for (int i = 0; i < strs.length; i++) {
+      for(int i = 0; i < strs.length; ++i) {
          String s = strs[i];
          if (s.equals(str)) {
             return i;
@@ -102,14 +104,15 @@ public abstract class ShaderOption {
    }
 
    public void addPaths(String[] newPaths) {
-      List<String> pathList = Arrays.asList(this.paths);
+      List pathList = Arrays.asList(this.paths);
 
-      for (int i = 0; i < newPaths.length; i++) {
+      for(int i = 0; i < newPaths.length; ++i) {
          String newPath = newPaths[i];
          if (!pathList.contains(newPath)) {
             this.paths = (String[])Config.addObjectToArray(this.paths, newPath);
          }
       }
+
    }
 
    public boolean isEnabled() {
@@ -173,7 +176,12 @@ public abstract class ShaderOption {
          return 0.0F;
       } else {
          int index = getIndex(this.value, this.values);
-         return index < 0 ? 0.0F : 1.0F * (float)index / ((float)this.values.length - 1.0F);
+         if (index < 0) {
+            return 0.0F;
+         } else {
+            float f = 1.0F * (float)index / ((float)this.values.length - 1.0F);
+            return f;
+         }
       }
    }
 
@@ -186,6 +194,7 @@ public abstract class ShaderOption {
    }
 
    public String toString() {
-      return this.name + ", value: " + this.value + ", valueDefault: " + this.valueDefault + ", paths: " + Config.arrayToString((Object[])this.paths);
+      String var10000 = this.name;
+      return var10000 + ", value: " + this.value + ", valueDefault: " + this.valueDefault + ", paths: " + Config.arrayToString((Object[])this.paths);
    }
 }

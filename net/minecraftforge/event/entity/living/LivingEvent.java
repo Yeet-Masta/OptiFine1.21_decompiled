@@ -1,4 +1,6 @@
 package net.minecraftforge.event.entity.living;
 
-public class LivingEvent extends net.minecraftforge.entity.EntityEvent {
+import net.minecraftforge.entity.EntityEvent;
+
+public class LivingEvent extends EntityEvent {
 }

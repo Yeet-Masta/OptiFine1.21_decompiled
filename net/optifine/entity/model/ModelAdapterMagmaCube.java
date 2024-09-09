@@ -2,7 +2,10 @@ package net.optifine.entity.model;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.LavaSlimeModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.MagmaCubeRenderer;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.Config;
@@ -13,13 +16,11 @@ public class ModelAdapterMagmaCube extends ModelAdapter {
       super(EntityType.f_20468_, "magma_cube", 0.5F);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new LavaSlimeModel(bakeModelLayer(ModelLayers.f_171197_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof LavaSlimeModel modelMagmaCube)) {
          return null;
       } else if (modelPart.equals("core")) {
@@ -37,14 +38,12 @@ public class ModelAdapterMagmaCube extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"core", "segment1", "segment2", "segment3", "segment4", "segment5", "segment6", "segment7", "segment8", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.entity.EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       MagmaCubeRenderer render = new MagmaCubeRenderer(renderManager.getContext());
       render.f_115290_ = (LavaSlimeModel)modelBase;
       render.f_114477_ = shadowSize;

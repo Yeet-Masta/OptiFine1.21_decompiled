@@ -1,9 +1,12 @@
 package net.optifine.player;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.optifine.http.FileDownloadThread;
 import net.optifine.http.HttpUtils;
 
@@ -12,25 +15,19 @@ public class PlayerConfigurations {
    private static boolean reloadPlayerItems = Boolean.getBoolean("player.models.reload");
    private static long timeReloadPlayerItemsMs = System.currentTimeMillis();
 
-   public static void renderPlayerItems(
-      HumanoidModel modelBiped,
-      net.minecraft.client.player.AbstractClientPlayer player,
-      com.mojang.blaze3d.vertex.PoseStack matrixStackIn,
-      net.minecraft.client.renderer.MultiBufferSource bufferIn,
-      int packedLightIn,
-      int packedOverlayIn
-   ) {
+   public static void renderPlayerItems(HumanoidModel modelBiped, AbstractClientPlayer player, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn) {
       PlayerConfiguration cfg = getPlayerConfiguration(player);
       if (cfg != null) {
          cfg.renderPlayerItems(modelBiped, player, matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
       }
+
    }
 
-   public static synchronized PlayerConfiguration getPlayerConfiguration(net.minecraft.client.player.AbstractClientPlayer player) {
+   public static synchronized PlayerConfiguration getPlayerConfiguration(AbstractClientPlayer player) {
       if (reloadPlayerItems && System.currentTimeMillis() > timeReloadPlayerItemsMs + 5000L) {
-         net.minecraft.client.player.AbstractClientPlayer currentPlayer = Minecraft.m_91087_().f_91074_;
+         AbstractClientPlayer currentPlayer = Minecraft.m_91087_().f_91074_;
          if (currentPlayer != null) {
-            setPlayerConfiguration(currentPlayer.getNameClear(), null);
+            setPlayerConfiguration(currentPlayer.getNameClear(), (PlayerConfiguration)null);
             timeReloadPlayerItemsMs = System.currentTimeMillis();
          }
       }
@@ -44,7 +41,8 @@ public class PlayerConfigurations {
             pc = new PlayerConfiguration();
             getMapConfigurations().put(name, pc);
             PlayerConfigurationReceiver pcl = new PlayerConfigurationReceiver(name);
-            String url = HttpUtils.getPlayerItemsUrl() + "/users/" + name + ".cfg";
+            String var10000 = HttpUtils.getPlayerItemsUrl();
+            String url = var10000 + "/users/" + name + ".cfg";
             FileDownloadThread fdt = new FileDownloadThread(url, pcl);
             fdt.start();
          }

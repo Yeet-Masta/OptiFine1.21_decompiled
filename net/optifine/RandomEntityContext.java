@@ -1,5 +1,8 @@
 package net.optifine;
 
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.config.ConnectedParser;
@@ -7,17 +10,18 @@ import net.optifine.entity.model.CustomEntityModels;
 import net.optifine.entity.model.IEntityRenderer;
 import net.optifine.entity.model.RendererCache;
 
-public interface RandomEntityContext<T> {
+public interface RandomEntityContext {
    String getName();
 
    String[] getResourceKeys();
 
    String getResourceName();
 
-   T makeResource(net.minecraft.resources.ResourceLocation var1, int var2);
+   Object makeResource(ResourceLocation var1, int var2);
 
    default String getResourceNameCapital() {
-      return this.getResourceName().substring(0, 1).toUpperCase() + this.getResourceName().substring(1);
+      String var10000 = this.getResourceName().substring(0, 1).toUpperCase();
+      return var10000 + this.getResourceName().substring(1);
    }
 
    default String getResourceNamePlural() {
@@ -28,26 +32,23 @@ public interface RandomEntityContext<T> {
       return new ConnectedParser(this.getName());
    }
 
-   public static class Models implements RandomEntityContext<IEntityRenderer> {
+   public static class Models implements RandomEntityContext {
       private RendererCache rendererCache = new RendererCache();
 
-      @Override
       public String getName() {
          return "CustomEntityModels";
       }
 
-      @Override
       public String[] getResourceKeys() {
          return new String[]{"models"};
       }
 
-      @Override
       public String getResourceName() {
          return "model";
       }
 
-      public IEntityRenderer makeResource(net.minecraft.resources.ResourceLocation locBase, int index) {
-         net.minecraft.resources.ResourceLocation loc = index <= 1 ? locBase : RandomEntities.getLocationIndexed(locBase, index);
+      public IEntityRenderer makeResource(ResourceLocation locBase, int index) {
+         ResourceLocation loc = index <= 1 ? locBase : RandomEntities.getLocationIndexed(locBase, index);
          if (loc == null) {
             Config.warn("Invalid path: " + locBase.m_135815_());
             return null;
@@ -57,11 +58,10 @@ public interface RandomEntityContext<T> {
                Config.warn("Model not found: " + loc.m_135815_());
                return null;
             } else {
-               if (renderer instanceof net.minecraft.client.renderer.entity.EntityRenderer) {
-                  this.rendererCache.put((EntityType)renderer.getType().getLeft().get(), index, (net.minecraft.client.renderer.entity.EntityRenderer)renderer);
-               } else if (renderer instanceof net.minecraft.client.renderer.blockentity.BlockEntityRenderer) {
-                  this.rendererCache
-                     .put((BlockEntityType)renderer.getType().getRight().get(), index, (net.minecraft.client.renderer.blockentity.BlockEntityRenderer)renderer);
+               if (renderer instanceof EntityRenderer) {
+                  this.rendererCache.put((EntityType)renderer.getType().getLeft().get(), index, (EntityRenderer)renderer);
+               } else if (renderer instanceof BlockEntityRenderer) {
+                  this.rendererCache.put((BlockEntityType)renderer.getType().getRight().get(), index, (BlockEntityRenderer)renderer);
                }
 
                return renderer;
@@ -74,38 +74,35 @@ public interface RandomEntityContext<T> {
       }
    }
 
-   public static class Textures implements RandomEntityContext<net.minecraft.resources.ResourceLocation> {
+   public static class Textures implements RandomEntityContext {
       private boolean legacy;
 
       public Textures(boolean legacy) {
          this.legacy = legacy;
       }
 
-      @Override
       public String getName() {
          return "RandomEntities";
       }
 
-      @Override
       public String[] getResourceKeys() {
          return new String[]{"textures", "skins"};
       }
 
-      @Override
       public String getResourceName() {
          return "texture";
       }
 
-      public net.minecraft.resources.ResourceLocation makeResource(net.minecraft.resources.ResourceLocation locBase, int index) {
+      public ResourceLocation makeResource(ResourceLocation locBase, int index) {
          if (index <= 1) {
             return locBase;
          } else {
-            net.minecraft.resources.ResourceLocation locOf = RandomEntities.getLocationRandom(locBase, this.legacy);
+            ResourceLocation locOf = RandomEntities.getLocationRandom(locBase, this.legacy);
             if (locOf == null) {
                Config.warn("Invalid path: " + locBase.m_135815_());
                return null;
             } else {
-               net.minecraft.resources.ResourceLocation locNew = RandomEntities.getLocationIndexed(locOf, index);
+               ResourceLocation locNew = RandomEntities.getLocationIndexed(locOf, index);
                if (locNew == null) {
                   Config.warn("Invalid path: " + locBase.m_135815_());
                   return null;

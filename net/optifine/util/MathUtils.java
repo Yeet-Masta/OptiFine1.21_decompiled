@@ -3,6 +3,7 @@ package net.optifine.util;
 import java.nio.FloatBuffer;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import org.joml.AxisAngle4f;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -11,17 +12,18 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class MathUtils {
-   public static final float PI = (float) Math.PI;
-   public static final float PI2 = (float) (Math.PI * 2);
-   public static final float PId2 = (float) (Math.PI / 2);
+   // $FF: renamed from: PI float
+   public static final float field_40 = 3.1415927F;
+   public static final float PI2 = 6.2831855F;
+   public static final float PId2 = 1.5707964F;
    private static final float[] ASIN_TABLE = new float[65536];
 
    public static float asin(float value) {
-      return ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & 65535];
+      return ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & '\uffff'];
    }
 
    public static float acos(float value) {
-      return (float) (Math.PI / 2) - ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & 65535];
+      return 1.5707964F - ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & '\uffff'];
    }
 
    public static int getAverage(int[] vals) {
@@ -29,7 +31,8 @@ public class MathUtils {
          return 0;
       } else {
          int sum = getSum(vals);
-         return sum / vals.length;
+         int avg = sum / vals.length;
+         return avg;
       }
    }
 
@@ -39,7 +42,7 @@ public class MathUtils {
       } else {
          int sum = 0;
 
-         for (int i = 0; i < vals.length; i++) {
+         for(int i = 0; i < vals.length; ++i) {
             int val = vals[i];
             sum += val;
          }
@@ -49,7 +52,7 @@ public class MathUtils {
    }
 
    public static int roundDownToPowerOfTwo(int val) {
-      int po2 = net.minecraft.util.Mth.m_14125_(val);
+      int po2 = Mth.m_14125_(val);
       return val == po2 ? po2 : po2 / 2;
    }
 
@@ -58,11 +61,11 @@ public class MathUtils {
    }
 
    public static float toDeg(float angle) {
-      return angle * 180.0F / (float) Math.PI;
+      return angle * 180.0F / 3.1415927F;
    }
 
    public static float toRad(float angle) {
-      return angle / 180.0F * (float) Math.PI;
+      return angle / 180.0F * 3.1415927F;
    }
 
    public static float roundToFloat(double d) {
@@ -318,16 +321,19 @@ public class MathUtils {
    }
 
    public static Matrix4f makeOrtho4f(float leftIn, float rightIn, float topIn, float bottomIn, float nearIn, float farIn) {
-      return new Matrix4f().ortho(leftIn, rightIn, bottomIn, topIn, nearIn, farIn);
+      Matrix4f mat4 = (new Matrix4f()).ortho(leftIn, rightIn, bottomIn, topIn, nearIn, farIn);
+      return mat4;
    }
 
    static {
-      for (int i = 0; i < 65536; i++) {
+      int i;
+      for(i = 0; i < 65536; ++i) {
          ASIN_TABLE[i] = (float)Math.asin((double)i / 32767.5 - 1.0);
       }
 
-      for (int i = -1; i < 2; i++) {
-         ASIN_TABLE[(int)(((double)i + 1.0) * 32767.5) & 65535] = (float)Math.asin((double)i);
+      for(i = -1; i < 2; ++i) {
+         ASIN_TABLE[(int)(((double)i + 1.0) * 32767.5) & '\uffff'] = (float)Math.asin((double)i);
       }
+
    }
 }

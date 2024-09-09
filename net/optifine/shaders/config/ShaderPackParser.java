@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import net.optifine.expr.ParseException;
 import net.optifine.render.GlAlphaState;
 import net.optifine.render.GlBlendState;
 import net.optifine.shaders.IShaderPack;
+import net.optifine.shaders.Program;
 import net.optifine.shaders.SMCLog;
 import net.optifine.shaders.ShaderUtils;
 import net.optifine.shaders.Shaders;
@@ -45,25 +47,27 @@ import net.optifine.util.StrUtils;
 public class ShaderPackParser {
    public static final Pattern PATTERN_VERSION = Pattern.compile("^\\s*#version\\s+(\\d+).*$");
    public static final Pattern PATTERN_INCLUDE = Pattern.compile("^\\s*#include\\s+\"([A-Za-z0-9_/\\.]+)\".*$");
-   private static final Set<String> setConstNames = makeSetConstNames();
-   private static final Map<String, Integer> mapAlphaFuncs = makeMapAlphaFuncs();
-   private static final Map<String, Integer> mapBlendFactors = makeMapBlendFactors();
+   private static final Set setConstNames = makeSetConstNames();
+   private static final Map mapAlphaFuncs = makeMapAlphaFuncs();
+   private static final Map mapBlendFactors = makeMapBlendFactors();
 
-   public static ShaderOption[] parseShaderPackOptions(IShaderPack shaderPack, String[] programNames, List<Integer> listDimensions) {
+   public static ShaderOption[] parseShaderPackOptions(IShaderPack shaderPack, String[] programNames, List listDimensions) {
       if (shaderPack == null) {
          return new ShaderOption[0];
       } else {
-         Map<String, ShaderOption> mapOptions = new HashMap();
+         Map mapOptions = new HashMap();
          collectShaderOptions(shaderPack, "/shaders", programNames, mapOptions);
+         Iterator it = listDimensions.iterator();
 
-         for (int dimId : listDimensions) {
+         while(it.hasNext()) {
+            int dimId = (Integer)it.next();
             String dirWorld = "/shaders/world" + dimId;
             collectShaderOptions(shaderPack, dirWorld, programNames, mapOptions);
          }
 
-         Collection<ShaderOption> options = mapOptions.values();
+         Collection options = mapOptions.values();
          ShaderOption[] sos = (ShaderOption[])options.toArray(new ShaderOption[options.size()]);
-         Comparator<ShaderOption> comp = new Comparator<ShaderOption>() {
+         Comparator comp = new Comparator() {
             public int compare(ShaderOption o1, ShaderOption o2) {
                return o1.getName().compareToIgnoreCase(o2.getName());
             }
@@ -73,8 +77,8 @@ public class ShaderPackParser {
       }
    }
 
-   private static void collectShaderOptions(IShaderPack shaderPack, String dir, String[] programNames, Map<String, ShaderOption> mapOptions) {
-      for (int i = 0; i < programNames.length; i++) {
+   private static void collectShaderOptions(IShaderPack shaderPack, String dir, String[] programNames, Map mapOptions) {
+      for(int i = 0; i < programNames.length; ++i) {
          String programName = programNames[i];
          if (!programName.equals("")) {
             String csh = dir + "/" + programName + ".csh";
@@ -87,12 +91,13 @@ public class ShaderPackParser {
             collectShaderOptions(shaderPack, fsh, mapOptions);
          }
       }
+
    }
 
-   private static void collectShaderOptions(IShaderPack sp, String path, Map<String, ShaderOption> mapOptions) {
+   private static void collectShaderOptions(IShaderPack sp, String path, Map mapOptions) {
       String[] lines = getLines(sp, path);
 
-      for (int i = 0; i < lines.length; i++) {
+      for(int i = 0; i < lines.length; ++i) {
          String line = lines[i];
          ShaderOption so = getShaderOption(line, path);
          if (so != null && !so.getName().startsWith(ShaderMacros.getPrefixMacro())) {
@@ -102,8 +107,10 @@ public class ShaderPackParser {
                if (!Config.equals(so2.getValueDefault(), so.getValueDefault())) {
                   if (so2.isEnabled()) {
                      Config.warn("Ambiguous shader option: " + so.getName());
-                     Config.warn(" - in " + Config.arrayToString((Object[])so2.getPaths()) + ": " + so2.getValueDefault());
-                     Config.warn(" - in " + Config.arrayToString((Object[])so.getPaths()) + ": " + so.getValueDefault());
+                     String var10000 = Config.arrayToString((Object[])so2.getPaths());
+                     Config.warn(" - in " + var10000 + ": " + so2.getValueDefault());
+                     var10000 = Config.arrayToString((Object[])so.getPaths());
+                     Config.warn(" - in " + var10000 + ": " + so.getValueDefault());
                   }
 
                   so2.setEnabled(false);
@@ -119,10 +126,11 @@ public class ShaderPackParser {
             }
          }
       }
+
    }
 
    private static boolean isOptionUsed(ShaderOption so, String[] lines) {
-      for (int i = 0; i < lines.length; i++) {
+      for(int i = 0; i < lines.length; ++i) {
          String line = lines[i];
          if (so.isUsedInLine(line)) {
             return true;
@@ -134,11 +142,12 @@ public class ShaderPackParser {
 
    private static String[] getLines(IShaderPack sp, String path) {
       try {
-         List<String> listFiles = new ArrayList();
+         List listFiles = new ArrayList();
          LineBuffer lb = loadFile(path, sp, 0, listFiles, 0);
          return lb == null ? new String[0] : lb.getLines();
       } catch (IOException var4) {
-         Config.dbg(var4.getClass().getName() + ": " + var4.getMessage());
+         String var10000 = var4.getClass().getName();
+         Config.dbg(var10000 + ": " + var4.getMessage());
          return new String[0];
       }
    }
@@ -168,8 +177,8 @@ public class ShaderPackParser {
       }
    }
 
-   private static Set<String> makeSetConstNames() {
-      Set<String> set = new HashSet();
+   private static Set makeSetConstNames() {
+      Set set = new HashSet();
       set.add("shadowMapResolution");
       set.add("shadowMapFov");
       set.add("shadowDistance");
@@ -211,13 +220,16 @@ public class ShaderPackParser {
 
    public static ShaderProfile[] parseProfiles(Properties props, ShaderOption[] shaderOptions) {
       String PREFIX_PROFILE = "profile.";
-      List<ShaderProfile> list = new ArrayList();
+      List list = new ArrayList();
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
 
-      for (String key : props.keySet()) {
+      while(it.hasNext()) {
+         String key = (String)it.next();
          if (key.startsWith(PREFIX_PROFILE)) {
             String name = key.substring(PREFIX_PROFILE.length());
-            String val = props.getProperty(key);
-            Set<String> parsedProfiles = new HashSet();
+            props.getProperty(key);
+            Set parsedProfiles = new HashSet();
             ShaderProfile p = parseProfile(name, props, parsedProfiles, shaderOptions);
             if (p != null) {
                list.add(p);
@@ -225,15 +237,23 @@ public class ShaderPackParser {
          }
       }
 
-      return list.size() <= 0 ? null : (ShaderProfile[])list.toArray(new ShaderProfile[list.size()]);
+      if (list.size() <= 0) {
+         return null;
+      } else {
+         ShaderProfile[] profs = (ShaderProfile[])list.toArray(new ShaderProfile[list.size()]);
+         return profs;
+      }
    }
 
-   public static Map<String, IExpressionBool> parseProgramConditions(Properties props, ShaderOption[] shaderOptions) {
+   public static Map parseProgramConditions(Properties props, ShaderOption[] shaderOptions) {
       String PREFIX_PROGRAM = "program.";
       Pattern pattern = Pattern.compile("program\\.([^.]+)\\.enabled");
-      Map<String, IExpressionBool> map = new HashMap();
+      Map map = new HashMap();
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
 
-      for (String key : props.keySet()) {
+      while(it.hasNext()) {
+         String key = (String)it.next();
          Matcher matcher = pattern.matcher(key);
          if (matcher.matches()) {
             String name = matcher.group(1);
@@ -254,22 +274,24 @@ public class ShaderPackParser {
       try {
          ShaderOptionResolver sor = new ShaderOptionResolver(shaderOptions);
          ExpressionParser parser = new ExpressionParser(sor);
-         return parser.parseBool(val);
+         IExpressionBool expr = parser.parseBool(val);
+         return expr;
       } catch (ParseException var5) {
-         SMCLog.warning(var5.getClass().getName() + ": " + var5.getMessage());
+         String var10000 = var5.getClass().getName();
+         SMCLog.warning(var10000 + ": " + var5.getMessage());
          return null;
       }
    }
 
-   public static Set<String> parseOptionSliders(Properties props, ShaderOption[] shaderOptions) {
-      Set<String> sliders = new HashSet();
+   public static Set parseOptionSliders(Properties props, ShaderOption[] shaderOptions) {
+      Set sliders = new HashSet();
       String value = props.getProperty("sliders");
       if (value == null) {
          return sliders;
       } else {
          String[] names = Config.tokenize(value, " ");
 
-         for (int i = 0; i < names.length; i++) {
+         for(int i = 0; i < names.length; ++i) {
             String name = names[i];
             ShaderOption so = ShaderUtils.getShaderOption(name, shaderOptions);
             if (so == null) {
@@ -283,7 +305,7 @@ public class ShaderPackParser {
       }
    }
 
-   private static ShaderProfile parseProfile(String name, Properties props, Set<String> parsedProfiles, ShaderOption[] shaderOptions) {
+   private static ShaderProfile parseProfile(String name, Properties props, Set parsedProfiles, ShaderOption[] shaderOptions) {
       String PREFIX_PROFILE = "profile.";
       String key = PREFIX_PROFILE + name;
       if (parsedProfiles.contains(key)) {
@@ -295,7 +317,7 @@ public class ShaderPackParser {
          String val = props.getProperty(key);
          String[] parts = Config.tokenize(val, " ");
 
-         for (int i = 0; i < parts.length; i++) {
+         for(int i = 0; i < parts.length; ++i) {
             String part = parts[i];
             if (part.startsWith(PREFIX_PROFILE)) {
                String nameParent = part.substring(PREFIX_PROFILE.length());
@@ -306,8 +328,9 @@ public class ShaderPackParser {
                }
             } else {
                String[] tokens = Config.tokenize(part, ":=");
+               String option;
                if (tokens.length == 1) {
-                  String option = tokens[0];
+                  option = tokens[0];
                   boolean on = true;
                   if (option.startsWith("!")) {
                      on = false;
@@ -336,16 +359,16 @@ public class ShaderPackParser {
                } else if (tokens.length != 2) {
                   Config.warn("[Shaders] Invalid option value: " + part);
                } else {
-                  String optionx = tokens[0];
+                  option = tokens[0];
                   String value = tokens[1];
-                  ShaderOption so = ShaderUtils.getShaderOption(optionx, shaderOptions);
+                  ShaderOption so = ShaderUtils.getShaderOption(option, shaderOptions);
                   if (so == null) {
                      Config.warn("[Shaders] Invalid option: " + part);
                   } else if (!so.isValidValue(value)) {
                      Config.warn("[Shaders] Invalid value: " + part);
                   } else {
                      so.setVisible(true);
-                     prof.addOptionValue(optionx, value);
+                     prof.addOptionValue(option, value);
                   }
                }
             }
@@ -355,15 +378,13 @@ public class ShaderPackParser {
       }
    }
 
-   public static Map<String, ScreenShaderOptions> parseGuiScreens(Properties props, ShaderProfile[] shaderProfiles, ShaderOption[] shaderOptions) {
-      Map<String, ScreenShaderOptions> map = new HashMap();
+   public static Map parseGuiScreens(Properties props, ShaderProfile[] shaderProfiles, ShaderOption[] shaderOptions) {
+      Map map = new HashMap();
       parseGuiScreen("screen", props, map, shaderProfiles, shaderOptions);
       return map.isEmpty() ? null : map;
    }
 
-   private static boolean parseGuiScreen(
-      String key, Properties props, Map<String, ScreenShaderOptions> map, ShaderProfile[] shaderProfiles, ShaderOption[] shaderOptions
-   ) {
+   private static boolean parseGuiScreen(String key, Properties props, Map map, ShaderProfile[] shaderProfiles, ShaderOption[] shaderOptions) {
       String val = props.getProperty(key);
       if (val == null) {
          return false;
@@ -373,14 +394,15 @@ public class ShaderPackParser {
             Config.warn("[Shaders] Screen circular reference: " + key + " = " + val);
             return false;
          } else {
-            List<ShaderOption> list = new ArrayList();
-            Set<String> setNames = new HashSet();
+            List list = new ArrayList();
+            Set setNames = new HashSet();
             String[] opNames = Config.tokenize(val, " ");
 
-            for (int i = 0; i < opNames.length; i++) {
-               String opName = opNames[i];
+            String opName;
+            for(int i = 0; i < opNames.length; ++i) {
+               opName = opNames[i];
                if (opName.equals("<empty>")) {
-                  list.add(null);
+                  list.add((Object)null);
                } else if (setNames.contains(opName)) {
                   Config.warn("[Shaders] Duplicate option: " + opName + ", key: " + key);
                } else {
@@ -400,7 +422,7 @@ public class ShaderPackParser {
                      if (!screen.matches("^[a-zA-Z0-9_]+$")) {
                         Config.warn("[Shaders] Invalid screen: " + opName + ", key: " + key);
                      } else {
-                        map.put(keyParent, null);
+                        map.put(keyParent, (Object)null);
                         boolean parseScreen = parseGuiScreen("screen." + screen, props, map, shaderProfiles, shaderOptions);
                         map.remove(keyParent);
                         if (!parseScreen) {
@@ -414,7 +436,7 @@ public class ShaderPackParser {
                      ShaderOption so = ShaderUtils.getShaderOption(opName, shaderOptions);
                      if (so == null) {
                         Config.warn("[Shaders] Invalid option: " + opName + ", key: " + key);
-                        list.add(null);
+                        list.add((Object)null);
                      } else {
                         so.setVisible(true);
                         list.add(so);
@@ -424,8 +446,8 @@ public class ShaderPackParser {
             }
 
             ShaderOption[] scrOps = (ShaderOption[])list.toArray(new ShaderOption[list.size()]);
-            String colStr = props.getProperty(key + ".columns");
-            int columns = Config.parseInt(colStr, 2);
+            opName = props.getProperty(key + ".columns");
+            int columns = Config.parseInt(opName, 2);
             ScreenShaderOptions sso = new ScreenShaderOptions(key, scrOps, columns);
             map.put(key, sso);
             return true;
@@ -433,32 +455,27 @@ public class ShaderPackParser {
       }
    }
 
-   public static LineBuffer loadShader(
-      net.optifine.shaders.Program program,
-      ShaderType shaderType,
-      InputStream is,
-      String filePath,
-      IShaderPack shaderPack,
-      List<String> listFiles,
-      ShaderOption[] activeOptions
-   ) throws IOException {
+   public static LineBuffer loadShader(Program program, ShaderType shaderType, InputStream is, String filePath, IShaderPack shaderPack, List listFiles, ShaderOption[] activeOptions) throws IOException {
       LineBuffer reader = LineBuffer.readAll(new InputStreamReader(is));
       reader = resolveIncludes(reader, filePath, shaderPack, 0, listFiles, 0);
       reader = addMacros(reader, 0);
       reader = remapTextureUnits(reader);
       LineBuffer writer = new LineBuffer();
+      Iterator it = reader.iterator();
 
-      for (String line : reader) {
+      while(it.hasNext()) {
+         String line = (String)it.next();
          line = applyOptions(line, activeOptions);
          writer.add(line);
       }
 
-      return ShadersCompatibility.remap(program, shaderType, writer);
+      writer = ShadersCompatibility.remap(program, shaderType, writer);
+      return writer;
    }
 
    private static String applyOptions(String line, ShaderOption[] ops) {
       if (ops != null && ops.length > 0) {
-         for (int i = 0; i < ops.length; i++) {
+         for(int i = 0; i < ops.length; ++i) {
             ShaderOption op = ops[i];
             if (op.matchesLine(line)) {
                line = op.getSourceLine();
@@ -472,7 +489,7 @@ public class ShaderPackParser {
       }
    }
 
-   public static LineBuffer resolveIncludes(LineBuffer reader, String filePath, IShaderPack shaderPack, int fileIndex, List<String> listFiles, int includeLevel) throws IOException {
+   public static LineBuffer resolveIncludes(LineBuffer reader, String filePath, IShaderPack shaderPack, int fileIndex, List listFiles, int includeLevel) throws IOException {
       String fileDir = "/";
       int pos = filePath.lastIndexOf("/");
       if (pos >= 0) {
@@ -481,9 +498,11 @@ public class ShaderPackParser {
 
       LineBuffer writer = new LineBuffer();
       int lineNumber = 0;
+      Iterator it = reader.iterator();
 
-      for (String line : reader) {
-         lineNumber++;
+      while(it.hasNext()) {
+         String line = (String)it.next();
+         ++lineNumber;
          Matcher mi = PATTERN_INCLUDE.matcher(line);
          if (mi.matches()) {
             String fileInc = mi.group(1);
@@ -520,7 +539,8 @@ public class ShaderPackParser {
          Config.warn("Macro insert position not found");
          return reader;
       } else {
-         String lineMacro = "#line " + (++macroInsertPosition + 1) + " " + fileIndex;
+         ++macroInsertPosition;
+         String lineMacro = "#line " + (macroInsertPosition + 1) + " " + fileIndex;
          String[] headerMacros = ShaderMacros.getHeaderMacroLines();
          writer.insert(macroInsertPosition, headerMacros);
          macroInsertPosition += headerMacros.length;
@@ -528,7 +548,7 @@ public class ShaderPackParser {
          if (customMacros.length > 0) {
             LineBuffer lb = new LineBuffer();
 
-            for (int i = 0; i < customMacros.length; i++) {
+            for(int i = 0; i < customMacros.length; ++i) {
                ShaderMacro macro = customMacros[i];
                lb.add(macro.getSourceLine());
             }
@@ -543,9 +563,9 @@ public class ShaderPackParser {
    }
 
    private static ShaderMacro[] getCustomMacros(LineBuffer lines, int startPos) {
-      Set<ShaderMacro> setMacros = new LinkedHashSet();
+      Set setMacros = new LinkedHashSet();
 
-      for (int i = startPos; i < lines.size(); i++) {
+      for(int i = startPos; i < lines.size(); ++i) {
          String line = lines.get(i);
          if (line.contains(ShaderMacros.getPrefixMacro())) {
             ShaderMacro[] lineExts = findMacros(line, ShaderMacros.getExtensions());
@@ -555,7 +575,8 @@ public class ShaderPackParser {
          }
       }
 
-      return (ShaderMacro[])setMacros.toArray(new ShaderMacro[setMacros.size()]);
+      ShaderMacro[] macros = (ShaderMacro[])setMacros.toArray(new ShaderMacro[setMacros.size()]);
+      return macros;
    }
 
    public static LineBuffer remapTextureUnits(LineBuffer reader) throws IOException {
@@ -564,15 +585,15 @@ public class ShaderPackParser {
       } else {
          LineBuffer writer = new LineBuffer();
 
-         for (String line : reader) {
+         String line;
+         for(Iterator it = reader.iterator(); it.hasNext(); writer.add(line)) {
+            line = (String)it.next();
             String lineNew = line.replace("gl_TextureMatrix[1]", "gl_TextureMatrix[2]");
             lineNew = lineNew.replace("gl_MultiTexCoord1", "gl_MultiTexCoord2");
             if (!lineNew.equals(line)) {
                lineNew = lineNew + " // Legacy fix, replaced TU 1 with 2";
                line = lineNew;
             }
-
-            writer.add(line);
          }
 
          return writer;
@@ -580,30 +601,32 @@ public class ShaderPackParser {
    }
 
    private static ShaderMacro[] findMacros(String line, ShaderMacro[] macros) {
-      List<ShaderMacro> list = new ArrayList();
+      List list = new ArrayList();
 
-      for (int i = 0; i < macros.length; i++) {
+      for(int i = 0; i < macros.length; ++i) {
          ShaderMacro ext = macros[i];
          if (line.contains(ext.getName())) {
             list.add(ext);
          }
       }
 
-      return (ShaderMacro[])list.toArray(new ShaderMacro[list.size()]);
+      ShaderMacro[] exts = (ShaderMacro[])list.toArray(new ShaderMacro[list.size()]);
+      return exts;
    }
 
-   private static LineBuffer loadFile(String filePath, IShaderPack shaderPack, int fileIndex, List<String> listFiles, int includeLevel) throws IOException {
+   private static LineBuffer loadFile(String filePath, IShaderPack shaderPack, int fileIndex, List listFiles, int includeLevel) throws IOException {
       if (includeLevel >= 10) {
          throw new IOException("#include depth exceeded: " + includeLevel + ", file: " + filePath);
       } else {
-         includeLevel++;
+         ++includeLevel;
          InputStream in = shaderPack.getResourceAsStream(filePath);
          if (in == null) {
             return null;
          } else {
             InputStreamReader isr = new InputStreamReader(in, "ASCII");
             LineBuffer br = LineBuffer.readAll(isr);
-            return resolveIncludes(br, filePath, shaderPack, fileIndex, listFiles, includeLevel);
+            br = resolveIncludes(br, filePath, shaderPack, fileIndex, listFiles, includeLevel);
+            return br;
          }
       }
    }
@@ -613,12 +636,30 @@ public class ShaderPackParser {
       String VARIABLE = "variable";
       String PREFIX_UNIFORM = UNIFORM + ".";
       String PREFIX_VARIABLE = VARIABLE + ".";
-      Map<String, IExpression> mapExpressions = new HashMap();
-      List<CustomUniform> listUniforms = new ArrayList();
+      Map mapExpressions = new HashMap();
+      List listUniforms = new ArrayList();
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
 
-      for (String key : props.keySet()) {
-         String[] keyParts = Config.tokenize(key, ".");
-         if (keyParts.length == 3) {
+      while(true) {
+         while(true) {
+            String key;
+            String[] keyParts;
+            do {
+               if (!it.hasNext()) {
+                  if (listUniforms.size() <= 0) {
+                     return null;
+                  }
+
+                  CustomUniform[] cusArr = (CustomUniform[])listUniforms.toArray(new CustomUniform[listUniforms.size()]);
+                  CustomUniforms cus = new CustomUniforms(cusArr, mapExpressions);
+                  return cus;
+               }
+
+               key = (String)it.next();
+               keyParts = Config.tokenize(key, ".");
+            } while(keyParts.length != 3);
+
             String kind = keyParts[0];
             String type = keyParts[1];
             String name = keyParts[2];
@@ -637,20 +678,13 @@ public class ShaderPackParser {
             }
          }
       }
-
-      if (listUniforms.size() <= 0) {
-         return null;
-      } else {
-         CustomUniform[] cusArr = (CustomUniform[])listUniforms.toArray(new CustomUniform[listUniforms.size()]);
-         return new CustomUniforms(cusArr, mapExpressions);
-      }
    }
 
-   private static CustomUniform parseCustomUniform(String kind, String name, String type, String src, Map<String, IExpression> mapExpressions) {
+   private static CustomUniform parseCustomUniform(String kind, String name, String type, String src, Map mapExpressions) {
       try {
          UniformType uniformType = UniformType.parse(type);
          if (uniformType == null) {
-            SMCLog.warning("Unknown " + kind + " type: " + uniformType);
+            SMCLog.warning("Unknown " + kind + " type: " + String.valueOf(uniformType));
             return null;
          } else {
             ShaderExpressionResolver resolver = new ShaderExpressionResolver(mapExpressions);
@@ -658,15 +692,17 @@ public class ShaderPackParser {
             IExpression expr = parser.parse(src);
             ExpressionType expressionType = expr.getExpressionType();
             if (!uniformType.matchesExpressionType(expressionType)) {
-               SMCLog.warning("Expression type does not match " + kind + " type, expression: " + expressionType + ", " + kind + ": " + uniformType + " " + name);
+               SMCLog.warning("Expression type does not match " + kind + " type, expression: " + String.valueOf(expressionType) + ", " + kind + ": " + String.valueOf(uniformType) + " " + name);
                return null;
             } else {
                expr = makeExpressionCached(expr);
-               return new CustomUniform(name, uniformType, expr);
+               CustomUniform cu = new CustomUniform(name, uniformType, expr);
+               return cu;
             }
          }
       } catch (ParseException var11) {
-         SMCLog.warning(var11.getClass().getName() + ": " + var11.getMessage());
+         String var10000 = var11.getClass().getName();
+         SMCLog.warning(var10000 + ": " + var11.getMessage());
          return null;
       }
    }
@@ -680,13 +716,17 @@ public class ShaderPackParser {
    }
 
    public static void parseAlphaStates(Properties props) {
-      for (String key : props.keySet()) {
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
+
+      while(it.hasNext()) {
+         String key = (String)it.next();
          String[] keyParts = Config.tokenize(key, ".");
          if (keyParts.length == 2) {
             String type = keyParts[0];
             String programName = keyParts[1];
             if (type.equals("alphaTest")) {
-               net.optifine.shaders.Program program = Shaders.getProgram(programName);
+               Program program = Shaders.getProgram(programName);
                if (program == null) {
                   SMCLog.severe("Invalid program name: " + programName);
                } else {
@@ -699,6 +739,7 @@ public class ShaderPackParser {
             }
          }
       }
+
    }
 
    public static GlAlphaState parseAlphaState(String str) {
@@ -706,13 +747,14 @@ public class ShaderPackParser {
          return null;
       } else {
          String[] parts = Config.tokenize(str, " ");
+         String str0;
          if (parts.length == 1) {
-            String str0 = parts[0];
+            str0 = parts[0];
             if (str0.equals("off") || str0.equals("false")) {
                return new GlAlphaState(false);
             }
          } else if (parts.length == 2) {
-            String str0 = parts[0];
+            str0 = parts[0];
             String str1 = parts[1];
             Integer func = (Integer)mapAlphaFuncs.get(str0);
             float ref = Config.parseFloat(str1, -1.0F);
@@ -727,32 +769,51 @@ public class ShaderPackParser {
    }
 
    public static void parseBlendStates(Properties props) {
-      for (String key : props.keySet()) {
-         String[] keyParts = Config.tokenize(key, ".");
-         if (keyParts.length >= 2 && keyParts.length <= 3) {
-            String type = keyParts[0];
-            String programName = keyParts[1];
-            String bufferName = keyParts.length == 3 ? keyParts[2] : null;
-            if (type.equals("blend")) {
-               net.optifine.shaders.Program program = Shaders.getProgram(programName);
-               if (program == null) {
-                  SMCLog.severe("Invalid program name: " + programName);
-               } else {
-                  String val = props.getProperty(key).trim();
-                  GlBlendState state = parseBlendState(val);
-                  if (state != null) {
-                     if (bufferName != null) {
-                        int index = program.getProgramStage().isAnyShadow() ? ShaderParser.getShadowColorIndex(bufferName) : Shaders.getBufferIndex(bufferName);
-                        int maxColorIndex = program.getProgramStage().isAnyShadow() ? 2 : 16;
-                        if (index >= 0 && index < maxColorIndex) {
-                           program.setBlendStateColorIndexed(index, state);
-                           SMCLog.info("Blend " + programName + "." + bufferName + "=" + val);
-                        } else {
-                           SMCLog.severe("Invalid buffer name: " + bufferName);
-                        }
-                     } else {
-                        program.setBlendState(state);
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
+
+      while(true) {
+         while(true) {
+            String key;
+            String type;
+            String programName;
+            String bufferName;
+            do {
+               String[] keyParts;
+               do {
+                  do {
+                     if (!it.hasNext()) {
+                        return;
                      }
+
+                     key = (String)it.next();
+                     keyParts = Config.tokenize(key, ".");
+                  } while(keyParts.length < 2);
+               } while(keyParts.length > 3);
+
+               type = keyParts[0];
+               programName = keyParts[1];
+               bufferName = keyParts.length == 3 ? keyParts[2] : null;
+            } while(!type.equals("blend"));
+
+            Program program = Shaders.getProgram(programName);
+            if (program == null) {
+               SMCLog.severe("Invalid program name: " + programName);
+            } else {
+               String val = props.getProperty(key).trim();
+               GlBlendState state = parseBlendState(val);
+               if (state != null) {
+                  if (bufferName != null) {
+                     int index = program.getProgramStage().isAnyShadow() ? ShaderParser.getShadowColorIndex(bufferName) : Shaders.getBufferIndex(bufferName);
+                     int maxColorIndex = program.getProgramStage().isAnyShadow() ? 2 : 16;
+                     if (index >= 0 && index < maxColorIndex) {
+                        program.setBlendStateColorIndexed(index, state);
+                        SMCLog.info("Blend " + programName + "." + bufferName + "=" + val);
+                     } else {
+                        SMCLog.severe("Invalid buffer name: " + bufferName);
+                     }
+                  } else {
+                     program.setBlendState(state);
                   }
                }
             }
@@ -765,13 +826,14 @@ public class ShaderPackParser {
          return null;
       } else {
          String[] parts = Config.tokenize(str, " ");
+         String str0;
          if (parts.length == 1) {
-            String str0 = parts[0];
+            str0 = parts[0];
             if (str0.equals("off") || str0.equals("false")) {
                return new GlBlendState(false);
             }
          } else if (parts.length == 2 || parts.length == 4) {
-            String str0 = parts[0];
+            str0 = parts[0];
             String str1 = parts[1];
             String str2 = str0;
             String str3 = str1;
@@ -795,13 +857,17 @@ public class ShaderPackParser {
    }
 
    public static void parseRenderScales(Properties props) {
-      for (String key : props.keySet()) {
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
+
+      while(it.hasNext()) {
+         String key = (String)it.next();
          String[] keyParts = Config.tokenize(key, ".");
          if (keyParts.length == 2) {
             String type = keyParts[0];
             String programName = keyParts[1];
             if (type.equals("scale")) {
-               net.optifine.shaders.Program program = Shaders.getProgram(programName);
+               Program program = Shaders.getProgram(programName);
                if (program == null) {
                   SMCLog.severe("Invalid program name: " + programName);
                } else {
@@ -814,6 +880,7 @@ public class ShaderPackParser {
             }
          }
       }
+
    }
 
    private static RenderScale parseRenderScale(String str) {
@@ -844,38 +911,55 @@ public class ShaderPackParser {
    }
 
    public static void parseBuffersFlip(Properties props) {
-      for (String key : props.keySet()) {
-         String[] keyParts = Config.tokenize(key, ".");
-         if (keyParts.length == 3) {
-            String type = keyParts[0];
-            String programName = keyParts[1];
-            String bufferName = keyParts[2];
-            if (type.equals("flip")) {
-               net.optifine.shaders.Program program = Shaders.getProgram(programName);
-               if (program == null) {
-                  SMCLog.severe("Invalid program name: " + programName);
-               } else {
-                  Boolean[] buffersFlip = program.getBuffersFlip();
-                  int buffer = Shaders.getBufferIndex(bufferName);
-                  if (buffer >= 0 && buffer < buffersFlip.length) {
-                     String valStr = props.getProperty(key).trim();
-                     Boolean val = Config.parseBoolean(valStr, null);
-                     if (val == null) {
-                        SMCLog.severe("Invalid boolean value: " + valStr);
-                     } else {
-                        buffersFlip[buffer] = val;
-                     }
-                  } else {
-                     SMCLog.severe("Invalid buffer name: " + bufferName);
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
+
+      while(true) {
+         while(true) {
+            String key;
+            String type;
+            String programName;
+            String bufferName;
+            do {
+               String[] keyParts;
+               do {
+                  if (!it.hasNext()) {
+                     return;
                   }
+
+                  key = (String)it.next();
+                  keyParts = Config.tokenize(key, ".");
+               } while(keyParts.length != 3);
+
+               type = keyParts[0];
+               programName = keyParts[1];
+               bufferName = keyParts[2];
+            } while(!type.equals("flip"));
+
+            Program program = Shaders.getProgram(programName);
+            if (program == null) {
+               SMCLog.severe("Invalid program name: " + programName);
+            } else {
+               Boolean[] buffersFlip = program.getBuffersFlip();
+               int buffer = Shaders.getBufferIndex(bufferName);
+               if (buffer >= 0 && buffer < buffersFlip.length) {
+                  String valStr = props.getProperty(key).trim();
+                  Boolean val = Config.parseBoolean(valStr, (Boolean)null);
+                  if (val == null) {
+                     SMCLog.severe("Invalid boolean value: " + valStr);
+                  } else {
+                     buffersFlip[buffer] = val;
+                  }
+               } else {
+                  SMCLog.severe("Invalid buffer name: " + bufferName);
                }
             }
          }
       }
    }
 
-   private static Map<String, Integer> makeMapAlphaFuncs() {
-      Map<String, Integer> map = new HashMap();
+   private static Map makeMapAlphaFuncs() {
+      Map map = new HashMap();
       map.put("NEVER", new Integer(512));
       map.put("LESS", new Integer(513));
       map.put("EQUAL", new Integer(514));
@@ -887,8 +971,8 @@ public class ShaderPackParser {
       return Collections.unmodifiableMap(map);
    }
 
-   private static Map<String, Integer> makeMapBlendFactors() {
-      Map<String, Integer> map = new HashMap();
+   private static Map makeMapBlendFactors() {
+      Map map = new HashMap();
       map.put("ZERO", new Integer(0));
       map.put("ONE", new Integer(1));
       map.put("SRC_COLOR", new Integer(768));
@@ -909,34 +993,45 @@ public class ShaderPackParser {
 
    public static DynamicDimension[] parseBufferSizes(Properties props, int countBuffers) {
       DynamicDimension[] bufferSizes = new DynamicDimension[countBuffers];
+      Set keys = props.keySet();
+      Iterator it = keys.iterator();
 
-      for (String key : props.keySet()) {
-         if (key.startsWith("size.buffer.")) {
-            String[] keyParts = Config.tokenize(key, ".");
-            if (keyParts.length == 3) {
-               String bufferName = keyParts[2];
-               int buffer = Shaders.getBufferIndex(bufferName);
-               if (buffer >= 0 && buffer < bufferSizes.length) {
-                  String val = props.getProperty(key).trim();
-                  DynamicDimension dim = parseDynamicDimension(val);
-                  if (dim == null) {
-                     SMCLog.severe("Invalid buffer size: " + key + "=" + val);
-                  } else {
-                     bufferSizes[buffer] = dim;
-                     if (dim.isRelative()) {
-                        SMCLog.info("Relative size " + bufferName + ": " + dim.getWidth() + " " + dim.getHeight());
-                     } else {
-                        SMCLog.info("Fixed size " + bufferName + ": " + (int)dim.getWidth() + " " + (int)dim.getHeight());
-                     }
+      while(true) {
+         while(true) {
+            String key;
+            String[] keyParts;
+            do {
+               do {
+                  if (!it.hasNext()) {
+                     return bufferSizes;
                   }
+
+                  key = (String)it.next();
+               } while(!key.startsWith("size.buffer."));
+
+               keyParts = Config.tokenize(key, ".");
+            } while(keyParts.length != 3);
+
+            String bufferName = keyParts[2];
+            int buffer = Shaders.getBufferIndex(bufferName);
+            if (buffer >= 0 && buffer < bufferSizes.length) {
+               String val = props.getProperty(key).trim();
+               DynamicDimension dim = parseDynamicDimension(val);
+               if (dim == null) {
+                  SMCLog.severe("Invalid buffer size: " + key + "=" + val);
                } else {
-                  SMCLog.severe("Invalid buffer name: " + key);
+                  bufferSizes[buffer] = dim;
+                  if (dim.isRelative()) {
+                     SMCLog.info("Relative size " + bufferName + ": " + dim.getWidth() + " " + dim.getHeight());
+                  } else {
+                     SMCLog.info("Fixed size " + bufferName + ": " + (int)dim.getWidth() + " " + (int)dim.getHeight());
+                  }
                }
+            } else {
+               SMCLog.severe("Invalid buffer name: " + key);
             }
          }
       }
-
-      return bufferSizes;
    }
 
    private static DynamicDimension parseDynamicDimension(String str) {

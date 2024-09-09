@@ -7,16 +7,17 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
 import net.optifine.reflect.Reflector;
 
 public class TileEntityUtils {
    public static String getTileEntityName(BlockGetter blockAccess, BlockPos blockPos) {
-      net.minecraft.world.level.block.entity.BlockEntity te = blockAccess.m_7702_(blockPos);
+      BlockEntity te = blockAccess.m_7702_(blockPos);
       return getTileEntityName(te);
    }
 
-   public static String getTileEntityName(net.minecraft.world.level.block.entity.BlockEntity te) {
+   public static String getTileEntityName(BlockEntity te) {
       if (!(te instanceof Nameable iwn)) {
          return null;
       } else {
@@ -25,7 +26,7 @@ public class TileEntityUtils {
       }
    }
 
-   public static void updateTileEntityName(net.minecraft.world.level.block.entity.BlockEntity te) {
+   public static void updateTileEntityName(BlockEntity te) {
       BlockPos pos = te.m_58899_();
       Component name = getTileEntityRawName(te);
       if (name == null) {
@@ -34,16 +35,21 @@ public class TileEntityUtils {
             nameServer = Component.m_237113_("");
          }
 
-         setTileEntityRawName(te, nameServer);
+         setTileEntityRawName(te, (Component)nameServer);
       }
    }
 
    public static Component getServerTileEntityRawName(BlockPos blockPos) {
-      net.minecraft.world.level.block.entity.BlockEntity tes = IntegratedServerUtils.getTileEntity(blockPos);
-      return tes == null ? null : getTileEntityRawName(tes);
+      BlockEntity tes = IntegratedServerUtils.getTileEntity(blockPos);
+      if (tes == null) {
+         return null;
+      } else {
+         Component itc = getTileEntityRawName(tes);
+         return itc;
+      }
    }
 
-   public static Component getTileEntityRawName(net.minecraft.world.level.block.entity.BlockEntity te) {
+   public static Component getTileEntityRawName(BlockEntity te) {
       if (te instanceof Nameable) {
          return ((Nameable)te).m_7770_();
       } else {
@@ -51,7 +57,7 @@ public class TileEntityUtils {
       }
    }
 
-   public static boolean setTileEntityRawName(net.minecraft.world.level.block.entity.BlockEntity te, Component name) {
+   public static boolean setTileEntityRawName(BlockEntity te, Component name) {
       if (te instanceof BaseContainerBlockEntity) {
          Reflector.BaseContainerBlockEntity_customName.setValue(te, name);
          return true;

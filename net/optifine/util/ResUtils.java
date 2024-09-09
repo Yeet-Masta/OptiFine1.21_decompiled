@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -14,7 +15,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.CompositePackResources;
+import net.minecraft.server.packs.FilePackResources;
 import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.VanillaPackResources;
 import net.optifine.Config;
 
 public class ResUtils {
@@ -23,16 +29,17 @@ public class ResUtils {
    }
 
    public static String[] collectFiles(String[] prefixes, String[] suffixes) {
-      Set<String> setPaths = new LinkedHashSet();
+      Set setPaths = new LinkedHashSet();
       PackResources[] rps = Config.getResourcePacks();
 
-      for (int i = 0; i < rps.length; i++) {
+      for(int i = 0; i < rps.length; ++i) {
          PackResources rp = rps[i];
-         String[] ps = collectFiles(rp, prefixes, suffixes, null);
+         String[] ps = collectFiles(rp, (String[])prefixes, (String[])suffixes, (String[])null);
          setPaths.addAll(Arrays.asList(ps));
       }
 
-      return (String[])setPaths.toArray(new String[setPaths.size()]);
+      String[] paths = (String[])setPaths.toArray(new String[setPaths.size()]);
+      return paths;
    }
 
    public static String[] collectFiles(PackResources rp, String prefix, String suffix, String[] defaultPaths) {
@@ -40,23 +47,26 @@ public class ResUtils {
    }
 
    public static String[] collectFiles(PackResources rp, String[] prefixes, String[] suffixes) {
-      return collectFiles(rp, prefixes, suffixes, null);
+      return collectFiles(rp, (String[])prefixes, (String[])suffixes, (String[])null);
    }
 
    public static String[] collectFiles(PackResources rp, String[] prefixes, String[] suffixes, String[] defaultPaths) {
-      if (!(rp instanceof net.minecraft.server.packs.CompositePackResources crp)) {
-         if (rp instanceof net.minecraft.server.packs.VanillaPackResources) {
+      if (!(rp instanceof CompositePackResources tpFile)) {
+         if (rp instanceof VanillaPackResources) {
             return collectFilesFixed(rp, defaultPaths);
          } else {
-            File tpFile = null;
-            if (rp instanceof net.minecraft.server.packs.FilePackResources fpr) {
+            tpFile = null;
+            File tpFile;
+            if (rp instanceof FilePackResources) {
+               FilePackResources fpr = (FilePackResources)rp;
                tpFile = fpr.getFile();
             } else {
-               if (!(rp instanceof net.minecraft.server.packs.PathPackResources ppr)) {
-                  Config.warn("Unknown resource pack type: " + rp);
+               if (!(rp instanceof PathPackResources)) {
+                  Config.warn("Unknown resource pack type: " + String.valueOf(rp));
                   return new String[0];
                }
 
+               PathPackResources ppr = (PathPackResources)rp;
                tpFile = ppr.f_243919_.toFile();
             }
 
@@ -67,19 +77,22 @@ public class ResUtils {
             } else if (tpFile.isFile()) {
                return collectFilesZIP(tpFile, prefixes, suffixes);
             } else {
-               Config.warn("Unknown resource pack file: " + tpFile);
+               Config.warn("Unknown resource pack file: " + String.valueOf(tpFile));
                return new String[0];
             }
          }
       } else {
-         List<String> pathsList = new ArrayList();
+         List pathsList = new ArrayList();
+         Iterator var6 = tpFile.f_291498_.iterator();
 
-         for (PackResources subRp : crp.f_291498_) {
+         while(var6.hasNext()) {
+            PackResources subRp = (PackResources)var6.next();
             String[] subPaths = collectFiles(subRp, prefixes, suffixes, defaultPaths);
             pathsList.addAll(Arrays.asList(subPaths));
          }
 
-         return (String[])pathsList.toArray(new String[pathsList.size()]);
+         String[] paths = (String[])pathsList.toArray(new String[pathsList.size()]);
+         return paths;
       }
    }
 
@@ -89,19 +102,20 @@ public class ResUtils {
       } else {
          List list = new ArrayList();
 
-         for (int i = 0; i < paths.length; i++) {
+         for(int i = 0; i < paths.length; ++i) {
             String path = paths[i];
             if (!isLowercase(path)) {
                Config.warn("Skipping non-lowercase path: " + path);
             } else {
-               net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(path);
+               ResourceLocation loc = new ResourceLocation(path);
                if (Config.hasResource(rp, loc)) {
                   list.add(path);
                }
             }
          }
 
-         return (String[])list.toArray(new String[list.size()]);
+         String[] pathArr = (String[])list.toArray(new String[list.size()]);
+         return pathArr;
       }
    }
 
@@ -112,10 +126,11 @@ public class ResUtils {
       if (files == null) {
          return new String[0];
       } else {
-         for (int i = 0; i < files.length; i++) {
+         for(int i = 0; i < files.length; ++i) {
             File file = files[i];
+            String name;
             if (file.isFile()) {
-               String name = basePath + file.getName();
+               name = basePath + file.getName();
                if (name.startsWith(prefixAssets)) {
                   name = name.substring(prefixAssets.length());
                   if (StrUtils.startsWith(name, prefixes) && StrUtils.endsWith(name, suffixes)) {
@@ -127,17 +142,18 @@ public class ResUtils {
                   }
                }
             } else if (file.isDirectory()) {
-               String dirPath = basePath + file.getName() + "/";
-               String[] names = collectFilesFolder(file, dirPath, prefixes, suffixes);
+               name = basePath + file.getName() + "/";
+               String[] names = collectFilesFolder(file, name, prefixes, suffixes);
 
-               for (int n = 0; n < names.length; n++) {
+               for(int n = 0; n < names.length; ++n) {
                   String name = names[n];
                   list.add(name);
                }
             }
          }
 
-         return (String[])list.toArray(new String[list.size()]);
+         String[] names = (String[])list.toArray(new String[list.size()]);
+         return names;
       }
    }
 
@@ -149,7 +165,7 @@ public class ResUtils {
          ZipFile zf = new ZipFile(tpFile);
          Enumeration en = zf.entries();
 
-         while (en.hasMoreElements()) {
+         while(en.hasMoreElements()) {
             ZipEntry ze = (ZipEntry)en.nextElement();
             String name = ze.getName();
             if (name.startsWith(prefixAssets)) {
@@ -165,7 +181,8 @@ public class ResUtils {
          }
 
          zf.close();
-         return (String[])list.toArray(new String[list.size()]);
+         String[] names = (String[])list.toArray(new String[list.size()]);
+         return names;
       } catch (IOException var9) {
          var9.printStackTrace();
          return new String[0];
@@ -177,7 +194,7 @@ public class ResUtils {
    }
 
    public static Properties readProperties(String path, String module) {
-      net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(path);
+      ResourceLocation loc = new ResourceLocation(path);
 
       try {
          InputStream in = Config.getResourceStream(loc);

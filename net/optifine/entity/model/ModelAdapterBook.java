@@ -1,7 +1,11 @@
 package net.optifine.entity.model;
 
 import net.minecraft.client.model.BookModel;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.EnchantTableRenderer;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.Config;
@@ -16,17 +20,15 @@ public class ModelAdapterBook extends ModelAdapter {
       super(tileEntityType, name, shadowSize);
    }
 
-   @Override
-   public net.minecraft.client.model.Model makeModel() {
+   public Model makeModel() {
       return new BookModel(bakeModelLayer(ModelLayers.f_171271_));
    }
 
-   @Override
-   public net.minecraft.client.model.geom.ModelPart getModelRenderer(net.minecraft.client.model.Model model, String modelPart) {
+   public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BookModel modelBook)) {
          return null;
       } else {
-         net.minecraft.client.model.geom.ModelPart root = (net.minecraft.client.model.geom.ModelPart)Reflector.ModelBook_root.getValue(modelBook);
+         ModelPart root = (ModelPart)Reflector.ModelBook_root.getValue(modelBook);
          if (root != null) {
             if (modelPart.equals("cover_right")) {
                return root.getChildModelDeep("left_lid");
@@ -65,17 +67,15 @@ public class ModelAdapterBook extends ModelAdapter {
       }
    }
 
-   @Override
    public String[] getModelRendererNames() {
       return new String[]{"cover_right", "cover_left", "pages_right", "pages_left", "flipping_page_right", "flipping_page_left", "book_spine", "root"};
    }
 
-   @Override
-   public IEntityRenderer makeEntityRender(net.minecraft.client.model.Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      net.minecraft.client.renderer.blockentity.BlockEntityRenderer renderer = rendererCache.get(
-         BlockEntityType.f_58928_, index, () -> new EnchantTableRenderer(dispatcher.getContext())
-      );
+   public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
+      BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58928_, index, () -> {
+         return new EnchantTableRenderer(dispatcher.getContext());
+      });
       if (!(renderer instanceof EnchantTableRenderer)) {
          return null;
       } else if (!Reflector.TileEntityEnchantmentTableRenderer_modelBook.exists()) {

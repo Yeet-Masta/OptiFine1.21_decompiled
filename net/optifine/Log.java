@@ -14,6 +14,7 @@ public class Log {
       if (logDetail) {
          LOGGER.info("[OptiFine] " + s);
       }
+
    }
 
    public static void dbg(String s) {
@@ -46,10 +47,10 @@ public class Log {
       StackTraceElement[] stes = t.getStackTrace();
       if (stes != null) {
          if (stes.length > 35) {
-            List<StackTraceElement> listStes = new ArrayList(Arrays.asList(stes));
-            List<StackTraceElement> listStes2 = new ArrayList();
+            List listStes = new ArrayList(Arrays.asList(stes));
+            List listStes2 = new ArrayList();
             listStes2.addAll(listStes.subList(0, 30));
-            listStes2.add(new StackTraceElement("..", "", null, 0));
+            listStes2.add(new StackTraceElement("..", "", (String)null, 0));
             listStes2.addAll(listStes.subList(listStes.size() - 5, listStes.size()));
             StackTraceElement[] stes2 = (StackTraceElement[])listStes2.toArray(new StackTraceElement[listStes2.size()]);
             t.setStackTrace(stes2);
