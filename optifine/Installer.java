@@ -1,7 +1,6 @@
 package optifine;
 
 import java.awt.Dimension;
-import java.awt.Font;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -43,8 +42,8 @@ public class Installer {
          str = str.replace("\t", "  ");
          JTextArea textArea = new JTextArea(str);
          textArea.setEditable(false);
-         Font f = textArea.getFont();
-         Font f2 = new Font("Monospaced", f.getStyle(), f.getSize());
+         java.awt.Font f = textArea.getFont();
+         java.awt.Font f2 = new java.awt.Font("Monospaced", f.getStyle(), f.getSize());
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));

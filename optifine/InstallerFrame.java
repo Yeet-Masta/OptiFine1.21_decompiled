@@ -3,7 +3,6 @@ package optifine;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -86,8 +85,8 @@ public class InstallerFrame extends JFrame {
          str = str.replace("\t", "  ");
          JTextArea textArea = new JTextArea(str);
          textArea.setEditable(false);
-         Font f = textArea.getFont();
-         Font f2 = new Font("Monospaced", f.getStyle(), f.getSize());
+         java.awt.Font f = textArea.getFont();
+         java.awt.Font f2 = new java.awt.Font("Monospaced", f.getStyle(), f.getSize());
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
@@ -103,8 +102,8 @@ public class InstallerFrame extends JFrame {
          str = str.replace("\t", "  ");
          JTextArea textArea = new JTextArea(str);
          textArea.setEditable(false);
-         Font f = textArea.getFont();
-         Font f2 = new Font("Monospaced", f.getStyle(), f.getSize());
+         java.awt.Font f = textArea.getFont();
+         java.awt.Font f2 = new java.awt.Font("Monospaced", f.getStyle(), f.getSize());
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
@@ -118,7 +117,7 @@ public class InstallerFrame extends JFrame {
             this.ivjLabelOfVersion = new JLabel();
             this.ivjLabelOfVersion.setName("LabelOfVersion");
             this.ivjLabelOfVersion.setBounds(2, 5, 385, 42);
-            this.ivjLabelOfVersion.setFont(new Font("Dialog", 1, 18));
+            this.ivjLabelOfVersion.setFont(new java.awt.Font("Dialog", 1, 18));
             this.ivjLabelOfVersion.setHorizontalAlignment(0);
             this.ivjLabelOfVersion.setPreferredSize(new Dimension(385, 42));
             this.ivjLabelOfVersion.setText("OptiFine ...");
@@ -136,7 +135,7 @@ public class InstallerFrame extends JFrame {
             this.ivjLabelMcVersion = new JLabel();
             this.ivjLabelMcVersion.setName("LabelMcVersion");
             this.ivjLabelMcVersion.setBounds(2, 38, 385, 25);
-            this.ivjLabelMcVersion.setFont(new Font("Dialog", 1, 14));
+            this.ivjLabelMcVersion.setFont(new java.awt.Font("Dialog", 1, 14));
             this.ivjLabelMcVersion.setHorizontalAlignment(0);
             this.ivjLabelMcVersion.setPreferredSize(new Dimension(385, 25));
             this.ivjLabelMcVersion.setText("for Minecraft ...");
@@ -328,7 +327,7 @@ public class InstallerFrame extends JFrame {
             this.ivjTextArea.setBounds(15, 66, 365, 44);
             this.ivjTextArea.setEditable(false);
             this.ivjTextArea.setEnabled(true);
-            this.ivjTextArea.setFont(new Font("Dialog", 0, 12));
+            this.ivjTextArea.setFont(new java.awt.Font("Dialog", 0, 12));
             this.ivjTextArea.setLineWrap(true);
             this.ivjTextArea.setOpaque(false);
             this.ivjTextArea.setPreferredSize(new Dimension(365, 44));
