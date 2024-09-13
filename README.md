@@ -4,3 +4,5 @@ nvm, I fixed it, kind of.... I still need to deal with the:
  
  /* $VF: Couldn't be decompiled. Class net/optifine/gui/GuiDetailSettingsOF wasn't processed yet! */// Please report this to the Vineflower issue tracker, at https://github.com/Vineflower/vineflower/issues with a copy of the class file (if you have the rights to distribute it!)
  womp womp
+
+nvm, I got it to work with help of this! https://github.com/Yeet-Masta/OptiFineDeobf-Working
