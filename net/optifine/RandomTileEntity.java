@@ -16,15 +16,16 @@ import net.optifine.util.TileEntityUtils;
 
 public class RandomTileEntity implements IRandomEntity {
    private BlockEntity tileEntity;
-   private static final CompoundTag EMPTY_TAG = new CompoundTag();
+   private static CompoundTag EMPTY_TAG = new CompoundTag();
 
+   @Override
    public int getId() {
       return Config.getRandom(this.getSpawnPosition(), 0);
    }
 
+   @Override
    public BlockPos getSpawnPosition() {
-      if (this.tileEntity instanceof BedBlockEntity) {
-         BedBlockEntity bbe = (BedBlockEntity)this.tileEntity;
+      if (this.tileEntity instanceof BedBlockEntity bbe) {
          BlockState bs = bbe.m_58900_();
          BedPart part = (BedPart)bs.m_61143_(BedBlock.f_49440_);
          if (part == BedPart.HEAD) {
@@ -36,19 +37,22 @@ public class RandomTileEntity implements IRandomEntity {
       return this.tileEntity.m_58899_();
    }
 
+   @Override
    public String getName() {
-      String name = TileEntityUtils.getTileEntityName(this.tileEntity);
-      return name;
+      return TileEntityUtils.getTileEntityName(this.tileEntity);
    }
 
+   @Override
    public Biome getSpawnBiome() {
       return (Biome)this.tileEntity.m_58904_().m_204166_(this.tileEntity.m_58899_()).m_203334_();
    }
 
+   @Override
    public int getHealth() {
       return -1;
    }
 
+   @Override
    public int getMaxHealth() {
       return -1;
    }
@@ -61,6 +65,7 @@ public class RandomTileEntity implements IRandomEntity {
       this.tileEntity = tileEntity;
    }
 
+   @Override
    public CompoundTag getNbtTag() {
       CompoundTag nbt = this.tileEntity.nbtTag;
       long timeMs = System.currentTimeMillis();
@@ -82,10 +87,12 @@ public class RandomTileEntity implements IRandomEntity {
       }
    }
 
-   public DyeColor getColor() {
+   @Override
+   public DyeColor m_130045_() {
       return RandomEntityRule.getBlockEntityColor(this.tileEntity);
    }
 
+   @Override
    public BlockState getBlockState() {
       return this.tileEntity.m_58900_();
    }

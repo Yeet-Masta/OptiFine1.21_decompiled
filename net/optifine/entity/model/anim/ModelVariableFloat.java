@@ -14,18 +14,22 @@ public class ModelVariableFloat implements IExpressionFloat, IModelVariableFloat
       this.enumModelVariable = enumModelVariable;
    }
 
+   @Override
    public ModelPart getModelRenderer() {
       return this.modelRenderer;
    }
 
+   @Override
    public float eval() {
       return this.getValue();
    }
 
+   @Override
    public float getValue() {
       return this.enumModelVariable.getFloat(this.modelRenderer);
    }
 
+   @Override
    public void setValue(float value) {
       this.enumModelVariable.setFloat(this.modelRenderer, value);
    }

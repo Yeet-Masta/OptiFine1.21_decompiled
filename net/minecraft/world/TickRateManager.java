@@ -6,19 +6,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
 public class TickRateManager {
-   public static final float f_302470_ = 1.0F;
+   public static float f_302470_;
    protected float f_302740_ = 20.0F;
-   protected long f_303856_;
-   protected int f_303482_;
-   protected boolean f_302370_;
-   protected boolean f_303812_;
-
-   public TickRateManager() {
-      this.f_303856_ = TimeUtil.f_145016_ / 20L;
-      this.f_303482_ = 0;
-      this.f_302370_ = true;
-      this.f_303812_ = false;
-   }
+   protected long f_303856_ = TimeUtil.f_145016_ / 20L;
+   protected int f_303482_ = 0;
+   protected boolean f_302370_ = true;
+   protected boolean f_303812_ = false;
 
    public void m_307254_(float rateIn) {
       this.f_302740_ = Math.max(rateIn, 1.0F);
@@ -64,9 +57,8 @@ public class TickRateManager {
    public void m_306707_() {
       this.f_302370_ = !this.f_303812_ || this.f_303482_ > 0;
       if (this.f_303482_ > 0) {
-         --this.f_303482_;
+         this.f_303482_--;
       }
-
    }
 
    public boolean m_305579_(Entity entityIn) {
@@ -74,9 +66,9 @@ public class TickRateManager {
    }
 
    private boolean hasPlayerPassengers(Entity entity) {
-      List passengers = entity.m_20197_();
+      List<Entity> passengers = entity.m_20197_();
 
-      for(int i = 0; i < passengers.size(); ++i) {
+      for (int i = 0; i < passengers.size(); i++) {
          Entity passenger = (Entity)passengers.get(i);
          if (passenger instanceof Player) {
             return true;

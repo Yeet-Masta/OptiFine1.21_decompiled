@@ -20,18 +20,17 @@ public class CacheLocal {
    }
 
    public void resetCache() {
-      for(int x = 0; x < this.maxX; ++x) {
+      for (int x = 0; x < this.maxX; x++) {
          int[][] ys = this.cache[x];
 
-         for(int y = 0; y < this.maxY; ++y) {
+         for (int y = 0; y < this.maxY; y++) {
             int[] zs = ys[y];
 
-            for(int z = 0; z < this.maxZ; ++z) {
+            for (int z = 0; z < this.maxZ; z++) {
                zs[z] = -1;
             }
          }
       }
-
    }
 
    public void setOffset(int x, int y, int z) {
@@ -58,6 +57,5 @@ public class CacheLocal {
       } catch (Exception var3) {
          var3.printStackTrace();
       }
-
    }
 }

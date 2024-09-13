@@ -16,10 +16,12 @@ public class ModelAdapterLeadKnot extends ModelAdapter {
       super(EntityType.f_20464_, "lead_knot", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new LeashKnotModel(bakeModelLayer(ModelLayers.f_171193_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof LeashKnotModel modelLeashKnot)) {
          return null;
@@ -30,10 +32,12 @@ public class ModelAdapterLeadKnot extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"knot", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       LeashKnotRenderer render = new LeashKnotRenderer(renderManager.getContext());

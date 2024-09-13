@@ -1,10 +1,8 @@
 package net.optifine.entity.model;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.model.Model;
@@ -13,24 +11,27 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.HangingSignRenderer;
+import net.minecraft.client.renderer.blockentity.HangingSignRenderer.HangingSignModel;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterHangingSign extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterHangingSign() {
       super(BlockEntityType.f_244529_, "hanging_sign", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
-      return new HangingSignRenderer.HangingSignModel(bakeModelLayer(ModelLayers.m_247439_(WoodType.f_61830_)));
+      return new HangingSignModel(bakeModelLayer(ModelLayers.m_247439_(WoodType.f_61830_)));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
-      if (!(model instanceof HangingSignRenderer.HangingSignModel modelHangingSign)) {
+      if (!(model instanceof HangingSignModel modelHangingSign)) {
          return null;
       } else if (mapParts.containsKey(modelPart)) {
          String name = (String)mapParts.get(modelPart);
@@ -40,13 +41,13 @@ public class ModelAdapterHangingSign extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("board", "board");
       map.put("plank", "plank");
       map.put("chains", "normalChains");
@@ -58,33 +59,30 @@ public class ModelAdapterHangingSign extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_244529_, index, () -> {
-         return new HangingSignRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_244529_, index, () -> new HangingSignRenderer(dispatcher.getContext()));
       if (!(renderer instanceof HangingSignRenderer)) {
          return null;
       } else if (!Reflector.TileEntityHangingSignRenderer_hangingSignModels.exists()) {
          Config.warn("Field not found: TileEntityHangingSignRenderer.hangingSignModels");
          return null;
       } else {
-         Map hangingSignModels = (Map)Reflector.getFieldValue(renderer, Reflector.TileEntityHangingSignRenderer_hangingSignModels);
+         Map<WoodType, HangingSignModel> hangingSignModels = (Map<WoodType, HangingSignModel>)Reflector.getFieldValue(
+            renderer, Reflector.TileEntityHangingSignRenderer_hangingSignModels
+         );
          if (hangingSignModels == null) {
             Config.warn("Field not found: TileEntityHangingSignRenderer.hangingSignModels");
             return null;
          } else {
             if (hangingSignModels instanceof ImmutableMap) {
-               hangingSignModels = new HashMap((Map)hangingSignModels);
+               hangingSignModels = new HashMap(hangingSignModels);
                Reflector.TileEntityHangingSignRenderer_hangingSignModels.setValue(renderer, hangingSignModels);
             }
 
-            Collection types = new HashSet(((Map)hangingSignModels).keySet());
-            Iterator var9 = types.iterator();
-
-            while(var9.hasNext()) {
-               WoodType type = (WoodType)var9.next();
-               ((Map)hangingSignModels).put(type, (HangingSignRenderer.HangingSignModel)modelBase);
+            for (WoodType type : new HashSet(hangingSignModels.keySet())) {
+               hangingSignModels.put(type, (HangingSignModel)modelBase);
             }
 
             return renderer;

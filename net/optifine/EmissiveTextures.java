@@ -3,8 +3,6 @@ package net.optifine;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
@@ -26,11 +24,11 @@ public class EmissiveTextures {
    private static boolean render = false;
    private static boolean hasEmissive = false;
    private static boolean renderEmissive = false;
-   private static final String SUFFIX_PNG = ".png";
-   private static final ResourceLocation LOCATION_TEXTURE_EMPTY;
-   private static final ResourceLocation LOCATION_SPRITE_EMPTY;
+   private static String SUFFIX_PNG;
+   private static ResourceLocation LOCATION_TEXTURE_EMPTY = TextureUtils.LOCATION_TEXTURE_EMPTY;
+   private static ResourceLocation LOCATION_SPRITE_EMPTY = TextureUtils.LOCATION_SPRITE_EMPTY;
    private static TextureManager textureManager;
-   private static int countRecursive;
+   private static int countRecursive = 0;
 
    public static boolean isActive() {
       return active;
@@ -42,7 +40,7 @@ public class EmissiveTextures {
 
    public static void beginRender() {
       if (render) {
-         ++countRecursive;
+         countRecursive++;
       } else {
          render = true;
          hasEmissive = false;
@@ -136,14 +134,14 @@ public class EmissiveTextures {
 
    public static void endRender() {
       if (countRecursive > 0) {
-         --countRecursive;
+         countRecursive--;
       } else {
          render = false;
          hasEmissive = false;
       }
    }
 
-   public static void update() {
+   public static void m_252999_() {
       textureManager = Minecraft.m_91087_().m_91097_();
       active = false;
       suffixEmissive = null;
@@ -172,19 +170,14 @@ public class EmissiveTextures {
          } catch (IOException var5) {
             var5.printStackTrace();
          }
-
       }
    }
 
-   public static void updateIcons(TextureAtlas textureMap, Set locations) {
+   public static void updateIcons(TextureAtlas textureMap, Set<ResourceLocation> locations) {
       if (active) {
-         Iterator var2 = locations.iterator();
-
-         while(var2.hasNext()) {
-            ResourceLocation loc = (ResourceLocation)var2.next();
+         for (ResourceLocation loc : locations) {
             checkEmissive(textureMap, loc);
          }
-
       }
    }
 
@@ -192,9 +185,7 @@ public class EmissiveTextures {
       String suffixEm = getSuffixEmissive();
       if (suffixEm != null) {
          if (!locSprite.m_135815_().endsWith(suffixEm)) {
-            String var10002 = locSprite.m_135827_();
-            String var10003 = locSprite.m_135815_();
-            ResourceLocation locSpriteEm = new ResourceLocation(var10002, var10003 + suffixEm);
+            ResourceLocation locSpriteEm = new ResourceLocation(locSprite.m_135827_(), locSprite.m_135815_() + suffixEm);
             ResourceLocation locPngEm = textureMap.getSpritePath(locSpriteEm);
             if (Config.hasResource(locPngEm)) {
                TextureAtlasSprite sprite = textureMap.registerSprite(locSprite);
@@ -208,14 +199,9 @@ public class EmissiveTextures {
    }
 
    public static void refreshIcons(TextureAtlas textureMap) {
-      Collection sprites = textureMap.getRegisteredSprites();
-      Iterator var2 = sprites.iterator();
-
-      while(var2.hasNext()) {
-         TextureAtlasSprite sprite = (TextureAtlasSprite)var2.next();
+      for (TextureAtlasSprite sprite : textureMap.getRegisteredSprites()) {
          refreshIcon(sprite, textureMap);
       }
-
    }
 
    private static void refreshIcon(TextureAtlasSprite sprite, TextureAtlas textureMap) {
@@ -253,8 +239,7 @@ public class EmissiveTextures {
                if (path.endsWith(suffixEmissivePng)) {
                   tex.isEmissive = true;
                } else {
-                  String var10000 = path.substring(0, path.length() - ".png".length());
-                  String pathEmPng = var10000 + suffixEmissivePng;
+                  String pathEmPng = path.substring(0, path.length() - ".png".length()) + suffixEmissivePng;
                   ResourceLocation locEmPng = new ResourceLocation(loc.m_135827_(), pathEmPng);
                   if (Config.hasResource(locEmPng)) {
                      tex.locationEmissive = locEmPng;
@@ -263,11 +248,5 @@ public class EmissiveTextures {
             }
          }
       }
-   }
-
-   static {
-      LOCATION_TEXTURE_EMPTY = TextureUtils.LOCATION_TEXTURE_EMPTY;
-      LOCATION_SPRITE_EMPTY = TextureUtils.LOCATION_SPRITE_EMPTY;
-      countRecursive = 0;
    }
 }

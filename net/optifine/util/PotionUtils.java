@@ -33,17 +33,12 @@ public class PotionUtils {
       if (pc == null) {
          return null;
       } else {
-         Optional opt = pc.f_317059_();
+         Optional<Holder<Potion>> opt = pc.f_317059_();
          if (opt.isEmpty()) {
             return null;
          } else {
-            Holder holder = (Holder)opt.get();
-            if (!holder.m_203633_()) {
-               return null;
-            } else {
-               Potion p = (Potion)holder.m_203334_();
-               return p;
-            }
+            Holder<Potion> holder = (Holder<Potion>)opt.get();
+            return !holder.m_203633_() ? null : (Potion)holder.m_203334_();
          }
       }
    }

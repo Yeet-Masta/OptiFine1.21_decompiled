@@ -3,6 +3,7 @@ package net.minecraft.client.renderer.entity.layers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.ElytraModel;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -21,21 +22,31 @@ import net.minecraft.world.item.Items;
 import net.optifine.Config;
 import net.optifine.CustomItems;
 
-public class ElytraLayer extends RenderLayer {
-   private static final ResourceLocation f_116934_ = ResourceLocation.m_340282_("textures/entity/elytra.png");
-   private final ElytraModel f_116935_;
+public class ElytraLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
+   private static ResourceLocation f_116934_ = ResourceLocation.m_340282_("textures/entity/elytra.png");
+   private ElytraModel<T> f_116935_;
 
-   public ElytraLayer(RenderLayerParent parentIn, EntityModelSet modelSetIn) {
+   public ElytraLayer(RenderLayerParent<T, M> parentIn, EntityModelSet modelSetIn) {
       super(parentIn);
       this.f_116935_ = new ElytraModel(modelSetIn.m_171103_(ModelLayers.f_171141_));
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, LivingEntity entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      T entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       ItemStack itemstack = entitylivingbaseIn.m_6844_(EquipmentSlot.CHEST);
       if (this.shouldRender(itemstack, entitylivingbaseIn)) {
          ResourceLocation resourcelocation;
-         if (entitylivingbaseIn instanceof AbstractClientPlayer) {
-            AbstractClientPlayer abstractclientplayer = (AbstractClientPlayer)entitylivingbaseIn;
+         if (entitylivingbaseIn instanceof AbstractClientPlayer abstractclientplayer) {
             PlayerSkin playerskin = abstractclientplayer.m_294544_();
             if (abstractclientplayer.getLocationElytra() != null) {
                resourcelocation = abstractclientplayer.getLocationElytra();
@@ -62,14 +73,13 @@ public class ElytraLayer extends RenderLayer {
          this.f_116935_.m_340227_(matrixStackIn, vertexconsumer, packedLightIn, OverlayTexture.f_118083_);
          matrixStackIn.m_85849_();
       }
-
    }
 
-   public boolean shouldRender(ItemStack stack, LivingEntity entity) {
+   public boolean shouldRender(ItemStack stack, T entity) {
       return stack.m_150930_(Items.f_42741_);
    }
 
-   public ResourceLocation getElytraTexture(ItemStack stack, LivingEntity entity) {
+   public ResourceLocation getElytraTexture(ItemStack stack, T entity) {
       return f_116934_;
    }
 }

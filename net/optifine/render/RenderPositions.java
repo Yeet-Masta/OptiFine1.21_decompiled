@@ -7,7 +7,7 @@ public class RenderPositions {
    private Vector3f positionRender;
 
    public RenderPositions(Vector3f position) {
-      this.positionDiv16 = (new Vector3f(position)).div(16.0F);
+      this.positionDiv16 = new Vector3f(position).div(16.0F);
       this.positionRender = new Vector3f(this.positionDiv16);
    }
 
@@ -20,7 +20,6 @@ public class RenderPositions {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.positionDiv16);
-      return var10000 + ", " + String.valueOf(this.positionRender);
+      return this.positionDiv16 + ", " + this.positionRender;
    }
 }

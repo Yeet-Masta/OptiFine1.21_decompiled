@@ -15,17 +15,19 @@ public class HeaderLineVariable extends HeaderLine {
       this.qualifier = qualifier;
       this.name = name;
       this.text = text;
-      this.patternLine = Pattern.compile("^(.*\\W|)" + qualifier + "\\W.*\\W" + name + "(\\W.*|)$");
-      this.patternName1 = Pattern.compile(",\\s*" + name + "(\\W)");
-      this.patternName2 = Pattern.compile("(\\W)" + name + "\\s*,");
+      this.patternLine = Pattern.m_289905_("^(.*\\W|)" + qualifier + "\\W.*\\W" + name + "(\\W.*|)$");
+      this.patternName1 = Pattern.m_289905_(",\\s*" + name + "(\\W)");
+      this.patternName2 = Pattern.m_289905_("(\\W)" + name + "\\s*,");
    }
 
+   @Override
    public String getText() {
       return this.text;
    }
 
+   @Override
    public boolean matches(String line) {
-      if (!line.contains(this.name)) {
+      if (!line.m_274455_(this.name)) {
          return false;
       } else {
          Matcher m = this.patternLine.matcher(line);
@@ -33,6 +35,7 @@ public class HeaderLineVariable extends HeaderLine {
       }
    }
 
+   @Override
    public String removeFrom(String line) {
       Matcher m1 = this.patternName1.matcher(line);
       String lineNew = m1.replaceAll("$1");

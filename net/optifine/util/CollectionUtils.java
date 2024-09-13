@@ -1,6 +1,5 @@
 package net.optifine.util;
 
-import java.util.Iterator;
 import java.util.Set;
 
 public class CollectionUtils {
@@ -16,18 +15,13 @@ public class CollectionUtils {
             s2 = temp;
          }
 
-         Iterator var4 = s1.iterator();
-
-         Object elem;
-         do {
-            if (!var4.hasNext()) {
-               return false;
+         for (Object elem : s1) {
+            if (s2.m_274455_(elem)) {
+               return true;
             }
+         }
 
-            elem = var4.next();
-         } while(!s2.contains(elem));
-
-         return true;
+         return false;
       } else {
          return false;
       }

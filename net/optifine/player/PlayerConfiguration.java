@@ -10,13 +10,14 @@ public class PlayerConfiguration {
    private PlayerItemModel[] playerItemModels = new PlayerItemModel[0];
    private boolean initialized = false;
 
-   public void renderPlayerItems(HumanoidModel modelBiped, AbstractClientPlayer player, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn) {
+   public void renderPlayerItems(
+      HumanoidModel modelBiped, AbstractClientPlayer player, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn
+   ) {
       if (this.initialized) {
-         for(int i = 0; i < this.playerItemModels.length; ++i) {
+         for (int i = 0; i < this.playerItemModels.length; i++) {
             PlayerItemModel model = this.playerItemModels[i];
-            model.render(modelBiped, player, matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
+            model.m_324219_(modelBiped, player, matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
          }
-
       }
    }
 

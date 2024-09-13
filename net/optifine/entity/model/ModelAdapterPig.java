@@ -13,10 +13,12 @@ public class ModelAdapterPig extends ModelAdapterQuadruped {
       super(EntityType.f_20510_, "pig", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new PigModel(bakeModelLayer(ModelLayers.f_171205_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PigRenderer render = new PigRenderer(renderManager.getContext());

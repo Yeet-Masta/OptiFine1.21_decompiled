@@ -18,15 +18,26 @@ public class PlayerItemsLayer extends RenderLayer {
       this.renderPlayer = renderPlayer;
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Entity entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   @Override
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      Entity entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       this.renderEquippedItems(entitylivingbaseIn, matrixStackIn, bufferIn, packedLightIn, OverlayTexture.f_118083_);
    }
 
    protected void renderEquippedItems(Entity entityLiving, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn) {
       if (Config.isShowCapes()) {
          if (!entityLiving.m_20145_()) {
-            if (entityLiving instanceof AbstractClientPlayer) {
-               AbstractClientPlayer player = (AbstractClientPlayer)entityLiving;
+            if (entityLiving instanceof AbstractClientPlayer player) {
                HumanoidModel modelBipedMain = (HumanoidModel)this.renderPlayer.m_7200_();
                PlayerConfigurations.renderPlayerItems(modelBipedMain, player, matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
             }

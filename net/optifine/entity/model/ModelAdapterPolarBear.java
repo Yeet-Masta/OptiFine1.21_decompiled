@@ -13,10 +13,12 @@ public class ModelAdapterPolarBear extends ModelAdapterQuadruped {
       super(EntityType.f_20514_, "polar_bear", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new PolarBearModel(bakeModelLayer(ModelLayers.f_171170_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PolarBearRenderer render = new PolarBearRenderer(renderManager.getContext());

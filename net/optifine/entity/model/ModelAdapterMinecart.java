@@ -20,10 +20,12 @@ public class ModelAdapterMinecart extends ModelAdapter {
       super(type, name, shadow);
    }
 
+   @Override
    public Model makeModel() {
       return new MinecartModel(bakeModelLayer(ModelLayers.f_171198_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof MinecartModel modelMinecart)) {
          return null;
@@ -42,10 +44,12 @@ public class ModelAdapterMinecart extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"bottom", "back", "front", "right", "left", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       MinecartRenderer render = new MinecartRenderer(renderManager.getContext(), ModelLayers.f_171198_);

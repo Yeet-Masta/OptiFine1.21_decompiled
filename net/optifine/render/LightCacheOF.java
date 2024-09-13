@@ -9,10 +9,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.override.ChunkCacheOF;
 
 public class LightCacheOF {
-   public static final float getBrightness(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
+   public static float getBrightness(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
       float aoLight = getAoLightRaw(blockStateIn, worldIn, blockPosIn);
-      aoLight = ModelBlockRenderer.fixAoLightValue(aoLight);
-      return aoLight;
+      return ModelBlockRenderer.fixAoLightValue(aoLight);
    }
 
    private static float getAoLightRaw(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
@@ -23,12 +22,8 @@ public class LightCacheOF {
       }
    }
 
-   public static final int getPackedLight(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
-      if (worldIn instanceof ChunkCacheOF cc) {
-         return cc.getCombinedLight(blockStateIn, worldIn, blockPosIn);
-      } else {
-         return getPackedLightRaw(worldIn, blockStateIn, blockPosIn);
-      }
+   public static int getPackedLight(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
+      return worldIn instanceof ChunkCacheOF cc ? cc.getCombinedLight(blockStateIn, worldIn, blockPosIn) : getPackedLightRaw(worldIn, blockStateIn, blockPosIn);
    }
 
    public static int getPackedLightRaw(BlockAndTintGetter worldIn, BlockState blockStateIn, BlockPos blockPosIn) {

@@ -22,6 +22,7 @@ public class SimpleShaderTexture extends AbstractTexture {
       this.texturePath = texturePath;
    }
 
+   @Override
    public void m_6704_(ResourceManager resourceManager) throws IOException {
       this.m_117964_();
       InputStream inputStream = Shaders.getShaderPackResourceStream(this.texturePath);
@@ -37,7 +38,6 @@ public class SimpleShaderTexture extends AbstractTexture {
          } finally {
             IOUtils.closeQuietly(inputStream);
          }
-
       }
    }
 
@@ -48,27 +48,33 @@ public class SimpleShaderTexture extends AbstractTexture {
       if (inMeta != null) {
          BufferedReader brMeta = new BufferedReader(new InputStreamReader(inMeta));
 
+         TextureMetadataSection var9;
          try {
-            JsonObject jsonMeta = (new JsonParser()).parse(brMeta).getAsJsonObject();
+            JsonObject jsonMeta = new JsonParser().m_82160_(brMeta).getAsJsonObject();
             JsonObject jsonMetaTexture = jsonMeta.getAsJsonObject(sectionName);
-            if (jsonMetaTexture != null) {
-               TextureMetadataSection meta = TextureMetadataSection.f_119108_.m_6322_(jsonMetaTexture);
-               if (meta != null) {
-                  TextureMetadataSection var9 = meta;
-                  return var9;
-               }
+            if (jsonMetaTexture == null) {
+               return def;
             }
+
+            TextureMetadataSection meta = TextureMetadataSection.f_119108_.m_6322_(jsonMetaTexture);
+            if (meta == null) {
+               return def;
+            }
+
+            var9 = meta;
          } catch (RuntimeException var13) {
             SMCLog.warning("Error reading metadata: " + pathMeta);
-            String var10000 = var13.getClass().getName();
-            SMCLog.warning(var10000 + ": " + var13.getMessage());
+            SMCLog.warning(var13.getClass().getName() + ": " + var13.getMessage());
+            return def;
          } finally {
             IOUtils.closeQuietly(brMeta);
             IOUtils.closeQuietly(inMeta);
          }
-      }
 
-      return def;
+         return var9;
+      } else {
+         return def;
+      }
    }
 
    public long getSize() {

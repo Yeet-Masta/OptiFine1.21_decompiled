@@ -18,16 +18,16 @@ import net.minecraftforge.client.model.data.ModelDataManager;
 import net.optifine.override.ChunkCacheOF;
 
 public class RenderChunkRegion implements BlockAndTintGetter {
-   public static final int f_337396_ = 1;
-   public static final int f_337092_ = 3;
-   private final int f_336971_;
-   private final int f_336993_;
-   protected final RenderChunk[] f_112905_;
-   protected final Level f_112908_;
+   public static int f_337396_;
+   public static int f_337092_;
+   private int f_336971_;
+   private int f_336993_;
+   protected RenderChunk[] f_112905_;
+   protected Level f_112908_;
    private SectionPos sectionPos;
 
    RenderChunkRegion(Level worldIn, int chunkStartXIn, int chunkStartYIn, RenderChunk[] chunksIn) {
-      this(worldIn, chunkStartXIn, chunkStartYIn, chunksIn, (SectionPos)null);
+      this(worldIn, chunkStartXIn, chunkStartYIn, chunksIn, null);
    }
 
    RenderChunkRegion(Level worldIn, int chunkStartXIn, int chunkStartYIn, RenderChunk[] chunksIn, SectionPos sectionPosIn) {
@@ -87,12 +87,11 @@ public class RenderChunkRegion implements BlockAndTintGetter {
       return this.m_340417_(cx, cz).getChunk();
    }
 
-   public void finish() {
-      for(int i = 0; i < this.f_112905_.length; ++i) {
+   public void m_185413_() {
+      for (int i = 0; i < this.f_112905_.length; i++) {
          RenderChunk rc = this.f_112905_[i];
-         rc.finish();
+         rc.m_185413_();
       }
-
    }
 
    public ChunkCacheOF makeChunkCacheOF() {
@@ -108,20 +107,10 @@ public class RenderChunkRegion implements BlockAndTintGetter {
    }
 
    public float getShade(float normalX, float normalY, float normalZ, boolean shade) {
-      if (this.f_112908_ instanceof ClientLevel) {
-         ClientLevel clientWorld = (ClientLevel)this.f_112908_;
-         return clientWorld.getShade(normalX, normalY, normalZ, shade);
-      } else {
-         return 1.0F;
-      }
+      return this.f_112908_ instanceof ClientLevel clientWorld ? clientWorld.getShade(normalX, normalY, normalZ, shade) : 1.0F;
    }
 
    public ModelDataManager getModelDataManager() {
-      if (this.f_112908_ instanceof ClientLevel) {
-         ClientLevel clientWorld = (ClientLevel)this.f_112908_;
-         return clientWorld.getModelDataManager();
-      } else {
-         return null;
-      }
+      return this.f_112908_ instanceof ClientLevel clientWorld ? clientWorld.getModelDataManager() : null;
    }
 }

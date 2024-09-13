@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -13,6 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.WeightedEntry;
 import net.minecraft.util.random.WeightedRandom;
+import net.minecraft.util.random.WeightedEntry.Wrapper;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.ChunkRenderTypeSet;
@@ -21,24 +23,25 @@ import net.minecraftforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 
 public class WeightedBakedModel implements BakedModel, IDynamicBakedModel {
-   private final int f_119540_;
-   private final List f_119541_;
-   private final BakedModel f_119542_;
+   private int f_119540_;
+   private List<Wrapper<BakedModel>> f_119541_;
+   private BakedModel f_119542_;
 
-   public WeightedBakedModel(List modelsIn) {
+   public WeightedBakedModel(List<Wrapper<BakedModel>> modelsIn) {
       this.f_119541_ = modelsIn;
       this.f_119540_ = WeightedRandom.m_146312_(modelsIn);
-      this.f_119542_ = (BakedModel)((WeightedEntry.Wrapper)modelsIn.get(0)).f_146299_();
+      this.f_119542_ = (BakedModel)((Wrapper)modelsIn.get(0)).f_146299_();
    }
 
-   public List m_213637_(@Nullable BlockState state, @Nullable Direction side, RandomSource rand) {
-      WeightedEntry.Wrapper wbm = (WeightedEntry.Wrapper)getWeightedItem(this.f_119541_, Math.abs((int)rand.m_188505_()) % this.f_119540_);
+   @Override
+   public List<BakedQuad> m_213637_(@Nullable BlockState state, @Nullable Direction side, RandomSource rand) {
+      Wrapper<BakedModel> wbm = getWeightedItem(this.f_119541_, Math.abs((int)rand.m_188505_()) % this.f_119540_);
       return wbm == null ? Collections.emptyList() : ((BakedModel)wbm.f_146299_()).m_213637_(state, side, rand);
    }
 
-   public static WeightedEntry getWeightedItem(List items, int targetWeight) {
-      for(int i = 0; i < items.size(); ++i) {
-         WeightedEntry t = (WeightedEntry)items.get(i);
+   public static <T extends WeightedEntry> T getWeightedItem(List<T> items, int targetWeight) {
+      for (int i = 0; i < items.size(); i++) {
+         T t = (T)items.get(i);
          targetWeight -= t.m_142631_().m_146281_();
          if (targetWeight < 0) {
             return t;
@@ -48,8 +51,8 @@ public class WeightedBakedModel implements BakedModel, IDynamicBakedModel {
       return null;
    }
 
-   public List getQuads(BlockState state, Direction side, RandomSource rand, ModelData modelData, RenderType renderType) {
-      WeightedEntry.Wrapper wbm = (WeightedEntry.Wrapper)getWeightedItem(this.f_119541_, Math.abs((int)rand.m_188505_()) % this.f_119540_);
+   public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand, ModelData modelData, RenderType renderType) {
+      Wrapper<BakedModel> wbm = getWeightedItem(this.f_119541_, Math.abs((int)rand.m_188505_()) % this.f_119540_);
       return wbm == null ? Collections.emptyList() : ((BakedModel)wbm.f_146299_()).getQuads(state, side, rand, modelData, renderType);
    }
 
@@ -70,42 +73,49 @@ public class WeightedBakedModel implements BakedModel, IDynamicBakedModel {
    }
 
    public ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
-      WeightedEntry.Wrapper wbm = (WeightedEntry.Wrapper)getWeightedItem(this.f_119541_, Math.abs((int)rand.m_188505_()) % this.f_119540_);
+      Wrapper<BakedModel> wbm = getWeightedItem(this.f_119541_, Math.abs((int)rand.m_188505_()) % this.f_119540_);
       return wbm == null ? ChunkRenderTypeSet.none() : ((BakedModel)wbm.f_146299_()).getRenderTypes(state, rand, data);
    }
 
+   @Override
    public boolean m_7541_() {
       return this.f_119542_.m_7541_();
    }
 
+   @Override
    public boolean m_7539_() {
       return this.f_119542_.m_7539_();
    }
 
+   @Override
    public boolean m_7547_() {
       return this.f_119542_.m_7547_();
    }
 
+   @Override
    public boolean m_7521_() {
       return this.f_119542_.m_7521_();
    }
 
+   @Override
    public TextureAtlasSprite m_6160_() {
       return this.f_119542_.m_6160_();
    }
 
+   @Override
    public ItemTransforms m_7442_() {
       return this.f_119542_.m_7442_();
    }
 
+   @Override
    public ItemOverrides m_7343_() {
       return this.f_119542_.m_7343_();
    }
 
    public static class Builder {
-      private final List f_119556_ = Lists.newArrayList();
+      private List<Wrapper<BakedModel>> f_119556_ = Lists.newArrayList();
 
-      public Builder m_119559_(@Nullable BakedModel model, int weight) {
+      public WeightedBakedModel.Builder m_119559_(@Nullable BakedModel model, int weight) {
          if (model != null) {
             this.f_119556_.add(WeightedEntry.m_146290_(model, weight));
          }
@@ -118,7 +128,7 @@ public class WeightedBakedModel implements BakedModel, IDynamicBakedModel {
          if (this.f_119556_.isEmpty()) {
             return null;
          } else {
-            return (BakedModel)(this.f_119556_.size() == 1 ? (BakedModel)((WeightedEntry.Wrapper)this.f_119556_.get(0)).f_146299_() : new WeightedBakedModel(this.f_119556_));
+            return (BakedModel)(this.f_119556_.size() == 1 ? (BakedModel)((Wrapper)this.f_119556_.get(0)).f_146299_() : new WeightedBakedModel(this.f_119556_));
          }
       }
    }

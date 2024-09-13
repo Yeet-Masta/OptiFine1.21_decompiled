@@ -1,5 +1,6 @@
 package net.optifine.render;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -12,6 +13,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.chunk.SectionCompiler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.BlockPosM;
@@ -26,50 +28,32 @@ public class RenderEnv {
    private int metadata = -1;
    private int breakingAnimation = -1;
    private int smartLeaves = -1;
-   private float[] quadBounds;
-   private BitSet boundsFlags;
-   private ModelBlockRenderer.AmbientOcclusionFace aoFace;
-   private BlockPosM colorizerBlockPosM;
-   private BlockPos.MutableBlockPos renderMutableBlockPos;
-   private boolean[] borderFlags;
-   private boolean[] borderFlags2;
-   private boolean[] borderFlags3;
-   private Direction[] borderDirections;
-   private List listQuadsCustomizer;
-   private List listQuadsCtmMultipass;
-   private BakedQuad[] arrayQuadsCtm1;
-   private BakedQuad[] arrayQuadsCtm2;
-   private BakedQuad[] arrayQuadsCtm3;
-   private BakedQuad[] arrayQuadsCtm4;
+   private float[] quadBounds = new float[Direction.f_122346_.length * 2];
+   private BitSet boundsFlags = new BitSet(3);
+   private ModelBlockRenderer.AmbientOcclusionFace aoFace = new ModelBlockRenderer.AmbientOcclusionFace();
+   private BlockPosM colorizerBlockPosM = null;
+   private MutableBlockPos renderMutableBlockPos = null;
+   private boolean[] borderFlags = null;
+   private boolean[] borderFlags2 = null;
+   private boolean[] borderFlags3 = null;
+   private Direction[] borderDirections = null;
+   private List<BakedQuad> listQuadsCustomizer = new ArrayList();
+   private List<BakedQuad> listQuadsCtmMultipass = new ArrayList();
+   private BakedQuad[] arrayQuadsCtm1 = new BakedQuad[1];
+   private BakedQuad[] arrayQuadsCtm2 = new BakedQuad[2];
+   private BakedQuad[] arrayQuadsCtm3 = new BakedQuad[3];
+   private BakedQuad[] arrayQuadsCtm4 = new BakedQuad[4];
    private SectionCompiler sectionCompiler;
-   private Map bufferBuilderMap;
+   private Map<RenderType, BufferBuilder> bufferBuilderMap;
    private SectionBufferBuilderPack sectionBufferBuilderPack;
-   private ListQuadsOverlay[] listsQuadsOverlay;
-   private boolean overlaysRendered;
-   private Long2ByteLinkedOpenHashMap renderSideMap;
-   private static final int UNKNOWN = -1;
-   private static final int FALSE = 0;
-   private static final int TRUE = 1;
+   private ListQuadsOverlay[] listsQuadsOverlay = new ListQuadsOverlay[RenderType.CHUNK_RENDER_TYPES.length];
+   private boolean overlaysRendered = false;
+   private Long2ByteLinkedOpenHashMap renderSideMap = new Long2ByteLinkedOpenHashMap();
+   private static int UNKNOWN;
+   private static int FALSE;
+   private static int TRUE;
 
    public RenderEnv(BlockState blockState, BlockPos blockPos) {
-      this.quadBounds = new float[Direction.f_122346_.length * 2];
-      this.boundsFlags = new BitSet(3);
-      this.aoFace = new ModelBlockRenderer.AmbientOcclusionFace();
-      this.colorizerBlockPosM = null;
-      this.renderMutableBlockPos = null;
-      this.borderFlags = null;
-      this.borderFlags2 = null;
-      this.borderFlags3 = null;
-      this.borderDirections = null;
-      this.listQuadsCustomizer = new ArrayList();
-      this.listQuadsCtmMultipass = new ArrayList();
-      this.arrayQuadsCtm1 = new BakedQuad[1];
-      this.arrayQuadsCtm2 = new BakedQuad[2];
-      this.arrayQuadsCtm3 = new BakedQuad[3];
-      this.arrayQuadsCtm4 = new BakedQuad[4];
-      this.listsQuadsOverlay = new ListQuadsOverlay[RenderType.CHUNK_RENDER_TYPES.length];
-      this.overlaysRendered = false;
-      this.renderSideMap = new Long2ByteLinkedOpenHashMap();
       this.blockState = blockState;
       this.blockPos = blockPos;
    }
@@ -154,9 +138,9 @@ public class RenderEnv {
       return this.colorizerBlockPosM;
    }
 
-   public BlockPos.MutableBlockPos getRenderMutableBlockPos() {
+   public MutableBlockPos getRenderMutableBlockPos() {
       if (this.renderMutableBlockPos == null) {
-         this.renderMutableBlockPos = new BlockPos.MutableBlockPos(0, 0, 0);
+         this.renderMutableBlockPos = new MutableBlockPos(0, 0, 0);
       }
 
       return this.renderMutableBlockPos;
@@ -215,7 +199,7 @@ public class RenderEnv {
       return this.smartLeaves == 1;
    }
 
-   public List getListQuadsCustomizer() {
+   public List<BakedQuad> getListQuadsCustomizer() {
       return this.listQuadsCustomizer;
    }
 
@@ -245,10 +229,10 @@ public class RenderEnv {
       return this.arrayQuadsCtm4;
    }
 
-   public List getListQuadsCtmMultipass(BakedQuad[] quads) {
+   public List<BakedQuad> getListQuadsCtmMultipass(BakedQuad[] quads) {
       this.listQuadsCtmMultipass.clear();
       if (quads != null) {
-         for(int i = 0; i < quads.length; ++i) {
+         for (int i = 0; i < quads.length; i++) {
             BakedQuad quad = quads[i];
             this.listQuadsCtmMultipass.add(quad);
          }
@@ -257,7 +241,9 @@ public class RenderEnv {
       return this.listQuadsCtmMultipass;
    }
 
-   public void setCompileParams(SectionCompiler sectionCompiler, Map bufferBuilderMap, SectionBufferBuilderPack sectionBufferBuilderPack) {
+   public void setCompileParams(
+      SectionCompiler sectionCompiler, Map<RenderType, BufferBuilder> bufferBuilderMap, SectionBufferBuilderPack sectionBufferBuilderPack
+   ) {
       this.sectionCompiler = sectionCompiler;
       this.bufferBuilderMap = bufferBuilderMap;
       this.sectionBufferBuilderPack = sectionBufferBuilderPack;
@@ -267,7 +253,7 @@ public class RenderEnv {
       return this.sectionCompiler;
    }
 
-   public Map getBufferBuilderMap() {
+   public Map<RenderType, BufferBuilder> getBufferBuilderMap() {
       return this.bufferBuilderMap;
    }
 

@@ -9,10 +9,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class OptiFineTweaker implements ITweaker {
-   private List args;
-   private static final Logger LOGGER = LogManager.getLogger();
+   private List<String> args;
+   private static Logger LOGGER = LogManager.getLogger();
 
-   public void acceptOptions(List args, File gameDir, File assetsDir, String profile) {
+   public void acceptOptions(List<String> args, File gameDir, File assetsDir, String profile) {
       dbg("OptiFineTweaker: acceptOptions");
       this.args = new ArrayList(args);
       this.args.add("--gameDir");

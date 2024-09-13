@@ -28,7 +28,9 @@ public class TextureAnimation {
    private boolean active = true;
    private boolean valid = true;
 
-   public TextureAnimation(String texFrom, byte[] srcData, String texTo, ResourceLocation locTexTo, int dstX, int dstY, int frameWidth, int frameHeight, Properties props) {
+   public TextureAnimation(
+      String texFrom, byte[] srcData, String texTo, ResourceLocation locTexTo, int dstX, int dstY, int frameWidth, int frameHeight, Properties props
+   ) {
       this.srcTex = texFrom;
       this.dstTex = texTo;
       this.dstTexLoc = locTexTo;
@@ -44,7 +46,7 @@ public class TextureAnimation {
       this.srcData = srcData;
       int numFrames = srcData.length / frameLen;
       if (props.get("tile.0") != null) {
-         for(int i = 0; props.get("tile." + i) != null; ++i) {
+         for (int i = 0; props.get("tile." + i) != null; i++) {
             numFrames = i + 1;
          }
       }
@@ -53,7 +55,7 @@ public class TextureAnimation {
       int durationDef = Math.max(Config.parseInt(durationDefStr, 1), 1);
       this.frames = new TextureAnimationFrame[numFrames];
 
-      for(int i = 0; i < this.frames.length; ++i) {
+      for (int i = 0; i < this.frames.length; i++) {
          String indexStr = (String)props.get("tile." + i);
          int index = Config.parseInt(indexStr, i);
          String durationStr = (String)props.get("duration." + i);
@@ -67,7 +69,6 @@ public class TextureAnimation {
       if (this.interpolate) {
          this.interpolateData = GlUtil.m_166247_(frameLen);
       }
-
    }
 
    public boolean nextFrame() {
@@ -75,12 +76,12 @@ public class TextureAnimation {
       if (frame == null) {
          return false;
       } else {
-         ++frame.counter;
+         frame.counter++;
          if (frame.counter < frame.duration) {
             return this.interpolate;
          } else {
             frame.counter = 0;
-            ++this.currentFrameIndex;
+            this.currentFrameIndex++;
             if (this.currentFrameIndex >= this.frames.length) {
                this.currentFrameIndex = 0;
             }
@@ -102,8 +103,7 @@ public class TextureAnimation {
             index = 0;
          }
 
-         TextureAnimationFrame frame = this.frames[index];
-         return frame;
+         return this.frames[index];
       }
    }
 
@@ -111,7 +111,7 @@ public class TextureAnimation {
       return this.frames.length;
    }
 
-   public void updateTexture() {
+   public void m_125959_() {
       if (this.valid) {
          if (this.dstTextId < 0) {
             AbstractTexture tex = TextureUtils.getTexture(this.dstTexLoc);
@@ -138,17 +138,15 @@ public class TextureAnimation {
                if (frame != null) {
                   int offset = frameLen * frame.index;
                   if (offset + frameLen <= this.imageData.limit()) {
-                     if (this.interpolate && frame.counter > 0) {
-                        if (this.interpolateSkip <= 1 || frame.counter % this.interpolateSkip == 0) {
-                           TextureAnimationFrame frameNext = this.getFrame(this.currentFrameIndex + 1);
-                           double k = 1.0 * (double)frame.counter / (double)frame.duration;
-                           this.updateTextureInerpolate(frame, frameNext, k);
-                        }
-                     } else {
+                     if (!this.interpolate || frame.counter <= 0) {
                         this.imageData.position(offset);
                         GlStateManager._bindTexture(this.dstTextId);
                         TextureUtils.resetDataUnpacking();
                         GL11.glTexSubImage2D(3553, 0, this.dstX, this.dstY, this.frameWidth, this.frameHeight, 6408, 5121, this.imageData);
+                     } else if (this.interpolateSkip <= 1 || frame.counter % this.interpolateSkip == 0) {
+                        TextureAnimationFrame frameNext = this.getFrame(this.currentFrameIndex + 1);
+                        double k = 1.0 * (double)frame.counter / (double)frame.duration;
+                        this.updateTextureInerpolate(frame, frameNext, k);
                      }
                   }
                }
@@ -165,7 +163,7 @@ public class TextureAnimation {
          if (offset2 + frameLen <= this.imageData.limit()) {
             this.interpolateData.clear();
 
-            for(int i = 0; i < frameLen; ++i) {
+            for (int i = 0; i < frameLen; i++) {
                int c1 = this.imageData.get(offset1 + i) & 255;
                int c2 = this.imageData.get(offset2 + i) & 255;
                int c = this.mix(c1, c2, k);

@@ -12,13 +12,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.util.Either;
 
 public abstract class ModelAdapter {
-   private Either type;
+   private Either<EntityType, BlockEntityType> type;
    private String name;
    private float shadowSize;
    private String[] aliases;
 
    public ModelAdapter(EntityType entityType, String name, float shadowSize) {
-      this((Either)Either.makeLeft(entityType), name, shadowSize, (String[])null);
+      this(Either.makeLeft(entityType), name, shadowSize, null);
    }
 
    public ModelAdapter(EntityType entityType, String name, float shadowSize, String[] aliases) {
@@ -26,21 +26,21 @@ public abstract class ModelAdapter {
    }
 
    public ModelAdapter(BlockEntityType tileEntityType, String name, float shadowSize) {
-      this((Either)Either.makeRight(tileEntityType), name, shadowSize, (String[])null);
+      this(Either.makeRight(tileEntityType), name, shadowSize, null);
    }
 
    public ModelAdapter(BlockEntityType tileEntityType, String name, float shadowSize, String[] aliases) {
       this(Either.makeRight(tileEntityType), name, shadowSize, aliases);
    }
 
-   public ModelAdapter(Either type, String name, float shadowSize, String[] aliases) {
+   public ModelAdapter(Either<EntityType, BlockEntityType> type, String name, float shadowSize, String[] aliases) {
       this.type = type;
       this.name = name;
       this.shadowSize = shadowSize;
       this.aliases = aliases;
    }
 
-   public Either getType() {
+   public Either<EntityType, BlockEntityType> getType() {
       return this.type;
    }
 
@@ -70,9 +70,9 @@ public abstract class ModelAdapter {
 
    public ModelPart[] getModelRenderers(Model model) {
       String[] names = this.getModelRendererNames();
-      List list = new ArrayList();
+      List<ModelPart> list = new ArrayList();
 
-      for(int i = 0; i < names.length; ++i) {
+      for (int i = 0; i < names.length; i++) {
          String name = names[i];
          ModelPart mr = this.getModelRenderer(model, name);
          if (mr != null) {
@@ -80,8 +80,7 @@ public abstract class ModelAdapter {
          }
       }
 
-      ModelPart[] mrs = (ModelPart[])list.toArray(new ModelPart[list.size()]);
-      return mrs;
+      return (ModelPart[])list.toArray(new ModelPart[list.size()]);
    }
 
    public static ModelPart bakeModelLayer(ModelLayerLocation loc) {

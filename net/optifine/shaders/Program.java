@@ -7,25 +7,24 @@ import net.optifine.shaders.config.RenderScale;
 import net.optifine.util.DynamicDimension;
 
 public class Program {
-   private final int index;
-   private final String name;
-   private final ProgramStage programStage;
-   private final Program programBackup;
+   private int index;
+   private String name;
+   private ProgramStage programStage;
+   private Program programBackup;
    private ComputeProgram[] computePrograms;
    private GlAlphaState alphaState;
    private GlBlendState blendState;
    private GlBlendState[] blendStatesColorIndexed;
    private RenderScale renderScale;
-   private final Boolean[] buffersFlip = new Boolean[16];
-   // $FF: renamed from: id int
-   private int field_46;
+   private Boolean[] buffersFlip = new Boolean[16];
+   private int f_11893_;
    private int ref;
    private String[] drawBufSettings;
    private DrawBuffers drawBuffers;
    private DrawBuffers drawBuffersCustom;
    private int compositeMipmapSetting;
    private int countInstances;
-   private final boolean[] toggleColorTextures = new boolean[16];
+   private boolean[] toggleColorTextures = new boolean[16];
    private DynamicDimension drawSize;
    private GlBlendState[] blendStatesIndexed;
 
@@ -50,11 +49,11 @@ public class Program {
       this.blendState = null;
       this.blendStatesColorIndexed = null;
       this.renderScale = null;
-      Arrays.fill(this.buffersFlip, (Object)null);
+      Arrays.fill(this.buffersFlip, null);
    }
 
    public void resetId() {
-      this.field_46 = 0;
+      this.f_11893_ = 0;
       this.ref = 0;
    }
 
@@ -68,11 +67,10 @@ public class Program {
       if (this.drawBuffersCustom == null) {
          this.drawBuffersCustom = new DrawBuffers(this.name, 16, 8);
       }
-
    }
 
    public void copyFrom(Program p) {
-      this.field_46 = p.getId();
+      this.f_11893_ = p.getId();
       this.alphaState = p.getAlphaState();
       this.blendState = p.getBlendState();
       this.blendStatesColorIndexed = p.blendStatesColorIndexed;
@@ -103,7 +101,7 @@ public class Program {
    }
 
    public int getId() {
-      return this.field_46;
+      return this.f_11893_;
    }
 
    public int getRef() {
@@ -159,7 +157,7 @@ public class Program {
    }
 
    public void setId(int id) {
-      this.field_46 = id;
+      this.f_11893_ = id;
    }
 
    public void setRef(int ref) {
@@ -223,11 +221,11 @@ public class Program {
    }
 
    public String getRealProgramName() {
-      if (this.field_46 == 0) {
+      if (this.f_11893_ == 0) {
          return "none";
       } else {
          Program p;
-         for(p = this; p.getRef() != this.field_46; p = p.getProgramBackup()) {
+         for (p = this; p.getRef() != this.f_11893_; p = p.getProgramBackup()) {
             if (p.getProgramBackup() == null || p.getProgramBackup() == p) {
                return "unknown";
             }
@@ -258,7 +256,6 @@ public class Program {
    }
 
    public String toString() {
-      String var10000 = this.name;
-      return "name: " + var10000 + ", id: " + this.field_46 + ", ref: " + this.ref + ", real: " + this.getRealProgramName();
+      return "name: " + this.name + ", id: " + this.f_11893_ + ", ref: " + this.ref + ", real: " + this.getRealProgramName();
    }
 }

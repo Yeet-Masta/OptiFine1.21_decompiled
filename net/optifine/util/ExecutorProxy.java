@@ -12,15 +12,15 @@ import java.util.concurrent.TimeoutException;
 public abstract class ExecutorProxy implements ExecutorService {
    protected abstract ExecutorService delegate();
 
-   public void execute(Runnable command) {
-      this.delegate().execute(command);
+   public void m_305380_(Runnable command) {
+      this.delegate().m_305380_(command);
    }
 
    public void shutdown() {
       this.delegate().shutdown();
    }
 
-   public List shutdownNow() {
+   public List<Runnable> shutdownNow() {
       return this.delegate().shutdownNow();
    }
 
@@ -36,31 +36,31 @@ public abstract class ExecutorProxy implements ExecutorService {
       return this.delegate().awaitTermination(timeout, unit);
    }
 
-   public Future submit(Callable task) {
+   public <T> Future<T> submit(Callable<T> task) {
       return this.delegate().submit(task);
    }
 
-   public Future submit(Runnable task, Object result) {
+   public <T> Future<T> submit(Runnable task, T result) {
       return this.delegate().submit(task, result);
    }
 
-   public Future submit(Runnable task) {
+   public Future<?> submit(Runnable task) {
       return this.delegate().submit(task);
    }
 
-   public List invokeAll(Collection tasks) throws InterruptedException {
+   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
       return this.delegate().invokeAll(tasks);
    }
 
-   public List invokeAll(Collection tasks, long timeout, TimeUnit unit) throws InterruptedException {
+   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
       return this.delegate().invokeAll(tasks, timeout, unit);
    }
 
-   public Object invokeAny(Collection tasks) throws InterruptedException, ExecutionException {
-      return this.delegate().invokeAny(tasks);
+   public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+      return (T)this.delegate().invokeAny(tasks);
    }
 
-   public Object invokeAny(Collection tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-      return this.delegate().invokeAny(tasks, timeout, unit);
+   public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      return (T)this.delegate().invokeAny(tasks, timeout, unit);
    }
 }

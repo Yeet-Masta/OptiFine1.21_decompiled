@@ -3,8 +3,8 @@ package com.mojang.blaze3d.vertex;
 import javax.annotation.Nullable;
 
 public class Tesselator {
-   private static final int f_302531_ = 786432;
-   private final ByteBufferBuilder f_337014_;
+   private static int f_302531_;
+   private ByteBufferBuilder f_337014_;
    @Nullable
    private static Tesselator f_302797_;
 

@@ -7,7 +7,6 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
@@ -24,7 +23,6 @@ import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.gui.components.SubtitleOverlay;
 import net.minecraft.client.gui.components.spectator.SpectatorGui;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
@@ -34,8 +32,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.numbers.NumberFormat;
 import net.minecraft.network.chat.numbers.StyledFormat;
 import net.minecraft.resources.ResourceLocation;
@@ -73,6 +71,7 @@ import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.client.extensions.common.IClientMobEffectExtensions;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions.FontContext;
 import net.optifine.Config;
 import net.optifine.CustomColors;
 import net.optifine.CustomItems;
@@ -81,55 +80,57 @@ import net.optifine.reflect.Reflector;
 import org.joml.Matrix4fStack;
 
 public class Gui {
-   private static final ResourceLocation f_291829_ = ResourceLocation.m_340282_("hud/crosshair");
-   private static final ResourceLocation f_291363_ = ResourceLocation.m_340282_("hud/crosshair_attack_indicator_full");
-   private static final ResourceLocation f_291360_ = ResourceLocation.m_340282_("hud/crosshair_attack_indicator_background");
-   private static final ResourceLocation f_290711_ = ResourceLocation.m_340282_("hud/crosshair_attack_indicator_progress");
-   private static final ResourceLocation f_291473_ = ResourceLocation.m_340282_("hud/effect_background_ambient");
-   private static final ResourceLocation f_290513_ = ResourceLocation.m_340282_("hud/effect_background");
-   private static final ResourceLocation f_291149_ = ResourceLocation.m_340282_("hud/hotbar");
-   private static final ResourceLocation f_290368_ = ResourceLocation.m_340282_("hud/hotbar_selection");
-   private static final ResourceLocation f_291322_ = ResourceLocation.m_340282_("hud/hotbar_offhand_left");
-   private static final ResourceLocation f_291864_ = ResourceLocation.m_340282_("hud/hotbar_offhand_right");
-   private static final ResourceLocation f_290833_ = ResourceLocation.m_340282_("hud/hotbar_attack_indicator_background");
-   private static final ResourceLocation f_291301_ = ResourceLocation.m_340282_("hud/hotbar_attack_indicator_progress");
-   private static final ResourceLocation f_291483_ = ResourceLocation.m_340282_("hud/jump_bar_background");
-   private static final ResourceLocation f_291104_ = ResourceLocation.m_340282_("hud/jump_bar_cooldown");
-   private static final ResourceLocation f_291820_ = ResourceLocation.m_340282_("hud/jump_bar_progress");
-   private static final ResourceLocation f_291741_ = ResourceLocation.m_340282_("hud/experience_bar_background");
-   private static final ResourceLocation f_291491_ = ResourceLocation.m_340282_("hud/experience_bar_progress");
-   private static final ResourceLocation f_291879_ = ResourceLocation.m_340282_("hud/armor_empty");
-   private static final ResourceLocation f_291785_ = ResourceLocation.m_340282_("hud/armor_half");
-   private static final ResourceLocation f_290436_ = ResourceLocation.m_340282_("hud/armor_full");
-   private static final ResourceLocation f_291486_ = ResourceLocation.m_340282_("hud/food_empty_hunger");
-   private static final ResourceLocation f_291577_ = ResourceLocation.m_340282_("hud/food_half_hunger");
-   private static final ResourceLocation f_290366_ = ResourceLocation.m_340282_("hud/food_full_hunger");
-   private static final ResourceLocation f_290694_ = ResourceLocation.m_340282_("hud/food_empty");
-   private static final ResourceLocation f_291002_ = ResourceLocation.m_340282_("hud/food_half");
-   private static final ResourceLocation f_291650_ = ResourceLocation.m_340282_("hud/food_full");
-   private static final ResourceLocation f_291833_ = ResourceLocation.m_340282_("hud/air");
-   private static final ResourceLocation f_291609_ = ResourceLocation.m_340282_("hud/air_bursting");
-   private static final ResourceLocation f_290939_ = ResourceLocation.m_340282_("hud/heart/vehicle_container");
-   private static final ResourceLocation f_291256_ = ResourceLocation.m_340282_("hud/heart/vehicle_full");
-   private static final ResourceLocation f_290334_ = ResourceLocation.m_340282_("hud/heart/vehicle_half");
-   private static final ResourceLocation f_92981_ = ResourceLocation.m_340282_("textures/misc/vignette.png");
-   private static final ResourceLocation f_92983_ = ResourceLocation.m_340282_("textures/misc/pumpkinblur.png");
-   private static final ResourceLocation f_168665_ = ResourceLocation.m_340282_("textures/misc/spyglass_scope.png");
-   private static final ResourceLocation f_168666_ = ResourceLocation.m_340282_("textures/misc/powder_snow_outline.png");
-   private static final Comparator f_302813_;
-   private static final Component f_92984_;
-   private static final Component f_193830_;
-   private static final float f_168668_ = 5.0F;
-   private static final int f_168669_ = 10;
-   private static final int f_168670_ = 10;
-   private static final String f_168671_ = ": ";
-   private static final float f_168672_ = 0.2F;
-   private static final int f_168673_ = 9;
-   private static final int f_168674_ = 8;
-   private static final float f_193831_ = 0.2F;
-   private final RandomSource f_92985_ = RandomSource.m_216327_();
-   private final Minecraft f_92986_;
-   private final ChatComponent f_92988_;
+   private static ResourceLocation f_291829_ = ResourceLocation.m_340282_("hud/crosshair");
+   private static ResourceLocation f_291363_ = ResourceLocation.m_340282_("hud/crosshair_attack_indicator_full");
+   private static ResourceLocation f_291360_ = ResourceLocation.m_340282_("hud/crosshair_attack_indicator_background");
+   private static ResourceLocation f_290711_ = ResourceLocation.m_340282_("hud/crosshair_attack_indicator_progress");
+   private static ResourceLocation f_291473_ = ResourceLocation.m_340282_("hud/effect_background_ambient");
+   private static ResourceLocation f_290513_ = ResourceLocation.m_340282_("hud/effect_background");
+   private static ResourceLocation f_291149_ = ResourceLocation.m_340282_("hud/hotbar");
+   private static ResourceLocation f_290368_ = ResourceLocation.m_340282_("hud/hotbar_selection");
+   private static ResourceLocation f_291322_ = ResourceLocation.m_340282_("hud/hotbar_offhand_left");
+   private static ResourceLocation f_291864_ = ResourceLocation.m_340282_("hud/hotbar_offhand_right");
+   private static ResourceLocation f_290833_ = ResourceLocation.m_340282_("hud/hotbar_attack_indicator_background");
+   private static ResourceLocation f_291301_ = ResourceLocation.m_340282_("hud/hotbar_attack_indicator_progress");
+   private static ResourceLocation f_291483_ = ResourceLocation.m_340282_("hud/jump_bar_background");
+   private static ResourceLocation f_291104_ = ResourceLocation.m_340282_("hud/jump_bar_cooldown");
+   private static ResourceLocation f_291820_ = ResourceLocation.m_340282_("hud/jump_bar_progress");
+   private static ResourceLocation f_291741_ = ResourceLocation.m_340282_("hud/experience_bar_background");
+   private static ResourceLocation f_291491_ = ResourceLocation.m_340282_("hud/experience_bar_progress");
+   private static ResourceLocation f_291879_ = ResourceLocation.m_340282_("hud/armor_empty");
+   private static ResourceLocation f_291785_ = ResourceLocation.m_340282_("hud/armor_half");
+   private static ResourceLocation f_290436_ = ResourceLocation.m_340282_("hud/armor_full");
+   private static ResourceLocation f_291486_ = ResourceLocation.m_340282_("hud/food_empty_hunger");
+   private static ResourceLocation f_291577_ = ResourceLocation.m_340282_("hud/food_half_hunger");
+   private static ResourceLocation f_290366_ = ResourceLocation.m_340282_("hud/food_full_hunger");
+   private static ResourceLocation f_290694_ = ResourceLocation.m_340282_("hud/food_empty");
+   private static ResourceLocation f_291002_ = ResourceLocation.m_340282_("hud/food_half");
+   private static ResourceLocation f_291650_ = ResourceLocation.m_340282_("hud/food_full");
+   private static ResourceLocation f_291833_ = ResourceLocation.m_340282_("hud/air");
+   private static ResourceLocation f_291609_ = ResourceLocation.m_340282_("hud/air_bursting");
+   private static ResourceLocation f_290939_ = ResourceLocation.m_340282_("hud/heart/vehicle_container");
+   private static ResourceLocation f_291256_ = ResourceLocation.m_340282_("hud/heart/vehicle_full");
+   private static ResourceLocation f_290334_ = ResourceLocation.m_340282_("hud/heart/vehicle_half");
+   private static ResourceLocation f_92981_ = ResourceLocation.m_340282_("textures/misc/vignette.png");
+   private static ResourceLocation f_92983_ = ResourceLocation.m_340282_("textures/misc/pumpkinblur.png");
+   private static ResourceLocation f_168665_ = ResourceLocation.m_340282_("textures/misc/spyglass_scope.png");
+   private static ResourceLocation f_168666_ = ResourceLocation.m_340282_("textures/misc/powder_snow_outline.png");
+   private static Comparator<PlayerScoreEntry> f_302813_ = Comparator.comparing(PlayerScoreEntry::f_303807_)
+      .reversed()
+      .thenComparing(PlayerScoreEntry::f_302847_, String.CASE_INSENSITIVE_ORDER);
+   private static Component f_92984_ = Component.m_237115_("demo.demoExpired");
+   private static Component f_193830_ = Component.m_237115_("menu.savingLevel");
+   private static float f_168668_;
+   private static int f_168669_;
+   private static int f_168670_;
+   private static String f_168671_;
+   private static float f_168672_;
+   private static int f_168673_;
+   private static int f_168674_;
+   private static float f_193831_;
+   private RandomSource f_92985_ = RandomSource.m_216327_();
+   private Minecraft f_92986_;
+   private ChatComponent f_92988_;
    private int f_92989_;
    @Nullable
    private Component f_92990_;
@@ -138,12 +139,12 @@ public class Gui {
    private boolean f_238167_;
    public float f_92980_ = 1.0F;
    private int f_92993_;
-   private ItemStack f_92994_;
+   private ItemStack f_92994_ = ItemStack.f_41583_;
    protected DebugScreenOverlay f_291320_;
-   private final SubtitleOverlay f_92996_;
-   private final SpectatorGui f_92997_;
-   private final PlayerTabOverlay f_92998_;
-   private final BossHealthOverlay f_92999_;
+   private SubtitleOverlay f_92996_;
+   private SpectatorGui f_92997_;
+   private PlayerTabOverlay f_92998_;
+   private BossHealthOverlay f_92999_;
    private int f_93000_;
    @Nullable
    private Component f_93001_;
@@ -158,12 +159,10 @@ public class Gui {
    private long f_92976_;
    private float f_193828_;
    private float f_193829_;
-   private final LayeredDraw f_316662_;
+   private LayeredDraw f_316662_ = new LayeredDraw();
    private float f_168664_;
 
    public Gui(Minecraft mcIn) {
-      this.f_92994_ = ItemStack.f_41583_;
-      this.f_316662_ = new LayeredDraw();
       this.f_92986_ = mcIn;
       this.f_291320_ = new DebugScreenOverlay(mcIn);
       this.f_92997_ = new SpectatorGui(mcIn);
@@ -172,22 +171,27 @@ public class Gui {
       this.f_92999_ = new BossHealthOverlay(mcIn);
       this.f_92996_ = new SubtitleOverlay(mcIn);
       this.m_93006_();
-      LayeredDraw layereddraw = (new LayeredDraw()).m_322513_(this::m_318727_).m_322513_(this::m_280130_).m_322513_(this::m_319215_).m_322513_(this::m_324707_).m_322513_(this::m_280523_).m_322513_((graphicsIn, partialTicks) -> {
-         this.f_92999_.m_280652_(graphicsIn);
-      });
-      LayeredDraw layereddraw1 = (new LayeredDraw()).m_322513_(this::m_280339_).m_322513_((graphicsIn, partialTicks) -> {
-         if (this.f_291320_.m_294516_()) {
-            this.f_291320_.m_94056_(graphicsIn);
-         }
-
-      }).m_322513_(this::m_323286_).m_322513_(this::m_324281_).m_322513_(this::m_320668_).m_322513_(this::m_322096_).m_322513_(this::m_320053_).m_322513_((graphicsIn, partialTicks) -> {
-         this.f_92996_.m_280227_(graphicsIn);
-      });
-      this.f_316662_.m_323151_(layereddraw, () -> {
-         return !mcIn.f_91066_.f_92062_;
-      }).m_322513_(this::m_322680_).m_323151_(layereddraw1, () -> {
-         return !mcIn.f_91066_.f_92062_;
-      });
+      LayeredDraw layereddraw = new LayeredDraw()
+         .m_322513_(this::m_318727_)
+         .m_322513_(this::m_280130_)
+         .m_322513_(this::m_319215_)
+         .m_322513_(this::m_324707_)
+         .m_322513_(this::m_280523_)
+         .m_322513_((graphicsIn, partialTicks) -> this.f_92999_.m_280652_(graphicsIn));
+      LayeredDraw layereddraw1 = new LayeredDraw()
+         .m_322513_(this::m_280339_)
+         .m_322513_((graphicsIn, partialTicks) -> {
+            if (this.f_291320_.m_294516_()) {
+               this.f_291320_.m_94056_(graphicsIn);
+            }
+         })
+         .m_322513_(this::m_323286_)
+         .m_322513_(this::m_324281_)
+         .m_322513_(this::m_320668_)
+         .m_322513_(this::m_322096_)
+         .m_322513_(this::m_320053_)
+         .m_322513_((graphicsIn, partialTicks) -> this.f_92996_.m_280227_(graphicsIn));
+      this.f_316662_.m_323151_(layereddraw, () -> !mcIn.f_91066_.f_92062_).m_322513_(this::m_322680_).m_323151_(layereddraw1, () -> !mcIn.f_91066_.f_92062_);
    }
 
    public void m_93006_() {
@@ -229,7 +233,6 @@ public class Gui {
       if (f1 > 0.0F && !this.f_92986_.f_91074_.m_21023_(MobEffects.f_19604_)) {
          this.m_280379_(graphicsIn, f1);
       }
-
    }
 
    private void m_322680_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
@@ -245,7 +248,6 @@ public class Gui {
          graphicsIn.m_285944_(RenderType.m_286086_(), 0, 0, graphicsIn.m_280182_(), graphicsIn.m_280206_(), i);
          this.f_92986_.m_91307_().m_7238_();
       }
-
    }
 
    private void m_324281_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
@@ -275,7 +277,6 @@ public class Gui {
 
          this.f_92986_.m_91307_().m_7238_();
       }
-
    }
 
    private void m_320668_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
@@ -316,7 +317,6 @@ public class Gui {
 
          this.f_92986_.m_91307_().m_7238_();
       }
-
    }
 
    private void m_322096_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
@@ -326,7 +326,6 @@ public class Gui {
          int j = Mth.m_14107_(this.f_92986_.f_91067_.m_91594_() * (double)window.m_85446_() / (double)window.m_85444_());
          this.f_92988_.m_280165_(graphicsIn, this.f_92989_, i, j, false);
       }
-
    }
 
    private void m_323286_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
@@ -344,41 +343,45 @@ public class Gui {
       if (objective1 != null) {
          this.m_280030_(graphicsIn, objective1);
       }
-
    }
 
    private void m_320053_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
       Scoreboard scoreboard = this.f_92986_.f_91073_.m_6188_();
       Objective objective = scoreboard.m_83416_(DisplaySlot.LIST);
-      if (this.f_92986_.f_91066_.f_92099_.m_90857_() && (!this.f_92986_.m_91090_() || this.f_92986_.f_91074_.f_108617_.m_246170_().size() > 1 || objective != null)) {
+      if (this.f_92986_.f_91066_.f_92099_.m_90857_()
+         && (!this.f_92986_.m_91090_() || this.f_92986_.f_91074_.f_108617_.m_246170_().size() > 1 || objective != null)) {
          this.f_92998_.m_94556_(true);
          this.f_92998_.m_280406_(graphicsIn, graphicsIn.m_280182_(), scoreboard, objective);
       } else {
          this.f_92998_.m_94556_(false);
       }
-
    }
 
    private void m_280130_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
       Options options = this.f_92986_.f_91066_;
       if (options.m_92176_().m_90612_() && (this.f_92986_.f_91072_.m_105295_() != GameType.SPECTATOR || this.m_93024_(this.f_92986_.f_91077_))) {
          RenderSystem.enableBlend();
-         if (this.f_291320_.m_294516_() && !this.f_92986_.f_91074_.m_36330_() && !(Boolean)options.m_231824_().m_231551_()) {
+         if (this.f_291320_.m_294516_() && !this.f_92986_.f_91074_.m_36330_() && !options.m_231824_().m_231551_()) {
             Camera camera = this.f_92986_.f_91063_.m_109153_();
             Matrix4fStack matrix4fstack = RenderSystem.getModelViewStack();
             matrix4fstack.pushMatrix();
             matrix4fstack.mul(graphicsIn.m_280168_().m_85850_().m_252922_());
             matrix4fstack.translate((float)(graphicsIn.m_280182_() / 2), (float)(graphicsIn.m_280206_() / 2), 0.0F);
-            matrix4fstack.rotateX(-camera.m_90589_() * 0.017453292F);
-            matrix4fstack.rotateY(camera.m_90590_() * 0.017453292F);
+            matrix4fstack.rotateX(-camera.m_90589_() * (float) (Math.PI / 180.0));
+            matrix4fstack.rotateY(camera.m_90590_() * (float) (Math.PI / 180.0));
             matrix4fstack.scale(-1.0F, -1.0F, -1.0F);
             RenderSystem.applyModelViewMatrix();
             RenderSystem.renderCrosshair(10);
             matrix4fstack.popMatrix();
             RenderSystem.applyModelViewMatrix();
          } else {
-            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-            int i = true;
+            RenderSystem.blendFuncSeparate(
+               GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR,
+               GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR,
+               GlStateManager.SourceFactor.ONE,
+               GlStateManager.DestFactor.ZERO
+            );
+            int i = 15;
             graphicsIn.m_292816_(f_291829_, (graphicsIn.m_280182_() - 15) / 2, (graphicsIn.m_280206_() - 15) / 2, 15, 15);
             if (this.f_92986_.f_91066_.m_232120_().m_231551_() == AttackIndicatorStatus.CROSSHAIR) {
                float f = this.f_92986_.f_91074_.m_36403_(0.0F);
@@ -404,7 +407,6 @@ public class Gui {
 
          RenderSystem.disableBlend();
       }
-
    }
 
    private boolean m_93024_(@Nullable HitResult rayTraceIn) {
@@ -422,61 +424,38 @@ public class Gui {
    }
 
    private void m_280523_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
-      Collection collection = this.f_92986_.f_91074_.m_21220_();
+      Collection<MobEffectInstance> collection = this.f_92986_.f_91074_.m_21220_();
       if (!collection.isEmpty()) {
-         Screen var5 = this.f_92986_.f_91080_;
-         if (var5 instanceof EffectRenderingInventoryScreen) {
-            EffectRenderingInventoryScreen effectrenderinginventoryscreen = (EffectRenderingInventoryScreen)var5;
-            if (effectrenderinginventoryscreen.m_194018_()) {
-               return;
-            }
+         if (this.f_92986_.f_91080_ instanceof EffectRenderingInventoryScreen effectrenderinginventoryscreen && effectrenderinginventoryscreen.m_194018_()) {
+            return;
          }
 
          RenderSystem.enableBlend();
          int j1 = 0;
          int k1 = 0;
          MobEffectTextureManager mobeffecttexturemanager = this.f_92986_.m_91306_();
-         List list = Lists.newArrayListWithExpectedSize(collection.size());
-         Iterator var8 = Ordering.natural().reverse().sortedCopy(collection).iterator();
+         List<Runnable> list = Lists.newArrayListWithExpectedSize(collection.size());
 
-         while(true) {
-            MobEffectInstance mobeffectinstance;
-            Holder holder;
-            IClientMobEffectExtensions cmee;
-            int i;
-            int j;
-            float f;
-            do {
-               do {
-                  do {
-                     if (!var8.hasNext()) {
-                        list.forEach(Runnable::run);
-                        RenderSystem.disableBlend();
-                        return;
-                     }
-
-                     mobeffectinstance = (MobEffectInstance)var8.next();
-                     holder = mobeffectinstance.m_19544_();
-                     cmee = IClientMobEffectExtensions.of(mobeffectinstance);
-                  } while(cmee != null && !cmee.isVisibleInGui(mobeffectinstance));
-               } while(!mobeffectinstance.m_19575_());
-
-               i = graphicsIn.m_280182_();
-               j = 1;
+         for (MobEffectInstance mobeffectinstance : Ordering.natural().reverse().sortedCopy(collection)) {
+            Holder<MobEffect> holder = mobeffectinstance.m_19544_();
+            IClientMobEffectExtensions cmee = IClientMobEffectExtensions.m_253057_(mobeffectinstance);
+            if ((cmee == null || cmee.isVisibleInGui(mobeffectinstance)) && mobeffectinstance.m_19575_()) {
+               int i = graphicsIn.m_280182_();
+               int j = 1;
                if (this.f_92986_.m_91402_()) {
                   j += 15;
                }
 
                if (((MobEffect)holder.m_203334_()).m_19486_()) {
-                  ++j1;
+                  j1++;
                   i -= 25 * j1;
                } else {
-                  ++k1;
+                  k1++;
                   i -= 25 * k1;
                   j += 26;
                }
 
-               f = 1.0F;
+               float f = 1.0F;
                if (mobeffectinstance.m_19571_()) {
                   graphicsIn.m_292816_(f_291473_, i, j, 24, 24);
                } else {
@@ -484,18 +463,27 @@ public class Gui {
                   if (mobeffectinstance.m_267633_(200)) {
                      int k = mobeffectinstance.m_19557_();
                      int l = 10 - k / 20;
-                     f = Mth.m_14036_((float)k / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F) + Mth.m_14089_((float)k * 3.1415927F / 5.0F) * Mth.m_14036_((float)l / 10.0F * 0.25F, 0.0F, 0.25F);
+                     f = Mth.m_14036_((float)k / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F)
+                        + Mth.m_14089_((float)k * (float) Math.PI / 5.0F) * Mth.m_14036_((float)l / 10.0F * 0.25F, 0.0F, 0.25F);
                   }
                }
-            } while(cmee != null && cmee.renderGuiIcon(mobeffectinstance, this, graphicsIn, i, j, 0.0F, f));
 
-            TextureAtlasSprite textureatlassprite = mobeffecttexturemanager.m_118732_(holder);
-            list.add(() -> {
-               graphicsIn.m_280246_(1.0F, 1.0F, 1.0F, f);
-               graphicsIn.m_280159_(i + 3, j + 3, 0, 18, 18, textureatlassprite);
-               graphicsIn.m_280246_(1.0F, 1.0F, 1.0F, 1.0F);
-            });
+               if (cmee == null || !cmee.renderGuiIcon(mobeffectinstance, this, graphicsIn, i, j, 0.0F, f)) {
+                  TextureAtlasSprite textureatlassprite = mobeffecttexturemanager.m_118732_(holder);
+                  int l1 = i;
+                  int i1 = j;
+                  float f1 = f;
+                  list.add((Runnable)() -> {
+                     graphicsIn.m_280246_(1.0F, 1.0F, 1.0F, f1);
+                     graphicsIn.m_280159_(l1 + 3, i1 + 3, 0, 18, 18, textureatlassprite);
+                     graphicsIn.m_280246_(1.0F, 1.0F, 1.0F, 1.0F);
+                  });
+               }
+            }
          }
+
+         list.forEach(Runnable::run);
+         RenderSystem.disableBlend();
       }
    }
 
@@ -524,7 +512,6 @@ public class Gui {
       } else if (this.f_92986_.f_91074_.m_5833_()) {
          this.f_92997_.m_280365_(graphicsIn);
       }
-
    }
 
    private void m_324469_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
@@ -533,8 +520,8 @@ public class Gui {
          ItemStack itemstack = player.m_21206_();
          HumanoidArm humanoidarm = player.m_5737_().m_20828_();
          int i = graphicsIn.m_280182_() / 2;
-         int j = true;
-         int k = true;
+         int j = 182;
+         int k = 91;
          RenderSystem.enableBlend();
          graphicsIn.m_280168_().m_85836_();
          graphicsIn.m_280168_().m_252880_(0.0F, 0.0F, -90.0F);
@@ -553,18 +540,15 @@ public class Gui {
          int l = 1;
          CustomItems.setRenderOffHand(false);
 
-         int i2;
-         int j2;
-         int k2;
-         for(i2 = 0; i2 < 9; ++i2) {
-            j2 = i - 90 + i2 * 20 + 2;
-            k2 = graphicsIn.m_280206_() - 16 - 3;
-            this.m_280585_(graphicsIn, j2, k2, partialTicks, player, (ItemStack)player.m_150109_().f_35974_.get(i2), l++);
+         for (int i1 = 0; i1 < 9; i1++) {
+            int j1 = i - 90 + i1 * 20 + 2;
+            int k1 = graphicsIn.m_280206_() - 16 - 3;
+            this.m_280585_(graphicsIn, j1, k1, partialTicks, player, (ItemStack)player.m_150109_().f_35974_.get(i1), l++);
          }
 
          if (!itemstack.m_41619_()) {
             CustomItems.setRenderOffHand(true);
-            i2 = graphicsIn.m_280206_() - 16 - 3;
+            int i2 = graphicsIn.m_280206_() - 16 - 3;
             if (humanoidarm == HumanoidArm.LEFT) {
                this.m_280585_(graphicsIn, i - 91 - 26, i2, partialTicks, player, itemstack, l++);
             } else {
@@ -578,8 +562,8 @@ public class Gui {
             RenderSystem.enableBlend();
             float f = this.f_92986_.f_91074_.m_36403_(0.0F);
             if (f < 1.0F) {
-               j2 = graphicsIn.m_280206_() - 20;
-               k2 = i + 91 + 6;
+               int j2 = graphicsIn.m_280206_() - 20;
+               int k2 = i + 91 + 6;
                if (humanoidarm == HumanoidArm.RIGHT) {
                   k2 = i - 91 - 22;
                }
@@ -592,13 +576,12 @@ public class Gui {
             RenderSystem.disableBlend();
          }
       }
-
    }
 
    private void m_280069_(PlayerRideableJumping jumpingIn, GuiGraphics graphicsIn, int x) {
       this.f_92986_.m_91307_().m_6180_("jumpBar");
       float f = this.f_92986_.f_91074_.m_108634_();
-      int i = true;
+      int i = 182;
       int j = (int)(f * 183.0F);
       int k = graphicsIn.m_280206_() - 32 + 3;
       RenderSystem.enableBlend();
@@ -617,7 +600,7 @@ public class Gui {
       this.f_92986_.m_91307_().m_6180_("expBar");
       int i = this.f_92986_.f_91074_.m_36323_();
       if (i > 0) {
-         int j = true;
+         int j = 182;
          int k = (int)(this.f_92986_.f_91074_.f_36080_ * 183.0F);
          int l = graphicsIn.m_280206_() - 32 + 3;
          RenderSystem.enableBlend();
@@ -641,7 +624,7 @@ public class Gui {
             col = CustomColors.getExpBarTextColor(col);
          }
 
-         String s = "" + i;
+         String s = i + "";
          int j = (graphicsIn.m_280182_() - this.m_93082_().m_92895_(s)) / 2;
          int k = graphicsIn.m_280206_() - 31 - 4;
          graphicsIn.m_280056_(this.m_93082_(), s, j + 1, k, 0, false);
@@ -651,7 +634,6 @@ public class Gui {
          graphicsIn.m_280056_(this.m_93082_(), s, j, k, col, false);
          this.f_92986_.m_91307_().m_7238_();
       }
-
    }
 
    private boolean m_322177_() {
@@ -668,7 +650,7 @@ public class Gui {
          MutableComponent mutablecomponent = Component.m_237119_().m_7220_(this.f_92994_.m_41786_()).m_130940_(this.f_92994_.m_41791_().m_321696_());
          if (Reflector.ForgeRarity_getStyleModifier.exists()) {
             Rarity rarityForge = this.f_92994_.m_41791_();
-            UnaryOperator styleModifier = (UnaryOperator)Reflector.call(rarityForge, Reflector.ForgeRarity_getStyleModifier);
+            UnaryOperator<Style> styleModifier = (UnaryOperator<Style>)Reflector.m_46374_(rarityForge, Reflector.ForgeRarity_getStyleModifier);
             mutablecomponent = Component.m_237119_().m_7220_(this.f_92994_.m_41786_()).m_130938_(styleModifier);
          }
 
@@ -678,10 +660,10 @@ public class Gui {
 
          Component highlightTip = mutablecomponent;
          if (Reflector.IForgeItemStack_getHighlightTip.exists()) {
-            highlightTip = (Component)Reflector.call(this.f_92994_, Reflector.IForgeItemStack_getHighlightTip, mutablecomponent);
+            highlightTip = (Component)Reflector.m_46374_(this.f_92994_, Reflector.IForgeItemStack_getHighlightTip, mutablecomponent);
          }
 
-         int i = this.m_93082_().m_92852_((FormattedText)highlightTip);
+         int i = this.m_93082_().m_92852_(highlightTip);
          int j = (graphicsIn.m_280182_() - i) / 2;
          int k = graphicsIn.m_280206_() - Math.max(yShift, 59);
          if (!this.f_92986_.f_91072_.m_105205_()) {
@@ -695,14 +677,14 @@ public class Gui {
 
          if (l > 0) {
             Font font = null;
-            IClientItemExtensions cmee = IClientItemExtensions.of(this.f_92994_);
+            IClientItemExtensions cmee = IClientItemExtensions.m_253057_(this.f_92994_);
             if (cmee != null) {
-               font = cmee.getFont(this.f_92994_, IClientItemExtensions.FontContext.SELECTED_ITEM_NAME);
+               font = cmee.getFont(this.f_92994_, FontContext.SELECTED_ITEM_NAME);
             }
 
             if (font != null) {
-               i = (graphicsIn.m_280182_() - font.m_92852_((FormattedText)highlightTip)) / 2;
-               graphicsIn.m_280648_(this.m_93082_(), ((Component)highlightTip).m_7532_(), j, k, 16777215 + (l << 24));
+               i = (graphicsIn.m_280182_() - font.m_92852_(highlightTip)) / 2;
+               graphicsIn.m_280648_(this.m_93082_(), highlightTip.m_7532_(), j, k, 16777215 + (l << 24));
             } else {
                graphicsIn.m_339210_(this.m_93082_(), mutablecomponent, j, k, i, ARGB32.m_320289_(l, -1));
             }
@@ -715,84 +697,77 @@ public class Gui {
    private void m_280339_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
       if (this.f_92986_.m_91402_()) {
          this.f_92986_.m_91307_().m_6180_("demo");
-         Object component;
+         Component component;
          if (this.f_92986_.f_91073_.m_46467_() >= 120500L) {
             component = f_92984_;
          } else {
-            component = Component.m_237110_("demo.remainingTime", new Object[]{StringUtil.m_14404_((int)(120500L - this.f_92986_.f_91073_.m_46467_()), this.f_92986_.f_91073_.m_304826_().m_306179_())});
+            component = Component.m_237110_(
+               "demo.remainingTime",
+               new Object[]{StringUtil.m_14404_((int)(120500L - this.f_92986_.f_91073_.m_46467_()), this.f_92986_.f_91073_.m_304826_().m_306179_())}
+            );
          }
 
-         int i = this.m_93082_().m_92852_((FormattedText)component);
+         int i = this.m_93082_().m_92852_(component);
          int j = graphicsIn.m_280182_() - i - 10;
-         int k = true;
-         graphicsIn.m_339210_(this.m_93082_(), (Component)component, j, 5, i, -1);
+         int k = 5;
+         graphicsIn.m_339210_(this.m_93082_(), component, j, 5, i, -1);
          this.f_92986_.m_91307_().m_7238_();
       }
-
    }
 
    private void m_280030_(GuiGraphics graphicsIn, Objective objective) {
       Scoreboard scoreboard = objective.m_83313_();
       NumberFormat numberformat = objective.m_305063_(StyledFormat.f_303088_);
-      DisplayEntry[] agui$displayentry = (DisplayEntry[])scoreboard.m_306706_(objective).stream().filter((entryIn) -> {
-         return !entryIn.m_307477_();
-      }).sorted(f_302813_).limit(15L).map((entry2In) -> {
-         PlayerTeam playerteam = scoreboard.m_83500_(entry2In.f_302847_());
-         Component component1 = entry2In.m_305530_();
-         Component component2 = PlayerTeam.m_83348_(playerteam, component1);
-         Component component3 = entry2In.m_304640_(numberformat);
-         int i1 = this.m_93082_().m_92852_(component3);
-         return new DisplayEntry(component2, component3, i1);
-      }).toArray((x$0) -> {
-         return new DisplayEntry[x$0];
-      });
+      Gui.DisplayEntry[] agui$displayentry = (Gui.DisplayEntry[])scoreboard.m_306706_(objective)
+         .stream()
+         .m_138619_(entryIn -> !entryIn.m_307477_())
+         .sorted(f_302813_)
+         .limit(15L)
+         .map(entry2In -> {
+            PlayerTeam playerteam = scoreboard.m_83500_(entry2In.f_302847_());
+            Component component1 = entry2In.m_305530_();
+            Component component2 = PlayerTeam.m_83348_(playerteam, component1);
+            Component component3 = entry2In.m_304640_(numberformat);
+            int i1 = this.m_93082_().m_92852_(component3);
+            return new Gui.DisplayEntry(component2, component3, i1);
+         })
+         .toArray(Gui.DisplayEntry[]::new);
       Component component = objective.m_83322_();
       int i = this.m_93082_().m_92852_(component);
       int j = i;
       int k = this.m_93082_().m_92895_(": ");
-      DisplayEntry[] var10 = agui$displayentry;
-      int var11 = agui$displayentry.length;
 
-      for(int var12 = 0; var12 < var11; ++var12) {
-         DisplayEntry gui$displayentry = var10[var12];
+      for (Gui.DisplayEntry gui$displayentry : agui$displayentry) {
          j = Math.max(j, this.m_93082_().m_92852_(gui$displayentry.f_302553_) + (gui$displayentry.f_302793_ > 0 ? k + gui$displayentry.f_302793_ : 0));
       }
 
+      int l = j;
       graphicsIn.m_286007_(() -> {
          int i1 = agui$displayentry.length;
          int j1 = i1 * 9;
          int k1 = graphicsIn.m_280206_() / 2 + j1 / 3;
-         int l1 = true;
-         int i2 = graphicsIn.m_280182_() - j - 3;
+         int l1 = 3;
+         int i2 = graphicsIn.m_280182_() - l - 3;
          int j2 = graphicsIn.m_280182_() - 3 + 2;
          int k2 = this.f_92986_.f_91066_.m_92170_(0.3F);
          int l2 = this.f_92986_.f_91066_.m_92170_(0.4F);
          int i3 = k1 - i1 * 9;
          graphicsIn.m_280509_(i2 - 2, i3 - 9 - 1, j2, i3 - 1, l2);
          graphicsIn.m_280509_(i2 - 2, i3 - 1, j2, k1, k2);
-         graphicsIn.m_280614_(this.m_93082_(), component, i2 + j / 2 - i / 2, i3 - 9, -1, false);
+         graphicsIn.m_280614_(this.m_93082_(), component, i2 + l / 2 - i / 2, i3 - 9, -1, false);
 
-         for(int j3 = 0; j3 < i1; ++j3) {
-            DisplayEntry gui$displayentry1 = agui$displayentry[j3];
+         for (int j3 = 0; j3 < i1; j3++) {
+            Gui.DisplayEntry gui$displayentry1 = agui$displayentry[j3];
             int k3 = k1 - (i1 - j3) * 9;
             graphicsIn.m_280614_(this.m_93082_(), gui$displayentry1.f_302553_, i2, k3, -1, false);
             graphicsIn.m_280614_(this.m_93082_(), gui$displayentry1.f_303810_, j2 - gui$displayentry1.f_302793_, k3, -1, false);
          }
-
       });
    }
 
    @Nullable
    private Player m_93092_() {
-      Entity var2 = this.f_92986_.m_91288_();
-      Player var10000;
-      if (var2 instanceof Player player) {
-         var10000 = player;
-      } else {
-         var10000 = null;
-      }
-
-      return var10000;
+      return this.f_92986_.m_91288_() instanceof Player player ? player : null;
    }
 
    @Nullable
@@ -888,7 +863,7 @@ public class Gui {
             int i4 = Mth.m_14165_((double)j3 * 10.0 / (double)i3) - l3;
             RenderSystem.enableBlend();
 
-            for(int j4 = 0; j4 < l3 + i4; ++j4) {
+            for (int j4 = 0; j4 < l3 + i4; j4++) {
                if (j4 < l3) {
                   graphicsIn.m_292816_(f_291833_, i1 - j4 * 8 - 9, j2, 9, 9);
                } else {
@@ -901,7 +876,6 @@ public class Gui {
 
          this.f_92986_.m_91307_().m_7238_();
       }
-
    }
 
    private static void m_232354_(GuiGraphics graphicsIn, Player playerIn, int p_232354_2_, int p_232354_3_, int p_232354_4_, int p_232354_5_) {
@@ -910,7 +884,7 @@ public class Gui {
          RenderSystem.enableBlend();
          int j = p_232354_2_ - (p_232354_3_ - 1) * p_232354_4_ - 10;
 
-         for(int k = 0; k < 10; ++k) {
+         for (int k = 0; k < 10; k++) {
             int l = p_232354_5_ + k * 8;
             if (k * 2 + 1 < i) {
                graphicsIn.m_292816_(f_290436_, l, j, 9, 9);
@@ -927,17 +901,28 @@ public class Gui {
 
          RenderSystem.disableBlend();
       }
-
    }
 
-   private void m_168688_(GuiGraphics graphicsIn, Player playerIn, int p_168688_3_, int p_168688_4_, int p_168688_5_, int p_168688_6_, float p_168688_7_, int p_168688_8_, int p_168688_9_, int p_168688_10_, boolean halfIn) {
-      HeartType gui$hearttype = Gui.HeartType.m_168732_(playerIn);
+   private void m_168688_(
+      GuiGraphics graphicsIn,
+      Player playerIn,
+      int p_168688_3_,
+      int p_168688_4_,
+      int p_168688_5_,
+      int p_168688_6_,
+      float p_168688_7_,
+      int p_168688_8_,
+      int p_168688_9_,
+      int p_168688_10_,
+      boolean halfIn
+   ) {
+      Gui.HeartType gui$hearttype = Gui.HeartType.m_168732_(playerIn);
       boolean flag = playerIn.m_9236_().m_6106_().m_5466_();
       int i = Mth.m_14165_((double)p_168688_7_ / 2.0);
       int j = Mth.m_14165_((double)p_168688_10_ / 2.0);
       int k = i * 2;
 
-      for(int l = i + j - 1; l >= 0; --l) {
+      for (int l = i + j - 1; l >= 0; l--) {
          int i1 = l / 10;
          int j1 = l % 10;
          int k1 = p_168688_3_ + j1 * 8;
@@ -961,21 +946,19 @@ public class Gui {
             }
          }
 
-         boolean flag4;
          if (halfIn && i2 < p_168688_9_) {
-            flag4 = i2 + 1 == p_168688_9_;
-            this.m_280593_(graphicsIn, gui$hearttype, k1, l1, flag, true, flag4);
+            boolean flag3 = i2 + 1 == p_168688_9_;
+            this.m_280593_(graphicsIn, gui$hearttype, k1, l1, flag, true, flag3);
          }
 
          if (i2 < p_168688_8_) {
-            flag4 = i2 + 1 == p_168688_8_;
+            boolean flag4 = i2 + 1 == p_168688_8_;
             this.m_280593_(graphicsIn, gui$hearttype, k1, l1, flag, false, flag4);
          }
       }
-
    }
 
-   private void m_280593_(GuiGraphics graphicsIn, HeartType typeIn, int xIn, int yIn, boolean hardcoreIn, boolean halfIn, boolean blinkingIn) {
+   private void m_280593_(GuiGraphics graphicsIn, Gui.HeartType typeIn, int xIn, int yIn, boolean hardcoreIn, boolean halfIn, boolean blinkingIn) {
       RenderSystem.enableBlend();
       graphicsIn.m_292816_(typeIn.m_295491_(hardcoreIn, blinkingIn, halfIn), xIn, yIn, 9, 9);
       RenderSystem.disableBlend();
@@ -986,7 +969,7 @@ public class Gui {
       int i = fooddata.m_38702_();
       RenderSystem.enableBlend();
 
-      for(int j = 0; j < 10; ++j) {
+      for (int j = 0; j < 10; j++) {
          int k = p_320133_3_;
          ResourceLocation resourcelocation;
          ResourceLocation resourcelocation1;
@@ -1032,11 +1015,11 @@ public class Gui {
             int j1 = 0;
             RenderSystem.enableBlend();
 
-            while(i > 0) {
+            while (i > 0) {
                int k1 = Math.min(i, 10);
                i -= k1;
 
-               for(int l1 = 0; l1 < k1; ++l1) {
+               for (int l1 = 0; l1 < k1; l1++) {
                   int i2 = l - l1 * 8 - 9;
                   graphicsIn.m_292816_(f_290939_, i2, i1, 9, 9);
                   if (l1 * 2 + 1 + j1 < j) {
@@ -1055,7 +1038,6 @@ public class Gui {
             RenderSystem.disableBlend();
          }
       }
-
    }
 
    private void m_280155_(GuiGraphics graphicsIn, ResourceLocation locationIn, float alphaIn) {
@@ -1092,35 +1074,41 @@ public class Gui {
       BlockPos blockpos = BlockPos.m_274561_(entityIn.m_20185_(), entityIn.m_20188_(), entityIn.m_20189_());
       float f = LightTexture.m_234316_(entityIn.m_9236_().m_6042_(), entityIn.m_9236_().m_46803_(blockpos));
       float f1 = Mth.m_14036_(1.0F - f, 0.0F, 1.0F);
-      this.f_92980_ += (f1 - this.f_92980_) * 0.01F;
+      this.f_92980_ = this.f_92980_ + (f1 - this.f_92980_) * 0.01F;
    }
 
    private void m_280154_(GuiGraphics graphicsIn, @Nullable Entity entityIn) {
       if (!Config.isVignetteEnabled()) {
          RenderSystem.enableDepthTest();
-         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+         RenderSystem.blendFuncSeparate(
+            GlStateManager.SourceFactor.SRC_ALPHA,
+            GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+            GlStateManager.SourceFactor.ONE,
+            GlStateManager.DestFactor.ZERO
+         );
       } else {
          WorldBorder worldborder = this.f_92986_.f_91073_.m_6857_();
          float f = 0.0F;
-         float f2;
          if (entityIn != null) {
-            f2 = (float)worldborder.m_61925_(entityIn);
+            float f1 = (float)worldborder.m_61925_(entityIn);
             double d0 = Math.min(worldborder.m_61966_() * (double)worldborder.m_61967_() * 1000.0, Math.abs(worldborder.m_61961_() - worldborder.m_61959_()));
             double d1 = Math.max((double)worldborder.m_61968_(), d0);
-            if ((double)f2 < d1) {
-               f = 1.0F - (float)((double)f2 / d1);
+            if ((double)f1 < d1) {
+               f = 1.0F - (float)((double)f1 / d1);
             }
          }
 
          RenderSystem.disableDepthTest();
          RenderSystem.depthMask(false);
          RenderSystem.enableBlend();
-         RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+         RenderSystem.blendFuncSeparate(
+            GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO
+         );
          if (f > 0.0F) {
             f = Mth.m_14036_(f, 0.0F, 1.0F);
             graphicsIn.m_280246_(0.0F, f, f, 1.0F);
          } else {
-            f2 = this.f_92980_;
+            float f2 = this.f_92980_;
             f2 = Mth.m_14036_(f2, 0.0F, 1.0F);
             graphicsIn.m_280246_(f2, f2, f2, 1.0F);
          }
@@ -1171,7 +1159,6 @@ public class Gui {
 
          graphicsIn.m_280370_(this.f_92986_.f_91062_, stack, x, y);
       }
-
    }
 
    public void m_193832_(boolean skipTickIn) {
@@ -1179,7 +1166,6 @@ public class Gui {
       if (!skipTickIn) {
          this.m_93066_();
       }
-
    }
 
    private void m_93066_() {
@@ -1188,18 +1174,18 @@ public class Gui {
       }
 
       if (this.f_92991_ > 0) {
-         --this.f_92991_;
+         this.f_92991_--;
       }
 
       if (this.f_93000_ > 0) {
-         --this.f_93000_;
+         this.f_93000_--;
          if (this.f_93000_ <= 0) {
             this.f_93001_ = null;
             this.f_93002_ = null;
          }
       }
 
-      ++this.f_92989_;
+      this.f_92989_++;
       Entity entity = this.f_92986_.m_91288_();
       if (entity != null) {
          this.m_93020_(entity);
@@ -1209,19 +1195,20 @@ public class Gui {
          ItemStack itemstack = this.f_92986_.f_91074_.m_150109_().m_36056_();
          boolean forgeEquals = true;
          if (Reflector.IForgeItemStack_getHighlightTip.exists()) {
-            Component stackTip = (Component)Reflector.call(itemstack, Reflector.IForgeItemStack_getHighlightTip, itemstack.m_41786_());
-            Component highlightTip = (Component)Reflector.call(this.f_92994_, Reflector.IForgeItemStack_getHighlightTip, this.f_92994_.m_41786_());
+            Component stackTip = (Component)Reflector.m_46374_(itemstack, Reflector.IForgeItemStack_getHighlightTip, itemstack.m_41786_());
+            Component highlightTip = (Component)Reflector.m_46374_(this.f_92994_, Reflector.IForgeItemStack_getHighlightTip, this.f_92994_.m_41786_());
             forgeEquals = Config.equals(stackTip, highlightTip);
          }
 
          if (itemstack.m_41619_()) {
             this.f_92993_ = 0;
-         } else if (!this.f_92994_.m_41619_() && itemstack.m_150930_(this.f_92994_.m_41720_()) && itemstack.m_41786_().equals(this.f_92994_.m_41786_()) && forgeEquals) {
-            if (this.f_92993_ > 0) {
-               --this.f_92993_;
-            }
-         } else {
-            this.f_92993_ = (int)(40.0 * (Double)this.f_92986_.f_91066_.m_264038_().m_231551_());
+         } else if (this.f_92994_.m_41619_()
+            || !itemstack.m_150930_(this.f_92994_.m_41720_())
+            || !itemstack.m_41786_().equals(this.f_92994_.m_41786_())
+            || !forgeEquals) {
+            this.f_92993_ = (int)(40.0 * this.f_92986_.f_91066_.m_264038_().m_231551_());
+         } else if (this.f_92993_ > 0) {
+            this.f_92993_--;
          }
 
          this.f_92994_ = itemstack;
@@ -1274,7 +1261,6 @@ public class Gui {
       if (this.f_93000_ > 0) {
          this.f_93000_ = this.f_92970_ + this.f_92971_ + this.f_92972_;
       }
-
    }
 
    public void m_168711_(Component componentIn) {
@@ -1333,7 +1319,7 @@ public class Gui {
    }
 
    public void m_280266_(GuiGraphics graphicsIn, DeltaTracker partialTicks) {
-      if ((Boolean)this.f_92986_.f_91066_.m_231834_().m_231551_() && (this.f_193828_ > 0.0F || this.f_193829_ > 0.0F)) {
+      if (this.f_92986_.f_91066_.m_231834_().m_231551_() && (this.f_193828_ > 0.0F || this.f_193829_ > 0.0F)) {
          int i = Mth.m_14143_(255.0F * Mth.m_14036_(Mth.m_14179_(partialTicks.m_338557_(), this.f_193829_, this.f_193828_), 0.0F, 1.0F));
          if (i > 8) {
             Font font = this.m_93082_();
@@ -1344,53 +1330,92 @@ public class Gui {
             graphicsIn.m_339210_(font, f_193830_, l, i1, j, k);
          }
       }
-
-   }
-
-   static {
-      f_302813_ = Comparator.comparing(PlayerScoreEntry::f_303807_).reversed().thenComparing(PlayerScoreEntry::f_302847_, String.CASE_INSENSITIVE_ORDER);
-      f_92984_ = Component.m_237115_("demo.demoExpired");
-      f_193830_ = Component.m_237115_("menu.savingLevel");
    }
 
    static record DisplayEntry(Component f_302553_, Component f_303810_, int f_302793_) {
-      DisplayEntry(Component name, Component score, int scoreWidth) {
-         this.f_302553_ = name;
-         this.f_303810_ = score;
-         this.f_302793_ = scoreWidth;
-      }
-
-      public Component f_302553_() {
-         return this.f_302553_;
-      }
-
-      public Component f_303810_() {
-         return this.f_303810_;
-      }
-
-      public int f_302793_() {
-         return this.f_302793_;
-      }
    }
 
    static enum HeartType {
-      CONTAINER(ResourceLocation.m_340282_("hud/heart/container"), ResourceLocation.m_340282_("hud/heart/container_blinking"), ResourceLocation.m_340282_("hud/heart/container"), ResourceLocation.m_340282_("hud/heart/container_blinking"), ResourceLocation.m_340282_("hud/heart/container_hardcore"), ResourceLocation.m_340282_("hud/heart/container_hardcore_blinking"), ResourceLocation.m_340282_("hud/heart/container_hardcore"), ResourceLocation.m_340282_("hud/heart/container_hardcore_blinking")),
-      NORMAL(ResourceLocation.m_340282_("hud/heart/full"), ResourceLocation.m_340282_("hud/heart/full_blinking"), ResourceLocation.m_340282_("hud/heart/half"), ResourceLocation.m_340282_("hud/heart/half_blinking"), ResourceLocation.m_340282_("hud/heart/hardcore_full"), ResourceLocation.m_340282_("hud/heart/hardcore_full_blinking"), ResourceLocation.m_340282_("hud/heart/hardcore_half"), ResourceLocation.m_340282_("hud/heart/hardcore_half_blinking")),
-      POISIONED(ResourceLocation.m_340282_("hud/heart/poisoned_full"), ResourceLocation.m_340282_("hud/heart/poisoned_full_blinking"), ResourceLocation.m_340282_("hud/heart/poisoned_half"), ResourceLocation.m_340282_("hud/heart/poisoned_half_blinking"), ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_full"), ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_full_blinking"), ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_half"), ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_half_blinking")),
-      WITHERED(ResourceLocation.m_340282_("hud/heart/withered_full"), ResourceLocation.m_340282_("hud/heart/withered_full_blinking"), ResourceLocation.m_340282_("hud/heart/withered_half"), ResourceLocation.m_340282_("hud/heart/withered_half_blinking"), ResourceLocation.m_340282_("hud/heart/withered_hardcore_full"), ResourceLocation.m_340282_("hud/heart/withered_hardcore_full_blinking"), ResourceLocation.m_340282_("hud/heart/withered_hardcore_half"), ResourceLocation.m_340282_("hud/heart/withered_hardcore_half_blinking")),
-      ABSORBING(ResourceLocation.m_340282_("hud/heart/absorbing_full"), ResourceLocation.m_340282_("hud/heart/absorbing_full_blinking"), ResourceLocation.m_340282_("hud/heart/absorbing_half"), ResourceLocation.m_340282_("hud/heart/absorbing_half_blinking"), ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_full"), ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_full_blinking"), ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_half"), ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_half_blinking")),
-      FROZEN(ResourceLocation.m_340282_("hud/heart/frozen_full"), ResourceLocation.m_340282_("hud/heart/frozen_full_blinking"), ResourceLocation.m_340282_("hud/heart/frozen_half"), ResourceLocation.m_340282_("hud/heart/frozen_half_blinking"), ResourceLocation.m_340282_("hud/heart/frozen_hardcore_full"), ResourceLocation.m_340282_("hud/heart/frozen_hardcore_full_blinking"), ResourceLocation.m_340282_("hud/heart/frozen_hardcore_half"), ResourceLocation.m_340282_("hud/heart/frozen_hardcore_half_blinking"));
+      CONTAINER(
+         ResourceLocation.m_340282_("hud/heart/container"),
+         ResourceLocation.m_340282_("hud/heart/container_blinking"),
+         ResourceLocation.m_340282_("hud/heart/container"),
+         ResourceLocation.m_340282_("hud/heart/container_blinking"),
+         ResourceLocation.m_340282_("hud/heart/container_hardcore"),
+         ResourceLocation.m_340282_("hud/heart/container_hardcore_blinking"),
+         ResourceLocation.m_340282_("hud/heart/container_hardcore"),
+         ResourceLocation.m_340282_("hud/heart/container_hardcore_blinking")
+      ),
+      NORMAL(
+         ResourceLocation.m_340282_("hud/heart/full"),
+         ResourceLocation.m_340282_("hud/heart/full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/half"),
+         ResourceLocation.m_340282_("hud/heart/half_blinking"),
+         ResourceLocation.m_340282_("hud/heart/hardcore_full"),
+         ResourceLocation.m_340282_("hud/heart/hardcore_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/hardcore_half"),
+         ResourceLocation.m_340282_("hud/heart/hardcore_half_blinking")
+      ),
+      POISIONED(
+         ResourceLocation.m_340282_("hud/heart/poisoned_full"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_half"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_half_blinking"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_full"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_half"),
+         ResourceLocation.m_340282_("hud/heart/poisoned_hardcore_half_blinking")
+      ),
+      WITHERED(
+         ResourceLocation.m_340282_("hud/heart/withered_full"),
+         ResourceLocation.m_340282_("hud/heart/withered_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/withered_half"),
+         ResourceLocation.m_340282_("hud/heart/withered_half_blinking"),
+         ResourceLocation.m_340282_("hud/heart/withered_hardcore_full"),
+         ResourceLocation.m_340282_("hud/heart/withered_hardcore_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/withered_hardcore_half"),
+         ResourceLocation.m_340282_("hud/heart/withered_hardcore_half_blinking")
+      ),
+      ABSORBING(
+         ResourceLocation.m_340282_("hud/heart/absorbing_full"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_half"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_half_blinking"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_full"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_half"),
+         ResourceLocation.m_340282_("hud/heart/absorbing_hardcore_half_blinking")
+      ),
+      FROZEN(
+         ResourceLocation.m_340282_("hud/heart/frozen_full"),
+         ResourceLocation.m_340282_("hud/heart/frozen_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/frozen_half"),
+         ResourceLocation.m_340282_("hud/heart/frozen_half_blinking"),
+         ResourceLocation.m_340282_("hud/heart/frozen_hardcore_full"),
+         ResourceLocation.m_340282_("hud/heart/frozen_hardcore_full_blinking"),
+         ResourceLocation.m_340282_("hud/heart/frozen_hardcore_half"),
+         ResourceLocation.m_340282_("hud/heart/frozen_hardcore_half_blinking")
+      );
 
-      private final ResourceLocation f_291247_;
-      private final ResourceLocation f_290790_;
-      private final ResourceLocation f_291803_;
-      private final ResourceLocation f_291226_;
-      private final ResourceLocation f_291645_;
-      private final ResourceLocation f_291413_;
-      private final ResourceLocation f_291153_;
-      private final ResourceLocation f_291264_;
+      private ResourceLocation f_291247_;
+      private ResourceLocation f_290790_;
+      private ResourceLocation f_291803_;
+      private ResourceLocation f_291226_;
+      private ResourceLocation f_291645_;
+      private ResourceLocation f_291413_;
+      private ResourceLocation f_291153_;
+      private ResourceLocation f_291264_;
 
-      private HeartType(final ResourceLocation fullIn, final ResourceLocation fullBlinkingIn, final ResourceLocation halfIn, final ResourceLocation halfBlinkingIn, final ResourceLocation hardcoreFullIn, final ResourceLocation hardcoreFullBlinkingIn, final ResourceLocation hardcoreHalfIn, final ResourceLocation hardcoreHalfBlinkingIn) {
+      private HeartType(
+         final ResourceLocation fullIn,
+         final ResourceLocation fullBlinkingIn,
+         final ResourceLocation halfIn,
+         final ResourceLocation halfBlinkingIn,
+         final ResourceLocation hardcoreFullIn,
+         final ResourceLocation hardcoreFullBlinkingIn,
+         final ResourceLocation hardcoreHalfIn,
+         final ResourceLocation hardcoreHalfBlinkingIn
+      ) {
          this.f_291247_ = fullIn;
          this.f_290790_ = fullBlinkingIn;
          this.f_291803_ = halfIn;
@@ -1415,8 +1440,8 @@ public class Gui {
          }
       }
 
-      static HeartType m_168732_(Player playerIn) {
-         HeartType gui$hearttype;
+      static Gui.HeartType m_168732_(Player playerIn) {
+         Gui.HeartType gui$hearttype;
          if (playerIn.m_21023_(MobEffects.f_19614_)) {
             gui$hearttype = POISIONED;
          } else if (playerIn.m_21023_(MobEffects.f_19615_)) {
@@ -1428,11 +1453,6 @@ public class Gui {
          }
 
          return gui$hearttype;
-      }
-
-      // $FF: synthetic method
-      private static HeartType[] $values() {
-         return new HeartType[]{CONTAINER, NORMAL, POISIONED, WITHERED, ABSORBING, FROZEN};
       }
    }
 }

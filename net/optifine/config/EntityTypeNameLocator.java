@@ -5,7 +5,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.optifine.util.EntityTypeUtils;
 
-public class EntityTypeNameLocator implements IObjectLocator {
+public class EntityTypeNameLocator implements IObjectLocator<String> {
    public String getObject(ResourceLocation loc) {
       EntityType type = EntityTypeUtils.getEntityType(loc);
       return type == null ? null : type.m_20675_();

@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 import net.minecraft.util.Mth;
@@ -20,7 +21,7 @@ import org.slf4j.Logger;
 public interface SpriteResourceLoader {
    Logger f_260482_ = LogUtils.getLogger();
 
-   static SpriteResourceLoader m_292996_(Collection serializersIn) {
+   static SpriteResourceLoader m_292996_(Collection<MetadataSectionSerializer<?>> serializersIn) {
       return (locIn, resIn) -> {
          ResourceMetadata resourcemetadata;
          try {
@@ -56,11 +57,13 @@ public interface SpriteResourceLoader {
             return null;
          }
 
-         AnimationMetadataSection animationmetadatasection = (AnimationMetadataSection)resourcemetadata.m_214059_(AnimationMetadataSection.f_119011_).orElse(AnimationMetadataSection.f_119012_);
+         AnimationMetadataSection animationmetadatasection = (AnimationMetadataSection)resourcemetadata.m_214059_(AnimationMetadataSection.f_119011_)
+            .orElse(AnimationMetadataSection.f_119012_);
          FrameSize framesize = animationmetadatasection.m_245821_(nativeimage.m_84982_(), nativeimage.m_85084_());
          if (Mth.m_264612_(nativeimage.m_84982_(), framesize.f_244129_()) && Mth.m_264612_(nativeimage.m_85084_(), framesize.f_244503_())) {
             if (Reflector.ForgeHooksClient_loadSpriteContents.exists()) {
-               SpriteContents contents = (SpriteContents)Reflector.ForgeHooksClient_loadSpriteContents.call(locIn, resIn, framesize, nativeimage, resourcemetadata);
+               SpriteContents contents = (SpriteContents)Reflector.ForgeHooksClient_loadSpriteContents
+                  .m_46374_(locIn, resIn, framesize, nativeimage, resourcemetadata);
                if (contents != null) {
                   return contents;
                }
@@ -68,7 +71,10 @@ public interface SpriteResourceLoader {
 
             return new SpriteContents(locIn, framesize, nativeimage, resourcemetadata);
          } else {
-            f_260482_.error("Image {} size {},{} is not multiple of frame size {},{}", new Object[]{locIn, nativeimage.m_84982_(), nativeimage.m_85084_(), framesize.f_244129_(), framesize.f_244503_()});
+            f_260482_.error(
+               "Image {} size {},{} is not multiple of frame size {},{}",
+               new Object[]{locIn, nativeimage.m_84982_(), nativeimage.m_85084_(), framesize.f_244129_(), framesize.f_244503_()}
+            );
             nativeimage.close();
             return null;
          }

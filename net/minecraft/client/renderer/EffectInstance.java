@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.Reader;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntSupplier;
@@ -35,26 +34,26 @@ import net.optifine.reflect.Reflector;
 import org.slf4j.Logger;
 
 public class EffectInstance implements Effect, AutoCloseable {
-   private static final String f_172564_ = "shaders/program/";
-   private static final Logger f_108921_ = LogUtils.getLogger();
-   private static final AbstractUniform f_108922_ = new AbstractUniform();
-   private static final boolean f_172565_ = true;
+   private static String f_172564_;
+   private static Logger f_108921_ = LogUtils.getLogger();
+   private static AbstractUniform f_108922_ = new AbstractUniform();
+   private static boolean f_172565_;
    private static EffectInstance f_108923_;
    private static int f_108924_ = -1;
-   private final Map f_108925_ = Maps.newHashMap();
-   private final List f_108926_ = Lists.newArrayList();
-   private final List f_108927_ = Lists.newArrayList();
-   private final List f_108928_ = Lists.newArrayList();
-   private final List f_108929_ = Lists.newArrayList();
-   private final Map f_108930_ = Maps.newHashMap();
-   private final int f_108931_;
-   private final String f_108932_;
+   private Map<String, IntSupplier> f_108925_ = Maps.newHashMap();
+   private List<String> f_108926_ = Lists.newArrayList();
+   private List<Integer> f_108927_ = Lists.newArrayList();
+   private List<Uniform> f_108928_ = Lists.newArrayList();
+   private List<Integer> f_108929_ = Lists.newArrayList();
+   private Map<String, Uniform> f_108930_ = Maps.newHashMap();
+   private int f_108931_;
+   private String f_108932_;
    private boolean f_108933_;
-   private final BlendMode f_108934_;
-   private final List f_108935_;
-   private final List f_108936_;
-   private final EffectProgram f_108937_;
-   private final EffectProgram f_108938_;
+   private BlendMode f_108934_;
+   private List<Integer> f_108935_;
+   private List<String> f_108936_;
+   private EffectProgram f_108937_;
+   private EffectProgram f_108938_;
 
    public EffectInstance(ResourceProvider resourceManagerIn, String nameIn) throws IOException {
       ResourceLocation resourcelocation = ResourceLocation.m_340282_("shaders/program/" + nameIn + ".json");
@@ -73,13 +72,11 @@ public class EffectInstance implements Effect, AutoCloseable {
             JsonObject jsonobject = GsonHelper.m_13859_(reader);
             String s = GsonHelper.m_13906_(jsonobject, "vertex");
             String s1 = GsonHelper.m_13906_(jsonobject, "fragment");
-            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", (JsonArray)null);
+            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", null);
             if (jsonarray != null) {
                int i = 0;
 
-               for(Iterator var11 = jsonarray.iterator(); var11.hasNext(); ++i) {
-                  JsonElement jsonelement = (JsonElement)var11.next();
-
+               for (JsonElement jsonelement : jsonarray) {
                   try {
                      this.m_108948_(jsonelement);
                   } catch (Exception var20) {
@@ -87,19 +84,18 @@ public class EffectInstance implements Effect, AutoCloseable {
                      chainedjsonexception1.m_135908_("samplers[" + i + "]");
                      throw chainedjsonexception1;
                   }
+
+                  i++;
                }
             }
 
-            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "attributes", (JsonArray)null);
-            Iterator var28;
+            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "attributes", null);
             if (jsonarray1 != null) {
                int j = 0;
                this.f_108935_ = Lists.newArrayListWithCapacity(jsonarray1.size());
                this.f_108936_ = Lists.newArrayListWithCapacity(jsonarray1.size());
 
-               for(var28 = jsonarray1.iterator(); var28.hasNext(); ++j) {
-                  JsonElement jsonelement1 = (JsonElement)var28.next();
-
+               for (JsonElement jsonelement1 : jsonarray1) {
                   try {
                      this.f_108936_.add(GsonHelper.m_13805_(jsonelement1, "attribute"));
                   } catch (Exception var19) {
@@ -107,19 +103,19 @@ public class EffectInstance implements Effect, AutoCloseable {
                      chainedjsonexception2.m_135908_("attributes[" + j + "]");
                      throw chainedjsonexception2;
                   }
+
+                  j++;
                }
             } else {
                this.f_108935_ = null;
                this.f_108936_ = null;
             }
 
-            JsonArray jsonarray2 = GsonHelper.m_13832_(jsonobject, "uniforms", (JsonArray)null);
+            JsonArray jsonarray2 = GsonHelper.m_13832_(jsonobject, "uniforms", null);
             if (jsonarray2 != null) {
                int k = 0;
 
-               for(Iterator var30 = jsonarray2.iterator(); var30.hasNext(); ++k) {
-                  JsonElement jsonelement2 = (JsonElement)var30.next();
-
+               for (JsonElement jsonelement2 : jsonarray2) {
                   try {
                      this.m_108958_(jsonelement2);
                   } catch (Exception var18) {
@@ -127,20 +123,19 @@ public class EffectInstance implements Effect, AutoCloseable {
                      chainedjsonexception3.m_135908_("uniforms[" + k + "]");
                      throw chainedjsonexception3;
                   }
+
+                  k++;
                }
             }
 
-            this.f_108934_ = m_108950_(GsonHelper.m_13841_(jsonobject, "blend", (JsonObject)null));
+            this.f_108934_ = m_108950_(GsonHelper.m_13841_(jsonobject, "blend", null));
             this.f_108937_ = m_172566_(resourceManagerIn, Program.Type.VERTEX, s);
             this.f_108938_ = m_172566_(resourceManagerIn, Program.Type.FRAGMENT, s1);
             this.f_108931_ = ProgramManager.m_85577_();
             ProgramManager.m_166623_(this);
             this.m_108967_();
             if (this.f_108936_ != null) {
-               var28 = this.f_108936_.iterator();
-
-               while(var28.hasNext()) {
-                  String s2 = (String)var28.next();
+               for (String s2 : this.f_108936_) {
                   int l = Uniform.m_85639_(this.f_108931_, s2);
                   this.f_108935_.add(l);
                }
@@ -162,8 +157,7 @@ public class EffectInstance implements Effect, AutoCloseable {
          }
       } catch (Exception var22) {
          ChainedJsonException chainedjsonexception = ChainedJsonException.m_135906_(var22);
-         String var10001 = resourcelocation.m_135815_();
-         chainedjsonexception.m_135910_(var10001 + " (" + resource.m_215506_() + ")");
+         chainedjsonexception.m_135910_(resourcelocation.m_135815_() + " (" + resource.m_215506_() + ")");
          throw chainedjsonexception;
       }
 
@@ -180,9 +174,7 @@ public class EffectInstance implements Effect, AutoCloseable {
             ResourceLocation resourcelocation = ResourceLocation.m_340282_("shaders/program/" + nameIn + typeIn.m_85569_());
             if (Reflector.MinecraftForge.exists()) {
                ResourceLocation rl = ResourceLocation.m_135820_(nameIn);
-               String var10002 = rl.m_135827_();
-               String var10003 = rl.m_135815_();
-               resourcelocation = new ResourceLocation(var10002, "shaders/program/" + var10003 + typeIn.m_85569_());
+               resourcelocation = new ResourceLocation(rl.m_135827_(), "shaders/program/" + rl.m_135815_() + typeIn.m_85569_());
             }
 
             Resource resource = resourceManagerIn.m_215593_(resourcelocation);
@@ -272,10 +264,7 @@ public class EffectInstance implements Effect, AutoCloseable {
    }
 
    public void close() {
-      Iterator var1 = this.f_108928_.iterator();
-
-      while(var1.hasNext()) {
-         Uniform uniform = (Uniform)var1.next();
+      for (Uniform uniform : this.f_108928_) {
          uniform.close();
       }
 
@@ -287,13 +276,12 @@ public class EffectInstance implements Effect, AutoCloseable {
       f_108924_ = -1;
       f_108923_ = null;
 
-      for(int i = 0; i < this.f_108927_.size(); ++i) {
+      for (int i = 0; i < this.f_108927_.size(); i++) {
          if (this.f_108925_.get(this.f_108926_.get(i)) != null) {
-            GlStateManager._activeTexture('蓀' + i);
+            GlStateManager._activeTexture(33984 + i);
             GlStateManager._bindTexture(0);
          }
       }
-
    }
 
    public void m_108966_() {
@@ -305,11 +293,11 @@ public class EffectInstance implements Effect, AutoCloseable {
          f_108924_ = this.f_108931_;
       }
 
-      for(int i = 0; i < this.f_108927_.size(); ++i) {
+      for (int i = 0; i < this.f_108927_.size(); i++) {
          String s = (String)this.f_108926_.get(i);
          IntSupplier intsupplier = (IntSupplier)this.f_108925_.get(s);
          if (intsupplier != null) {
-            RenderSystem.activeTexture('蓀' + i);
+            RenderSystem.activeTexture(33984 + i);
             int j = intsupplier.getAsInt();
             if (j != -1) {
                RenderSystem.bindTexture(j);
@@ -318,13 +306,9 @@ public class EffectInstance implements Effect, AutoCloseable {
          }
       }
 
-      Iterator var5 = this.f_108928_.iterator();
-
-      while(var5.hasNext()) {
-         Uniform uniform = (Uniform)var5.next();
+      for (Uniform uniform : this.f_108928_) {
          uniform.m_85633_();
       }
-
    }
 
    public void m_108957_() {
@@ -346,27 +330,23 @@ public class EffectInstance implements Effect, AutoCloseable {
       RenderSystem.assertOnRenderThread();
       IntList intlist = new IntArrayList();
 
-      int l;
-      for(l = 0; l < this.f_108926_.size(); ++l) {
-         String s = (String)this.f_108926_.get(l);
+      for (int i = 0; i < this.f_108926_.size(); i++) {
+         String s = (String)this.f_108926_.get(i);
          int j = Uniform.m_85624_(this.f_108931_, s);
          if (j == -1) {
             f_108921_.warn("Shader {} could not find sampler named {} in the specified shader program.", this.f_108932_, s);
             this.f_108925_.remove(s);
-            intlist.add(l);
+            intlist.add(i);
          } else {
             this.f_108927_.add(j);
          }
       }
 
-      for(l = intlist.size() - 1; l >= 0; --l) {
+      for (int l = intlist.size() - 1; l >= 0; l--) {
          this.f_108926_.remove(intlist.getInt(l));
       }
 
-      Iterator var6 = this.f_108928_.iterator();
-
-      while(var6.hasNext()) {
-         Uniform uniform = (Uniform)var6.next();
+      for (Uniform uniform : this.f_108928_) {
          String s1 = uniform.m_85599_();
          int k = Uniform.m_85624_(this.f_108931_, s1);
          if (k == -1) {
@@ -377,19 +357,17 @@ public class EffectInstance implements Effect, AutoCloseable {
             this.f_108930_.put(s1, uniform);
          }
       }
-
    }
 
    private void m_108948_(JsonElement jsonElementIn) {
       JsonObject jsonobject = GsonHelper.m_13918_(jsonElementIn, "sampler");
       String s = GsonHelper.m_13906_(jsonobject, "name");
       if (!GsonHelper.m_13813_(jsonobject, "file")) {
-         this.f_108925_.put(s, (Object)null);
+         this.f_108925_.put(s, null);
          this.f_108926_.add(s);
       } else {
          this.f_108926_.add(s);
       }
-
    }
 
    public void m_108954_(String nameIn, IntSupplier samplerIn) {
@@ -413,9 +391,7 @@ public class EffectInstance implements Effect, AutoCloseable {
       } else {
          int k = 0;
 
-         for(Iterator var9 = jsonarray.iterator(); var9.hasNext(); ++k) {
-            JsonElement jsonelement = (JsonElement)var9.next();
-
+         for (JsonElement jsonelement : jsonarray) {
             try {
                afloat[k] = GsonHelper.m_13888_(jsonelement, "value");
             } catch (Exception var13) {
@@ -423,12 +399,14 @@ public class EffectInstance implements Effect, AutoCloseable {
                chainedjsonexception.m_135908_("values[" + k + "]");
                throw chainedjsonexception;
             }
+
+            k++;
          }
 
          if (j > 1 && jsonarray.size() == 1) {
-            while(k < j) {
+            while (k < j) {
                afloat[k] = afloat[0];
-               ++k;
+               k++;
             }
          }
 

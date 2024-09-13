@@ -16,10 +16,12 @@ public class ModelAdapterTrident extends ModelAdapter {
       super(EntityType.f_20487_, "trident", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new TridentModel(bakeModelLayer(ModelLayers.f_171255_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof TridentModel modelTrident)) {
          return null;
@@ -51,10 +53,12 @@ public class ModelAdapterTrident extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "base", "left_spike", "middle_spike", "right_spike", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ThrownTridentRenderer render = new ThrownTridentRenderer(renderManager.getContext());

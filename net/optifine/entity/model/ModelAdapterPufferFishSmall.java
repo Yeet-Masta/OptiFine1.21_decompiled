@@ -17,10 +17,12 @@ public class ModelAdapterPufferFishSmall extends ModelAdapter {
       super(EntityType.f_20516_, "puffer_fish_small", 0.2F);
    }
 
+   @Override
    public Model makeModel() {
       return new PufferfishSmallModel(bakeModelLayer(ModelLayers.f_171173_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PufferfishSmallModel modelPufferFishSmall)) {
          return null;
@@ -41,19 +43,19 @@ public class ModelAdapterPufferFishSmall extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "eye_right", "eye_left", "tail", "fin_right", "fin_left", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PufferfishRenderer customRenderer = new PufferfishRenderer(renderManager.getContext());
       customRenderer.f_114477_ = shadowSize;
-      EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> {
-         return customRenderer;
-      });
+      EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> customRenderer);
       if (!(render instanceof PufferfishRenderer renderFish)) {
-         Config.warn("Not a PufferfishRenderer: " + String.valueOf(render));
+         Config.warn("Not a PufferfishRenderer: " + render);
          return null;
       } else if (!Reflector.RenderPufferfish_modelSmall.exists()) {
          Config.warn("Model field not found: RenderPufferfish.modelSmall");

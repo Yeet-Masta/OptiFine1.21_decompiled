@@ -13,17 +13,45 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.horse.Llama;
 import net.minecraft.world.item.DyeColor;
 
-public class LlamaDecorLayer extends RenderLayer {
-   private static final ResourceLocation[] f_117214_ = new ResourceLocation[]{ResourceLocation.m_340282_("textures/entity/llama/decor/white.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/orange.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/magenta.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/light_blue.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/yellow.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/lime.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/pink.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/gray.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/light_gray.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/cyan.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/purple.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/blue.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/brown.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/green.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/red.png"), ResourceLocation.m_340282_("textures/entity/llama/decor/black.png")};
-   private static final ResourceLocation f_117215_ = ResourceLocation.m_340282_("textures/entity/llama/decor/trader_llama.png");
-   private final LlamaModel f_117216_;
+public class LlamaDecorLayer extends RenderLayer<Llama, LlamaModel<Llama>> {
+   private static ResourceLocation[] f_117214_ = new ResourceLocation[]{
+      ResourceLocation.m_340282_("textures/entity/llama/decor/white.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/orange.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/magenta.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/light_blue.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/yellow.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/lime.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/pink.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/gray.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/light_gray.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/cyan.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/purple.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/blue.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/brown.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/green.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/red.png"),
+      ResourceLocation.m_340282_("textures/entity/llama/decor/black.png")
+   };
+   private static ResourceLocation f_117215_ = ResourceLocation.m_340282_("textures/entity/llama/decor/trader_llama.png");
+   private LlamaModel<Llama> f_117216_;
 
-   public LlamaDecorLayer(RenderLayerParent p_i174498_1_, EntityModelSet p_i174498_2_) {
+   public LlamaDecorLayer(RenderLayerParent<Llama, LlamaModel<Llama>> p_i174498_1_, EntityModelSet p_i174498_2_) {
       super(p_i174498_1_);
       this.f_117216_ = new LlamaModel(p_i174498_2_.m_171103_(ModelLayers.f_171195_));
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Llama entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      Llama entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       DyeColor dyecolor = entitylivingbaseIn.m_30826_();
       ResourceLocation resourcelocation;
       if (dyecolor != null) {
@@ -40,7 +68,7 @@ public class LlamaDecorLayer extends RenderLayer {
          resourcelocation = this.f_117216_.locationTextureCustom;
       }
 
-      ((LlamaModel)this.m_117386_()).m_102624_(this.f_117216_);
+      this.m_117386_().m_102624_(this.f_117216_);
       this.f_117216_.m_6973_(entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
       VertexConsumer vertexconsumer = bufferIn.m_6299_(RenderType.m_110458_(resourcelocation));
       this.f_117216_.m_340227_(matrixStackIn, vertexconsumer, packedLightIn, OverlayTexture.f_118083_);

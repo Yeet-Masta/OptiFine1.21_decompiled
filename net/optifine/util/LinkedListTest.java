@@ -1,39 +1,35 @@
 package net.optifine.util;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import net.optifine.render.VboRange;
 
 public class LinkedListTest {
    public static void main(String[] args) throws Exception {
-      LinkedList linkedList = new LinkedList();
-      List listFree = new ArrayList();
-      List listUsed = new ArrayList();
+      LinkedList<VboRange> linkedList = new LinkedList<>();
+      List<VboRange> listFree = new ArrayList();
+      List<VboRange> listUsed = new ArrayList();
       Random random = new Random();
       int count = 100;
 
-      int i;
-      VboRange range;
-      for(i = 0; i < count; ++i) {
-         range = new VboRange();
+      for (int i = 0; i < count; i++) {
+         VboRange range = new VboRange();
          range.setPosition(i);
          listFree.add(range);
       }
 
-      for(i = 0; i < 100000; ++i) {
+      for (int i = 0; i < 100000; i++) {
          checkLists(listFree, listUsed, count);
          checkLinkedList(linkedList, listUsed.size());
          if (i % 5 == 0) {
             dbgLinkedList(linkedList);
          }
 
-         LinkedList.Node node;
          if (random.nextBoolean()) {
             if (!listFree.isEmpty()) {
-               range = (VboRange)listFree.get(random.nextInt(listFree.size()));
-               node = range.getNode();
+               VboRange range = (VboRange)listFree.get(random.nextInt(listFree.size()));
+               LinkedList.Node<VboRange> node = range.getNode();
                if (random.nextBoolean()) {
                   linkedList.addFirst(node);
                   dbg("Add first: " + range.getPosition());
@@ -46,73 +42,67 @@ public class LinkedListTest {
                   }
 
                   VboRange rangePrev = (VboRange)listUsed.get(random.nextInt(listUsed.size()));
-                  LinkedList.Node nodePrev = rangePrev.getNode();
+                  LinkedList.Node<VboRange> nodePrev = rangePrev.getNode();
                   linkedList.addAfter(nodePrev, node);
-                  int var10000 = rangePrev.getPosition();
-                  dbg("Add after: " + var10000 + ", " + range.getPosition());
+                  dbg("Add after: " + rangePrev.getPosition() + ", " + range.getPosition());
                }
 
                listFree.remove(range);
                listUsed.add(range);
             }
          } else if (!listUsed.isEmpty()) {
-            range = (VboRange)listUsed.get(random.nextInt(listUsed.size()));
-            node = range.getNode();
+            VboRange range = (VboRange)listUsed.get(random.nextInt(listUsed.size()));
+            LinkedList.Node<VboRange> node = range.getNode();
             linkedList.remove(node);
             dbg("Remove: " + range.getPosition());
             listUsed.remove(range);
             listFree.add(range);
          }
       }
-
    }
 
-   private static void dbgLinkedList(LinkedList linkedList) {
+   private static void dbgLinkedList(LinkedList<VboRange> linkedList) {
       StringBuffer sb = new StringBuffer();
 
-      VboRange range;
-      for(Iterator it = linkedList.iterator(); it.hasNext(); sb.append(range.getPosition())) {
-         LinkedList.Node node = (LinkedList.Node)it.next();
-         range = (VboRange)node.getItem();
+      for (LinkedList.Node<VboRange> node : linkedList) {
+         VboRange range = node.getItem();
          if (sb.length() > 0) {
             sb.append(", ");
          }
+
+         sb.append(range.getPosition());
       }
 
-      dbg("List: " + String.valueOf(sb));
+      dbg("List: " + sb);
    }
 
-   private static void checkLinkedList(LinkedList linkedList, int used) {
-      int var10002;
+   private static void checkLinkedList(LinkedList<VboRange> linkedList, int used) {
       if (linkedList.getSize() != used) {
-         var10002 = linkedList.getSize();
-         throw new RuntimeException("Wrong size, linked: " + var10002 + ", used: " + used);
+         throw new RuntimeException("Wrong size, linked: " + linkedList.getSize() + ", used: " + used);
       } else {
          int count = 0;
 
-         for(LinkedList.Node node = linkedList.getFirst(); node != null; node = node.getNext()) {
-            ++count;
+         for (LinkedList.Node<VboRange> node = linkedList.getFirst(); node != null; node = node.getNext()) {
+            count++;
          }
 
          if (linkedList.getSize() != count) {
-            var10002 = linkedList.getSize();
-            throw new RuntimeException("Wrong count, linked: " + var10002 + ", count: " + count);
+            throw new RuntimeException("Wrong count, linked: " + linkedList.getSize() + ", count: " + count);
          } else {
             int countBack = 0;
 
-            for(LinkedList.Node nodeBack = linkedList.getLast(); nodeBack != null; nodeBack = nodeBack.getPrev()) {
-               ++countBack;
+            for (LinkedList.Node<VboRange> nodeBack = linkedList.getLast(); nodeBack != null; nodeBack = nodeBack.getPrev()) {
+               countBack++;
             }
 
             if (linkedList.getSize() != countBack) {
-               var10002 = linkedList.getSize();
-               throw new RuntimeException("Wrong count back, linked: " + var10002 + ", count: " + countBack);
+               throw new RuntimeException("Wrong count back, linked: " + linkedList.getSize() + ", count: " + countBack);
             }
          }
       }
    }
 
-   private static void checkLists(List listFree, List listUsed, int count) {
+   private static void checkLists(List<VboRange> listFree, List<VboRange> listUsed, int count) {
       int total = listFree.size() + listUsed.size();
       if (total != count) {
          throw new RuntimeException("Total size: " + total);

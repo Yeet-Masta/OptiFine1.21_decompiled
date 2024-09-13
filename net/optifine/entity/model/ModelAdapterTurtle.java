@@ -17,10 +17,12 @@ public class ModelAdapterTurtle extends ModelAdapterQuadruped {
       super(EntityType.f_20490_, "turtle", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new TurtleModel(bakeModelLayer(ModelLayers.f_171260_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof QuadrupedModel)) {
          return null;
@@ -30,12 +32,13 @@ public class ModelAdapterTurtle extends ModelAdapterQuadruped {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       String[] names = super.getModelRendererNames();
-      names = (String[])Config.addObjectToArray(names, "body2");
-      return names;
+      return (String[])Config.addObjectToArray(names, "body2");
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TurtleRenderer render = new TurtleRenderer(renderManager.getContext());

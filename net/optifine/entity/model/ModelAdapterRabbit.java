@@ -13,21 +13,23 @@ import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterRabbit extends ModelAdapter {
-   private static Map mapPartFields = null;
+   private static Map<String, Integer> mapPartFields = null;
 
    public ModelAdapterRabbit() {
       super(EntityType.f_20517_, "rabbit", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new RabbitModel(bakeModelLayer(ModelLayers.f_171174_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof RabbitModel modelRabbit)) {
          return null;
       } else {
-         Map mapParts = getMapPartFields();
+         Map<String, Integer> mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             int index = (Integer)mapParts.get(modelPart);
             return (ModelPart)Reflector.getFieldValue(modelRabbit, Reflector.ModelRabbit_ModelRenderers, index);
@@ -37,11 +39,14 @@ public class ModelAdapterRabbit extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      return new String[]{"left_foot", "right_foot", "left_thigh", "right_thigh", "body", "left_arm", "right_arm", "head", "right_ear", "left_ear", "tail", "nose"};
+      return new String[]{
+         "left_foot", "right_foot", "left_thigh", "right_thigh", "body", "left_arm", "right_arm", "head", "right_ear", "left_ear", "tail", "nose"
+      };
    }
 
-   private static Map getMapPartFields() {
+   private static Map<String, Integer> getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -62,6 +67,7 @@ public class ModelAdapterRabbit extends ModelAdapter {
       }
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       RabbitRenderer render = new RabbitRenderer(renderManager.getContext());

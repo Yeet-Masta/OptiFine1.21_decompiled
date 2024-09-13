@@ -4,7 +4,8 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.optifine.util.EnchantmentUtils;
 
 public class ParserEnchantmentId implements IParserInt {
-   public int parse(String str, int defVal) {
+   @Override
+   public int m_82160_(String str, int defVal) {
       Enchantment en = EnchantmentUtils.getEnchantment(str);
       return en == null ? defVal : EnchantmentUtils.getId(en);
    }

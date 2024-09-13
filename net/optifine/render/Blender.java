@@ -4,16 +4,16 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.optifine.Config;
 
 public class Blender {
-   public static final int BLEND_ALPHA = 0;
-   public static final int BLEND_ADD = 1;
-   public static final int BLEND_SUBSTRACT = 2;
-   public static final int BLEND_MULTIPLY = 3;
-   public static final int BLEND_DODGE = 4;
-   public static final int BLEND_BURN = 5;
-   public static final int BLEND_SCREEN = 6;
-   public static final int BLEND_OVERLAY = 7;
-   public static final int BLEND_REPLACE = 8;
-   public static final int BLEND_DEFAULT = 1;
+   public static int BLEND_ALPHA;
+   public static int BLEND_ADD;
+   public static int BLEND_SUBSTRACT;
+   public static int BLEND_MULTIPLY;
+   public static int BLEND_DODGE;
+   public static int BLEND_BURN;
+   public static int BLEND_SCREEN;
+   public static int BLEND_OVERLAY;
+   public static int BLEND_REPLACE;
+   public static int BLEND_DEFAULT;
 
    public static int parseBlend(String str) {
       if (str == null) {

@@ -96,7 +96,16 @@ public class GlBlendState {
    }
 
    public String toString() {
-      return "enabled: " + this.enabled + ", src: " + this.srcFactor + ", dst: " + this.dstFactor + ", srcAlpha: " + this.srcFactorAlpha + ", dstAlpha: " + this.dstFactorAlpha;
+      return "enabled: "
+         + this.enabled
+         + ", src: "
+         + this.srcFactor
+         + ", dst: "
+         + this.dstFactor
+         + ", srcAlpha: "
+         + this.srcFactorAlpha
+         + ", dstAlpha: "
+         + this.dstFactorAlpha;
    }
 
    public void apply() {

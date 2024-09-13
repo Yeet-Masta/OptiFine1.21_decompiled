@@ -7,13 +7,14 @@ import java.nio.IntBuffer;
 import javax.annotation.Nullable;
 import net.optifine.render.BufferBuilderCache;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.MemoryUtil.MemoryAllocator;
 import org.slf4j.Logger;
 
 public class ByteBufferBuilder implements AutoCloseable {
-   private static final Logger f_337525_ = LogUtils.getLogger();
-   private static final MemoryUtil.MemoryAllocator f_337626_ = MemoryUtil.getAllocator(false);
-   private static final int f_337594_ = 2097152;
-   private static final int f_336759_ = -1;
+   private static Logger f_337525_ = LogUtils.getLogger();
+   private static MemoryAllocator f_337626_ = MemoryUtil.getAllocator(false);
+   private static int f_337594_;
+   private static int f_336759_;
    long f_337511_;
    private int f_336824_;
    private int f_337065_;
@@ -51,7 +52,6 @@ public class ByteBufferBuilder implements AutoCloseable {
          int j = Math.max(this.f_336824_ + i, capacityIn);
          this.m_338423_(j);
       }
-
    }
 
    private void m_338423_(int capacityIn) {
@@ -68,7 +68,7 @@ public class ByteBufferBuilder implements AutoCloseable {
    }
 
    @Nullable
-   public Result m_339207_() {
+   public ByteBufferBuilder.Result m_339207_() {
       this.m_339060_();
       int i = this.f_337195_;
       int j = this.f_337065_ - i;
@@ -76,8 +76,8 @@ public class ByteBufferBuilder implements AutoCloseable {
          return null;
       } else {
          this.f_337195_ = this.f_337065_;
-         ++this.f_337608_;
-         return new Result(i, j, this.f_337664_);
+         this.f_337608_++;
+         return new ByteBufferBuilder.Result(i, j, this.f_337664_);
       }
    }
 
@@ -95,7 +95,6 @@ public class ByteBufferBuilder implements AutoCloseable {
          this.m_339343_();
          this.f_337608_ = 0;
       }
-
    }
 
    boolean m_338446_(int generationIn) {
@@ -106,7 +105,6 @@ public class ByteBufferBuilder implements AutoCloseable {
       if (--this.f_337608_ <= 0) {
          this.m_339343_();
       }
-
    }
 
    private void m_339343_() {
@@ -117,7 +115,7 @@ public class ByteBufferBuilder implements AutoCloseable {
 
       this.f_337065_ = i;
       this.f_337195_ = 0;
-      ++this.f_337664_;
+      this.f_337664_++;
    }
 
    public void close() {
@@ -129,7 +127,6 @@ public class ByteBufferBuilder implements AutoCloseable {
          this.intBuffer = null;
          this.floatBuffer = null;
       }
-
    }
 
    private void m_339060_() {
@@ -171,9 +168,9 @@ public class ByteBufferBuilder implements AutoCloseable {
    }
 
    public class Result implements AutoCloseable {
-      private final int f_337012_;
-      private final int f_337459_;
-      private final int f_337017_;
+      private int f_337012_;
+      private int f_337459_;
+      private int f_337017_;
       private boolean f_337698_;
 
       Result(final int offsetIn, final int capacityIn, final int generationIn) {
@@ -197,7 +194,6 @@ public class ByteBufferBuilder implements AutoCloseable {
                ByteBufferBuilder.this.m_340122_();
             }
          }
-
       }
 
       public String toString() {

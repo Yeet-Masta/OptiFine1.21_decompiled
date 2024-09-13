@@ -14,16 +14,18 @@ import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterWindCharge extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterWindCharge() {
       super(EntityType.f_303421_, "wind_charge", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new WindChargeModel(bakeModelLayer(ModelLayers.f_303259_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof WindChargeModel modelWindCharge)) {
          return null;
@@ -37,13 +39,13 @@ public class ModelAdapterWindCharge extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("core", "projectile");
       map.put("wind", "wind");
       map.put("cube1", "cube_r1");
@@ -53,6 +55,7 @@ public class ModelAdapterWindCharge extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WindChargeRenderer render = new WindChargeRenderer(renderManager.getContext());

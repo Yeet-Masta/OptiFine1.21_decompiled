@@ -1,12 +1,10 @@
 package optifine;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Insets;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -29,7 +27,7 @@ public class InstallerFrame extends JFrame {
    private JButton ivjButtonClose = null;
    private JPanel ivjPanelBottom = null;
    private JPanel ivjPanelContentPane = null;
-   IvjEventHandler ivjEventHandler = new IvjEventHandler();
+   InstallerFrame.IvjEventHandler ivjEventHandler = new InstallerFrame.IvjEventHandler();
    private JTextArea ivjTextArea = null;
    private JButton ivjButtonExtract = null;
    private JLabel ivjLabelFolder = null;
@@ -42,7 +40,7 @@ public class InstallerFrame extends JFrame {
 
    private void customInit() {
       try {
-         this.pack();
+         this.m_240988_();
          this.setDefaultCloseOperation(3);
          File dirMc = Utils.getWorkingDirectory();
          this.getFieldFolder().setText(dirMc.getPath());
@@ -69,14 +67,13 @@ public class InstallerFrame extends JFrame {
       } catch (Exception var7) {
          var7.printStackTrace();
       }
-
    }
 
    public static void main(String[] args) {
       try {
          UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
          InstallerFrame frm = new InstallerFrame();
-         Utils.centerWindow(frm, (Component)null);
+         Utils.centerWindow(frm, null);
          frm.show();
       } catch (Exception var8) {
          String msg = var8.getMessage();
@@ -94,9 +91,8 @@ public class InstallerFrame extends JFrame {
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
-         JOptionPane.showMessageDialog((Component)null, scrollPane, "Error", 0);
+         JOptionPane.showMessageDialog(null, scrollPane, "Error", 0);
       }
-
    }
 
    private void handleException(Throwable e) {
@@ -112,7 +108,7 @@ public class InstallerFrame extends JFrame {
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
-         JOptionPane.showMessageDialog((Component)null, scrollPane, "Error", 0);
+         JOptionPane.showMessageDialog(null, scrollPane, "Error", 0);
       }
    }
 
@@ -157,7 +153,7 @@ public class InstallerFrame extends JFrame {
          try {
             this.ivjPanelCenter = new JPanel();
             this.ivjPanelCenter.setName("PanelCenter");
-            this.ivjPanelCenter.setLayout((LayoutManager)null);
+            this.ivjPanelCenter.setLayout(null);
             this.ivjPanelCenter.add(this.getLabelOfVersion(), this.getLabelOfVersion().getName());
             this.ivjPanelCenter.add(this.getLabelMcVersion(), this.getLabelMcVersion().getName());
             this.ivjPanelCenter.add(this.getTextArea(), this.getTextArea().getName());
@@ -272,7 +268,6 @@ public class InstallerFrame extends JFrame {
       } catch (Exception var2) {
          this.handleException(var2);
       }
-
    }
 
    public void onExtract() {
@@ -296,7 +291,6 @@ public class InstallerFrame extends JFrame {
       } catch (Exception var3) {
          this.handleException(var3);
       }
-
    }
 
    public void onClose() {
@@ -309,7 +303,6 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
-
    }
 
    private void connEtoC2(ActionEvent arg1) {
@@ -318,7 +311,6 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
-
    }
 
    private void initConnections() throws Exception {
@@ -340,7 +332,8 @@ public class InstallerFrame extends JFrame {
             this.ivjTextArea.setLineWrap(true);
             this.ivjTextArea.setOpaque(false);
             this.ivjTextArea.setPreferredSize(new Dimension(365, 44));
-            this.ivjTextArea.setText("This installer will install OptiFine in the official Minecraft launcher and will create a new profile \"OptiFine\" for it.");
+            this.ivjTextArea
+               .setText("This installer will install OptiFine in the official Minecraft launcher and will create a new profile \"OptiFine\" for it.");
             this.ivjTextArea.setWrapStyleWord(true);
          } catch (Throwable var2) {
             this.handleException(var2);
@@ -371,7 +364,6 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
-
    }
 
    private JLabel getLabelFolder() {
@@ -432,7 +424,6 @@ public class InstallerFrame extends JFrame {
          File dir = jfc.getSelectedFile();
          this.getFieldFolder().setText(dir.getPath());
       }
-
    }
 
    private void connEtoC4(ActionEvent arg1) {
@@ -441,7 +432,6 @@ public class InstallerFrame extends JFrame {
       } catch (Throwable var3) {
          this.handleException(var3);
       }
-
    }
 
    class IvjEventHandler implements ActionListener {
@@ -461,7 +451,6 @@ public class InstallerFrame extends JFrame {
          if (e.getSource() == InstallerFrame.this.getButtonInstall()) {
             InstallerFrame.this.connEtoC1(e);
          }
-
       }
    }
 }

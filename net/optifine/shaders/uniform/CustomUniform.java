@@ -20,18 +20,16 @@ public class CustomUniform {
       this.shaderUniform.setProgram(program);
    }
 
-   public void update() {
+   public void m_252999_() {
       if (this.shaderUniform.isDefined()) {
          try {
             this.type.updateUniform(this.expression, this.shaderUniform);
          } catch (RuntimeException var2) {
             SMCLog.severe("Error updating custom uniform: " + this.shaderUniform.getName());
-            String var10000 = var2.getClass().getName();
-            SMCLog.severe(var10000 + ": " + var2.getMessage());
+            SMCLog.severe(var2.getClass().getName() + ": " + var2.getMessage());
             this.shaderUniform.disable();
             SMCLog.severe("Custom uniform disabled: " + this.shaderUniform.getName());
          }
-
       }
    }
 
@@ -56,7 +54,6 @@ public class CustomUniform {
    }
 
    public String toString() {
-      String var10000 = this.type.name().toLowerCase();
-      return var10000 + " " + this.name;
+      return this.type.name().toLowerCase() + " " + this.name;
    }
 }

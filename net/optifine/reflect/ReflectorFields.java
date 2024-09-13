@@ -22,10 +22,9 @@ public class ReflectorFields {
 
             this.reflectorFields = new ReflectorField[this.fieldCount];
 
-            for(int i = 0; i < this.reflectorFields.length; ++i) {
+            for (int i = 0; i < this.reflectorFields.length; i++) {
                this.reflectorFields[i] = new ReflectorField(this.reflectorClass, this.fieldType, i);
             }
-
          }
       }
    }
@@ -39,17 +38,16 @@ public class ReflectorFields {
             Field[] fileds = cls.getDeclaredFields();
             int fieldCount = 0;
 
-            for(int i = 0; i < fileds.length; ++i) {
+            for (int i = 0; i < fileds.length; i++) {
                Field field = fileds[i];
                if (field.getType() == fieldType) {
-                  ++fieldCount;
+                  fieldCount++;
                   field.setAccessible(true);
                }
             }
 
             if (fieldCount == 0) {
-               String var10000 = cls.getName();
-               Log.log("(Reflector) Fields not present: " + var10000 + ".(type: " + String.valueOf(fieldType) + ")");
+               Log.m_260877_("(Reflector) Fields not present: " + cls.getName() + ".(type: " + fieldType + ")");
             }
 
             return fieldCount;
@@ -93,7 +91,7 @@ public class ReflectorFields {
       } else {
          Object[] vals = (Object[])Array.newInstance(this.fieldType, this.fieldCount);
 
-         for(int i = 0; i < vals.length; ++i) {
+         for (int i = 0; i < vals.length; i++) {
             vals[i] = this.reflectorFields[i].getValue(obj);
          }
 
@@ -105,7 +103,7 @@ public class ReflectorFields {
       if (this.reflectorFields == null) {
          return false;
       } else {
-         for(int i = 0; i < this.reflectorFields.length; ++i) {
+         for (int i = 0; i < this.reflectorFields.length; i++) {
             ReflectorField reflectorField = this.reflectorFields[i];
             if (!reflectorField.exists()) {
                return false;

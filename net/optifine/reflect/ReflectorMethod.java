@@ -6,22 +6,17 @@ import java.util.List;
 import net.optifine.Log;
 
 public class ReflectorMethod implements IResolvable {
-   private ReflectorClass reflectorClass;
-   private String targetMethodName;
-   private Class[] targetMethodParameterTypes;
-   private boolean checked;
-   private Method targetMethod;
+   private ReflectorClass reflectorClass = null;
+   private String targetMethodName = null;
+   private Class[] targetMethodParameterTypes = null;
+   private boolean checked = false;
+   private Method targetMethod = null;
 
    public ReflectorMethod(ReflectorClass reflectorClass, String targetMethodName) {
-      this(reflectorClass, targetMethodName, (Class[])null);
+      this(reflectorClass, targetMethodName, null);
    }
 
    public ReflectorMethod(ReflectorClass reflectorClass, String targetMethodName, Class[] targetMethodParameterTypes) {
-      this.reflectorClass = null;
-      this.targetMethodName = null;
-      this.targetMethodParameterTypes = null;
-      this.checked = false;
-      this.targetMethod = null;
       this.reflectorClass = reflectorClass;
       this.targetMethodName = targetMethodName;
       this.targetMethodParameterTypes = targetMethodParameterTypes;
@@ -38,22 +33,19 @@ public class ReflectorMethod implements IResolvable {
             return null;
          } else {
             try {
-               String var10000;
                if (this.targetMethodParameterTypes == null) {
                   Method[] ms = getMethods(cls, this.targetMethodName);
                   if (ms.length <= 0) {
-                     var10000 = cls.getName();
-                     Log.log("(Reflector) Method not present: " + var10000 + "." + this.targetMethodName);
+                     Log.m_260877_("(Reflector) Method not present: " + cls.getName() + "." + this.targetMethodName);
                      return null;
                   }
 
                   if (ms.length > 1) {
-                     var10000 = cls.getName();
-                     Log.warn("(Reflector) More than one method found: " + var10000 + "." + this.targetMethodName);
+                     Log.warn("(Reflector) More than one method found: " + cls.getName() + "." + this.targetMethodName);
 
-                     for(int i = 0; i < ms.length; ++i) {
+                     for (int i = 0; i < ms.length; i++) {
                         Method m = ms[i];
-                        Log.warn("(Reflector)  - " + String.valueOf(m));
+                        Log.warn("(Reflector)  - " + m);
                      }
 
                      return null;
@@ -65,8 +57,7 @@ public class ReflectorMethod implements IResolvable {
                }
 
                if (this.targetMethod == null) {
-                  var10000 = cls.getName();
-                  Log.log("(Reflector) Method not present: " + var10000 + "." + this.targetMethodName);
+                  Log.m_260877_("(Reflector) Method not present: " + cls.getName() + "." + this.targetMethodName);
                   return null;
                } else {
                   this.targetMethod.setAccessible(true);
@@ -81,11 +72,7 @@ public class ReflectorMethod implements IResolvable {
    }
 
    public boolean exists() {
-      if (this.checked) {
-         return this.targetMethod != null;
-      } else {
-         return this.getTargetMethod() != null;
-      }
+      return this.checked ? this.targetMethod != null : this.getTargetMethod() != null;
    }
 
    public Class getReturnType() {
@@ -98,8 +85,8 @@ public class ReflectorMethod implements IResolvable {
       this.targetMethod = null;
    }
 
-   public Object call(Object... params) {
-      return Reflector.call(this, params);
+   public Object m_46374_(Object... params) {
+      return Reflector.m_46374_(this, params);
    }
 
    public boolean callBoolean(Object... params) {
@@ -126,8 +113,8 @@ public class ReflectorMethod implements IResolvable {
       return Reflector.callString(this, params);
    }
 
-   public Object call(Object param) {
-      return Reflector.call(this, param);
+   public Object m_46374_(Object param) {
+      return Reflector.m_46374_(this, param);
    }
 
    public boolean callBoolean(Object param) {
@@ -161,7 +148,7 @@ public class ReflectorMethod implements IResolvable {
    public static Method getMethod(Class cls, String methodName, Class[] paramTypes) {
       Method[] ms = cls.getDeclaredMethods();
 
-      for(int i = 0; i < ms.length; ++i) {
+      for (int i = 0; i < ms.length; i++) {
          Method m = ms[i];
          if (m.getName().equals(methodName)) {
             Class[] types = m.getParameterTypes();
@@ -178,17 +165,17 @@ public class ReflectorMethod implements IResolvable {
       List listMethods = new ArrayList();
       Method[] ms = cls.getDeclaredMethods();
 
-      for(int i = 0; i < ms.length; ++i) {
+      for (int i = 0; i < ms.length; i++) {
          Method m = ms[i];
          if (m.getName().equals(methodName)) {
             listMethods.add(m);
          }
       }
 
-      Method[] methods = (Method[])listMethods.toArray(new Method[listMethods.size()]);
-      return methods;
+      return (Method[])listMethods.toArray(new Method[listMethods.size()]);
    }
 
+   @Override
    public void resolve() {
       Method m = this.getTargetMethod();
    }

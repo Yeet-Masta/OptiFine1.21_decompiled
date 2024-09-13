@@ -16,10 +16,12 @@ public class ModelAdapterGhast extends ModelAdapter {
       super(EntityType.f_20453_, "ghast", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new GhastModel(bakeModelLayer(ModelLayers.f_171150_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof GhastModel modelGhast)) {
          return null;
@@ -38,10 +40,12 @@ public class ModelAdapterGhast extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tentacle1", "tentacle2", "tentacle3", "tentacle4", "tentacle5", "tentacle6", "tentacle7", "tentacle8", "tentacle9", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       GhastRenderer render = new GhastRenderer(renderManager.getContext());

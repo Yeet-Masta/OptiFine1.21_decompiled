@@ -1,8 +1,6 @@
 package net.optifine.config;
 
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.regex.Pattern;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
@@ -28,25 +26,25 @@ public class NbtTagValue {
    private Pattern valueRegex = null;
    private RangeListInt valueRange = null;
    private int valueFormat = 0;
-   private static final int TYPE_INVALID = -1;
-   private static final int TYPE_TEXT = 0;
-   private static final int TYPE_PATTERN = 1;
-   private static final int TYPE_IPATTERN = 2;
-   private static final int TYPE_REGEX = 3;
-   private static final int TYPE_IREGEX = 4;
-   private static final int TYPE_RANGE = 5;
-   private static final int TYPE_EXISTS = 6;
-   private static final String PREFIX_PATTERN = "pattern:";
-   private static final String PREFIX_IPATTERN = "ipattern:";
-   private static final String PREFIX_REGEX = "regex:";
-   private static final String PREFIX_IREGEX = "iregex:";
-   private static final String PREFIX_RAW = "raw:";
-   private static final String PREFIX_RANGE = "range:";
-   private static final String PREFIX_EXISTS = "exists:";
-   private static final int FORMAT_DEFAULT = 0;
-   private static final int FORMAT_HEX_COLOR = 1;
-   private static final String PREFIX_HEX_COLOR = "#";
-   private static final Pattern PATTERN_HEX_COLOR = Pattern.compile("^#[0-9a-f]{6}+$");
+   private static int TYPE_INVALID;
+   private static int TYPE_TEXT;
+   private static int TYPE_PATTERN;
+   private static int TYPE_IPATTERN;
+   private static int TYPE_REGEX;
+   private static int TYPE_IREGEX;
+   private static int TYPE_RANGE;
+   private static int TYPE_EXISTS;
+   private static String PREFIX_PATTERN;
+   private static String PREFIX_IPATTERN;
+   private static String PREFIX_REGEX;
+   private static String PREFIX_IREGEX;
+   private static String PREFIX_RAW;
+   private static String PREFIX_RANGE;
+   private static String PREFIX_EXISTS;
+   private static int FORMAT_DEFAULT;
+   private static int FORMAT_HEX_COLOR;
+   private static String PREFIX_HEX_COLOR;
+   private static Pattern PATTERN_HEX_COLOR = Pattern.m_289905_("^#[0-9a-f]{6}+$");
 
    public NbtTagValue(String tag, String value) {
       String[] names = Config.tokenize(tag, ".");
@@ -77,14 +75,14 @@ public class NbtTagValue {
       } else if (value.startsWith("regex:")) {
          this.type = 3;
          value = value.substring("regex:".length());
-         this.valueRegex = Pattern.compile(value);
+         this.valueRegex = Pattern.m_289905_(value);
          if (value.equals(".*")) {
             this.type = 6;
          }
       } else if (value.startsWith("iregex:")) {
          this.type = 4;
          value = value.substring("iregex:".length());
-         this.valueRegex = Pattern.compile(value, 2);
+         this.valueRegex = Pattern.m_289905_(value, 2);
          if (value.equals(".*")) {
             this.type = 6;
          }
@@ -101,7 +99,7 @@ public class NbtTagValue {
       } else if (value.startsWith("exists:")) {
          this.type = 6;
          value = value.substring("exists:".length());
-         Boolean valB = Config.parseBoolean(value, (Boolean)null);
+         Boolean valB = Config.parseBoolean(value, null);
          if (Config.isFalse(valB)) {
             this.negative = !this.negative;
          }
@@ -124,11 +122,7 @@ public class NbtTagValue {
    }
 
    public boolean matches(CompoundTag nbt) {
-      if (this.negative) {
-         return !this.matchesCompound(nbt);
-      } else {
-         return this.matchesCompound(nbt);
-      }
+      return this.negative ? !this.matchesCompound(nbt) : this.matchesCompound(nbt);
    }
 
    public boolean matchesCompound(CompoundTag nbt) {
@@ -137,36 +131,26 @@ public class NbtTagValue {
       } else {
          Tag tagBase = nbt;
 
-         for(int i = 0; i < this.parents.length; ++i) {
+         for (int i = 0; i < this.parents.length; i++) {
             String tag = this.parents[i];
-            tagBase = getChildTag((Tag)tagBase, tag);
+            tagBase = getChildTag(tagBase, tag);
             if (tagBase == null) {
                return false;
             }
          }
 
          if (this.name.equals("*")) {
-            return this.matchesAnyChild((Tag)tagBase);
+            return this.matchesAnyChild(tagBase);
          } else {
-            Tag tagBase = getChildTag((Tag)tagBase, this.name);
-            if (tagBase == null) {
-               return false;
-            } else if (this.matchesBase(tagBase)) {
-               return true;
-            } else {
-               return false;
-            }
+            tagBase = getChildTag(tagBase, this.name);
+            return tagBase == null ? false : this.matchesBase(tagBase);
          }
       }
    }
 
    private boolean matchesAnyChild(Tag tagBase) {
       if (tagBase instanceof CompoundTag tagCompound) {
-         Set nbtKeySet = tagCompound.m_128431_();
-         Iterator it = nbtKeySet.iterator();
-
-         while(it.hasNext()) {
-            String key = (String)it.next();
+         for (String key : tagCompound.m_128431_()) {
             Tag nbtBase = tagCompound.m_128423_(key);
             if (this.matchesBase(nbtBase)) {
                return true;
@@ -177,7 +161,7 @@ public class NbtTagValue {
       if (tagBase instanceof ListTag tagList) {
          int count = tagList.size();
 
-         for(int i = 0; i < count; ++i) {
+         for (int i = 0; i < count; i++) {
             Tag nbtBase = tagList.get(i);
             if (this.matchesBase(nbtBase)) {
                return true;
@@ -274,35 +258,21 @@ public class NbtTagValue {
    private static String getNbtString(Tag nbtBase, int format) {
       if (nbtBase == null) {
          return null;
-      } else if (!(nbtBase instanceof StringTag)) {
-         if (nbtBase instanceof IntTag) {
-            IntTag i = (IntTag)nbtBase;
-            if (format == 1) {
-               String var10000 = Integer.toHexString(i.m_7047_());
-               return "#" + StrUtils.fillLeft(var10000, 6, '0');
-            } else {
-               return Integer.toString(i.m_7047_());
-            }
-         } else if (nbtBase instanceof ByteTag) {
-            ByteTag b = (ByteTag)nbtBase;
+      } else if (!(nbtBase instanceof StringTag nbtString)) {
+         if (nbtBase instanceof IntTag i) {
+            return format == 1 ? "#" + StrUtils.fillLeft(Integer.toHexString(i.m_7047_()), 6, '0') : Integer.toString(i.m_7047_());
+         } else if (nbtBase instanceof ByteTag b) {
             return Byte.toString(b.m_7063_());
-         } else if (nbtBase instanceof ShortTag) {
-            ShortTag s = (ShortTag)nbtBase;
+         } else if (nbtBase instanceof ShortTag s) {
             return Short.toString(s.m_7053_());
-         } else if (nbtBase instanceof LongTag) {
-            LongTag l = (LongTag)nbtBase;
+         } else if (nbtBase instanceof LongTag l) {
             return Long.toString(l.m_7046_());
-         } else if (nbtBase instanceof FloatTag) {
-            FloatTag f = (FloatTag)nbtBase;
+         } else if (nbtBase instanceof FloatTag f) {
             return Float.toString(f.m_7057_());
-         } else if (nbtBase instanceof DoubleTag) {
-            DoubleTag d = (DoubleTag)nbtBase;
-            return Double.toString(d.m_7061_());
          } else {
-            return nbtBase.toString();
+            return nbtBase instanceof DoubleTag d ? Double.toString(d.m_7061_()) : nbtBase.toString();
          }
       } else {
-         StringTag nbtString = (StringTag)nbtBase;
          String text = nbtString.m_7916_();
          if (text.startsWith("{") && text.endsWith("}")) {
             text = getMergedJsonText(text);
@@ -319,26 +289,18 @@ public class NbtTagValue {
    private static int getNbtInt(Tag nbtBase, int defVal) {
       if (nbtBase == null) {
          return defVal;
-      } else if (nbtBase instanceof IntTag) {
-         IntTag i = (IntTag)nbtBase;
+      } else if (nbtBase instanceof IntTag i) {
          return i.m_7047_();
-      } else if (nbtBase instanceof ByteTag) {
-         ByteTag b = (ByteTag)nbtBase;
+      } else if (nbtBase instanceof ByteTag b) {
          return b.m_7063_();
-      } else if (nbtBase instanceof ShortTag) {
-         ShortTag s = (ShortTag)nbtBase;
+      } else if (nbtBase instanceof ShortTag s) {
          return s.m_7053_();
-      } else if (nbtBase instanceof LongTag) {
-         LongTag l = (LongTag)nbtBase;
+      } else if (nbtBase instanceof LongTag l) {
          return (int)l.m_7046_();
-      } else if (nbtBase instanceof FloatTag) {
-         FloatTag f = (FloatTag)nbtBase;
+      } else if (nbtBase instanceof FloatTag f) {
          return (int)f.m_7057_();
-      } else if (nbtBase instanceof DoubleTag) {
-         DoubleTag d = (DoubleTag)nbtBase;
-         return (int)d.m_7061_();
       } else {
-         return defVal;
+         return nbtBase instanceof DoubleTag d ? (int)d.m_7061_() : defVal;
       }
    }
 
@@ -347,7 +309,7 @@ public class NbtTagValue {
       String TOKEN_TEXT = "\"text\":\"";
       int pos = -1;
 
-      while(true) {
+      while (true) {
          pos = text.indexOf(TOKEN_TEXT, pos + 1);
          if (pos < 0) {
             return sb.toString();
@@ -364,7 +326,7 @@ public class NbtTagValue {
       StringBuilder sb = new StringBuilder();
       boolean escapeMode = false;
 
-      for(int i = pos; i < text.length(); ++i) {
+      for (int i = pos; i < text.length(); i++) {
          char ch = text.charAt(i);
          if (escapeMode) {
             if (ch == 'b') {
@@ -399,7 +361,7 @@ public class NbtTagValue {
    public String toString() {
       StringBuffer sb = new StringBuffer();
 
-      for(int i = 0; i < this.parents.length; ++i) {
+      for (int i = 0; i < this.parents.length; i++) {
          String parent = this.parents[i];
          if (i > 0) {
             sb.append(".");

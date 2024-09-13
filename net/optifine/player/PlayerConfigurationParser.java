@@ -17,9 +17,9 @@ import net.optifine.util.Json;
 
 public class PlayerConfigurationParser {
    private String player = null;
-   public static final String CONFIG_ITEMS = "items";
-   public static final String ITEM_TYPE = "type";
-   public static final String ITEM_ACTIVE = "active";
+   public static String CONFIG_ITEMS;
+   public static String ITEM_TYPE;
+   public static String ITEM_ACTIVE;
 
    public PlayerConfigurationParser(String player) {
       this.player = player;
@@ -33,7 +33,7 @@ public class PlayerConfigurationParser {
          PlayerConfiguration pc = new PlayerConfiguration();
          JsonArray items = (JsonArray)jo.get("items");
          if (items != null) {
-            for(int i = 0; i < items.size(); ++i) {
+            for (int i = 0; i < items.size(); i++) {
                JsonObject item = (JsonObject)items.get(i);
                boolean active = Json.getBoolean(item, "active", true);
                if (active) {
@@ -76,13 +76,11 @@ public class PlayerConfigurationParser {
    }
 
    private NativeImage downloadTextureImage(String texturePath) {
-      String var10000 = HttpUtils.getPlayerItemsUrl();
-      String textureUrl = var10000 + "/" + texturePath;
+      String textureUrl = HttpUtils.getPlayerItemsUrl() + "/" + texturePath;
 
       try {
          byte[] body = HttpPipeline.get(textureUrl, Minecraft.m_91087_().m_91096_());
-         NativeImage image = NativeImage.m_85058_(new ByteArrayInputStream(body));
-         return image;
+         return NativeImage.m_85058_(new ByteArrayInputStream(body));
       } catch (IOException var5) {
          Config.warn("Error loading item texture " + texturePath + ": " + var5.getClass().getName() + ": " + var5.getMessage());
          return null;
@@ -90,16 +88,14 @@ public class PlayerConfigurationParser {
    }
 
    private PlayerItemModel downloadModel(String modelPath) {
-      String var10000 = HttpUtils.getPlayerItemsUrl();
-      String modelUrl = var10000 + "/" + modelPath;
+      String modelUrl = HttpUtils.getPlayerItemsUrl() + "/" + modelPath;
 
       try {
          byte[] bytes = HttpPipeline.get(modelUrl, Minecraft.m_91087_().m_91096_());
          String jsonStr = new String(bytes, "ASCII");
          JsonParser jp = new JsonParser();
-         JsonObject jo = (JsonObject)jp.parse(jsonStr);
-         PlayerItemModel pim = PlayerItemParser.parseItemModel(jo);
-         return pim;
+         JsonObject jo = (JsonObject)jp.m_82160_(jsonStr);
+         return PlayerItemParser.parseItemModel(jo);
       } catch (Exception var8) {
          Config.warn("Error loading item model " + modelPath + ": " + var8.getClass().getName() + ": " + var8.getMessage());
          return null;

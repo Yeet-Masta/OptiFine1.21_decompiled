@@ -41,9 +41,4 @@ public enum EnumShaderOption {
    public String getValueDefault() {
       return this.valueDefault;
    }
-
-   // $FF: synthetic method
-   private static EnumShaderOption[] $values() {
-      return new EnumShaderOption[]{ANTIALIASING, NORMAL_MAP, SPECULAR_MAP, RENDER_RES_MUL, SHADOW_RES_MUL, HAND_DEPTH_MUL, CLOUD_SHADOW, OLD_HAND_LIGHT, OLD_LIGHTING, SHADER_PACK, TWEAK_BLOCK_DAMAGE, SHADOW_CLIP_FRUSTRUM, TEX_MIN_FIL_B, TEX_MIN_FIL_N, TEX_MIN_FIL_S, TEX_MAG_FIL_B, TEX_MAG_FIL_N, TEX_MAG_FIL_S};
-   }
 }

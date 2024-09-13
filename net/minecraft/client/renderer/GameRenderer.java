@@ -78,6 +78,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.material.FogType;
@@ -108,20 +109,20 @@ import org.joml.Vector3f;
 import org.slf4j.Logger;
 
 public class GameRenderer implements AutoCloseable {
-   private static final ResourceLocation f_109057_ = ResourceLocation.m_340282_("textures/misc/nausea.png");
-   private static final ResourceLocation f_314877_ = ResourceLocation.m_340282_("shaders/post/blur.json");
-   public static final int f_313914_ = 10;
-   static final Logger f_109058_ = LogUtils.getLogger();
-   private static final boolean f_172636_ = false;
-   public static final float f_172592_ = 0.05F;
-   private static final float f_289032_ = 1000.0F;
-   final Minecraft f_109059_;
-   private final ResourceManager f_109060_;
-   private final RandomSource f_109061_ = RandomSource.m_216327_();
+   private static ResourceLocation f_109057_ = ResourceLocation.m_340282_("textures/misc/nausea.png");
+   private static ResourceLocation f_314877_ = ResourceLocation.m_340282_("shaders/post/blur.json");
+   public static int f_313914_;
+   static Logger f_109058_ = LogUtils.getLogger();
+   private static boolean f_172636_;
+   public static float f_172592_;
+   private static float f_289032_;
+   Minecraft f_109059_;
+   private ResourceManager f_109060_;
+   private RandomSource f_109061_ = RandomSource.m_216327_();
    private float f_109062_;
-   public final ItemInHandRenderer f_109055_;
-   private final MapRenderer f_109063_;
-   private final RenderBuffers f_109064_;
+   public ItemInHandRenderer f_109055_;
+   private MapRenderer f_109063_;
+   private RenderBuffers f_109064_;
    private int f_303613_;
    private float f_109066_;
    private float f_109067_;
@@ -132,13 +133,13 @@ public class GameRenderer implements AutoCloseable {
    private long f_109072_;
    private boolean f_182638_;
    private long f_109073_ = Util.m_137550_();
-   private final LightTexture f_109074_;
-   private final OverlayTexture f_109075_ = new OverlayTexture();
+   private LightTexture f_109074_;
+   private OverlayTexture f_109075_ = new OverlayTexture();
    private boolean f_109076_;
    private float f_109077_ = 1.0F;
    private float f_109078_;
    private float f_109079_;
-   public static final int f_172634_ = 40;
+   public static int f_172634_;
    @Nullable
    private ItemStack f_109080_;
    private int f_109047_;
@@ -149,10 +150,10 @@ public class GameRenderer implements AutoCloseable {
    @Nullable
    private PostChain f_316883_;
    private boolean f_109053_;
-   private final Camera f_109054_ = new Camera();
+   private Camera f_109054_ = new Camera();
    @Nullable
    public ShaderInstance f_172635_;
-   private final Map f_172578_ = Maps.newHashMap();
+   private Map<String, ShaderInstance> f_172578_ = Maps.newHashMap();
    @Nullable
    private static ShaderInstance f_172579_;
    @Nullable
@@ -302,7 +303,6 @@ public class GameRenderer implements AutoCloseable {
       if (this.f_172635_ != null) {
          this.f_172635_.close();
       }
-
    }
 
    public void m_172736_(boolean renderHandIn) {
@@ -346,9 +346,8 @@ public class GameRenderer implements AutoCloseable {
       } else if (entityIn instanceof EnderMan) {
          this.m_109128_(ResourceLocation.m_340282_("shaders/post/invert.json"));
       } else if (Reflector.ForgeHooksClient_loadEntityShader.exists()) {
-         Reflector.call(Reflector.ForgeHooksClient_loadEntityShader, entityIn, this);
+         Reflector.m_46374_(Reflector.ForgeHooksClient_loadEntityShader, entityIn, this);
       }
-
    }
 
    private void m_109128_(ResourceLocation resourceLocationIn) {
@@ -368,7 +367,6 @@ public class GameRenderer implements AutoCloseable {
             f_109058_.warn("Failed to parse shader: {}", resourceLocationIn, var4);
             this.f_109053_ = false;
          }
-
       }
    }
 
@@ -385,7 +383,6 @@ public class GameRenderer implements AutoCloseable {
       } catch (JsonSyntaxException var4) {
          f_109058_.warn("Failed to parse shader: {}", f_314877_, var4);
       }
-
    }
 
    public void m_323091_(float partialTicks) {
@@ -395,27 +392,24 @@ public class GameRenderer implements AutoCloseable {
             this.f_316883_.m_321643_("Radius", f);
             this.f_316883_.m_110023_(partialTicks);
          }
-
       }
    }
 
    public PreparableReloadListener m_247116_() {
-      return new SimplePreparableReloadListener() {
-         protected ResourceCache m_5944_(ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
-            Map map = resourceManagerIn.m_214159_("shaders", (locIn) -> {
+      return new SimplePreparableReloadListener<GameRenderer.ResourceCache>() {
+         protected GameRenderer.ResourceCache m_5944_(ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
+            Map<ResourceLocation, Resource> map = resourceManagerIn.m_214159_("shaders", locIn -> {
                String s = locIn.m_135815_();
                return s.endsWith(".json") || s.endsWith(Program.Type.FRAGMENT.m_85569_()) || s.endsWith(Program.Type.VERTEX.m_85569_()) || s.endsWith(".glsl");
             });
-            Map map1 = new HashMap();
+            Map<ResourceLocation, Resource> map1 = new HashMap();
             map.forEach((locIn, resIn) -> {
                try {
                   InputStream inputstream = resIn.m_215507_();
 
                   try {
                      byte[] abyte = inputstream.readAllBytes();
-                     map1.put(locIn, new Resource(resIn.m_247173_(), () -> {
-                        return new ByteArrayInputStream(abyte);
-                     }));
+                     map1.put(locIn, new Resource(resIn.m_247173_(), () -> new ByteArrayInputStream(abyte)));
                   } catch (Throwable var7) {
                      if (inputstream != null) {
                         try {
@@ -434,12 +428,11 @@ public class GameRenderer implements AutoCloseable {
                } catch (Exception var8) {
                   GameRenderer.f_109058_.warn("Failed to read resource {}", locIn, var8);
                }
-
             });
-            return new ResourceCache(resourceManagerIn, map1);
+            return new GameRenderer.ResourceCache(resourceManagerIn, map1);
          }
 
-         protected void m_5787_(ResourceCache objectIn, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
+         protected void m_5787_(GameRenderer.ResourceCache objectIn, ResourceManager resourceManagerIn, ProfilerFiller profilerIn) {
             GameRenderer.this.m_172767_(objectIn);
             if (GameRenderer.this.f_109050_ != null) {
                GameRenderer.this.f_109050_.close();
@@ -487,192 +480,277 @@ public class GameRenderer implements AutoCloseable {
 
    void m_172767_(ResourceProvider providerIn) {
       RenderSystem.assertOnRenderThread();
-      List list = Lists.newArrayList();
+      List<Program> list = Lists.newArrayList();
       list.addAll(Program.Type.FRAGMENT.m_85570_().values());
       list.addAll(Program.Type.VERTEX.m_85570_().values());
       list.forEach(Program::m_85543_);
-      List list1 = Lists.newArrayListWithCapacity(this.f_172578_.size());
+      List<Pair<ShaderInstance, Consumer<ShaderInstance>>> list1 = Lists.newArrayListWithCapacity(this.f_172578_.size());
 
       try {
-         list1.add(Pair.of(new ShaderInstance(providerIn, "particle", DefaultVertexFormat.f_85813_), (p_172713_0_) -> {
-            f_172586_ = p_172713_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "position", DefaultVertexFormat.f_85814_), (p_172710_0_) -> {
-            f_172579_ = p_172710_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "position_color", DefaultVertexFormat.f_85815_), (p_172707_0_) -> {
-            f_172580_ = p_172707_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "position_color_lightmap", DefaultVertexFormat.f_85816_), (p_172704_0_) -> {
-            f_172587_ = p_172704_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "position_color_tex_lightmap", DefaultVertexFormat.f_85820_), (p_172698_0_) -> {
-            f_172588_ = p_172698_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "position_tex", DefaultVertexFormat.f_85817_), (p_172695_0_) -> {
-            f_172582_ = p_172695_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "position_tex_color", DefaultVertexFormat.f_85819_), (p_172692_0_) -> {
-            f_172583_ = p_172692_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_solid", DefaultVertexFormat.f_85811_), (p_172683_0_) -> {
-            f_172591_ = p_172683_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_cutout_mipped", DefaultVertexFormat.f_85811_), (p_172680_0_) -> {
-            f_172608_ = p_172680_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_cutout", DefaultVertexFormat.f_85811_), (p_172677_0_) -> {
-            f_172609_ = p_172677_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_translucent", DefaultVertexFormat.f_85811_), (p_172674_0_) -> {
-            f_172610_ = p_172674_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_translucent_moving_block", DefaultVertexFormat.f_85811_), (p_172671_0_) -> {
-            f_172611_ = p_172671_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_armor_cutout_no_cull", DefaultVertexFormat.f_85812_), (p_172665_0_) -> {
-            f_172613_ = p_172665_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_solid", DefaultVertexFormat.f_85812_), (p_172662_0_) -> {
-            f_172614_ = p_172662_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_cutout", DefaultVertexFormat.f_85812_), (p_172659_0_) -> {
-            f_172615_ = p_172659_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_cutout_no_cull", DefaultVertexFormat.f_85812_), (p_172656_0_) -> {
-            f_172616_ = p_172656_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_cutout_no_cull_z_offset", DefaultVertexFormat.f_85812_), (p_172653_0_) -> {
-            f_172617_ = p_172653_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_item_entity_translucent_cull", DefaultVertexFormat.f_85812_), (p_172650_0_) -> {
-            f_172618_ = p_172650_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_translucent_cull", DefaultVertexFormat.f_85812_), (p_172647_0_) -> {
-            f_172619_ = p_172647_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_translucent", DefaultVertexFormat.f_85812_), (p_172644_0_) -> {
-            f_172620_ = p_172644_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_translucent_emissive", DefaultVertexFormat.f_85812_), (p_172641_0_) -> {
-            f_234217_ = p_172641_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_smooth_cutout", DefaultVertexFormat.f_85812_), (p_172638_0_) -> {
-            f_172621_ = p_172638_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_beacon_beam", DefaultVertexFormat.f_85811_), (p_172839_0_) -> {
-            f_172622_ = p_172839_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_decal", DefaultVertexFormat.f_85812_), (p_172836_0_) -> {
-            f_172623_ = p_172836_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_no_outline", DefaultVertexFormat.f_85812_), (p_172833_0_) -> {
-            f_172624_ = p_172833_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_shadow", DefaultVertexFormat.f_85812_), (p_172830_0_) -> {
-            f_172625_ = p_172830_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_alpha", DefaultVertexFormat.f_85812_), (p_172827_0_) -> {
-            f_172626_ = p_172827_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_eyes", DefaultVertexFormat.f_85812_), (p_172824_0_) -> {
-            f_172627_ = p_172824_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_energy_swirl", DefaultVertexFormat.f_85812_), (p_172821_0_) -> {
-            f_172628_ = p_172821_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_leash", DefaultVertexFormat.f_85816_), (p_172818_0_) -> {
-            f_172629_ = p_172818_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_water_mask", DefaultVertexFormat.f_85814_), (p_172815_0_) -> {
-            f_172630_ = p_172815_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_outline", DefaultVertexFormat.f_85819_), (p_172812_0_) -> {
-            f_172631_ = p_172812_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_armor_entity_glint", DefaultVertexFormat.f_85817_), (p_172806_0_) -> {
-            f_172633_ = p_172806_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_glint_translucent", DefaultVertexFormat.f_85817_), (p_172804_0_) -> {
-            f_172593_ = p_172804_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_glint", DefaultVertexFormat.f_85817_), (p_172802_0_) -> {
-            f_172594_ = p_172802_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_glint", DefaultVertexFormat.f_85817_), (p_172798_0_) -> {
-            f_172596_ = p_172798_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_entity_glint_direct", DefaultVertexFormat.f_85817_), (p_172795_0_) -> {
-            f_172597_ = p_172795_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_text", DefaultVertexFormat.f_85820_), (p_172793_0_) -> {
-            f_172598_ = p_172793_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_text_background", DefaultVertexFormat.f_85816_), (p_268793_0_) -> {
-            f_268423_ = p_268793_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_text_intensity", DefaultVertexFormat.f_85820_), (p_172791_0_) -> {
-            f_172599_ = p_172791_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_text_see_through", DefaultVertexFormat.f_85820_), (p_172788_0_) -> {
-            f_172600_ = p_172788_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_text_background_see_through", DefaultVertexFormat.f_85816_), (p_268792_0_) -> {
-            f_268525_ = p_268792_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_text_intensity_see_through", DefaultVertexFormat.f_85820_), (p_172786_0_) -> {
-            f_172601_ = p_172786_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_lightning", DefaultVertexFormat.f_85815_), (p_172784_0_) -> {
-            f_172602_ = p_172784_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_tripwire", DefaultVertexFormat.f_85811_), (p_172781_0_) -> {
-            f_172603_ = p_172781_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_end_portal", DefaultVertexFormat.f_85814_), (p_172777_0_) -> {
-            f_172604_ = p_172777_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_end_gateway", DefaultVertexFormat.f_85814_), (p_172773_0_) -> {
-            f_172605_ = p_172773_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_clouds", DefaultVertexFormat.f_85822_), (p_317418_0_) -> {
-            f_314342_ = p_317418_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_lines", DefaultVertexFormat.f_166851_), (p_172732_0_) -> {
-            f_172606_ = p_172732_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_crumbling", DefaultVertexFormat.f_85811_), (p_234229_0_) -> {
-            f_172607_ = p_234229_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_gui", DefaultVertexFormat.f_85815_), (p_285677_0_) -> {
-            f_285653_ = p_285677_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_gui_overlay", DefaultVertexFormat.f_85815_), (p_285675_0_) -> {
-            f_285598_ = p_285675_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_gui_text_highlight", DefaultVertexFormat.f_85815_), (p_285674_0_) -> {
-            f_285623_ = p_285674_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_gui_ghost_recipe_overlay", DefaultVertexFormat.f_85815_), (p_285676_0_) -> {
-            f_285569_ = p_285676_0_;
-         }));
-         list1.add(Pair.of(new ShaderInstance(providerIn, "rendertype_breeze_wind", DefaultVertexFormat.f_85812_), (p_304052_0_) -> {
-            f_303765_ = p_304052_0_;
-         }));
+         list1.add(Pair.m_253057_(new ShaderInstance(providerIn, "particle", DefaultVertexFormat.f_85813_), (Consumer)p_172713_0_ -> f_172586_ = p_172713_0_));
+         list1.add(Pair.m_253057_(new ShaderInstance(providerIn, "position", DefaultVertexFormat.f_85814_), (Consumer)p_172710_0_ -> f_172579_ = p_172710_0_));
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "position_color", DefaultVertexFormat.f_85815_), (Consumer)p_172707_0_ -> f_172580_ = p_172707_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "position_color_lightmap", DefaultVertexFormat.f_85816_), (Consumer)p_172704_0_ -> f_172587_ = p_172704_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "position_color_tex_lightmap", DefaultVertexFormat.f_85820_), (Consumer)p_172698_0_ -> f_172588_ = p_172698_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "position_tex", DefaultVertexFormat.f_85817_), (Consumer)p_172695_0_ -> f_172582_ = p_172695_0_)
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "position_tex_color", DefaultVertexFormat.f_85819_), (Consumer)p_172692_0_ -> f_172583_ = p_172692_0_)
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_solid", DefaultVertexFormat.f_85811_), (Consumer)p_172683_0_ -> f_172591_ = p_172683_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_cutout_mipped", DefaultVertexFormat.f_85811_), (Consumer)p_172680_0_ -> f_172608_ = p_172680_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_cutout", DefaultVertexFormat.f_85811_), (Consumer)p_172677_0_ -> f_172609_ = p_172677_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_translucent", DefaultVertexFormat.f_85811_), (Consumer)p_172674_0_ -> f_172610_ = p_172674_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_translucent_moving_block", DefaultVertexFormat.f_85811_),
+               (Consumer)p_172671_0_ -> f_172611_ = p_172671_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_armor_cutout_no_cull", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172665_0_ -> f_172613_ = p_172665_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_solid", DefaultVertexFormat.f_85812_), (Consumer)p_172662_0_ -> f_172614_ = p_172662_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_cutout", DefaultVertexFormat.f_85812_), (Consumer)p_172659_0_ -> f_172615_ = p_172659_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_cutout_no_cull", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172656_0_ -> f_172616_ = p_172656_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_cutout_no_cull_z_offset", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172653_0_ -> f_172617_ = p_172653_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_item_entity_translucent_cull", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172650_0_ -> f_172618_ = p_172650_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_translucent_cull", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172647_0_ -> f_172619_ = p_172647_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_translucent", DefaultVertexFormat.f_85812_), (Consumer)p_172644_0_ -> f_172620_ = p_172644_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_translucent_emissive", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172641_0_ -> f_234217_ = p_172641_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_smooth_cutout", DefaultVertexFormat.f_85812_),
+               (Consumer)p_172638_0_ -> f_172621_ = p_172638_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_beacon_beam", DefaultVertexFormat.f_85811_), (Consumer)p_172839_0_ -> f_172622_ = p_172839_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_decal", DefaultVertexFormat.f_85812_), (Consumer)p_172836_0_ -> f_172623_ = p_172836_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_no_outline", DefaultVertexFormat.f_85812_), (Consumer)p_172833_0_ -> f_172624_ = p_172833_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_shadow", DefaultVertexFormat.f_85812_), (Consumer)p_172830_0_ -> f_172625_ = p_172830_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_alpha", DefaultVertexFormat.f_85812_), (Consumer)p_172827_0_ -> f_172626_ = p_172827_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_eyes", DefaultVertexFormat.f_85812_), (Consumer)p_172824_0_ -> f_172627_ = p_172824_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_energy_swirl", DefaultVertexFormat.f_85812_), (Consumer)p_172821_0_ -> f_172628_ = p_172821_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_leash", DefaultVertexFormat.f_85816_), (Consumer)p_172818_0_ -> f_172629_ = p_172818_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_water_mask", DefaultVertexFormat.f_85814_), (Consumer)p_172815_0_ -> f_172630_ = p_172815_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_outline", DefaultVertexFormat.f_85819_), (Consumer)p_172812_0_ -> f_172631_ = p_172812_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_armor_entity_glint", DefaultVertexFormat.f_85817_), (Consumer)p_172806_0_ -> f_172633_ = p_172806_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_glint_translucent", DefaultVertexFormat.f_85817_), (Consumer)p_172804_0_ -> f_172593_ = p_172804_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_glint", DefaultVertexFormat.f_85817_), (Consumer)p_172802_0_ -> f_172594_ = p_172802_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_glint", DefaultVertexFormat.f_85817_), (Consumer)p_172798_0_ -> f_172596_ = p_172798_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_entity_glint_direct", DefaultVertexFormat.f_85817_), (Consumer)p_172795_0_ -> f_172597_ = p_172795_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_text", DefaultVertexFormat.f_85820_), (Consumer)p_172793_0_ -> f_172598_ = p_172793_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_text_background", DefaultVertexFormat.f_85816_), (Consumer)p_268793_0_ -> f_268423_ = p_268793_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_text_intensity", DefaultVertexFormat.f_85820_), (Consumer)p_172791_0_ -> f_172599_ = p_172791_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_text_see_through", DefaultVertexFormat.f_85820_), (Consumer)p_172788_0_ -> f_172600_ = p_172788_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_text_background_see_through", DefaultVertexFormat.f_85816_),
+               (Consumer)p_268792_0_ -> f_268525_ = p_268792_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_text_intensity_see_through", DefaultVertexFormat.f_85820_),
+               (Consumer)p_172786_0_ -> f_172601_ = p_172786_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_lightning", DefaultVertexFormat.f_85815_), (Consumer)p_172784_0_ -> f_172602_ = p_172784_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_tripwire", DefaultVertexFormat.f_85811_), (Consumer)p_172781_0_ -> f_172603_ = p_172781_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_end_portal", DefaultVertexFormat.f_85814_), (Consumer)p_172777_0_ -> f_172604_ = p_172777_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_end_gateway", DefaultVertexFormat.f_85814_), (Consumer)p_172773_0_ -> f_172605_ = p_172773_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_clouds", DefaultVertexFormat.f_85822_), (Consumer)p_317418_0_ -> f_314342_ = p_317418_0_)
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_lines", DefaultVertexFormat.f_166851_), (Consumer)p_172732_0_ -> f_172606_ = p_172732_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_crumbling", DefaultVertexFormat.f_85811_), (Consumer)p_234229_0_ -> f_172607_ = p_234229_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(new ShaderInstance(providerIn, "rendertype_gui", DefaultVertexFormat.f_85815_), (Consumer)p_285677_0_ -> f_285653_ = p_285677_0_)
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_gui_overlay", DefaultVertexFormat.f_85815_), (Consumer)p_285675_0_ -> f_285598_ = p_285675_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_gui_text_highlight", DefaultVertexFormat.f_85815_), (Consumer)p_285674_0_ -> f_285623_ = p_285674_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_gui_ghost_recipe_overlay", DefaultVertexFormat.f_85815_),
+               (Consumer)p_285676_0_ -> f_285569_ = p_285676_0_
+            )
+         );
+         list1.add(
+            Pair.m_253057_(
+               new ShaderInstance(providerIn, "rendertype_breeze_wind", DefaultVertexFormat.f_85812_), (Consumer)p_304052_0_ -> f_303765_ = p_304052_0_
+            )
+         );
          this.m_323672_(providerIn);
          ReflectorForge.postModLoaderEvent(Reflector.RegisterShadersEvent_Constructor, providerIn, list1);
       } catch (IOException var5) {
-         list1.forEach((pairIn) -> {
-            ((ShaderInstance)pairIn.getFirst()).close();
-         });
+         list1.forEach(pairIn -> ((ShaderInstance)pairIn.getFirst()).close());
          throw new RuntimeException("could not reload shaders", var5);
       }
 
       this.m_172759_();
-      list1.forEach((pairIn) -> {
+      list1.forEach(pairIn -> {
          ShaderInstance shaderinstance = (ShaderInstance)pairIn.getFirst();
          this.f_172578_.put(shaderinstance.m_173365_(), shaderinstance);
-         ((Consumer)pairIn.getSecond()).accept(shaderinstance);
+         ((Consumer)pairIn.getSecond()).m_340568_(shaderinstance);
       });
    }
 
@@ -696,7 +774,7 @@ public class GameRenderer implements AutoCloseable {
 
       this.f_109054_.m_90565_();
       this.f_109055_.m_109311_();
-      ++this.f_303613_;
+      this.f_303613_++;
       if (this.f_109059_.f_91073_.m_304826_().m_305915_()) {
          this.f_109059_.f_91060_.m_109693_(this.f_109054_);
          this.f_109069_ = this.f_109068_;
@@ -710,13 +788,12 @@ public class GameRenderer implements AutoCloseable {
          }
 
          if (this.f_109047_ > 0) {
-            --this.f_109047_;
+            this.f_109047_--;
             if (this.f_109047_ == 0) {
                this.f_109080_ = null;
             }
          }
       }
-
    }
 
    @Nullable
@@ -744,19 +821,9 @@ public class GameRenderer implements AutoCloseable {
          double d1 = this.f_109059_.f_91074_.m_323410_();
          HitResult hitresult = this.m_321147_(entity, d0, d1, partialTicks);
          this.f_109059_.f_91077_ = hitresult;
-         Minecraft var10000 = this.f_109059_;
-         Entity var10001;
-         if (hitresult instanceof EntityHitResult) {
-            EntityHitResult entityhitresult = (EntityHitResult)hitresult;
-            var10001 = entityhitresult.m_82443_();
-         } else {
-            var10001 = null;
-         }
-
-         var10000.f_91076_ = var10001;
+         this.f_109059_.f_91076_ = hitresult instanceof EntityHitResult entityhitresult ? entityhitresult.m_82443_() : null;
          this.f_109059_.m_91307_().m_7238_();
       }
-
    }
 
    private HitResult m_321147_(Entity entityHitIn, double blockRangeIn, double entityRangeIn, float partialTicks) {
@@ -774,10 +841,10 @@ public class GameRenderer implements AutoCloseable {
       Vec3 vec32 = vec3.m_82520_(vec31.f_82479_ * d0, vec31.f_82480_ * d0, vec31.f_82481_ * d0);
       float f = 1.0F;
       AABB aabb = entityHitIn.m_20191_().m_82369_(vec31.m_82490_(d0)).m_82377_(1.0, 1.0, 1.0);
-      EntityHitResult entityhitresult = ProjectileUtil.m_37287_(entityHitIn, vec3, vec32, aabb, (entityIn) -> {
-         return !entityIn.m_5833_() && entityIn.m_6087_();
-      }, d1);
-      return entityhitresult != null && entityhitresult.m_82450_().m_82557_(vec3) < d2 ? m_324916_(entityhitresult, vec3, entityRangeIn) : m_324916_(hitresult, vec3, blockRangeIn);
+      EntityHitResult entityhitresult = ProjectileUtil.m_37287_(entityHitIn, vec3, vec32, aabb, entityIn -> !entityIn.m_5833_() && entityIn.m_6087_(), d1);
+      return entityhitresult != null && entityhitresult.m_82450_().m_82557_(vec3) < d2
+         ? m_324916_(entityhitresult, vec3, entityRangeIn)
+         : m_324916_(hitresult, vec3, blockRangeIn);
    }
 
    private static HitResult m_324916_(HitResult resultIn, Vec3 vecIn, double entityRangeIn) {
@@ -793,13 +860,12 @@ public class GameRenderer implements AutoCloseable {
 
    private void m_109156_() {
       float f = 1.0F;
-      Entity var3 = this.f_109059_.m_91288_();
-      if (var3 instanceof AbstractClientPlayer abstractclientplayer) {
+      if (this.f_109059_.m_91288_() instanceof AbstractClientPlayer abstractclientplayer) {
          f = abstractclientplayer.m_108565_();
       }
 
       this.f_109067_ = this.f_109066_;
-      this.f_109066_ += (f - this.f_109066_) * 0.5F;
+      this.f_109066_ = this.f_109066_ + (f - this.f_109066_) * 0.5F;
       if (this.f_109066_ > 1.5F) {
          this.f_109066_ = 1.5F;
       }
@@ -807,7 +873,6 @@ public class GameRenderer implements AutoCloseable {
       if (this.f_109066_ < 0.1F) {
          this.f_109066_ = 0.1F;
       }
-
    }
 
    public double m_109141_(Camera activeRenderInfoIn, float partialTicks, boolean useFOVSetting) {
@@ -815,16 +880,15 @@ public class GameRenderer implements AutoCloseable {
          return 90.0;
       } else {
          double d0 = 70.0;
-         boolean zoomActive;
          if (useFOVSetting) {
-            d0 = (double)(Integer)this.f_109059_.f_91066_.m_231837_().m_231551_();
-            zoomActive = this.f_109059_.m_91288_() instanceof AbstractClientPlayer && ((AbstractClientPlayer)this.f_109059_.m_91288_()).m_150108_();
-            if (Config.isDynamicFov() || zoomActive) {
+            d0 = (double)this.f_109059_.f_91066_.m_231837_().m_231551_().intValue();
+            boolean playerScoping = this.f_109059_.m_91288_() instanceof AbstractClientPlayer && ((AbstractClientPlayer)this.f_109059_.m_91288_()).m_150108_();
+            if (Config.isDynamicFov() || playerScoping) {
                d0 *= (double)Mth.m_14179_(partialTicks, this.f_109067_, this.f_109066_);
             }
          }
 
-         zoomActive = false;
+         boolean zoomActive = false;
          if (this.f_109059_.f_91080_ == null) {
             zoomActive = this.f_109059_.f_91066_.ofKeyBindZoom.m_90857_();
          }
@@ -853,21 +917,21 @@ public class GameRenderer implements AutoCloseable {
 
          FogType fogtype = activeRenderInfoIn.m_167685_();
          if (fogtype == FogType.LAVA || fogtype == FogType.WATER) {
-            d0 *= Mth.m_14139_((Double)this.f_109059_.f_91066_.m_231925_().m_231551_(), 1.0, 0.8571428656578064);
+            d0 *= Mth.m_14139_(this.f_109059_.f_91066_.m_231925_().m_231551_(), 1.0, 0.85714287F);
          }
 
-         return Reflector.ForgeHooksClient_getFieldOfView.exists() ? Reflector.callDouble(Reflector.ForgeHooksClient_getFieldOfView, this, activeRenderInfoIn, partialTicks, d0, useFOVSetting) : d0;
+         return Reflector.ForgeHooksClient_getFieldOfView.exists()
+            ? Reflector.callDouble(Reflector.ForgeHooksClient_getFieldOfView, this, activeRenderInfoIn, partialTicks, d0, useFOVSetting)
+            : d0;
       }
    }
 
    private void m_109117_(PoseStack matrixStackIn, float partialTicks) {
-      Entity var4 = this.f_109059_.m_91288_();
-      if (var4 instanceof LivingEntity livingentity) {
+      if (this.f_109059_.m_91288_() instanceof LivingEntity livingentity) {
          float f2 = (float)livingentity.f_20916_ - partialTicks;
-         float f3;
          if (livingentity.m_21224_()) {
-            f3 = Math.min((float)livingentity.f_20919_ + partialTicks, 20.0F);
-            matrixStackIn.m_252781_(Axis.f_252403_.m_252977_(40.0F - 8000.0F / (f3 + 200.0F)));
+            float f = Math.min((float)livingentity.f_20919_ + partialTicks, 20.0F);
+            matrixStackIn.m_252781_(Axis.f_252403_.m_252977_(40.0F - 8000.0F / (f + 200.0F)));
          }
 
          if (f2 < 0.0F) {
@@ -875,14 +939,13 @@ public class GameRenderer implements AutoCloseable {
          }
 
          f2 /= (float)livingentity.f_20917_;
-         f2 = Mth.m_14031_(f2 * f2 * f2 * f2 * 3.1415927F);
-         f3 = livingentity.m_264297_();
+         f2 = Mth.m_14031_(f2 * f2 * f2 * f2 * (float) Math.PI);
+         float f3 = livingentity.m_264297_();
          matrixStackIn.m_252781_(Axis.f_252436_.m_252977_(-f3));
-         float f1 = (float)((double)(-f2) * 14.0 * (Double)this.f_109059_.f_91066_.m_269326_().m_231551_());
+         float f1 = (float)((double)(-f2) * 14.0 * this.f_109059_.f_91066_.m_269326_().m_231551_());
          matrixStackIn.m_252781_(Axis.f_252403_.m_252977_(f1));
          matrixStackIn.m_252781_(Axis.f_252436_.m_252977_(f3));
       }
-
    }
 
    private void m_109138_(PoseStack matrixStackIn, float partialTicks) {
@@ -891,11 +954,10 @@ public class GameRenderer implements AutoCloseable {
          float f = player.f_19787_ - player.f_19867_;
          float f1 = -(player.f_19787_ + f * partialTicks);
          float f2 = Mth.m_14179_(partialTicks, player.f_36099_, player.f_36100_);
-         matrixStackIn.m_252880_(Mth.m_14031_(f1 * 3.1415927F) * f2 * 0.5F, -Math.abs(Mth.m_14089_(f1 * 3.1415927F) * f2), 0.0F);
-         matrixStackIn.m_252781_(Axis.f_252403_.m_252977_(Mth.m_14031_(f1 * 3.1415927F) * f2 * 3.0F));
-         matrixStackIn.m_252781_(Axis.f_252529_.m_252977_(Math.abs(Mth.m_14089_(f1 * 3.1415927F - 0.2F) * f2) * 5.0F));
+         matrixStackIn.m_252880_(Mth.m_14031_(f1 * (float) Math.PI) * f2 * 0.5F, -Math.abs(Mth.m_14089_(f1 * (float) Math.PI) * f2), 0.0F);
+         matrixStackIn.m_252781_(Axis.f_252403_.m_252977_(Mth.m_14031_(f1 * (float) Math.PI) * f2 * 3.0F));
+         matrixStackIn.m_252781_(Axis.f_252529_.m_252977_(Math.abs(Mth.m_14089_(f1 * (float) Math.PI - 0.2F) * f2) * 5.0F));
       }
-
    }
 
    public void m_172718_(float zoomIn, float yawIn, float pitchIn) {
@@ -912,7 +974,9 @@ public class GameRenderer implements AutoCloseable {
       this.renderHand(activeRenderInfoIn, partialTicks, matrixStackIn, true, true, false);
    }
 
-   public void renderHand(Camera activeRenderInfoIn, float partialTicks, Matrix4f matrixStackIn, boolean renderItem, boolean renderOverlay, boolean renderTranslucent) {
+   public void renderHand(
+      Camera activeRenderInfoIn, float partialTicks, Matrix4f matrixStackIn, boolean renderItem, boolean renderOverlay, boolean renderTranslucent
+   ) {
       if (!this.f_109076_) {
          Shaders.beginRenderFirstPersonHand(renderTranslucent);
          this.m_252879_(this.m_253088_(this.m_109141_(activeRenderInfoIn, partialTicks, false)));
@@ -920,22 +984,40 @@ public class GameRenderer implements AutoCloseable {
          boolean flag = false;
          if (renderItem) {
             posestack.m_85836_();
-            posestack.m_318714_(matrixStackIn.invert(new Matrix4f()));
+            posestack.m_318714_(matrixStackIn.m_81807_(new Matrix4f()));
             Matrix4fStack matrix4fstack = RenderSystem.getModelViewStack();
             matrix4fstack.pushMatrix().set(matrixStackIn);
             RenderSystem.applyModelViewMatrix();
             this.m_109117_(posestack, partialTicks);
-            if ((Boolean)this.f_109059_.f_91066_.m_231830_().m_231551_()) {
+            if (this.f_109059_.f_91066_.m_231830_().m_231551_()) {
                this.m_109138_(posestack, partialTicks);
             }
 
             flag = this.f_109059_.m_91288_() instanceof LivingEntity && ((LivingEntity)this.f_109059_.m_91288_()).m_5803_();
-            if (this.f_109059_.f_91066_.m_92176_().m_90612_() && !flag && !this.f_109059_.f_91066_.f_92062_ && this.f_109059_.f_91072_.m_105295_() != GameType.SPECTATOR) {
+            if (this.f_109059_.f_91066_.m_92176_().m_90612_()
+               && !flag
+               && !this.f_109059_.f_91066_.f_92062_
+               && this.f_109059_.f_91072_.m_105295_() != GameType.SPECTATOR) {
                this.f_109074_.m_109896_();
                if (Config.isShaders()) {
-                  ShadersRender.renderItemFP(this.f_109055_, partialTicks, posestack, this.f_109064_.m_110104_(), this.f_109059_.f_91074_, this.f_109059_.m_91290_().m_114394_(this.f_109059_.f_91074_, partialTicks), renderTranslucent);
+                  ShadersRender.renderItemFP(
+                     this.f_109055_,
+                     partialTicks,
+                     posestack,
+                     this.f_109064_.m_110104_(),
+                     this.f_109059_.f_91074_,
+                     this.f_109059_.m_91290_().m_114394_(this.f_109059_.f_91074_, partialTicks),
+                     renderTranslucent
+                  );
                } else {
-                  this.f_109055_.m_109314_(partialTicks, posestack, this.f_109064_.m_110104_(), this.f_109059_.f_91074_, this.f_109059_.m_91290_().m_114394_(this.f_109059_.f_91074_, partialTicks));
+                  this.f_109055_
+                     .m_109314_(
+                        partialTicks,
+                        posestack,
+                        this.f_109064_.m_110104_(),
+                        this.f_109059_.f_91074_,
+                        this.f_109059_.m_91290_().m_114394_(this.f_109059_.f_91074_, partialTicks)
+                     );
                }
 
                this.f_109074_.m_109891_();
@@ -956,7 +1038,6 @@ public class GameRenderer implements AutoCloseable {
             ScreenEffectRenderer.m_110718_(this.f_109059_, posestack);
          }
       }
-
    }
 
    public void m_252879_(Matrix4f matrixIn) {
@@ -975,7 +1056,12 @@ public class GameRenderer implements AutoCloseable {
          matrix4f.scale(this.f_109077_, this.f_109077_, 1.0F);
       }
 
-      return matrix4f.perspective((float)(fovModifierIn * 0.01745329238474369), (float)this.f_109059_.m_91268_().m_85441_() / (float)this.f_109059_.m_91268_().m_85442_(), 0.05F, this.clipDistance);
+      return matrix4f.perspective(
+         (float)(fovModifierIn * (float) (Math.PI / 180.0)),
+         (float)this.f_109059_.m_91268_().m_85441_() / (float)this.f_109059_.m_91268_().m_85442_(),
+         0.05F,
+         this.clipDistance
+      );
    }
 
    public float m_172790_() {
@@ -984,12 +1070,16 @@ public class GameRenderer implements AutoCloseable {
 
    public static float m_109108_(LivingEntity livingEntityIn, float entitylivingbaseIn) {
       MobEffectInstance mobeffectinstance = livingEntityIn.m_21124_(MobEffects.f_19611_);
-      return !mobeffectinstance.m_267633_(200) ? 1.0F : 0.7F + Mth.m_14031_(((float)mobeffectinstance.m_19557_() - entitylivingbaseIn) * 3.1415927F * 0.2F) * 0.3F;
+      return !mobeffectinstance.m_267633_(200)
+         ? 1.0F
+         : 0.7F + Mth.m_14031_(((float)mobeffectinstance.m_19557_() - entitylivingbaseIn) * (float) Math.PI * 0.2F) * 0.3F;
    }
 
    public void m_109093_(DeltaTracker partialTicks, boolean renderWorldIn) {
       this.frameInit();
-      if (!this.f_109059_.m_91302_() && this.f_109059_.f_91066_.f_92126_ && (!(Boolean)this.f_109059_.f_91066_.m_231828_().m_231551_() || !this.f_109059_.f_91067_.m_91584_())) {
+      if (!this.f_109059_.m_91302_()
+         && this.f_109059_.f_91066_.f_92126_
+         && (!this.f_109059_.f_91066_.m_231828_().m_231551_() || !this.f_109059_.f_91067_.m_91584_())) {
          if (Util.m_137550_() - this.f_109073_ > 500L) {
             this.f_109059_.m_91358_(false);
          }
@@ -1022,7 +1112,10 @@ public class GameRenderer implements AutoCloseable {
          Window window = this.f_109059_.m_91268_();
          RenderSystem.clear(256, Minecraft.f_91002_);
          float guiFarPlane = Reflector.ForgeHooksClient_getGuiFarPlane.exists() ? Reflector.ForgeHooksClient_getGuiFarPlane.callFloat() : 21000.0F;
-         Matrix4f matrix4f = (new Matrix4f()).setOrtho(0.0F, (float)((double)window.m_85441_() / window.m_85449_()), (float)((double)window.m_85442_() / window.m_85449_()), 0.0F, 1000.0F, guiFarPlane);
+         Matrix4f matrix4f = new Matrix4f()
+            .setOrtho(
+               0.0F, (float)((double)window.m_85441_() / window.m_85449_()), (float)((double)window.m_85442_() / window.m_85449_()), 0.0F, 1000.0F, guiFarPlane
+            );
          RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.f_276633_);
          Matrix4fStack matrix4fstack = RenderSystem.getModelViewStack();
          matrix4fstack.pushMatrix();
@@ -1039,7 +1132,7 @@ public class GameRenderer implements AutoCloseable {
             this.f_109059_.m_91307_().m_6182_("gui");
             if (this.f_109059_.f_91074_ != null) {
                float f = Mth.m_14179_(partialTicks.m_338527_(false), this.f_109059_.f_91074_.f_108590_, this.f_109059_.f_91074_.f_108589_);
-               float f1 = ((Double)this.f_109059_.f_91066_.m_231924_().m_231551_()).floatValue();
+               float f1 = this.f_109059_.f_91066_.m_231924_().m_231551_().floatValue();
                if (f > 0.0F && this.f_109059_.f_91074_.m_21023_(MobEffects.f_19604_) && f1 < 1.0F) {
                   this.m_280083_(guigraphics, f * (1.0F - f1));
                }
@@ -1051,7 +1144,7 @@ public class GameRenderer implements AutoCloseable {
 
             this.f_109059_.f_91065_.m_280421_(guigraphics, partialTicks);
             if (this.f_109059_.f_91066_.ofQuickInfo && !this.f_109059_.m_293199_().f_291101_) {
-               QuickInfo.render(guigraphics);
+               QuickInfo.m_324219_(guigraphics);
             }
 
             RenderSystem.clear(256, Minecraft.f_91002_);
@@ -1063,25 +1156,21 @@ public class GameRenderer implements AutoCloseable {
                LoadingOverlay.m_96189_(this.f_109059_);
                if (this.f_109059_.m_91265_() instanceof LoadingOverlay) {
                   LoadingOverlay rlpg = (LoadingOverlay)this.f_109059_.m_91265_();
-                  rlpg.update();
+                  rlpg.m_252999_();
                }
             }
 
             this.guiLoadingVisible = this.f_109059_.m_91265_() != null;
          }
 
-         CrashReportCategory crashreportcategory2;
-         CrashReport crashreport2;
          if (this.f_109059_.m_91265_() != null) {
             try {
                this.f_109059_.m_91265_().m_88315_(guigraphics, i, j, partialTicks.m_338557_());
             } catch (Throwable var16) {
-               crashreport2 = CrashReport.m_127521_(var16, "Rendering overlay");
-               crashreportcategory2 = crashreport2.m_127514_("Overlay render details");
-               crashreportcategory2.m_128165_("Overlay name", () -> {
-                  return this.f_109059_.m_91265_().getClass().getCanonicalName();
-               });
-               throw new ReportedException(crashreport2);
+               CrashReport crashreport = CrashReport.m_127521_(var16, "Rendering overlay");
+               CrashReportCategory crashreportcategory = crashreport.m_127514_("Overlay render details");
+               crashreportcategory.m_128165_("Overlay name", () -> this.f_109059_.m_91265_().getClass().getCanonicalName());
+               throw new ReportedException(crashreport);
             }
          } else if (flag && this.f_109059_.f_91080_ != null) {
             try {
@@ -1095,18 +1184,32 @@ public class GameRenderer implements AutoCloseable {
                   this.f_109059_.f_91080_.m_280264_(guigraphics, i, j, partialTicks.m_338557_());
                }
             } catch (Throwable var17) {
-               crashreport2 = CrashReport.m_127521_(var17, "Rendering screen");
-               crashreportcategory2 = crashreport2.m_127514_("Screen render details");
-               crashreportcategory2.m_128165_("Screen name", () -> {
-                  return this.f_109059_.f_91080_.getClass().getCanonicalName();
-               });
-               crashreportcategory2.m_128165_("Mouse location", () -> {
-                  return String.format(Locale.ROOT, "Scaled: (%d, %d). Absolute: (%f, %f)", i, j, this.f_109059_.f_91067_.m_91589_(), this.f_109059_.f_91067_.m_91594_());
-               });
-               crashreportcategory2.m_128165_("Screen size", () -> {
-                  return String.format(Locale.ROOT, "Scaled: (%d, %d). Absolute: (%d, %d). Scale factor of %f", this.f_109059_.m_91268_().m_85445_(), this.f_109059_.m_91268_().m_85446_(), this.f_109059_.m_91268_().m_85441_(), this.f_109059_.m_91268_().m_85442_(), this.f_109059_.m_91268_().m_85449_());
-               });
-               throw new ReportedException(crashreport2);
+               CrashReport crashreport1 = CrashReport.m_127521_(var17, "Rendering screen");
+               CrashReportCategory crashreportcategory1 = crashreport1.m_127514_("Screen render details");
+               crashreportcategory1.m_128165_("Screen name", () -> this.f_109059_.f_91080_.getClass().getCanonicalName());
+               crashreportcategory1.m_128165_(
+                  "Mouse location",
+                  () -> String.m_12886_(
+                        Locale.ROOT,
+                        "Scaled: (%d, %d). Absolute: (%f, %f)",
+                        new Object[]{i, j, this.f_109059_.f_91067_.m_91589_(), this.f_109059_.f_91067_.m_91594_()}
+                     )
+               );
+               crashreportcategory1.m_128165_(
+                  "Screen size",
+                  () -> String.m_12886_(
+                        Locale.ROOT,
+                        "Scaled: (%d, %d). Absolute: (%d, %d). Scale factor of %f",
+                        new Object[]{
+                           this.f_109059_.m_91268_().m_85445_(),
+                           this.f_109059_.m_91268_().m_85446_(),
+                           this.f_109059_.m_91268_().m_85441_(),
+                           this.f_109059_.m_91268_().m_85442_(),
+                           this.f_109059_.m_91268_().m_85449_()
+                        }
+                     )
+               );
+               throw new ReportedException(crashreport1);
             }
 
             try {
@@ -1114,11 +1217,9 @@ public class GameRenderer implements AutoCloseable {
                   this.f_109059_.f_91080_.m_169417_();
                }
             } catch (Throwable var15) {
-               crashreport2 = CrashReport.m_127521_(var15, "Narrating screen");
-               crashreportcategory2 = crashreport2.m_127514_("Screen details");
-               crashreportcategory2.m_128165_("Screen name", () -> {
-                  return this.f_109059_.f_91080_.getClass().getCanonicalName();
-               });
+               CrashReport crashreport2 = CrashReport.m_127521_(var15, "Narrating screen");
+               CrashReportCategory crashreportcategory2 = crashreport2.m_127514_("Screen details");
+               crashreportcategory2.m_128165_("Screen name", () -> this.f_109059_.f_91080_.getClass().getCanonicalName());
                throw new ReportedException(crashreport2);
             }
          }
@@ -1141,7 +1242,7 @@ public class GameRenderer implements AutoCloseable {
 
       this.frameFinish();
       this.waitForServerThread();
-      MemoryMonitor.update();
+      MemoryMonitor.m_252999_();
       Lagometer.updateLagometer();
    }
 
@@ -1152,24 +1253,22 @@ public class GameRenderer implements AutoCloseable {
             this.f_109072_ = i;
             IntegratedServer integratedserver = this.f_109059_.m_91092_();
             if (integratedserver != null && !integratedserver.m_129918_()) {
-               integratedserver.m_182649_().ifPresent((pathIn) -> {
+               integratedserver.m_182649_().ifPresent(pathIn -> {
                   if (Files.isRegularFile(pathIn, new LinkOption[0])) {
                      this.f_182638_ = true;
                   } else {
                      this.m_182642_(pathIn);
                   }
-
                });
             }
          }
       }
-
    }
 
    private void m_182642_(Path pathIn) {
       if (this.f_109059_.f_91060_.m_294574_() > 10 && this.f_109059_.f_91060_.m_294493_()) {
          NativeImage nativeimage = Screenshot.m_92279_(this.f_109059_.m_91385_());
-         Util.m_183992_().execute(() -> {
+         Util.m_183992_().m_305380_(() -> {
             int i = nativeimage.m_84982_();
             int j = nativeimage.m_85084_();
             int k = 0;
@@ -1182,32 +1281,16 @@ public class GameRenderer implements AutoCloseable {
                j = i;
             }
 
-            try {
-               NativeImage nativeimage1 = new NativeImage(64, 64, false);
-
-               try {
-                  nativeimage.m_85034_(k, l, i, j, nativeimage1);
-                  nativeimage1.m_85066_(pathIn);
-               } catch (Throwable var15) {
-                  try {
-                     nativeimage1.close();
-                  } catch (Throwable var14) {
-                     var15.addSuppressed(var14);
-                  }
-
-                  throw var15;
-               }
-
-               nativeimage1.close();
+            try (NativeImage nativeimage1 = new NativeImage(64, 64, false)) {
+               nativeimage.m_85034_(k, l, i, j, nativeimage1);
+               nativeimage1.m_85066_(pathIn);
             } catch (IOException var16) {
                f_109058_.warn("Couldn't save auto screenshot", var16);
             } finally {
                nativeimage.close();
             }
-
          });
       }
-
    }
 
    private boolean m_109158_() {
@@ -1226,7 +1309,7 @@ public class GameRenderer implements AutoCloseable {
                   flag = blockstate.m_60750_(this.f_109059_.f_91073_, blockpos) != null;
                } else {
                   BlockInWorld blockinworld = new BlockInWorld(this.f_109059_.f_91073_, blockpos, false);
-                  Registry registry = this.f_109059_.f_91073_.m_9598_().m_175515_(Registries.f_256747_);
+                  Registry<Block> registry = this.f_109059_.f_91073_.m_9598_().m_175515_(Registries.f_256747_);
                   flag = !itemstack.m_41619_() && (itemstack.m_323082_(blockinworld) || itemstack.m_321400_(blockinworld));
                }
             }
@@ -1257,9 +1340,9 @@ public class GameRenderer implements AutoCloseable {
       boolean flag = this.m_109158_();
       this.f_109059_.m_91307_().m_6182_("camera");
       Camera camera = this.f_109054_;
-      Entity entity = this.f_109059_.m_91288_() == null ? this.f_109059_.f_91074_ : this.f_109059_.m_91288_();
-      float f1 = this.f_109059_.f_91073_.m_304826_().m_305579_((Entity)entity) ? 1.0F : f;
-      camera.m_90575_(this.f_109059_.f_91073_, (Entity)entity, !this.f_109059_.f_91066_.m_92176_().m_90612_(), this.f_109059_.f_91066_.m_92176_().m_90613_(), f1);
+      Entity entity = (Entity)(this.f_109059_.m_91288_() == null ? this.f_109059_.f_91074_ : this.f_109059_.m_91288_());
+      float f1 = this.f_109059_.f_91073_.m_304826_().m_305579_(entity) ? 1.0F : f;
+      camera.m_90575_(this.f_109059_.f_91073_, entity, !this.f_109059_.f_91066_.m_92176_().m_90612_(), this.f_109059_.f_91066_.m_92176_().m_90613_(), f1);
       this.f_109062_ = (float)(this.f_109059_.f_91066_.m_193772_() * 16);
       double d0 = this.m_109141_(camera, f, true);
       Matrix4f matrix4f = this.m_253088_(d0);
@@ -1270,19 +1353,19 @@ public class GameRenderer implements AutoCloseable {
 
       PoseStack posestack = new PoseStack();
       this.m_109117_(posestack, camera.m_306445_());
-      if ((Boolean)this.f_109059_.f_91066_.m_231830_().m_231551_()) {
+      if (this.f_109059_.f_91066_.m_231830_().m_231551_()) {
          this.m_109138_(posestack, camera.m_306445_());
       }
 
       matrix4f.mul(posestack.m_85850_().m_252922_());
-      float f2 = ((Double)this.f_109059_.f_91066_.m_231924_().m_231551_()).floatValue();
+      float f2 = this.f_109059_.f_91066_.m_231924_().m_231551_().floatValue();
       float f3 = Mth.m_14179_(f, this.f_109059_.f_91074_.f_108590_, this.f_109059_.f_91074_.f_108589_) * f2 * f2;
       if (f3 > 0.0F) {
          int i = this.f_109059_.f_91074_.m_21023_(MobEffects.f_19604_) ? 7 : 20;
          float f4 = 5.0F / (f3 * f3 + 5.0F) - f3 * 0.04F;
          f4 *= f4;
          Vector3f vector3f = new Vector3f(0.0F, Mth.f_13994_ / 2.0F, Mth.f_13994_ / 2.0F);
-         float f5 = ((float)this.f_303613_ + f) * (float)i * 0.017453292F;
+         float f5 = ((float)this.f_303613_ + f) * (float)i * (float) (Math.PI / 180.0);
          matrix4f.rotate(f5, vector3f);
          matrix4f.scale(1.0F / f4, 1.0F, 1.0F);
          matrix4f.rotate(-f5, vector3f);
@@ -1295,15 +1378,25 @@ public class GameRenderer implements AutoCloseable {
 
       this.m_252879_(matrix4f);
       Quaternionf quaternionf = camera.m_253121_().conjugate(new Quaternionf());
-      Matrix4f matrix4f1 = (new Matrix4f()).rotation(quaternionf);
+      Matrix4f matrix4f1 = new Matrix4f().m_252961_(quaternionf);
       if (Shaders.isEffectsModelView()) {
          matrix4f1 = matrixEffects.mul(matrix4f1);
       }
 
-      this.f_109059_.f_91060_.m_253210_(camera.m_90583_(), matrix4f1, this.m_253088_(Math.max(d0, (double)(Integer)this.f_109059_.f_91066_.m_231837_().m_231551_())));
+      this.f_109059_
+         .f_91060_
+         .m_253210_(camera.m_90583_(), matrix4f1, this.m_253088_(Math.max(d0, (double)this.f_109059_.f_91066_.m_231837_().m_231551_().intValue())));
       this.f_109059_.f_91060_.m_109599_(partialTicks, flag, camera, this, this.f_109074_, matrix4f1, matrix4f);
       this.f_109059_.m_91307_().m_6182_("forge_render_last");
-      ReflectorForge.dispatchRenderStageS(Reflector.RenderLevelStageEvent_Stage_AFTER_LEVEL, this.f_109059_.f_91060_, matrix4f1, matrix4f, this.f_109059_.f_91060_.getTicks(), camera, this.f_109059_.f_91060_.getFrustum());
+      ReflectorForge.dispatchRenderStageS(
+         Reflector.RenderLevelStageEvent_Stage_AFTER_LEVEL,
+         this.f_109059_.f_91060_,
+         matrix4f1,
+         matrix4f,
+         this.f_109059_.f_91060_.getTicks(),
+         camera,
+         this.f_109059_.f_91060_.getFrustum()
+      );
       this.f_109059_.m_91307_().m_6182_("hand");
       if (this.f_109070_ && !Shaders.isShadowPass) {
          if (isShaders) {
@@ -1339,65 +1432,63 @@ public class GameRenderer implements AutoCloseable {
 
    private void waitForServerThread() {
       this.serverWaitTimeCurrent = 0;
-      if (Config.isSmoothWorld() && Config.isSingleProcessor()) {
-         if (this.f_109059_.m_91090_()) {
-            IntegratedServer srv = this.f_109059_.m_91092_();
-            if (srv != null) {
-               boolean paused = this.f_109059_.m_91104_();
-               if (!paused && !(this.f_109059_.f_91080_ instanceof ReceivingLevelScreen)) {
-                  if (this.serverWaitTime > 0) {
-                     Lagometer.timerServer.start();
-                     Config.sleep((long)this.serverWaitTime);
-                     Lagometer.timerServer.end();
-                     this.serverWaitTimeCurrent = this.serverWaitTime;
-                  }
-
-                  long timeNow = System.nanoTime() / 1000000L;
-                  if (this.lastServerTime != 0L && this.lastServerTicks != 0) {
-                     long timeDiff = timeNow - this.lastServerTime;
-                     if (timeDiff < 0L) {
-                        this.lastServerTime = timeNow;
-                        timeDiff = 0L;
-                     }
-
-                     if (timeDiff >= 50L) {
-                        this.lastServerTime = timeNow;
-                        int ticks = srv.m_129921_();
-                        int tickDiff = ticks - this.lastServerTicks;
-                        if (tickDiff < 0) {
-                           this.lastServerTicks = ticks;
-                           tickDiff = 0;
-                        }
-
-                        if (tickDiff < 1 && this.serverWaitTime < 100) {
-                           this.serverWaitTime += 2;
-                        }
-
-                        if (tickDiff > 1 && this.serverWaitTime > 0) {
-                           --this.serverWaitTime;
-                        }
-
-                        this.lastServerTicks = ticks;
-                     }
-                  } else {
-                     this.lastServerTime = timeNow;
-                     this.lastServerTicks = srv.m_129921_();
-                     this.avgServerTickDiff = 1.0F;
-                     this.avgServerTimeDiff = 50.0F;
-                  }
-               } else {
-                  if (this.f_109059_.f_91080_ instanceof ReceivingLevelScreen) {
-                     Config.sleep(20L);
-                  }
-
-                  this.lastServerTime = 0L;
-                  this.lastServerTicks = 0;
-               }
-            }
-         }
-      } else {
+      if (!Config.isSmoothWorld() || !Config.isSingleProcessor()) {
          this.lastServerTime = 0L;
          this.lastServerTicks = 0;
+      } else if (this.f_109059_.m_91090_()) {
+         IntegratedServer srv = this.f_109059_.m_91092_();
+         if (srv != null) {
+            boolean paused = this.f_109059_.m_91104_();
+            if (!paused && !(this.f_109059_.f_91080_ instanceof ReceivingLevelScreen)) {
+               if (this.serverWaitTime > 0) {
+                  Lagometer.timerServer.start();
+                  Config.sleep((long)this.serverWaitTime);
+                  Lagometer.timerServer.end();
+                  this.serverWaitTimeCurrent = this.serverWaitTime;
+               }
+
+               long timeNow = System.nanoTime() / 1000000L;
+               if (this.lastServerTime != 0L && this.lastServerTicks != 0) {
+                  long timeDiff = timeNow - this.lastServerTime;
+                  if (timeDiff < 0L) {
+                     this.lastServerTime = timeNow;
+                     timeDiff = 0L;
+                  }
+
+                  if (timeDiff >= 50L) {
+                     this.lastServerTime = timeNow;
+                     int ticks = srv.m_129921_();
+                     int tickDiff = ticks - this.lastServerTicks;
+                     if (tickDiff < 0) {
+                        this.lastServerTicks = ticks;
+                        tickDiff = 0;
+                     }
+
+                     if (tickDiff < 1 && this.serverWaitTime < 100) {
+                        this.serverWaitTime += 2;
+                     }
+
+                     if (tickDiff > 1 && this.serverWaitTime > 0) {
+                        this.serverWaitTime--;
+                     }
+
+                     this.lastServerTicks = ticks;
+                  }
+               } else {
+                  this.lastServerTime = timeNow;
+                  this.lastServerTicks = srv.m_129921_();
+                  this.avgServerTickDiff = 1.0F;
+                  this.avgServerTimeDiff = 50.0F;
+               }
+            } else {
+               if (this.f_109059_.f_91080_ instanceof ReceivingLevelScreen) {
+                  Config.sleep(20L);
+               }
+
+               this.lastServerTime = 0L;
+               this.lastServerTicks = 0;
+            }
+         }
       }
    }
 
@@ -1418,10 +1509,12 @@ public class GameRenderer implements AutoCloseable {
          if (Config.getNewRelease() != null) {
             String userEdition = "HD_U".replace("HD_U", "HD Ultra").replace("L", "Light");
             String fullNewVer = userEdition + " " + Config.getNewRelease();
-            MutableComponent msg = Component.m_237113_(I18n.m_118938_("of.message.newVersion", new Object[]{"ï¿½n" + fullNewVer + "ï¿½r"}));
+            MutableComponent msg = Component.m_237113_(
+               I18n.m_118938_("of.message.newVersion", new Object[]{"\u00ef\u00bf\u00bdn" + fullNewVer + "\u00ef\u00bf\u00bdr"})
+            );
             msg.m_6270_(Style.f_131099_.m_131142_(new ClickEvent(Action.OPEN_URL, "https://optifine.net/downloads")));
             this.f_109059_.f_91065_.m_93076_().m_93785_(msg);
-            Config.setNewRelease((String)null);
+            Config.setNewRelease(null);
          }
 
          if (Config.isNotify64BitJava()) {
@@ -1446,7 +1539,6 @@ public class GameRenderer implements AutoCloseable {
       if (this.f_109059_.f_91080_ != null && this.f_109059_.f_91080_.getClass() == ChatScreen.class) {
          this.f_109059_.m_91152_(new GuiChatOF((ChatScreen)this.f_109059_.f_91080_));
       }
-
    }
 
    private void frameFinish() {
@@ -1458,7 +1550,6 @@ public class GameRenderer implements AutoCloseable {
             this.f_109059_.f_91065_.m_93076_().m_93785_(msg);
          }
       }
-
    }
 
    public boolean setFxaaShader(int fxaaLevel) {
@@ -1503,23 +1594,37 @@ public class GameRenderer implements AutoCloseable {
          float f1 = f * f;
          float f2 = f * f1;
          float f3 = 10.25F * f2 * f1 - 24.95F * f1 * f1 + 25.5F * f2 - 13.8F * f1 + 4.0F * f;
-         float f4 = f3 * 3.1415927F;
+         float f4 = f3 * (float) Math.PI;
          float f5 = this.f_109048_ * (float)(graphicsIn.m_280182_() / 4);
          float f6 = this.f_109049_ * (float)(graphicsIn.m_280206_() / 4);
          PoseStack posestack = new PoseStack();
          posestack.m_85836_();
-         posestack.m_252880_((float)(graphicsIn.m_280182_() / 2) + f5 * Mth.m_14154_(Mth.m_14031_(f4 * 2.0F)), (float)(graphicsIn.m_280206_() / 2) + f6 * Mth.m_14154_(Mth.m_14031_(f4 * 2.0F)), -50.0F);
+         posestack.m_252880_(
+            (float)(graphicsIn.m_280182_() / 2) + f5 * Mth.m_14154_(Mth.m_14031_(f4 * 2.0F)),
+            (float)(graphicsIn.m_280206_() / 2) + f6 * Mth.m_14154_(Mth.m_14031_(f4 * 2.0F)),
+            -50.0F
+         );
          float f7 = 50.0F + 175.0F * Mth.m_14031_(f4);
          posestack.m_85841_(f7, -f7, f7);
          posestack.m_252781_(Axis.f_252436_.m_252977_(900.0F * Mth.m_14154_(Mth.m_14031_(f4))));
          posestack.m_252781_(Axis.f_252529_.m_252977_(6.0F * Mth.m_14089_(f * 8.0F)));
          posestack.m_252781_(Axis.f_252403_.m_252977_(6.0F * Mth.m_14089_(f * 8.0F)));
-         graphicsIn.m_286007_(() -> {
-            this.f_109059_.m_91291_().m_269128_(this.f_109080_, ItemDisplayContext.FIXED, 15728880, OverlayTexture.f_118083_, posestack, graphicsIn.m_280091_(), this.f_109059_.f_91073_, 0);
-         });
+         graphicsIn.m_286007_(
+            () -> this.f_109059_
+                  .m_91291_()
+                  .m_269128_(
+                     this.f_109080_,
+                     ItemDisplayContext.FIXED,
+                     15728880,
+                     OverlayTexture.f_118083_,
+                     posestack,
+                     graphicsIn.m_280091_(),
+                     this.f_109059_.f_91073_,
+                     0
+                  )
+         );
          posestack.m_85849_();
       }
-
    }
 
    private void m_280083_(GuiGraphics graphicsIn, float scaleIn) {
@@ -1536,7 +1641,9 @@ public class GameRenderer implements AutoCloseable {
       RenderSystem.disableDepthTest();
       RenderSystem.depthMask(false);
       RenderSystem.enableBlend();
-      RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
+      RenderSystem.blendFuncSeparate(
+         GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE
+      );
       graphicsIn.m_280246_(f1, f2, f3, 1.0F);
       graphicsIn.m_280398_(f_109057_, 0, 0, -90, 0.0F, 0.0F, i, j, i, j);
       graphicsIn.m_280246_(1.0F, 1.0F, 1.0F, 1.0F);
@@ -1856,23 +1963,11 @@ public class GameRenderer implements AutoCloseable {
       return f_285569_;
    }
 
-   public static record ResourceCache(ResourceProvider f_244315_, Map f_243825_) implements ResourceProvider {
-      public ResourceCache(ResourceProvider original, Map cache) {
-         this.f_244315_ = original;
-         this.f_243825_ = cache;
-      }
+   public static record ResourceCache(ResourceProvider f_244315_, Map<ResourceLocation, Resource> f_243825_) implements ResourceProvider {
 
-      public Optional m_213713_(ResourceLocation locIn) {
+      public Optional<Resource> m_213713_(ResourceLocation locIn) {
          Resource resource = (Resource)this.f_243825_.get(locIn);
-         return resource != null ? Optional.of(resource) : this.f_244315_.m_213713_(locIn);
-      }
-
-      public ResourceProvider f_244315_() {
-         return this.f_244315_;
-      }
-
-      public Map f_243825_() {
-         return this.f_243825_;
+         return resource != null ? Optional.m_253057_(resource) : this.f_244315_.m_213713_(locIn);
       }
    }
 }

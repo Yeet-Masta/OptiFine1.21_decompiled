@@ -5,24 +5,23 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 public class ItemList {
-   // $FF: renamed from: sp java.lang.String
-   private String field_18 = ",";
+   private String f_12173_ = ",";
    List items = new ArrayList();
 
    public ItemList() {
    }
 
    public ItemList(String s) {
-      this.split(s, this.field_18, this.items);
+      this.m_269487_(s, this.f_12173_, this.items);
    }
 
    public ItemList(String s, String sp) {
-      this.field_18 = s;
-      this.split(s, sp, this.items);
+      this.f_12173_ = s;
+      this.m_269487_(s, sp, this.items);
    }
 
    public ItemList(String s, String sp, boolean isMultiToken) {
-      this.split(s, sp, this.items, isMultiToken);
+      this.m_269487_(s, sp, this.items, isMultiToken);
    }
 
    public List getItems() {
@@ -33,27 +32,25 @@ public class ItemList {
       return (String[])this.items.toArray();
    }
 
-   public void split(String s, String sp, List append, boolean isMultiToken) {
+   public void m_269487_(String s, String sp, List append, boolean isMultiToken) {
       if (s != null && sp != null) {
          if (isMultiToken) {
             StringTokenizer tokens = new StringTokenizer(s, sp);
 
-            while(tokens.hasMoreTokens()) {
+            while (tokens.hasMoreTokens()) {
                append.add(tokens.nextToken().trim());
             }
          } else {
-            this.split(s, sp, append);
+            this.m_269487_(s, sp, append);
          }
-
       }
    }
 
-   public void split(String s, String sp, List append) {
+   public void m_269487_(String s, String sp, List append) {
       if (s != null && sp != null) {
          int pos = 0;
-         int prevPos = false;
+         int prevPos = 0;
 
-         int prevPos;
          do {
             prevPos = pos;
             pos = s.indexOf(sp, pos);
@@ -61,16 +58,16 @@ public class ItemList {
                break;
             }
 
-            append.add(s.substring(prevPos, pos).trim());
+            append.add(s.substring(pos, pos).trim());
             pos += sp.length();
-         } while(pos != -1);
+         } while (pos != -1);
 
          append.add(s.substring(prevPos).trim());
       }
    }
 
    public void setSP(String sp) {
-      this.field_18 = sp;
+      this.f_12173_ = sp;
    }
 
    public void add(int i, String item) {
@@ -90,15 +87,15 @@ public class ItemList {
    }
 
    public void addAll(String s) {
-      this.split(s, this.field_18, this.items);
+      this.m_269487_(s, this.f_12173_, this.items);
    }
 
    public void addAll(String s, String sp) {
-      this.split(s, sp, this.items);
+      this.m_269487_(s, sp, this.items);
    }
 
    public void addAll(String s, String sp, boolean isMultiToken) {
-      this.split(s, sp, this.items, isMultiToken);
+      this.m_269487_(s, sp, this.items, isMultiToken);
    }
 
    public String get(int i) {
@@ -110,13 +107,13 @@ public class ItemList {
    }
 
    public String toString() {
-      return this.toString(this.field_18);
+      return this.toString(this.f_12173_);
    }
 
    public String toString(String sp) {
       StringBuffer sb = new StringBuffer();
 
-      for(int i = 0; i < this.items.size(); ++i) {
+      for (int i = 0; i < this.items.size(); i++) {
          if (i == 0) {
             sb.append(this.items.get(i));
          } else {
@@ -133,7 +130,7 @@ public class ItemList {
    }
 
    public void reset() {
-      this.field_18 = ",";
+      this.f_12173_ = ",";
       this.items.clear();
    }
 }

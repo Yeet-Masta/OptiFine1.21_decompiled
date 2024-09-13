@@ -11,10 +11,10 @@ import net.optifine.Config;
 import net.optifine.util.Either;
 
 public class CustomModelRegistry {
-   private static Map mapModelAdapters = makeMapModelAdapters();
+   private static Map<String, ModelAdapter> mapModelAdapters = makeMapModelAdapters();
 
-   private static Map makeMapModelAdapters() {
-      Map map = new LinkedHashMap();
+   private static Map<String, ModelAdapter> makeMapModelAdapters() {
+      Map<String, ModelAdapter> map = new LinkedHashMap();
       addModelAdapter(map, new ModelAdapterArrow());
       addModelAdapter(map, new ModelAdapterArmorStand());
       addModelAdapter(map, new ModelAdapterAxolotl());
@@ -163,11 +163,11 @@ public class CustomModelRegistry {
       return map;
    }
 
-   private static void addModelAdapter(Map map, ModelAdapter modelAdapter) {
+   private static void addModelAdapter(Map<String, ModelAdapter> map, ModelAdapter modelAdapter) {
       addModelAdapter(map, modelAdapter, modelAdapter.getName());
       String[] aliases = modelAdapter.getAliases();
       if (aliases != null) {
-         for(int i = 0; i < aliases.length; ++i) {
+         for (int i = 0; i < aliases.length; i++) {
             String alias = aliases[i];
             addModelAdapter(map, modelAdapter, alias);
          }
@@ -176,27 +176,25 @@ public class CustomModelRegistry {
       Model model = modelAdapter.makeModel();
       String[] names = modelAdapter.getModelRendererNames();
 
-      for(int i = 0; i < names.length; ++i) {
+      for (int i = 0; i < names.length; i++) {
          String name = names[i];
          ModelPart mr = modelAdapter.getModelRenderer(model, name);
          if (mr == null) {
-            String var10000 = modelAdapter.getName();
-            Config.warn("Model renderer not found, model: " + var10000 + ", name: " + name);
+            Config.warn("Model renderer not found, model: " + modelAdapter.getName() + ", name: " + name);
          }
       }
-
    }
 
-   private static void addModelAdapter(Map map, ModelAdapter modelAdapter, String name) {
+   private static void addModelAdapter(Map<String, ModelAdapter> map, ModelAdapter modelAdapter, String name) {
       if (map.containsKey(name)) {
          String typeStr = "?";
-         Either type = modelAdapter.getType();
+         Either<EntityType, BlockEntityType> type = modelAdapter.getType();
          if (type == null) {
             typeStr = "";
          } else if (type.getLeft().isPresent()) {
             typeStr = ((EntityType)type.getLeft().get()).m_20675_();
          } else if (type.getRight().isPresent()) {
-            typeStr = "" + String.valueOf(BlockEntityType.m_58954_((BlockEntityType)type.getRight().get()));
+            typeStr = BlockEntityType.m_58954_((BlockEntityType)type.getRight().get()) + "";
          }
 
          Config.warn("Model adapter already registered for id: " + name + ", type: " + typeStr);
@@ -210,8 +208,7 @@ public class CustomModelRegistry {
    }
 
    public static String[] getModelNames() {
-      Set setNames = mapModelAdapters.keySet();
-      String[] names = (String[])setNames.toArray(new String[setNames.size()]);
-      return names;
+      Set<String> setNames = mapModelAdapters.keySet();
+      return (String[])setNames.toArray(new String[setNames.size()]);
    }
 }

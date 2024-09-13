@@ -8,31 +8,33 @@ import net.optifine.shaders.Shaders;
 import net.optifine.util.StrUtils;
 
 public class ShaderOptionVariable extends ShaderOption {
-   private static final Pattern PATTERN_VARIABLE = Pattern.compile("^\\s*#define\\s+(\\w+)\\s+(-?[0-9\\.Ff]+|\\w+)\\s*(//.*)?$");
+   private static Pattern PATTERN_VARIABLE = Pattern.m_289905_("^\\s*#define\\s+(\\w+)\\s+(-?[0-9\\.Ff]+|\\w+)\\s*(//.*)?$");
 
    public ShaderOptionVariable(String name, String description, String value, String[] values, String path) {
       super(name, description, value, values, value, path);
       this.setVisible(this.getValues().length > 1);
    }
 
+   @Override
    public String getSourceLine() {
-      String var10000 = this.getName();
-      return "#define " + var10000 + " " + this.getValue() + " // Shader option " + this.getValue();
+      return "#define " + this.getName() + " " + this.getValue() + " // Shader option " + this.getValue();
    }
 
+   @Override
    public String getValueText(String val) {
       String prefix = Shaders.translate("prefix." + this.getName(), "");
       String text = super.getValueText(val);
       String suffix = Shaders.translate("suffix." + this.getName(), "");
-      String textFull = prefix + text + suffix;
-      return textFull;
+      return prefix + text + suffix;
    }
 
+   @Override
    public String getValueColor(String val) {
       String valLow = val.toLowerCase();
-      return !valLow.equals("false") && !valLow.equals("off") ? "§a" : "§c";
+      return !valLow.equals("false") && !valLow.equals("off") ? "\u00a7a" : "\u00a7c";
    }
 
+   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_VARIABLE.matcher(line);
       if (!m.matches()) {
@@ -83,7 +85,7 @@ public class ShaderOptionVariable extends ShaderOption {
             if (parts.length <= 0) {
                return values;
             } else {
-               if (!Arrays.asList(parts).contains(value)) {
+               if (!Arrays.asList(parts).m_274455_(value)) {
                   parts = (String[])Config.addObjectToArray(parts, value, 0);
                }
 

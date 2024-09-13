@@ -10,30 +10,37 @@ public class VertexBuilderDummy implements VertexConsumer {
       this.renderTypeBuffer = renderTypeBuffer;
    }
 
+   @Override
    public MultiBufferSource.BufferSource getRenderTypeBuffer() {
       return this.renderTypeBuffer;
    }
 
+   @Override
    public VertexConsumer m_167146_(float x, float y, float z) {
       return this;
    }
 
+   @Override
    public VertexConsumer m_167129_(int red, int green, int blue, int alpha) {
       return this;
    }
 
+   @Override
    public VertexConsumer m_167083_(float u, float v) {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338369_(int u, int v) {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338813_(int u, int v) {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338525_(float x, float y, float z) {
       return this;
    }

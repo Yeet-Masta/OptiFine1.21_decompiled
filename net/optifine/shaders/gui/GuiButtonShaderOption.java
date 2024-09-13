@@ -13,11 +13,7 @@ public class GuiButtonShaderOption extends GuiButtonOF {
    }
 
    protected boolean m_7972_(int p_isValidClickButton_1_) {
-      if (this.shaderOption instanceof ShaderOptionScreen) {
-         return p_isValidClickButton_1_ == 0;
-      } else {
-         return true;
-      }
+      return this.shaderOption instanceof ShaderOptionScreen ? p_isValidClickButton_1_ == 0 : true;
    }
 
    public ShaderOption getShaderOption() {

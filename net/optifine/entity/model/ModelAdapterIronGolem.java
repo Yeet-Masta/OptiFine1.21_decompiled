@@ -14,10 +14,12 @@ public class ModelAdapterIronGolem extends ModelAdapter {
       super(EntityType.f_20460_, "iron_golem", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new IronGolemModel(bakeModelLayer(ModelLayers.f_171192_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof IronGolemModel modelIronGolem)) {
          return null;
@@ -38,10 +40,12 @@ public class ModelAdapterIronGolem extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "right_arm", "left_arm", "left_leg", "right_leg", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       IronGolemRenderer render = new IronGolemRenderer(renderManager.getContext());

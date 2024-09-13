@@ -16,10 +16,12 @@ public class ModelAdapterWitherSkull extends ModelAdapter {
       super(EntityType.f_20498_, "wither_skull", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new SkullModel(bakeModelLayer(ModelLayers.f_171220_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SkullModel modelSkeletonHead)) {
          return null;
@@ -30,10 +32,12 @@ public class ModelAdapterWitherSkull extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WitherSkullRenderer render = new WitherSkullRenderer(renderManager.getContext());

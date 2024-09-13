@@ -6,14 +6,14 @@ public class QuadBounds {
    private float minX = Float.MAX_VALUE;
    private float minY = Float.MAX_VALUE;
    private float minZ = Float.MAX_VALUE;
-   private float maxX = -3.4028235E38F;
-   private float maxY = -3.4028235E38F;
-   private float maxZ = -3.4028235E38F;
+   private float maxX = -Float.MAX_VALUE;
+   private float maxY = -Float.MAX_VALUE;
+   private float maxZ = -Float.MAX_VALUE;
 
    public QuadBounds(int[] vertexData) {
       int step = vertexData.length / 4;
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          int pos = i * step;
          float x = Float.intBitsToFloat(vertexData[pos + 0]);
          float y = Float.intBitsToFloat(vertexData[pos + 1]);
@@ -42,7 +42,6 @@ public class QuadBounds {
             this.maxZ = z;
          }
       }
-
    }
 
    public float getMinX() {
@@ -73,33 +72,33 @@ public class QuadBounds {
       float min;
       float max;
       float val;
-      switch (face) {
-         case DOWN:
+      switch (<unrepresentable>.$SwitchMap$net$minecraft$core$Direction[face.ordinal()]) {
+         case 1:
             min = this.getMinY();
             max = this.getMaxY();
             val = 0.0F;
             break;
-         case field_61:
+         case 2:
             min = this.getMinY();
             max = this.getMaxY();
             val = 1.0F;
             break;
-         case NORTH:
+         case 3:
             min = this.getMinZ();
             max = this.getMaxZ();
             val = 0.0F;
             break;
-         case SOUTH:
+         case 4:
             min = this.getMinZ();
             max = this.getMaxZ();
             val = 1.0F;
             break;
-         case WEST:
+         case 5:
             min = this.getMinX();
             max = this.getMaxX();
             val = 0.0F;
             break;
-         case EAST:
+         case 6:
             min = this.getMinX();
             max = this.getMaxX();
             val = 1.0F;
@@ -116,23 +115,23 @@ public class QuadBounds {
       float max1;
       float min2;
       float max2;
-      switch (face) {
-         case DOWN:
-         case field_61:
+      switch (<unrepresentable>.$SwitchMap$net$minecraft$core$Direction[face.ordinal()]) {
+         case 1:
+         case 2:
             min1 = this.getMinX();
             max1 = this.getMaxX();
             min2 = this.getMinZ();
             max2 = this.getMaxZ();
             break;
-         case NORTH:
-         case SOUTH:
+         case 3:
+         case 4:
             min1 = this.getMinX();
             max1 = this.getMaxX();
             min2 = this.getMinY();
             max2 = this.getMaxY();
             break;
-         case WEST:
-         case EAST:
+         case 5:
+         case 6:
             min1 = this.getMinY();
             max1 = this.getMaxY();
             min2 = this.getMinZ();

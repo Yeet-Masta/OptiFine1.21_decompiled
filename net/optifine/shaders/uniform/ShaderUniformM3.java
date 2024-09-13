@@ -40,13 +40,14 @@ public class ShaderUniformM3 extends ShaderUniformBase {
 
    public float getValue(int row, int col) {
       int index = this.transpose ? col * 3 + row : row * 3 + col;
-      float value = this.matrixBuffer.get(index);
-      return value;
+      return this.matrixBuffer.get(index);
    }
 
+   @Override
    protected void onProgramSet(int program) {
    }
 
+   @Override
    protected void resetValue() {
       BufferUtil.fill(this.matrixBuffer, 0.0F);
    }

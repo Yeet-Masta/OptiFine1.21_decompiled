@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class JSONArray extends ArrayList implements List, JSONAware, JSONStreamAware {
-   private static final long serialVersionUID = 3957988303675231981L;
+   private static long serialVersionUID;
 
    public static void writeJSONString(List list, Writer out) throws IOException {
       if (list == null) {
@@ -17,7 +17,7 @@ public class JSONArray extends ArrayList implements List, JSONAware, JSONStreamA
          Iterator iter = list.iterator();
          out.write(91);
 
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             if (first) {
                first = false;
             } else {
@@ -36,6 +36,7 @@ public class JSONArray extends ArrayList implements List, JSONAware, JSONStreamA
       }
    }
 
+   @Override
    public void writeJSONString(Writer out) throws IOException {
       writeJSONString(this, out);
    }
@@ -49,7 +50,7 @@ public class JSONArray extends ArrayList implements List, JSONAware, JSONStreamA
          Iterator iter = list.iterator();
          sb.append('[');
 
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             if (first) {
                first = false;
             } else {
@@ -69,6 +70,7 @@ public class JSONArray extends ArrayList implements List, JSONAware, JSONStreamA
       }
    }
 
+   @Override
    public String toJSONString() {
       return toJSONString(this);
    }

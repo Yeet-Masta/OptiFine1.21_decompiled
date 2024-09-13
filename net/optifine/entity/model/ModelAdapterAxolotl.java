@@ -13,21 +13,23 @@ import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterAxolotl extends ModelAdapter {
-   private static Map mapPartFields = null;
+   private static Map<String, Integer> mapPartFields = null;
 
    public ModelAdapterAxolotl() {
       super(EntityType.f_147039_, "axolotl", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new AxolotlModel(bakeModelLayer(ModelLayers.f_171263_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof AxolotlModel modelAxolotl)) {
          return null;
       } else {
-         Map mapParts = getMapPartFields();
+         Map<String, Integer> mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             int index = (Integer)mapParts.get(modelPart);
             return (ModelPart)Reflector.getFieldValue(modelAxolotl, Reflector.ModelAxolotl_ModelRenderers, index);
@@ -37,11 +39,12 @@ public class ModelAdapterAxolotl extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return (String[])getMapPartFields().keySet().toArray(new String[0]);
    }
 
-   private static Map getMapPartFields() {
+   private static Map<String, Integer> getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -60,6 +63,7 @@ public class ModelAdapterAxolotl extends ModelAdapter {
       }
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       AxolotlRenderer render = new AxolotlRenderer(renderManager.getContext());

@@ -26,13 +26,12 @@ public class IntegratedServerUtils {
          if (is == null) {
             return null;
          } else {
-            ResourceKey wd = world.m_46472_();
+            ResourceKey<Level> wd = world.m_46472_();
             if (wd == null) {
                return null;
             } else {
                try {
-                  ServerLevel ws = is.m_129880_(wd);
-                  return ws;
+                  return is.m_129880_(wd);
                } catch (NullPointerException var5) {
                   return null;
                }
@@ -43,12 +42,7 @@ public class IntegratedServerUtils {
 
    public static Entity getEntity(UUID uuid) {
       ServerLevel ws = getWorldServer();
-      if (ws == null) {
-         return null;
-      } else {
-         Entity e = ws.m_8791_(uuid);
-         return e;
-      }
+      return ws == null ? null : ws.m_8791_(uuid);
    }
 
    public static BlockEntity getTileEntity(BlockPos pos) {
@@ -57,12 +51,7 @@ public class IntegratedServerUtils {
          return null;
       } else {
          ChunkAccess chunk = ws.m_7726_().m_7587_(pos.m_123341_() >> 4, pos.m_123343_() >> 4, ChunkStatus.f_315432_, false);
-         if (chunk == null) {
-            return null;
-         } else {
-            BlockEntity te = chunk.m_7702_(pos);
-            return te;
-         }
+         return chunk == null ? null : chunk.m_7702_(pos);
       }
    }
 }

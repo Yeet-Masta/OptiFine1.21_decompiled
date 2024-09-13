@@ -38,22 +38,24 @@ import org.lwjgl.util.freetype.FT_GlyphSlot;
 import org.lwjgl.util.freetype.FreeType;
 import org.slf4j.Logger;
 
-public final class NativeImage implements AutoCloseable {
-   private static final Logger f_84958_ = LogUtils.getLogger();
-   private static final Set f_84959_;
-   private final Format f_84960_;
-   private final int f_84961_;
-   private final int f_84962_;
-   private final boolean f_84963_;
+public class NativeImage implements AutoCloseable {
+   private static Logger f_84958_ = LogUtils.getLogger();
+   private static Set<StandardOpenOption> f_84959_ = EnumSet.m_253057_(
+      StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+   );
+   private NativeImage.Format f_84960_;
+   private int f_84961_;
+   private int f_84962_;
+   private boolean f_84963_;
    private long f_84964_;
-   private final long f_84965_;
-   private static boolean updateBlurMipmap;
+   private long f_84965_;
+   private static boolean updateBlurMipmap = true;
 
    public NativeImage(int widthIn, int heightIn, boolean clear) {
       this(NativeImage.Format.RGBA, widthIn, heightIn, clear);
    }
 
-   public NativeImage(Format pixelFormatIn, int widthIn, int heightIn, boolean initialize) {
+   public NativeImage(NativeImage.Format pixelFormatIn, int widthIn, int heightIn, boolean initialize) {
       if (widthIn > 0 && heightIn > 0) {
          this.f_84960_ = pixelFormatIn;
          this.f_84961_ = widthIn;
@@ -77,7 +79,7 @@ public final class NativeImage implements AutoCloseable {
       }
    }
 
-   private NativeImage(Format pixelFormatIn, int widthIn, int heightIn, boolean stbiPointerIn, long pointer) {
+   private NativeImage(NativeImage.Format pixelFormatIn, int widthIn, int heightIn, boolean stbiPointerIn, long pointer) {
       if (widthIn > 0 && heightIn > 0) {
          this.f_84960_ = pixelFormatIn;
          this.f_84961_ = widthIn;
@@ -91,8 +93,7 @@ public final class NativeImage implements AutoCloseable {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.f_84960_);
-      return "NativeImage[" + var10000 + " " + this.f_84961_ + "x" + this.f_84962_ + "@" + this.f_84964_ + (this.f_84963_ ? "S" : "N") + "]";
+      return "NativeImage[" + this.f_84960_ + " " + this.f_84961_ + "x" + this.f_84962_ + "@" + this.f_84964_ + (this.f_84963_ ? "S" : "N") + "]";
    }
 
    private boolean m_166422_(int xIn, int yIn) {
@@ -103,7 +104,7 @@ public final class NativeImage implements AutoCloseable {
       return m_85048_(NativeImage.Format.RGBA, inputStreamIn);
    }
 
-   public static NativeImage m_85048_(@Nullable Format pixelFormatIn, InputStream inputStreamIn) throws IOException {
+   public static NativeImage m_85048_(@Nullable NativeImage.Format pixelFormatIn, InputStream inputStreamIn) throws IOException {
       ByteBuffer bytebuffer = null;
 
       NativeImage nativeimage;
@@ -151,9 +152,9 @@ public final class NativeImage implements AutoCloseable {
       return nativeimage;
    }
 
-   public static NativeImage m_85051_(@Nullable Format pixelFormatIn, ByteBuffer byteBufferIn) throws IOException {
+   public static NativeImage m_85051_(@Nullable NativeImage.Format pixelFormatIn, ByteBuffer byteBufferIn) throws IOException {
       if (pixelFormatIn != null && !pixelFormatIn.m_85175_()) {
-         throw new UnsupportedOperationException("Don't know how to read format " + String.valueOf(pixelFormatIn));
+         throw new UnsupportedOperationException("Don't know how to read format " + pixelFormatIn);
       } else if (MemoryUtil.memAddress(byteBufferIn) == 0L) {
          throw new IllegalArgumentException("Invalid buffer");
       } else {
@@ -165,12 +166,20 @@ public final class NativeImage implements AutoCloseable {
             IntBuffer intbuffer = memorystack.mallocInt(1);
             IntBuffer intbuffer1 = memorystack.mallocInt(1);
             IntBuffer intbuffer2 = memorystack.mallocInt(1);
-            ByteBuffer bytebuffer = STBImage.stbi_load_from_memory(byteBufferIn, intbuffer, intbuffer1, intbuffer2, pixelFormatIn == null ? 0 : pixelFormatIn.f_85130_);
+            ByteBuffer bytebuffer = STBImage.stbi_load_from_memory(
+               byteBufferIn, intbuffer, intbuffer1, intbuffer2, pixelFormatIn == null ? 0 : pixelFormatIn.f_85130_
+            );
             if (bytebuffer == null) {
                throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
             }
 
-            nativeimage = new NativeImage(pixelFormatIn == null ? NativeImage.Format.m_85167_(intbuffer2.get(0)) : pixelFormatIn, intbuffer.get(0), intbuffer1.get(0), true, MemoryUtil.memAddress(bytebuffer));
+            nativeimage = new NativeImage(
+               pixelFormatIn == null ? NativeImage.Format.m_85167_(intbuffer2.get(0)) : pixelFormatIn,
+               intbuffer.get(0),
+               intbuffer1.get(0),
+               true,
+               MemoryUtil.memAddress(bytebuffer)
+            );
             NativeMemory.imageAllocated(nativeimage);
          } catch (Throwable var9) {
             if (memorystack != null) {
@@ -203,7 +212,6 @@ public final class NativeImage implements AutoCloseable {
             GlStateManager._texParameter(3553, 10241, mipmap ? mipmapType : 9728);
             GlStateManager._texParameter(3553, 10240, 9728);
          }
-
       }
    }
 
@@ -235,15 +243,17 @@ public final class NativeImage implements AutoCloseable {
       return this.f_84962_;
    }
 
-   public Format m_85102_() {
+   public NativeImage.Format m_85102_() {
       return this.f_84960_;
    }
 
    public int m_84985_(int x, int y) {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "getPixelRGBA only works on RGBA images; have %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "getPixelRGBA only works on RGBA images; have %s", new Object[]{this.f_84960_}));
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          this.m_85124_();
          long i = ((long)x + (long)y * (long)this.f_84961_) * 4L;
@@ -253,9 +263,11 @@ public final class NativeImage implements AutoCloseable {
 
    public void m_84988_(int x, int y, int value) {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "setPixelRGBA only works on RGBA images; have %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "setPixelRGBA only works on RGBA images; have %s", new Object[]{this.f_84960_}));
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          this.m_85124_();
          long i = ((long)x + (long)y * (long)this.f_84961_) * 4L;
@@ -265,7 +277,9 @@ public final class NativeImage implements AutoCloseable {
 
    public NativeImage m_266528_(IntUnaryOperator opIn) {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "function application only works on RGBA images; have %s", this.f_84960_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "function application only works on RGBA images; have %s", new Object[]{this.f_84960_})
+         );
       } else {
          this.m_85124_();
          NativeImage nativeimage = new NativeImage(this.f_84961_, this.f_84962_, false);
@@ -273,7 +287,7 @@ public final class NativeImage implements AutoCloseable {
          IntBuffer intbuffer = MemoryUtil.memIntBuffer(this.f_84964_, i);
          IntBuffer intbuffer1 = MemoryUtil.memIntBuffer(nativeimage.f_84964_, i);
 
-         for(int j = 0; j < i; ++j) {
+         for (int j = 0; j < i; j++) {
             intbuffer1.put(j, opIn.applyAsInt(intbuffer.get(j)));
          }
 
@@ -283,22 +297,23 @@ public final class NativeImage implements AutoCloseable {
 
    public void m_284481_(IntUnaryOperator operatorIn) {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "function application only works on RGBA images; have %s", this.f_84960_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "function application only works on RGBA images; have %s", new Object[]{this.f_84960_})
+         );
       } else {
          this.m_85124_();
          int i = this.f_84961_ * this.f_84962_;
          IntBuffer intbuffer = MemoryUtil.memIntBuffer(this.f_84964_, i);
 
-         for(int j = 0; j < i; ++j) {
+         for (int j = 0; j < i; j++) {
             intbuffer.put(j, operatorIn.applyAsInt(intbuffer.get(j)));
          }
-
       }
    }
 
    public int[] m_266370_() {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "getPixelsRGBA only works on RGBA images; have %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "getPixelsRGBA only works on RGBA images; have %s", new Object[]{this.f_84960_}));
       } else {
          this.m_85124_();
          int[] aint = new int[this.f_84961_ * this.f_84962_];
@@ -310,9 +325,13 @@ public final class NativeImage implements AutoCloseable {
    public void m_166402_(int x, int y, byte lum) {
       RenderSystem.assertOnRenderThread();
       if (!this.f_84960_.m_166428_()) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "setPixelLuminance only works on image with luminance; have %s", this.f_84960_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "setPixelLuminance only works on image with luminance; have %s", new Object[]{this.f_84960_})
+         );
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          this.m_85124_();
          long i = ((long)x + (long)y * (long)this.f_84961_) * (long)this.f_84960_.m_85161_() + (long)(this.f_84960_.m_166432_() / 8);
@@ -323,9 +342,11 @@ public final class NativeImage implements AutoCloseable {
    public byte m_166408_(int x, int y) {
       RenderSystem.assertOnRenderThread();
       if (!this.f_84960_.m_166433_()) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "no red or luminance in %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "no red or luminance in %s", new Object[]{this.f_84960_}));
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          int i = (x + y * this.f_84961_) * this.f_84960_.m_85161_() + this.f_84960_.m_166436_() / 8;
          return MemoryUtil.memGetByte(this.f_84964_ + (long)i);
@@ -335,9 +356,11 @@ public final class NativeImage implements AutoCloseable {
    public byte m_166415_(int x, int y) {
       RenderSystem.assertOnRenderThread();
       if (!this.f_84960_.m_166434_()) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "no green or luminance in %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "no green or luminance in %s", new Object[]{this.f_84960_}));
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          int i = (x + y * this.f_84961_) * this.f_84960_.m_85161_() + this.f_84960_.m_166437_() / 8;
          return MemoryUtil.memGetByte(this.f_84964_ + (long)i);
@@ -347,9 +370,11 @@ public final class NativeImage implements AutoCloseable {
    public byte m_166418_(int x, int y) {
       RenderSystem.assertOnRenderThread();
       if (!this.f_84960_.m_166435_()) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "no blue or luminance in %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "no blue or luminance in %s", new Object[]{this.f_84960_}));
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          int i = (x + y * this.f_84961_) * this.f_84960_.m_85161_() + this.f_84960_.m_166438_() / 8;
          return MemoryUtil.memGetByte(this.f_84964_ + (long)i);
@@ -358,9 +383,11 @@ public final class NativeImage implements AutoCloseable {
 
    public byte m_85087_(int x, int y) {
       if (!this.f_84960_.m_85173_()) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "no luminance or alpha in %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_(Locale.ROOT, "no luminance or alpha in %s", new Object[]{this.f_84960_}));
       } else if (this.m_166422_(x, y)) {
-         throw new IllegalArgumentException(String.format(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", x, y, this.f_84961_, this.f_84962_));
+         throw new IllegalArgumentException(
+            String.m_12886_(Locale.ROOT, "(%s, %s) outside of image bounds (%s, %s)", new Object[]{x, y, this.f_84961_, this.f_84962_})
+         );
       } else {
          int i = (x + y * this.f_84961_) * this.f_84960_.m_85161_() + this.f_84960_.m_85174_() / 8;
          return MemoryUtil.memGetByte(this.f_84964_ + (long)i);
@@ -409,7 +436,6 @@ public final class NativeImage implements AutoCloseable {
       }
    }
 
-   /** @deprecated */
    @Deprecated
    public int[] m_85118_() {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
@@ -418,8 +444,8 @@ public final class NativeImage implements AutoCloseable {
          this.m_85124_();
          int[] aint = new int[this.m_84982_() * this.m_85084_()];
 
-         for(int i = 0; i < this.m_85084_(); ++i) {
-            for(int j = 0; j < this.m_84982_(); ++j) {
+         for (int i = 0; i < this.m_85084_(); i++) {
+            for (int j = 0; j < this.m_84982_(); j++) {
                int k = this.m_84985_(j, i);
                aint[j + i * this.m_84982_()] = ARGB32.m_13660_(ABGR32.m_266503_(k), ABGR32.m_266313_(k), ABGR32.m_266446_(k), ABGR32.m_266247_(k));
             }
@@ -433,22 +459,47 @@ public final class NativeImage implements AutoCloseable {
       this.m_85003_(level, xOffset, yOffset, 0, 0, this.f_84961_, this.f_84962_, false, autoClose);
    }
 
-   public void m_85003_(int level, int xOffset, int yOffset, int unpackSkipPixels, int unpackSkipRows, int widthIn, int heightIn, boolean mipmap, boolean autoClose) {
+   public void m_85003_(
+      int level, int xOffset, int yOffset, int unpackSkipPixels, int unpackSkipRows, int widthIn, int heightIn, boolean mipmap, boolean autoClose
+   ) {
       this.m_85013_(level, xOffset, yOffset, unpackSkipPixels, unpackSkipRows, widthIn, heightIn, false, false, mipmap, autoClose);
    }
 
-   public void m_85013_(int level, int xOffset, int yOffset, int unpackSkipPixels, int unpackSkipRows, int widthIn, int heightIn, boolean blur, boolean clamp, boolean mipmap, boolean autoClose) {
+   public void m_85013_(
+      int level,
+      int xOffset,
+      int yOffset,
+      int unpackSkipPixels,
+      int unpackSkipRows,
+      int widthIn,
+      int heightIn,
+      boolean blur,
+      boolean clamp,
+      boolean mipmap,
+      boolean autoClose
+   ) {
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> {
-            this.m_85090_(level, xOffset, yOffset, unpackSkipPixels, unpackSkipRows, widthIn, heightIn, blur, clamp, mipmap, autoClose);
-         });
+         RenderSystem.recordRenderCall(
+            () -> this.m_85090_(level, xOffset, yOffset, unpackSkipPixels, unpackSkipRows, widthIn, heightIn, blur, clamp, mipmap, autoClose)
+         );
       } else {
          this.m_85090_(level, xOffset, yOffset, unpackSkipPixels, unpackSkipRows, widthIn, heightIn, blur, clamp, mipmap, autoClose);
       }
-
    }
 
-   private void m_85090_(int level, int xOffset, int yOffset, int unpackSkipPixels, int unpackSkipRows, int widthIn, int heightIn, boolean blur, boolean clamp, boolean mipmap, boolean autoClose) {
+   private void m_85090_(
+      int level,
+      int xOffset,
+      int yOffset,
+      int unpackSkipPixels,
+      int unpackSkipRows,
+      int widthIn,
+      int heightIn,
+      boolean blur,
+      boolean clamp,
+      boolean mipmap,
+      boolean autoClose
+   ) {
       try {
          RenderSystem.assertOnRenderThreadOrInit();
          this.m_85124_();
@@ -471,9 +522,7 @@ public final class NativeImage implements AutoCloseable {
          if (autoClose) {
             this.close();
          }
-
       }
-
    }
 
    public void m_85045_(int level, boolean opaque) {
@@ -482,13 +531,12 @@ public final class NativeImage implements AutoCloseable {
       this.f_84960_.m_85166_();
       GlStateManager._getTexImage(3553, level, this.f_84960_.m_85170_(), 5121, this.f_84964_);
       if (opaque && this.f_84960_.m_85171_()) {
-         for(int i = 0; i < this.m_85084_(); ++i) {
-            for(int j = 0; j < this.m_84982_(); ++j) {
+         for (int i = 0; i < this.m_85084_(); i++) {
+            for (int j = 0; j < this.m_84982_(); j++) {
                this.m_84988_(j, i, this.m_84985_(j, i) | 255 << this.f_84960_.m_85172_());
             }
          }
       }
-
    }
 
    public void m_166400_(float val) {
@@ -528,22 +576,27 @@ public final class NativeImage implements AutoCloseable {
             MemoryUtil.memCopy(MemoryUtil.memAddress(bytebuffer), this.f_84964_, (long)i);
             return true;
          } else {
-            throw new IllegalArgumentException(String.format(Locale.ROOT, "Glyph bitmap of size %sx%s does not match image of size: %sx%s", ft_bitmap.width(), ft_bitmap.rows(), this.m_84982_(), this.m_85084_()));
+            throw new IllegalArgumentException(
+               String.m_12886_(
+                  Locale.ROOT,
+                  "Glyph bitmap of size %sx%s does not match image of size: %sx%s",
+                  new Object[]{ft_bitmap.width(), ft_bitmap.rows(), this.m_84982_(), this.m_85084_()}
+               )
+            );
          }
       }
    }
 
    public void m_85066_(Path pathIn) throws IOException {
       if (!this.f_84960_.m_85175_()) {
-         throw new UnsupportedOperationException("Don't know how to write format " + String.valueOf(this.f_84960_));
+         throw new UnsupportedOperationException("Don't know how to write format " + this.f_84960_);
       } else {
          this.m_85124_();
          WritableByteChannel writablebytechannel = Files.newByteChannel(pathIn, f_84959_);
 
          try {
             if (!this.m_85064_(writablebytechannel)) {
-               String var10002 = String.valueOf(pathIn.toAbsolutePath());
-               throw new IOException("Could not write image to the PNG file \"" + var10002 + "\": " + STBImage.stbi_failure_reason());
+               throw new IOException("Could not write image to the PNG file \"" + pathIn.toAbsolutePath() + "\": " + STBImage.stbi_failure_reason());
             }
          } catch (Throwable var6) {
             if (writablebytechannel != null) {
@@ -560,7 +613,6 @@ public final class NativeImage implements AutoCloseable {
          if (writablebytechannel != null) {
             writablebytechannel.close();
          }
-
       }
    }
 
@@ -607,27 +659,27 @@ public final class NativeImage implements AutoCloseable {
    }
 
    private boolean m_85064_(WritableByteChannel channelIn) throws IOException {
-      WriteCallback nativeimage$writecallback = new WriteCallback(channelIn);
+      NativeImage.WriteCallback nativeimage$writecallback = new NativeImage.WriteCallback(channelIn);
 
-      boolean flag;
+      boolean var5;
       try {
          int i = Math.min(this.m_85084_(), Integer.MAX_VALUE / this.m_84982_() / this.f_84960_.m_85161_());
          if (i < this.m_85084_()) {
             f_84958_.warn("Dropping image height from {} to {} to fit the size into 32-bit signed int", this.m_85084_(), i);
          }
 
-         if (STBImageWrite.nstbi_write_png_to_func(nativeimage$writecallback.address(), 0L, this.m_84982_(), i, this.f_84960_.m_85161_(), this.f_84964_, 0) != 0) {
-            nativeimage$writecallback.m_85202_();
-            boolean var5 = true;
-            return var5;
+         if (STBImageWrite.nstbi_write_png_to_func(nativeimage$writecallback.address(), 0L, this.m_84982_(), i, this.f_84960_.m_85161_(), this.f_84964_, 0)
+            == 0) {
+            return false;
          }
 
-         flag = false;
+         nativeimage$writecallback.m_85202_();
+         var5 = true;
       } finally {
          nativeimage$writecallback.free();
       }
 
-      return flag;
+      return var5;
    }
 
    public void m_85054_(NativeImage from) {
@@ -643,23 +695,21 @@ public final class NativeImage implements AutoCloseable {
             int j = Math.min(this.m_84982_(), from.m_84982_());
             int k = Math.min(this.m_85084_(), from.m_85084_());
 
-            for(int l = 0; l < k; ++l) {
+            for (int l = 0; l < k; l++) {
                int i1 = l * from.m_84982_() * i;
                int j1 = l * this.m_84982_() * i;
                MemoryUtil.memCopy(from.f_84964_ + (long)i1, this.f_84964_ + (long)j1, (long)j * (long)i);
             }
          }
-
       }
    }
 
    public void m_84997_(int x, int y, int widthIn, int heightIn, int value) {
-      for(int i = y; i < y + heightIn; ++i) {
-         for(int j = x; j < x + widthIn; ++j) {
+      for (int i = y; i < y + heightIn; i++) {
+         for (int j = x; j < x + widthIn; j++) {
             this.m_84988_(j, i, value);
          }
       }
-
    }
 
    public void m_85025_(int xFrom, int yFrom, int xToDelta, int yToDelta, int widthIn, int heightIn, boolean mirrorX, boolean mirrorY) {
@@ -667,15 +717,14 @@ public final class NativeImage implements AutoCloseable {
    }
 
    public void m_260930_(NativeImage imageIn, int xFrom, int yFrom, int xTo, int yTo, int widthIn, int heightIn, boolean mirrorX, boolean mirrorY) {
-      for(int i = 0; i < heightIn; ++i) {
-         for(int j = 0; j < widthIn; ++j) {
+      for (int i = 0; i < heightIn; i++) {
+         for (int j = 0; j < widthIn; j++) {
             int k = mirrorX ? widthIn - 1 - j : j;
             int l = mirrorY ? heightIn - 1 - i : i;
             int i1 = this.m_84985_(xFrom + j, yFrom + i);
             imageIn.m_84988_(xTo + k, yTo + l, i1);
          }
       }
-
    }
 
    public void m_85122_() {
@@ -685,7 +734,7 @@ public final class NativeImage implements AutoCloseable {
       long k = MemoryUtil.nmemAlloc((long)j);
 
       try {
-         for(int l = 0; l < this.m_85084_() / 2; ++l) {
+         for (int l = 0; l < this.m_85084_() / 2; l++) {
             int i1 = l * this.m_84982_() * i;
             int j1 = (this.m_85084_() - 1 - l) * this.m_84982_() * i;
             MemoryUtil.memCopy(this.f_84964_ + (long)i1, k, (long)j);
@@ -695,7 +744,6 @@ public final class NativeImage implements AutoCloseable {
       } finally {
          MemoryUtil.nmemFree(k);
       }
-
    }
 
    public void m_85034_(int xIn, int yIn, int widthIn, int heightIn, NativeImage imageIn) {
@@ -704,7 +752,17 @@ public final class NativeImage implements AutoCloseable {
          throw new UnsupportedOperationException("resizeSubRectTo only works for images of the same format.");
       } else {
          int i = this.f_84960_.m_85161_();
-         STBImageResize.nstbir_resize_uint8(this.f_84964_ + (long)((xIn + yIn * this.m_84982_()) * i), widthIn, heightIn, this.m_84982_() * i, imageIn.f_84964_, imageIn.m_84982_(), imageIn.m_85084_(), 0, i);
+         STBImageResize.nstbir_resize_uint8(
+            this.f_84964_ + (long)((xIn + yIn * this.m_84982_()) * i),
+            widthIn,
+            heightIn,
+            this.m_84982_() * i,
+            imageIn.f_84964_,
+            imageIn.m_84982_(),
+            imageIn.m_85084_(),
+            0,
+            i
+         );
       }
    }
 
@@ -714,7 +772,7 @@ public final class NativeImage implements AutoCloseable {
 
    public IntBuffer getBufferRGBA() {
       if (this.f_84960_ != NativeImage.Format.RGBA) {
-         throw new IllegalArgumentException(String.format("getBuffer only works on RGBA images; have %s", this.f_84960_));
+         throw new IllegalArgumentException(String.m_12886_("getBuffer only works on RGBA images; have %s", new Object[]{this.f_84960_}));
       } else {
          this.m_85124_();
          return MemoryUtil.memIntBuffer(this.f_84964_, (int)this.f_84965_);
@@ -739,32 +797,41 @@ public final class NativeImage implements AutoCloseable {
       return updateBlurMipmap;
    }
 
-   static {
-      f_84959_ = EnumSet.of(StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-      updateBlurMipmap = true;
-   }
-
    public static enum Format {
       RGBA(4, 6408, true, true, true, false, true, 0, 8, 16, 255, 24, true),
       RGB(3, 6407, true, true, true, false, false, 0, 8, 16, 255, 255, true),
       LUMINANCE_ALPHA(2, 33319, false, false, false, true, true, 255, 255, 255, 0, 8, true),
       LUMINANCE(1, 6403, false, false, false, true, false, 0, 0, 0, 0, 255, true);
 
-      final int f_85130_;
-      private final int f_85131_;
-      private final boolean f_85132_;
-      private final boolean f_85133_;
-      private final boolean f_85134_;
-      private final boolean f_85135_;
-      private final boolean f_85136_;
-      private final int f_85137_;
-      private final int f_85138_;
-      private final int f_85139_;
-      private final int f_85140_;
-      private final int f_85141_;
-      private final boolean f_85142_;
+      int f_85130_;
+      private int f_85131_;
+      private boolean f_85132_;
+      private boolean f_85133_;
+      private boolean f_85134_;
+      private boolean f_85135_;
+      private boolean f_85136_;
+      private int f_85137_;
+      private int f_85138_;
+      private int f_85139_;
+      private int f_85140_;
+      private int f_85141_;
+      private boolean f_85142_;
 
-      private Format(final int channelsIn, final int glFormatIn, final boolean redIn, final boolean greenIn, final boolean blueIn, final boolean luminanceIn, final boolean alphaIn, final int offsetRedIn, final int offsetGreenIn, final int offsetBlueIn, final int offsetLuminanceIn, final int offsetAlphaIn, final boolean standardIn) {
+      private Format(
+         final int channelsIn,
+         final int glFormatIn,
+         final boolean redIn,
+         final boolean greenIn,
+         final boolean blueIn,
+         final boolean luminanceIn,
+         final boolean alphaIn,
+         final int offsetRedIn,
+         final int offsetGreenIn,
+         final int offsetBlueIn,
+         final int offsetLuminanceIn,
+         final int offsetAlphaIn,
+         final boolean standardIn
+      ) {
          this.f_85130_ = channelsIn;
          this.f_85131_ = glFormatIn;
          this.f_85132_ = redIn;
@@ -874,7 +941,7 @@ public final class NativeImage implements AutoCloseable {
          return this.f_85142_;
       }
 
-      static Format m_85167_(int channelsIn) {
+      static NativeImage.Format m_85167_(int channelsIn) {
          switch (channelsIn) {
             case 1:
                return LUMINANCE;
@@ -887,15 +954,27 @@ public final class NativeImage implements AutoCloseable {
                return RGBA;
          }
       }
+   }
 
-      // $FF: synthetic method
-      private static Format[] $values() {
-         return new Format[]{RGBA, RGB, LUMINANCE_ALPHA, LUMINANCE};
+   public static enum InternalGlFormat {
+      RGBA(6408),
+      RGB(6407),
+      RG(33319),
+      RED(6403);
+
+      private int f_85184_;
+
+      private InternalGlFormat(final int glFormatIn) {
+         this.f_85184_ = glFormatIn;
+      }
+
+      public int m_85191_() {
+         return this.f_85184_;
       }
    }
 
    static class WriteCallback extends STBIWriteCallback {
-      private final WritableByteChannel f_85195_;
+      private WritableByteChannel f_85195_;
       @Nullable
       private IOException f_85196_;
 
@@ -911,36 +990,12 @@ public final class NativeImage implements AutoCloseable {
          } catch (IOException var8) {
             this.f_85196_ = var8;
          }
-
       }
 
       public void m_85202_() throws IOException {
          if (this.f_85196_ != null) {
             throw this.f_85196_;
          }
-      }
-   }
-
-   public static enum InternalGlFormat {
-      RGBA(6408),
-      RGB(6407),
-      // $FF: renamed from: RG com.mojang.blaze3d.platform.NativeImage$InternalGlFormat
-      field_62(33319),
-      RED(6403);
-
-      private final int f_85184_;
-
-      private InternalGlFormat(final int glFormatIn) {
-         this.f_85184_ = glFormatIn;
-      }
-
-      public int m_85191_() {
-         return this.f_85184_;
-      }
-
-      // $FF: synthetic method
-      private static InternalGlFormat[] $values() {
-         return new InternalGlFormat[]{RGBA, RGB, field_62, RED};
       }
    }
 }

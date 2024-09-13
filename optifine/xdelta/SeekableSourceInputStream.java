@@ -4,24 +4,23 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class SeekableSourceInputStream extends InputStream {
-   // $FF: renamed from: ss optifine.xdelta.SeekableSource
-   SeekableSource field_71;
+   SeekableSource f_12175_;
 
    public SeekableSourceInputStream(SeekableSource ss) {
-      this.field_71 = ss;
+      this.f_12175_ = ss;
    }
 
    public int read() throws IOException {
       byte[] b = new byte[1];
-      this.field_71.read(b, 0, 1);
+      this.f_12175_.read(b, 0, 1);
       return b[0];
    }
 
    public int read(byte[] b, int off, int len) throws IOException {
-      return this.field_71.read(b, off, len);
+      return this.f_12175_.read(b, off, len);
    }
 
    public void close() throws IOException {
-      this.field_71.close();
+      this.f_12175_.close();
    }
 }

@@ -19,10 +19,12 @@ public class ModelAdapterVillager extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new VillagerModel(bakeModelLayer(ModelLayers.f_171210_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof VillagerModel modelVillager)) {
          return null;
@@ -49,10 +51,12 @@ public class ModelAdapterVillager extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "headwear", "headwear2", "body", "bodywear", "arms", "right_leg", "left_leg", "nose", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       ReloadableResourceManager resourceManager = (ReloadableResourceManager)Minecraft.m_91087_().m_91098_();
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();

@@ -24,7 +24,9 @@ public class ModelSprite {
    private float maxU = 0.0F;
    private float maxV = 0.0F;
 
-   public ModelSprite(ModelPart modelRenderer, float textureOffsetX, float textureOffsetY, float posX, float posY, float posZ, int sizeX, int sizeY, int sizeZ, float sizeAdd) {
+   public ModelSprite(
+      ModelPart modelRenderer, float textureOffsetX, float textureOffsetY, float posX, float posY, float posZ, int sizeX, int sizeY, int sizeZ, float sizeAdd
+   ) {
       this.modelRenderer = modelRenderer;
       this.textureOffsetX = textureOffsetX;
       this.textureOffsetY = textureOffsetY;
@@ -41,7 +43,7 @@ public class ModelSprite {
       this.maxV = (textureOffsetY + (float)sizeY) / modelRenderer.textureHeight;
    }
 
-   public void render(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
+   public void m_324219_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
       float scale = 0.0625F;
       matrixStackIn.m_252880_(this.posX * scale, this.posY * scale, this.posZ * scale);
       float rMinU = this.minU;
@@ -58,11 +60,41 @@ public class ModelSprite {
          rMaxV = this.minV;
       }
 
-      renderItemIn2D(matrixStackIn, bufferIn, rMinU, rMinV, rMaxU, rMaxV, this.sizeX, this.sizeY, scale * (float)this.sizeZ, this.modelRenderer.textureWidth, this.modelRenderer.textureHeight, packedLightIn, packedOverlayIn, colorIn);
+      renderItemIn2D(
+         matrixStackIn,
+         bufferIn,
+         rMinU,
+         rMinV,
+         rMaxU,
+         rMaxV,
+         this.sizeX,
+         this.sizeY,
+         scale * (float)this.sizeZ,
+         this.modelRenderer.textureWidth,
+         this.modelRenderer.textureHeight,
+         packedLightIn,
+         packedOverlayIn,
+         colorIn
+      );
       matrixStackIn.m_252880_(-this.posX * scale, -this.posY * scale, -this.posZ * scale);
    }
 
-   public static void renderItemIn2D(PoseStack matrixStackIn, VertexConsumer bufferIn, float minU, float minV, float maxU, float maxV, int sizeX, int sizeY, float width, float texWidth, float texHeight, int packedLightIn, int packedOverlayIn, int colorIn) {
+   public static void renderItemIn2D(
+      PoseStack matrixStackIn,
+      VertexConsumer bufferIn,
+      float minU,
+      float minV,
+      float maxU,
+      float maxV,
+      int sizeX,
+      int sizeY,
+      float width,
+      float texWidth,
+      float texHeight,
+      int packedLightIn,
+      int packedOverlayIn,
+      int colorIn
+   ) {
       if (width < 6.25E-4F) {
          width = 6.25E-4F;
       }
@@ -85,69 +117,78 @@ public class ModelSprite {
       addVertex(matrixStackIn, bufferIn, dimX, 0.0F, width, colorIn, maxU, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
       addVertex(matrixStackIn, bufferIn, dimX, dimY, width, colorIn, maxU, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
       addVertex(matrixStackIn, bufferIn, 0.0F, dimY, width, colorIn, minU, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-      float var8 = 0.5F * dU / (float)sizeX;
-      float var9 = 0.5F * dV / (float)sizeY;
+      float var8x = 0.5F * dU / (float)sizeX;
+      float var9x = 0.5F * dV / (float)sizeY;
       normX = -1.0F;
       normY = 0.0F;
       normZ = 0.0F;
 
-      int var10;
-      float var11;
-      float var12;
-      for(var10 = 0; var10 < sizeX; ++var10) {
-         var11 = (float)var10 / (float)sizeX;
-         var12 = minU + dU * var11 + var8;
-         addVertex(matrixStackIn, bufferIn, var11 * dimX, dimY, width, colorIn, var12, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, var11 * dimX, dimY, 0.0F, colorIn, var12, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, var11 * dimX, 0.0F, 0.0F, colorIn, var12, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, var11 * dimX, 0.0F, width, colorIn, var12, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+      for (int var10x = 0; var10x < sizeX; var10x++) {
+         float var11x = (float)var10x / (float)sizeX;
+         float var12x = minU + dU * var11x + var8x;
+         addVertex(matrixStackIn, bufferIn, var11x * dimX, dimY, width, colorIn, var12x, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, var11x * dimX, dimY, 0.0F, colorIn, var12x, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, var11x * dimX, 0.0F, 0.0F, colorIn, var12x, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, var11x * dimX, 0.0F, width, colorIn, var12x, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
       }
 
       normX = 1.0F;
       normY = 0.0F;
       normZ = 0.0F;
 
-      float var13;
-      for(var10 = 0; var10 < sizeX; ++var10) {
-         var11 = (float)var10 / (float)sizeX;
-         var12 = minU + dU * var11 + var8;
-         var13 = var11 + 1.0F / (float)sizeX;
-         addVertex(matrixStackIn, bufferIn, var13 * dimX, 0.0F, width, colorIn, var12, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, var13 * dimX, 0.0F, 0.0F, colorIn, var12, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, var13 * dimX, dimY, 0.0F, colorIn, var12, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, var13 * dimX, dimY, width, colorIn, var12, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+      for (int var42 = 0; var42 < sizeX; var42++) {
+         float var11x = (float)var42 / (float)sizeX;
+         float var12x = minU + dU * var11x + var8x;
+         float var13x = var11x + 1.0F / (float)sizeX;
+         addVertex(matrixStackIn, bufferIn, var13x * dimX, 0.0F, width, colorIn, var12x, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, var13x * dimX, 0.0F, 0.0F, colorIn, var12x, minV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, var13x * dimX, dimY, 0.0F, colorIn, var12x, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, var13x * dimX, dimY, width, colorIn, var12x, maxV, packedOverlayIn, packedLightIn, normX, normY, normZ);
       }
 
       normX = 0.0F;
       normY = 1.0F;
       normZ = 0.0F;
 
-      for(var10 = 0; var10 < sizeY; ++var10) {
-         var11 = (float)var10 / (float)sizeY;
-         var12 = minV + dV * var11 + var9;
-         var13 = var11 + 1.0F / (float)sizeY;
-         addVertex(matrixStackIn, bufferIn, 0.0F, var13 * dimY, width, colorIn, minU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, dimX, var13 * dimY, width, colorIn, maxU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, dimX, var13 * dimY, 0.0F, colorIn, maxU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, 0.0F, var13 * dimY, 0.0F, colorIn, minU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
+      for (int var43 = 0; var43 < sizeY; var43++) {
+         float var11x = (float)var43 / (float)sizeY;
+         float var12x = minV + dV * var11x + var9x;
+         float var13x = var11x + 1.0F / (float)sizeY;
+         addVertex(matrixStackIn, bufferIn, 0.0F, var13x * dimY, width, colorIn, minU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, dimX, var13x * dimY, width, colorIn, maxU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, dimX, var13x * dimY, 0.0F, colorIn, maxU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, 0.0F, var13x * dimY, 0.0F, colorIn, minU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
       }
 
       normX = 0.0F;
       normY = -1.0F;
       normZ = 0.0F;
 
-      for(var10 = 0; var10 < sizeY; ++var10) {
-         var11 = (float)var10 / (float)sizeY;
-         var12 = minV + dV * var11 + var9;
-         addVertex(matrixStackIn, bufferIn, dimX, var11 * dimY, width, colorIn, maxU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, 0.0F, var11 * dimY, width, colorIn, minU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, 0.0F, var11 * dimY, 0.0F, colorIn, minU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
-         addVertex(matrixStackIn, bufferIn, dimX, var11 * dimY, 0.0F, colorIn, maxU, var12, packedOverlayIn, packedLightIn, normX, normY, normZ);
+      for (int var44 = 0; var44 < sizeY; var44++) {
+         float var11x = (float)var44 / (float)sizeY;
+         float var12x = minV + dV * var11x + var9x;
+         addVertex(matrixStackIn, bufferIn, dimX, var11x * dimY, width, colorIn, maxU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, 0.0F, var11x * dimY, width, colorIn, minU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, 0.0F, var11x * dimY, 0.0F, colorIn, minU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
+         addVertex(matrixStackIn, bufferIn, dimX, var11x * dimY, 0.0F, colorIn, maxU, var12x, packedOverlayIn, packedLightIn, normX, normY, normZ);
       }
-
    }
 
-   static void addVertex(PoseStack matrixStackIn, VertexConsumer bufferIn, float x, float y, float z, int colorIn, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ) {
+   static void addVertex(
+      PoseStack matrixStackIn,
+      VertexConsumer bufferIn,
+      float x,
+      float y,
+      float z,
+      int colorIn,
+      float texU,
+      float texV,
+      int overlayUV,
+      int lightmapUV,
+      float normalX,
+      float normalY,
+      float normalZ
+   ) {
       PoseStack.Pose matrixEntry = matrixStackIn.m_85850_();
       Matrix4f matrix4f = matrixEntry.m_252922_();
       Matrix3f matrixNormal = matrixEntry.m_252943_();

@@ -18,10 +18,12 @@ public class ModelAdapterArrow extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new ArrowModel(new ModelPart(new ArrayList(), new HashMap()));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ArrowModel modelArrow)) {
          return null;
@@ -30,10 +32,12 @@ public class ModelAdapterArrow extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TippableArrowRenderer render = new TippableArrowRenderer(renderManager.getContext());

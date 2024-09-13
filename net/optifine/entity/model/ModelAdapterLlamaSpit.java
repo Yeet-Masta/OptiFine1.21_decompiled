@@ -16,10 +16,12 @@ public class ModelAdapterLlamaSpit extends ModelAdapter {
       super(EntityType.f_20467_, "llama_spit", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new LlamaSpitModel(bakeModelLayer(ModelLayers.f_171196_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof LlamaSpitModel modelLlamaSpit)) {
          return null;
@@ -30,10 +32,12 @@ public class ModelAdapterLlamaSpit extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       LlamaSpitRenderer render = new LlamaSpitRenderer(renderManager.getContext());

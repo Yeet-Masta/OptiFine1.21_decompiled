@@ -8,9 +8,9 @@ import org.lwjgl.BufferUtils;
 
 public class DrawBuffers {
    private String name;
-   private final int maxColorBuffers;
-   private final int maxDrawBuffers;
-   private final IntBuffer drawBuffers;
+   private int maxColorBuffers;
+   private int maxDrawBuffers;
+   private IntBuffer drawBuffers;
    private int[] attachmentMappings;
    private IntBuffer glDrawBuffers;
 
@@ -18,7 +18,7 @@ public class DrawBuffers {
       this.name = name;
       this.maxColorBuffers = maxColorBuffers;
       this.maxDrawBuffers = maxDrawBuffers;
-      this.drawBuffers = IntBuffer.wrap(new int[maxDrawBuffers]);
+      this.drawBuffers = IntBuffer.m_63770_(new int[maxDrawBuffers]);
    }
 
    public int get(int index) {
@@ -62,7 +62,7 @@ public class DrawBuffers {
    }
 
    public DrawBuffers fill(int val) {
-      for(int i = 0; i < this.drawBuffers.limit(); ++i) {
+      for (int i = 0; i < this.drawBuffers.limit(); i++) {
          this.drawBuffers.put(i, val);
       }
 
@@ -87,20 +87,17 @@ public class DrawBuffers {
       int[] ams = new int[maxColorBuffers];
       Arrays.fill(ams, -1);
 
-      int i;
-      int att;
-      int ai;
-      for(i = 0; i < drawBuffers.limit(); ++i) {
-         att = drawBuffers.get(i);
-         ai = att - '賠';
+      for (int i = 0; i < drawBuffers.limit(); i++) {
+         int att = drawBuffers.get(i);
+         int ai = att - 36064;
          if (ai >= 0 && ai < maxDrawBuffers) {
             ams[ai] = ai;
          }
       }
 
-      for(i = 0; i < drawBuffers.limit(); ++i) {
-         att = drawBuffers.get(i);
-         ai = att - '賠';
+      for (int ix = 0; ix < drawBuffers.limit(); ix++) {
+         int att = drawBuffers.get(ix);
+         int ai = att - 36064;
          if (ai >= maxDrawBuffers && ai < maxColorBuffers) {
             int mi = getMappingIndex(ai, maxDrawBuffers, ams);
             if (mi < 0) {
@@ -120,8 +117,8 @@ public class DrawBuffers {
       } else if (attachmentMappings[ai] >= 0) {
          return attachmentMappings[ai];
       } else {
-         for(int i = 0; i < maxDrawBuffers; ++i) {
-            if (!ArrayUtils.contains(attachmentMappings, i)) {
+         for (int i = 0; i < maxDrawBuffers; i++) {
+            if (!ArrayUtils.m_274455_(attachmentMappings, i)) {
                return i;
             }
          }
@@ -141,12 +138,12 @@ public class DrawBuffers {
    private static IntBuffer makeGlDrawBuffers(IntBuffer drawBuffers, int[] attachmentMappings) {
       IntBuffer glDrawBuffers = BufferUtils.createIntBuffer(drawBuffers.capacity());
 
-      for(int i = 0; i < drawBuffers.limit(); ++i) {
+      for (int i = 0; i < drawBuffers.limit(); i++) {
          int att = drawBuffers.get(i);
-         int ai = att - '賠';
+         int ai = att - 36064;
          int attFixed = 0;
          if (ai >= 0 && ai < attachmentMappings.length) {
-            attFixed = '賠' + attachmentMappings[ai];
+            attFixed = 36064 + attachmentMappings[ai];
          }
 
          glDrawBuffers.put(i, attFixed);
@@ -160,9 +157,9 @@ public class DrawBuffers {
    public String getInfo(boolean glBuffers) {
       StringBuffer sb = new StringBuffer();
 
-      for(int i = 0; i < this.drawBuffers.limit(); ++i) {
+      for (int i = 0; i < this.drawBuffers.limit(); i++) {
          int att = this.drawBuffers.get(i);
-         int ai = att - '賠';
+         int ai = att - 36064;
          if (glBuffers) {
             int[] ams = this.getAttachmentMappings();
             if (ai >= 0 && ai < ams.length) {
@@ -178,11 +175,11 @@ public class DrawBuffers {
    }
 
    private String getIndexName(int ai) {
-      return ai >= 0 && ai < this.maxColorBuffers ? "" + ai : "N";
+      return ai >= 0 && ai < this.maxColorBuffers ? ai + "" : "N";
    }
 
    public int indexOf(int att) {
-      for(int i = 0; i < this.limit(); ++i) {
+      for (int i = 0; i < this.limit(); i++) {
          if (this.get(i) == att) {
             return i;
          }
@@ -192,7 +189,12 @@ public class DrawBuffers {
    }
 
    public String toString() {
-      String var10000 = this.name;
-      return var10000 + ": " + BufferUtil.getBufferString(this.drawBuffers) + ", mapping: " + ArrayUtils.arrayToString(this.attachmentMappings) + ", glDrawBuffers: " + BufferUtil.getBufferString(this.glDrawBuffers);
+      return this.name
+         + ": "
+         + BufferUtil.getBufferString(this.drawBuffers)
+         + ", mapping: "
+         + ArrayUtils.arrayToString(this.attachmentMappings)
+         + ", glDrawBuffers: "
+         + BufferUtil.getBufferString(this.glDrawBuffers);
    }
 }

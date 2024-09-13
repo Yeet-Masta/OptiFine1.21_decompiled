@@ -14,10 +14,12 @@ public class ModelAdapterParrot extends ModelAdapter {
       super(EntityType.f_20508_, "parrot", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new ParrotModel(bakeModelLayer(ModelLayers.f_171203_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ParrotModel modelParrot)) {
          return null;
@@ -40,10 +42,12 @@ public class ModelAdapterParrot extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tail", "left_wing", "right_wing", "head", "left_leg", "right_leg", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ParrotRenderer render = new ParrotRenderer(renderManager.getContext());

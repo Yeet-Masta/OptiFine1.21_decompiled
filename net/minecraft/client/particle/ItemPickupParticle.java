@@ -16,12 +16,12 @@ import net.optifine.shaders.Program;
 import net.optifine.shaders.Shaders;
 
 public class ItemPickupParticle extends Particle {
-   private static final int f_172257_ = 3;
-   private final RenderBuffers f_107020_;
-   private final Entity f_107021_;
-   private final Entity f_107017_;
+   private static int f_172257_;
+   private RenderBuffers f_107020_;
+   private Entity f_107021_;
+   private Entity f_107017_;
    private int f_107018_;
-   private final EntityRenderDispatcher f_107019_;
+   private EntityRenderDispatcher f_107019_;
    private double f_302522_;
    private double f_302758_;
    private double f_303670_;
@@ -29,11 +29,15 @@ public class ItemPickupParticle extends Particle {
    private double f_302502_;
    private double f_302216_;
 
-   public ItemPickupParticle(EntityRenderDispatcher p_i107022_1_, RenderBuffers p_i107022_2_, ClientLevel p_i107022_3_, Entity p_i107022_4_, Entity p_i107022_5_) {
+   public ItemPickupParticle(
+      EntityRenderDispatcher p_i107022_1_, RenderBuffers p_i107022_2_, ClientLevel p_i107022_3_, Entity p_i107022_4_, Entity p_i107022_5_
+   ) {
       this(p_i107022_1_, p_i107022_2_, p_i107022_3_, p_i107022_4_, p_i107022_5_, p_i107022_4_.m_20184_());
    }
 
-   private ItemPickupParticle(EntityRenderDispatcher renderManagerIn, RenderBuffers renderTypeBuffersIn, ClientLevel worldIn, Entity entityIn, Entity targetEntityIn, Vec3 movementIn) {
+   private ItemPickupParticle(
+      EntityRenderDispatcher renderManagerIn, RenderBuffers renderTypeBuffersIn, ClientLevel worldIn, Entity entityIn, Entity targetEntityIn, Vec3 movementIn
+   ) {
       super(worldIn, entityIn.m_20185_(), entityIn.m_20186_(), entityIn.m_20189_(), movementIn.f_82479_, movementIn.f_82480_, movementIn.f_82481_);
       this.f_107020_ = renderTypeBuffersIn;
       this.f_107021_ = this.m_107036_(entityIn);
@@ -47,10 +51,12 @@ public class ItemPickupParticle extends Particle {
       return (Entity)(!(entityIn instanceof ItemEntity) ? entityIn : ((ItemEntity)entityIn).m_32066_());
    }
 
+   @Override
    public ParticleRenderType m_7556_() {
       return ParticleRenderType.f_107433_;
    }
 
+   @Override
    public void m_5744_(VertexConsumer buffer, Camera renderInfo, float partialTicks) {
       Program oldShadersProgram = null;
       if (Config.isShaders()) {
@@ -68,17 +74,28 @@ public class ItemPickupParticle extends Particle {
       double d5 = Mth.m_14139_((double)f, this.f_107021_.m_20189_(), d2);
       MultiBufferSource.BufferSource multibuffersource$buffersource = this.f_107020_.m_110104_();
       Vec3 vec3 = renderInfo.m_90583_();
-      this.f_107019_.m_114384_(this.f_107021_, d3 - vec3.m_7096_(), d4 - vec3.m_7098_(), d5 - vec3.m_7094_(), this.f_107021_.m_146908_(), partialTicks, new PoseStack(), multibuffersource$buffersource, this.f_107019_.m_114394_(this.f_107021_, partialTicks));
+      this.f_107019_
+         .m_114384_(
+            this.f_107021_,
+            d3 - vec3.m_7096_(),
+            d4 - vec3.m_7098_(),
+            d5 - vec3.m_7094_(),
+            this.f_107021_.m_146908_(),
+            partialTicks,
+            new PoseStack(),
+            multibuffersource$buffersource,
+            this.f_107019_.m_114394_(this.f_107021_, partialTicks)
+         );
       multibuffersource$buffersource.m_109911_();
       if (Config.isShaders()) {
-         Shaders.setEntityId((Entity)null);
+         Shaders.setEntityId(null);
          Shaders.useProgram(oldShadersProgram);
       }
-
    }
 
+   @Override
    public void m_5989_() {
-      ++this.f_107018_;
+      this.f_107018_++;
       if (this.f_107018_ == 3) {
          this.m_107274_();
       }

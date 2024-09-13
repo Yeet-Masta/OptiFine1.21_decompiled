@@ -12,7 +12,7 @@ import net.optifine.shaders.MultiTexID;
 import net.optifine.shaders.ShadersTex;
 
 public abstract class AbstractTexture implements AutoCloseable {
-   public static final int f_174680_ = -1;
+   public static int f_174680_;
    protected int f_117950_ = -1;
    protected boolean f_117951_;
    protected boolean f_117952_;
@@ -28,7 +28,7 @@ public abstract class AbstractTexture implements AutoCloseable {
          this.f_117951_ = blurIn;
          this.f_117952_ = mipmapIn;
          int i;
-         short j;
+         int j;
          if (blurIn) {
             i = mipmapIn ? 9987 : 9729;
             j = 9729;
@@ -63,7 +63,6 @@ public abstract class AbstractTexture implements AutoCloseable {
                TextureUtil.releaseTextureId(this.f_117950_);
                this.f_117950_ = -1;
             }
-
          });
       } else if (this.f_117950_ != -1) {
          ShadersTex.deleteTextures(this, this.f_117950_);
@@ -71,20 +70,16 @@ public abstract class AbstractTexture implements AutoCloseable {
          TextureUtil.releaseTextureId(this.f_117950_);
          this.f_117950_ = -1;
       }
-
    }
 
    public abstract void m_6704_(ResourceManager var1) throws IOException;
 
    public void m_117966_() {
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> {
-            GlStateManager._bindTexture(this.m_117963_());
-         });
+         RenderSystem.recordRenderCall(() -> GlStateManager._bindTexture(this.m_117963_()));
       } else {
          GlStateManager._bindTexture(this.m_117963_());
       }
-
    }
 
    public void m_6479_(TextureManager textureManagerIn, ResourceManager resourceManagerIn, ResourceLocation resourceLocationIn, Executor executorIn) {

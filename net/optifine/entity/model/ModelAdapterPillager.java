@@ -13,10 +13,12 @@ public class ModelAdapterPillager extends ModelAdapterIllager {
       super(EntityType.f_20513_, "pillager", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new IllagerModel(bakeModelLayer(ModelLayers.f_171161_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PillagerRenderer render = new PillagerRenderer(renderManager.getContext());

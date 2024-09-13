@@ -5,13 +5,13 @@ import java.util.Iterator;
 import net.minecraft.client.model.geom.ModelPart;
 
 public class ModelRendererUtils {
-   public static ModelPart getModelRenderer(Iterator iterator, int index) {
+   public static ModelPart getModelRenderer(Iterator<ModelPart> iterator, int index) {
       if (iterator == null) {
          return null;
       } else if (index < 0) {
          return null;
       } else {
-         for(int i = 0; i < index; ++i) {
+         for (int i = 0; i < index; i++) {
             if (!iterator.hasNext()) {
                return null;
             }
@@ -19,16 +19,11 @@ public class ModelRendererUtils {
             ModelPart var3 = (ModelPart)iterator.next();
          }
 
-         if (!iterator.hasNext()) {
-            return null;
-         } else {
-            ModelPart model = (ModelPart)iterator.next();
-            return model;
-         }
+         return !iterator.hasNext() ? null : (ModelPart)iterator.next();
       }
    }
 
-   public static ModelPart getModelRenderer(ImmutableList models, int index) {
+   public static ModelPart getModelRenderer(ImmutableList<ModelPart> models, int index) {
       if (models == null) {
          return null;
       } else if (index < 0) {

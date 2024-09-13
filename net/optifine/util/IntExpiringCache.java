@@ -4,16 +4,16 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
-public abstract class IntExpiringCache {
-   private final int intervalMs;
+public abstract class IntExpiringCache<T> {
+   private int intervalMs;
    private long timeCheckMs;
-   private Int2ObjectOpenHashMap map = new Int2ObjectOpenHashMap();
+   private Int2ObjectOpenHashMap<IntExpiringCache.Wrapper<T>> map = new Int2ObjectOpenHashMap();
 
    public IntExpiringCache(int intervalMs) {
       this.intervalMs = intervalMs;
    }
 
-   public Object get(int key) {
+   public T get(int key) {
       long timeNowMs = System.currentTimeMillis();
       if (!this.map.isEmpty() && timeNowMs >= this.timeCheckMs) {
          this.timeCheckMs = timeNowMs + (long)this.intervalMs;
@@ -21,10 +21,10 @@ public abstract class IntExpiringCache {
          IntSet keys = this.map.keySet();
          IntIterator it = keys.iterator();
 
-         while(it.hasNext()) {
+         while (it.hasNext()) {
             int k = it.nextInt();
             if (k != key) {
-               Wrapper w = (Wrapper)this.map.get(k);
+               IntExpiringCache.Wrapper<T> w = (IntExpiringCache.Wrapper<T>)this.map.get(k);
                if (w.getAccessTimeMs() <= timeMinMs) {
                   it.remove();
                }
@@ -32,10 +32,10 @@ public abstract class IntExpiringCache {
          }
       }
 
-      Wrapper w = (Wrapper)this.map.get(key);
+      IntExpiringCache.Wrapper<T> w = (IntExpiringCache.Wrapper<T>)this.map.get(key);
       if (w == null) {
-         Object obj = this.make();
-         w = new Wrapper(obj);
+         T obj = this.make();
+         w = new IntExpiringCache.Wrapper<>(obj);
          this.map.put(key, w);
       }
 
@@ -43,17 +43,17 @@ public abstract class IntExpiringCache {
       return w.getValue();
    }
 
-   protected abstract Object make();
+   protected abstract T make();
 
-   public static class Wrapper {
-      private final Object value;
+   public static class Wrapper<T> {
+      private T value;
       private long accessTimeMs;
 
-      public Wrapper(Object value) {
+      public Wrapper(T value) {
          this.value = value;
       }
 
-      public Object getValue() {
+      public T getValue() {
          return this.value;
       }
 

@@ -13,6 +13,7 @@ public abstract class ModelAdapterPlayer extends ModelAdapterBiped {
       super(type, name, shadowSize);
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (model instanceof PlayerModel playerModel) {
          if (modelPart.equals("left_sleeve")) {
@@ -39,8 +40,9 @@ public abstract class ModelAdapterPlayer extends ModelAdapterBiped {
       return super.getModelRenderer(model, modelPart);
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      List names = new ArrayList(Arrays.asList(super.getModelRendererNames()));
+      List<String> names = new ArrayList(Arrays.asList(super.getModelRendererNames()));
       names.add("left_sleeve");
       names.add("right_sleeve");
       names.add("left_pants");

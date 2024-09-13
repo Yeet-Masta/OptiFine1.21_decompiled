@@ -14,10 +14,12 @@ public class ModelAdapterZombieVillager extends ModelAdapterBiped {
       super(EntityType.f_20530_, "zombie_villager", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new ZombieVillagerModel(bakeModelLayer(ModelLayers.f_171228_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       ReloadableResourceManager resourceManager = (ReloadableResourceManager)Minecraft.m_91087_().m_91098_();
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();

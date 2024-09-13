@@ -19,10 +19,12 @@ public class ModelAdapterLlama extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new LlamaModel(bakeModelLayer(ModelLayers.f_171194_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof LlamaModel modelLlama)) {
          return null;
@@ -45,10 +47,12 @@ public class ModelAdapterLlama extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "leg1", "leg2", "leg3", "leg4", "chest_right", "chest_left"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       LlamaRenderer render = new LlamaRenderer(renderManager.getContext(), ModelLayers.f_171194_);

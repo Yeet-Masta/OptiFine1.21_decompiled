@@ -29,7 +29,6 @@ public class SpriteRenderData {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.sprite.getName());
-      return var10000 + ", " + this.positions.length;
+      return this.sprite.getName() + ", " + this.positions.length;
    }
 }

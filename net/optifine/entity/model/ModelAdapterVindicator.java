@@ -13,10 +13,12 @@ public class ModelAdapterVindicator extends ModelAdapterIllager {
       super(EntityType.f_20493_, "vindicator", 0.5F, new String[]{"vindication_illager"});
    }
 
+   @Override
    public Model makeModel() {
       return new IllagerModel(bakeModelLayer(ModelLayers.f_171211_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       VindicatorRenderer render = new VindicatorRenderer(renderManager.getContext());

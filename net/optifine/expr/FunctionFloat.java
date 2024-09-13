@@ -12,10 +12,11 @@ public class FunctionFloat implements IExpressionFloat {
       this.arguments = arguments;
    }
 
+   @Override
    public float eval() {
       IExpression[] args = this.arguments;
-      switch (this.type) {
-         case SMOOTH:
+      switch (<unrepresentable>.$SwitchMap$net$optifine$expr$FunctionType[this.type.ordinal()]) {
+         case 1:
             IExpression expr0 = args[0];
             if (!(expr0 instanceof ConstantFloat)) {
                float valRaw = evalFloat(args, 0);
@@ -25,8 +26,7 @@ public class FunctionFloat implements IExpressionFloat {
                   this.smoothId = Smoother.getNextId();
                }
 
-               float valSmooth = Smoother.getSmoothValue(this.smoothId, valRaw, valFadeUp, valFadeDown);
-               return valSmooth;
+               return Smoother.getSmoothValue(this.smoothId, valRaw, valFadeUp, valFadeDown);
             }
          default:
             return this.type.evalFloat(this.arguments);
@@ -35,11 +35,10 @@ public class FunctionFloat implements IExpressionFloat {
 
    private static float evalFloat(IExpression[] exprs, int index) {
       IExpressionFloat ef = (IExpressionFloat)exprs[index];
-      float val = ef.eval();
-      return val;
+      return ef.eval();
    }
 
    public String toString() {
-      return String.valueOf(this.type) + "()";
+      return this.type + "()";
    }
 }

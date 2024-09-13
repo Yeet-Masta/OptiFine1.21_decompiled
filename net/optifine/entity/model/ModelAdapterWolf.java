@@ -19,10 +19,12 @@ public class ModelAdapterWolf extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new WolfModel(bakeModelLayer(ModelLayers.f_171221_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof WolfModel modelWolf)) {
          return null;
@@ -45,10 +47,12 @@ public class ModelAdapterWolf extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "leg1", "leg2", "leg3", "leg4", "tail", "mane"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WolfRenderer render = new WolfRenderer(renderManager.getContext());

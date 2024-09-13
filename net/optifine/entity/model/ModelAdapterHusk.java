@@ -13,10 +13,12 @@ public class ModelAdapterHusk extends ModelAdapterBiped {
       super(EntityType.f_20458_, "husk", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new ZombieModel(bakeModelLayer(ModelLayers.f_171188_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       HuskRenderer render = new HuskRenderer(renderManager.getContext());

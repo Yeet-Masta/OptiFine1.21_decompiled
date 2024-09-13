@@ -24,38 +24,35 @@ import net.optifine.reflect.Reflector;
 import org.slf4j.Logger;
 
 public class Screenshot {
-   private static final Logger f_92276_ = LogUtils.getLogger();
-   public static final String f_260508_ = "screenshots";
+   private static Logger f_92276_ = LogUtils.getLogger();
+   public static String f_260508_;
    private int f_168594_;
-   private final DataOutputStream f_168595_;
-   private final byte[] f_168596_;
-   private final int f_168597_;
-   private final int f_168598_;
+   private DataOutputStream f_168595_;
+   private byte[] f_168596_;
+   private int f_168597_;
+   private int f_168598_;
    private File f_168599_;
 
-   public static void m_92289_(File gameDirectory, RenderTarget buffer, Consumer messageConsumer) {
-      m_92295_(gameDirectory, (String)null, buffer, messageConsumer);
+   public static void m_92289_(File gameDirectory, RenderTarget buffer, Consumer<Component> messageConsumer) {
+      m_92295_(gameDirectory, null, buffer, messageConsumer);
    }
 
-   public static void m_92295_(File gameDirectory, @Nullable String screenshotName, RenderTarget buffer, Consumer messageConsumer) {
+   public static void m_92295_(File gameDirectory, @Nullable String screenshotName, RenderTarget buffer, Consumer<Component> messageConsumer) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> {
-            m_92305_(gameDirectory, screenshotName, buffer, messageConsumer);
-         });
+         RenderSystem.recordRenderCall(() -> m_92305_(gameDirectory, screenshotName, buffer, messageConsumer));
       } else {
          m_92305_(gameDirectory, screenshotName, buffer, messageConsumer);
       }
-
    }
 
-   private static void m_92305_(File gameDirectory, @Nullable String screenshotName, RenderTarget buffer, Consumer messageConsumer) {
+   private static void m_92305_(File gameDirectory, @Nullable String screenshotName, RenderTarget buffer, Consumer<Component> messageConsumer) {
       Minecraft mc = Config.getMinecraft();
       Window mainWindow = mc.m_91268_();
       Options gameSettings = Config.getGameSettings();
       int fbWidth = mainWindow.m_85441_();
       int fbHeight = mainWindow.m_85442_();
-      int guiScaleOld = (Integer)gameSettings.m_231928_().m_231551_();
-      int guiScale = mainWindow.m_85385_((Integer)mc.f_91066_.m_231928_().m_231551_(), (Boolean)mc.f_91066_.m_231819_().m_231551_());
+      int guiScaleOld = gameSettings.m_231928_().m_231551_();
+      int guiScale = mainWindow.m_85385_(mc.f_91066_.m_231928_().m_231551_(), mc.f_91066_.m_231819_().m_231551_());
       int mul = Config.getScreenshotSize();
       boolean resize = GLX.isUsingFBOs() && mul > 1;
       if (resize) {
@@ -65,7 +62,7 @@ public class Screenshot {
             mainWindow.resizeFramebuffer(fbWidth * mul, fbHeight * mul);
          } catch (Exception var19) {
             f_92276_.warn("Couldn't save screenshot", var19);
-            messageConsumer.accept(Component.m_237110_("screenshot.failure", new Object[]{var19.getMessage()}));
+            messageConsumer.m_340568_(Component.m_237110_("screenshot.failure", new Object[]{var19.getMessage()}));
          }
 
          GlStateManager.clear(16640);
@@ -95,35 +92,39 @@ public class Screenshot {
 
       Object event = null;
       if (Reflector.ForgeHooksClient_onScreenshot.exists()) {
-         event = Reflector.call(Reflector.ForgeHooksClient_onScreenshot, nativeimage, file2);
+         event = Reflector.m_46374_(Reflector.ForgeHooksClient_onScreenshot, nativeimage, file2);
          if (Reflector.callBoolean(event, Reflector.Event_isCanceled)) {
-            Component msg = (Component)Reflector.call(event, Reflector.ScreenshotEvent_getCancelMessage);
-            messageConsumer.accept(msg);
+            Component msg = (Component)Reflector.m_46374_(event, Reflector.ScreenshotEvent_getCancelMessage);
+            messageConsumer.m_340568_(msg);
             return;
          }
 
-         file2 = (File)Reflector.call(event, Reflector.ScreenshotEvent_getScreenshotFile);
+         file2 = (File)Reflector.m_46374_(event, Reflector.ScreenshotEvent_getScreenshotFile);
       }
 
-      Util.m_183992_().execute(() -> {
-         try {
-            nativeimage.m_85056_(file2);
-            Component component = Component.m_237113_(file2.getName()).m_130940_(ChatFormatting.UNDERLINE).m_130938_((styleIn) -> {
-               return styleIn.m_131142_(new ClickEvent(Action.OPEN_FILE, file2.getAbsolutePath()));
-            });
-            if (event != null && Reflector.call(event, Reflector.ScreenshotEvent_getResultMessage) != null) {
-               messageConsumer.accept((Component)Reflector.call(event, Reflector.ScreenshotEvent_getResultMessage));
-            } else {
-               messageConsumer.accept(Component.m_237110_("screenshot.success", new Object[]{component}));
+      File target = file2;
+      Object eventF = event;
+      Util.m_183992_()
+         .m_305380_(
+            () -> {
+               try {
+                  nativeimage.m_85056_(target);
+                  Component component = Component.m_237113_(target.getName())
+                     .m_130940_(ChatFormatting.UNDERLINE)
+                     .m_130938_(styleIn -> styleIn.m_131142_(new ClickEvent(Action.OPEN_FILE, target.getAbsolutePath())));
+                  if (eventF != null && Reflector.m_46374_(eventF, Reflector.ScreenshotEvent_getResultMessage) != null) {
+                     messageConsumer.m_340568_((Component)Reflector.m_46374_(eventF, Reflector.ScreenshotEvent_getResultMessage));
+                  } else {
+                     messageConsumer.m_340568_(Component.m_237110_("screenshot.success", new Object[]{component}));
+                  }
+               } catch (Exception var8x) {
+                  f_92276_.warn("Couldn't save screenshot", var8x);
+                  messageConsumer.m_340568_(Component.m_237110_("screenshot.failure", new Object[]{var8x.getMessage()}));
+               } finally {
+                  nativeimage.close();
+               }
             }
-         } catch (Exception var8) {
-            f_92276_.warn("Couldn't save screenshot", var8);
-            messageConsumer.accept(Component.m_237110_("screenshot.failure", new Object[]{var8.getMessage()}));
-         } finally {
-            nativeimage.close();
-         }
-
-      });
+         );
    }
 
    public static NativeImage m_92279_(RenderTarget framebufferIn) {
@@ -147,13 +148,13 @@ public class Screenshot {
       String s = Util.m_241986_();
       int i = 1;
 
-      while(true) {
+      while (true) {
          File file1 = new File(gameDirectory, s + (i == 1 ? "" : "_" + i) + ".png");
          if (!file1.exists()) {
             return file1;
          }
 
-         ++i;
+         i++;
       }
    }
 
@@ -164,8 +165,10 @@ public class Screenshot {
       File file1 = new File(fileIn, "screenshots");
       file1.mkdir();
       String s = "huge_" + Util.m_241986_();
+      int i = 1;
 
-      for(int i = 1; (this.f_168599_ = new File(file1, s + (i == 1 ? "" : "_" + i) + ".tga")).exists(); ++i) {
+      while ((this.f_168599_ = new File(file1, s + (i == 1 ? "" : "_" + i) + ".tga")).exists()) {
+         i++;
       }
 
       byte[] abyte = new byte[18];
@@ -193,12 +196,11 @@ public class Screenshot {
 
       this.f_168594_ = j;
 
-      for(int k = 0; k < j; ++k) {
+      for (int k = 0; k < j; k++) {
          bufferIn.position((heightIn - j) * widthIn * 3 + k * widthIn * 3);
          int l = (xIn + k * this.f_168597_) * 3;
          bufferIn.get(this.f_168596_, l, i * 3);
       }
-
    }
 
    public void m_168605_() throws IOException {

@@ -16,10 +16,12 @@ public class ModelAdapterEndermite extends ModelAdapter {
       super(EntityType.f_20567_, "endermite", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new EndermiteModel(bakeModelLayer(ModelLayers.f_171143_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof EndermiteModel modelEnderMite)) {
          return null;
@@ -36,10 +38,12 @@ public class ModelAdapterEndermite extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body1", "body2", "body3", "body4", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       EndermiteRenderer render = new EndermiteRenderer(renderManager.getContext());

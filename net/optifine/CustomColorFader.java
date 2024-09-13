@@ -6,7 +6,7 @@ public class CustomColorFader {
    private Vec3 color = null;
    private long timeUpdate = System.currentTimeMillis();
 
-   public Vec3 getColor(double x, double y, double z) {
+   public Vec3 m_130045_(double x, double y, double z) {
       if (this.color == null) {
          this.color = new Vec3(x, y, z);
          return this.color;

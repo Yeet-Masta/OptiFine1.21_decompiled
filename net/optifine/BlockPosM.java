@@ -7,12 +7,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 
 public class BlockPosM extends BlockPos {
-   // $FF: renamed from: mx int
-   private int field_0;
-   // $FF: renamed from: my int
-   private int field_1;
-   // $FF: renamed from: mz int
-   private int field_2;
+   private int f_11965_;
+   private int f_11966_;
+   private int f_11967_;
    private int level;
    private BlockPosM[] facings;
    private boolean needsUpdate;
@@ -31,28 +28,28 @@ public class BlockPosM extends BlockPos {
 
    public BlockPosM(int x, int y, int z, int level) {
       super(0, 0, 0);
-      this.field_0 = x;
-      this.field_1 = y;
-      this.field_2 = z;
+      this.f_11965_ = x;
+      this.f_11966_ = y;
+      this.f_11967_ = z;
       this.level = level;
    }
 
    public int m_123341_() {
-      return this.field_0;
+      return this.f_11965_;
    }
 
    public int m_123342_() {
-      return this.field_1;
+      return this.f_11966_;
    }
 
    public int m_123343_() {
-      return this.field_2;
+      return this.f_11967_;
    }
 
    public void setXyz(int x, int y, int z) {
-      this.field_0 = x;
-      this.field_1 = y;
-      this.field_2 = z;
+      this.f_11965_ = x;
+      this.f_11966_ = y;
+      this.f_11967_ = z;
       this.needsUpdate = true;
    }
 
@@ -70,15 +67,15 @@ public class BlockPosM extends BlockPos {
          }
 
          if (this.needsUpdate) {
-            this.update();
+            this.m_252999_();
          }
 
          int index = facing.m_122411_();
          BlockPosM bpm = this.facings[index];
          if (bpm == null) {
-            int nx = this.field_0 + facing.m_122429_();
-            int ny = this.field_1 + facing.m_122430_();
-            int nz = this.field_2 + facing.m_122431_();
+            int nx = this.f_11965_ + facing.m_122429_();
+            int ny = this.f_11966_ + facing.m_122430_();
+            int nz = this.f_11967_ + facing.m_122431_();
             bpm = new BlockPosM(nx, ny, nz, this.level - 1);
             this.facings[index] = bpm;
          }
@@ -92,26 +89,26 @@ public class BlockPosM extends BlockPos {
    }
 
    public void setPosOffset(BlockPos pos, Direction facing) {
-      this.field_0 = pos.m_123341_() + facing.m_122429_();
-      this.field_1 = pos.m_123342_() + facing.m_122430_();
-      this.field_2 = pos.m_123343_() + facing.m_122431_();
+      this.f_11965_ = pos.m_123341_() + facing.m_122429_();
+      this.f_11966_ = pos.m_123342_() + facing.m_122430_();
+      this.f_11967_ = pos.m_123343_() + facing.m_122431_();
    }
 
    public BlockPos setPosOffset(BlockPos pos, Direction facing, Direction facing2) {
-      this.field_0 = pos.m_123341_() + facing.m_122429_() + facing2.m_122429_();
-      this.field_1 = pos.m_123342_() + facing.m_122430_() + facing2.m_122430_();
-      this.field_2 = pos.m_123343_() + facing.m_122431_() + facing2.m_122431_();
+      this.f_11965_ = pos.m_123341_() + facing.m_122429_() + facing2.m_122429_();
+      this.f_11966_ = pos.m_123342_() + facing.m_122430_() + facing2.m_122430_();
+      this.f_11967_ = pos.m_123343_() + facing.m_122431_() + facing2.m_122431_();
       return this;
    }
 
-   private void update() {
-      for(int i = 0; i < 6; ++i) {
+   private void m_252999_() {
+      for (int i = 0; i < 6; i++) {
          BlockPosM bpm = this.facings[i];
          if (bpm != null) {
             Direction facing = Direction.f_122346_[i];
-            int nx = this.field_0 + facing.m_122429_();
-            int ny = this.field_1 + facing.m_122430_();
-            int nz = this.field_2 + facing.m_122431_();
+            int nx = this.f_11965_ + facing.m_122429_();
+            int ny = this.f_11966_ + facing.m_122430_();
+            int nz = this.f_11967_ + facing.m_122431_();
             bpm.setXyz(nx, ny, nz);
          }
       }
@@ -120,15 +117,19 @@ public class BlockPosM extends BlockPos {
    }
 
    public BlockPos m_7949_() {
-      return new BlockPos(this.field_0, this.field_1, this.field_2);
+      return new BlockPos(this.f_11965_, this.f_11966_, this.f_11967_);
    }
 
-   public static Iterable getAllInBoxMutableM(BlockPos from, BlockPos to) {
-      final BlockPos posFrom = new BlockPos(Math.min(from.m_123341_(), to.m_123341_()), Math.min(from.m_123342_(), to.m_123342_()), Math.min(from.m_123343_(), to.m_123343_()));
-      final BlockPos posTo = new BlockPos(Math.max(from.m_123341_(), to.m_123341_()), Math.max(from.m_123342_(), to.m_123342_()), Math.max(from.m_123343_(), to.m_123343_()));
-      return new Iterable() {
-         public Iterator iterator() {
-            return new AbstractIterator() {
+   public static Iterable<BlockPosM> getAllInBoxMutableM(BlockPos from, BlockPos to) {
+      final BlockPos posFrom = new BlockPos(
+         Math.min(from.m_123341_(), to.m_123341_()), Math.min(from.m_123342_(), to.m_123342_()), Math.min(from.m_123343_(), to.m_123343_())
+      );
+      final BlockPos posTo = new BlockPos(
+         Math.max(from.m_123341_(), to.m_123341_()), Math.max(from.m_123342_(), to.m_123342_()), Math.max(from.m_123343_(), to.m_123343_())
+      );
+      return new Iterable<BlockPosM>() {
+         public Iterator<BlockPosM> iterator() {
+            return new AbstractIterator<BlockPosM>() {
                private BlockPosM posM = null;
 
                protected BlockPosM computeNext() {
@@ -142,14 +143,14 @@ public class BlockPosM extends BlockPos {
                      int by = this.posM.m_123342_();
                      int bz = this.posM.m_123343_();
                      if (bx < posTo.m_123341_()) {
-                        ++bx;
+                        bx++;
                      } else if (bz < posTo.m_123343_()) {
                         bx = posFrom.m_123341_();
-                        ++bz;
+                        bz++;
                      } else if (by < posTo.m_123342_()) {
                         bx = posFrom.m_123341_();
                         bz = posFrom.m_123343_();
-                        ++by;
+                        by++;
                      }
 
                      this.posM.setXyz(bx, by, bz);

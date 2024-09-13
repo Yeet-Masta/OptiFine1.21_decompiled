@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -29,19 +30,25 @@ import net.optifine.EmissiveTextures;
 import net.optifine.entity.model.CustomEntityModels;
 
 public class BlockEntityRenderDispatcher implements ResourceManagerReloadListener {
-   private Map f_112251_ = ImmutableMap.of();
-   private final Font f_112253_;
-   private final EntityModelSet f_173556_;
+   private Map<BlockEntityType<?>, BlockEntityRenderer<?>> f_112251_ = ImmutableMap.m_253057_();
+   private Font f_112253_;
+   private EntityModelSet f_173556_;
    public Level f_112248_;
    public Camera f_112249_;
    public HitResult f_112250_;
-   private final Supplier f_173557_;
-   private final Supplier f_234429_;
-   private final Supplier f_234430_;
+   private Supplier<BlockRenderDispatcher> f_173557_;
+   private Supplier<ItemRenderer> f_234429_;
+   private Supplier<EntityRenderDispatcher> f_234430_;
    public static BlockEntity tileEntityRendered;
-   private BlockEntityRendererProvider.Context context;
+   private Context context;
 
-   public BlockEntityRenderDispatcher(Font fontIn, EntityModelSet modelSetIn, Supplier blockRenderDispatcherIn, Supplier itemRendererIn, Supplier entityRendererIn) {
+   public BlockEntityRenderDispatcher(
+      Font fontIn,
+      EntityModelSet modelSetIn,
+      Supplier<BlockRenderDispatcher> blockRenderDispatcherIn,
+      Supplier<ItemRenderer> itemRendererIn,
+      Supplier<EntityRenderDispatcher> entityRendererIn
+   ) {
       this.f_234429_ = itemRendererIn;
       this.f_234430_ = entityRendererIn;
       this.f_112253_ = fontIn;
@@ -50,8 +57,8 @@ public class BlockEntityRenderDispatcher implements ResourceManagerReloadListene
    }
 
    @Nullable
-   public BlockEntityRenderer m_112265_(BlockEntity tileEntityIn) {
-      return (BlockEntityRenderer)this.f_112251_.get(tileEntityIn.m_58903_());
+   public <E extends BlockEntity> BlockEntityRenderer<E> m_112265_(E tileEntityIn) {
+      return (BlockEntityRenderer<E>)this.f_112251_.get(tileEntityIn.m_58903_());
    }
 
    public void m_173564_(Level worldIn, Camera cameraIn, HitResult hitResultIn) {
@@ -63,17 +70,19 @@ public class BlockEntityRenderDispatcher implements ResourceManagerReloadListene
       this.f_112250_ = hitResultIn;
    }
 
-   public void m_112267_(BlockEntity tileEntityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn) {
-      BlockEntityRenderer blockentityrenderer = this.m_112265_(tileEntityIn);
-      if (blockentityrenderer != null && tileEntityIn.m_58898_() && tileEntityIn.m_58903_().m_155262_(tileEntityIn.m_58900_()) && blockentityrenderer.m_142756_(tileEntityIn, this.f_112249_.m_90583_())) {
-         m_112278_(tileEntityIn, () -> {
-            m_112284_(blockentityrenderer, tileEntityIn, partialTicks, matrixStackIn, bufferIn);
-         });
+   public <E extends BlockEntity> void m_112267_(E tileEntityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn) {
+      BlockEntityRenderer<E> blockentityrenderer = this.m_112265_(tileEntityIn);
+      if (blockentityrenderer != null
+         && tileEntityIn.m_58898_()
+         && tileEntityIn.m_58903_().m_155262_(tileEntityIn.m_58900_())
+         && blockentityrenderer.m_142756_(tileEntityIn, this.f_112249_.m_90583_())) {
+         m_112278_(tileEntityIn, () -> m_112284_(blockentityrenderer, tileEntityIn, partialTicks, matrixStackIn, bufferIn));
       }
-
    }
 
-   private static void m_112284_(BlockEntityRenderer rendererIn, BlockEntity tileEntityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn) {
+   private static <T extends BlockEntity> void m_112284_(
+      BlockEntityRenderer<T> rendererIn, T tileEntityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn
+   ) {
       Level level = tileEntityIn.m_58904_();
       int i;
       if (level != null) {
@@ -103,8 +112,10 @@ public class BlockEntityRenderDispatcher implements ResourceManagerReloadListene
       tileEntityRendered = tileEntityRenderedPrev;
    }
 
-   public boolean m_112272_(BlockEntity tileEntityIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
-      BlockEntityRenderer blockentityrenderer = this.m_112265_(tileEntityIn);
+   public <E extends BlockEntity> boolean m_112272_(
+      E tileEntityIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn
+   ) {
+      BlockEntityRenderer<E> blockentityrenderer = this.m_112265_(tileEntityIn);
       if (blockentityrenderer == null) {
          return true;
       } else {
@@ -134,11 +145,17 @@ public class BlockEntityRenderDispatcher implements ResourceManagerReloadListene
       if (worldIn == null) {
          this.f_112249_ = null;
       }
-
    }
 
    public void m_6213_(ResourceManager resourceManager) {
-      BlockEntityRendererProvider.Context blockentityrendererprovider$context = new BlockEntityRendererProvider.Context(this, (BlockRenderDispatcher)this.f_173557_.get(), (ItemRenderer)this.f_234429_.get(), (EntityRenderDispatcher)this.f_234430_.get(), this.f_173556_, this.f_112253_);
+      Context blockentityrendererprovider$context = new Context(
+         this,
+         (BlockRenderDispatcher)this.f_173557_.get(),
+         (ItemRenderer)this.f_234429_.get(),
+         (EntityRenderDispatcher)this.f_234430_.get(),
+         this.f_173556_,
+         this.f_112253_
+      );
       this.context = blockentityrendererprovider$context;
       this.f_112251_ = BlockEntityRenderers.m_173598_(blockentityrendererprovider$context);
    }
@@ -147,11 +164,11 @@ public class BlockEntityRenderDispatcher implements ResourceManagerReloadListene
       return (BlockEntityRenderer)this.f_112251_.get(type);
    }
 
-   public BlockEntityRendererProvider.Context getContext() {
+   public Context getContext() {
       return this.context;
    }
 
-   public Map getBlockEntityRenderMap() {
+   public Map<BlockEntityType, BlockEntityRenderer> getBlockEntityRenderMap() {
       if (this.f_112251_ instanceof ImmutableMap) {
          this.f_112251_ = new HashMap(this.f_112251_);
       }
@@ -159,7 +176,9 @@ public class BlockEntityRenderDispatcher implements ResourceManagerReloadListene
       return this.f_112251_;
    }
 
-   public synchronized void setSpecialRendererInternal(BlockEntityType tileEntityType, BlockEntityRenderer specialRenderer) {
+   public synchronized <T extends BlockEntity> void setSpecialRendererInternal(
+      BlockEntityType<T> tileEntityType, BlockEntityRenderer<? super T> specialRenderer
+   ) {
       this.f_112251_.put(tileEntityType, specialRenderer);
    }
 }

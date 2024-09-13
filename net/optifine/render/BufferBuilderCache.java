@@ -2,8 +2,6 @@ package net.optifine.render;
 
 import java.util.BitSet;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.shaders.SVertexBuilder;
 import org.joml.Vector3f;
 
@@ -11,7 +9,7 @@ public class BufferBuilderCache {
    private TextureAtlasSprite[] quadSpritesPrev = null;
    private MultiTextureBuilder multiTextureBuilder = new MultiTextureBuilder();
    private SVertexBuilder sVertexBuilder = new SVertexBuilder();
-   private RenderEnv renderEnv = new RenderEnv((BlockState)null, (BlockPos)null);
+   private RenderEnv renderEnv = new RenderEnv(null, null);
    private BitSet animatedSpritesCached = new BitSet();
    protected Vector3f tempVec3f = new Vector3f();
    protected float[] tempFloat4 = new float[4];

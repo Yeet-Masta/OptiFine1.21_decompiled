@@ -9,11 +9,12 @@ public class ExpressionShaderOptionSwitch implements IExpressionBool {
       this.shaderOption = shaderOption;
    }
 
+   @Override
    public boolean eval() {
       return ShaderOptionSwitch.isTrue(this.shaderOption.getValue());
    }
 
    public String toString() {
-      return "" + String.valueOf(this.shaderOption);
+      return this.shaderOption + "";
    }
 }

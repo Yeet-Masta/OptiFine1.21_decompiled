@@ -12,18 +12,17 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class MathUtils {
-   // $FF: renamed from: PI float
-   public static final float field_40 = 3.1415927F;
-   public static final float PI2 = 6.2831855F;
-   public static final float PId2 = 1.5707964F;
-   private static final float[] ASIN_TABLE = new float[65536];
+   public static float PI;
+   public static float PI2;
+   public static float PId2;
+   private static float[] ASIN_TABLE = new float[65536];
 
    public static float asin(float value) {
-      return ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & '\uffff'];
+      return ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & 65535];
    }
 
    public static float acos(float value) {
-      return 1.5707964F - ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & '\uffff'];
+      return (float) (Math.PI / 2) - ASIN_TABLE[(int)((double)(value + 1.0F) * 32767.5) & 65535];
    }
 
    public static int getAverage(int[] vals) {
@@ -31,8 +30,7 @@ public class MathUtils {
          return 0;
       } else {
          int sum = getSum(vals);
-         int avg = sum / vals.length;
-         return avg;
+         return sum / vals.length;
       }
    }
 
@@ -42,7 +40,7 @@ public class MathUtils {
       } else {
          int sum = 0;
 
-         for(int i = 0; i < vals.length; ++i) {
+         for (int i = 0; i < vals.length; i++) {
             int val = vals[i];
             sum += val;
          }
@@ -61,11 +59,11 @@ public class MathUtils {
    }
 
    public static float toDeg(float angle) {
-      return angle * 180.0F / 3.1415927F;
+      return angle * 180.0F / (float) Math.PI;
    }
 
    public static float toRad(float angle) {
-      return angle / 180.0F * 3.1415927F;
+      return angle / 180.0F * (float) Math.PI;
    }
 
    public static float roundToFloat(double d) {
@@ -172,12 +170,12 @@ public class MathUtils {
    }
 
    public static void transform(Matrix4f mat4, Vector3f vec3, Vector3f dest) {
-      float x = vec3.x;
-      float y = vec3.y;
-      float z = vec3.z;
-      dest.x = mat4.m00() * x + mat4.m10() * y + mat4.m20() * z + mat4.m30();
-      dest.y = mat4.m01() * x + mat4.m11() * y + mat4.m21() * z + mat4.m31();
-      dest.z = mat4.m02() * x + mat4.m12() * y + mat4.m22() * z + mat4.m32();
+      float x = vec3.ROT_90_Z_POS;
+      float y = vec3.INVERSION;
+      float z = vec3.INVERT_X;
+      dest.ROT_90_Z_POS = mat4.m00() * x + mat4.m10() * y + mat4.m20() * z + mat4.m30();
+      dest.INVERSION = mat4.m01() * x + mat4.m11() * y + mat4.m21() * z + mat4.m31();
+      dest.INVERT_X = mat4.m02() * x + mat4.m12() * y + mat4.m22() * z + mat4.m32();
    }
 
    public static boolean isIdentity(Matrix4f mat4) {
@@ -192,7 +190,7 @@ public class MathUtils {
       return new Matrix4f(mat4);
    }
 
-   public static Quaternionf rotationDegrees(Vector3f vec, float angleDeg) {
+   public static Quaternionf m_252977_(Vector3f vec, float angleDeg) {
       float angle = toRad(angleDeg);
       AxisAngle4f axisAngle = new AxisAngle4f(angle, vec);
       return new Quaternionf(axisAngle);
@@ -245,7 +243,7 @@ public class MathUtils {
    }
 
    public static Vector3f makeVector3f(Vector4f vec4) {
-      return new Vector3f(vec4.x, vec4.y, vec4.z);
+      return new Vector3f(vec4.ROT_90_Z_POS, vec4.INVERSION, vec4.INVERT_X);
    }
 
    public static void transform(Vector3f vec3, Matrix3f mat3) {
@@ -321,19 +319,16 @@ public class MathUtils {
    }
 
    public static Matrix4f makeOrtho4f(float leftIn, float rightIn, float topIn, float bottomIn, float nearIn, float farIn) {
-      Matrix4f mat4 = (new Matrix4f()).ortho(leftIn, rightIn, bottomIn, topIn, nearIn, farIn);
-      return mat4;
+      return new Matrix4f().ortho(leftIn, rightIn, bottomIn, topIn, nearIn, farIn);
    }
 
    static {
-      int i;
-      for(i = 0; i < 65536; ++i) {
+      for (int i = 0; i < 65536; i++) {
          ASIN_TABLE[i] = (float)Math.asin((double)i / 32767.5 - 1.0);
       }
 
-      for(i = -1; i < 2; ++i) {
-         ASIN_TABLE[(int)(((double)i + 1.0) * 32767.5) & '\uffff'] = (float)Math.asin((double)i);
+      for (int i = -1; i < 2; i++) {
+         ASIN_TABLE[(int)(((double)i + 1.0) * 32767.5) & 65535] = (float)Math.asin((double)i);
       }
-
    }
 }

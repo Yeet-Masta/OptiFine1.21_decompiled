@@ -13,10 +13,12 @@ public class ModelAdapterPanda extends ModelAdapterQuadruped {
       super(EntityType.f_20507_, "panda", 0.9F);
    }
 
+   @Override
    public Model makeModel() {
       return new PandaModel(bakeModelLayer(ModelLayers.f_171202_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PandaRenderer render = new PandaRenderer(renderManager.getContext());

@@ -10,7 +10,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.logging.LogUtils;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -32,12 +31,14 @@ import oshi.hardware.CentralProcessor;
 
 @DontObfuscate
 public class GLX {
-   private static final Logger LOGGER = LogUtils.getLogger();
+   private static Logger LOGGER = LogUtils.getLogger();
    private static String cpuInfo;
 
    public static String getOpenGLVersionString() {
       RenderSystem.assertOnRenderThread();
-      return GLFW.glfwGetCurrentContext() == 0L ? "NO CONTEXT" : GlStateManager._getString(7937) + " GL version " + GlStateManager._getString(7938) + ", " + GlStateManager._getString(7936);
+      return GLFW.glfwGetCurrentContext() == 0L
+         ? "NO CONTEXT"
+         : GlStateManager._getString(7937) + " GL version " + GlStateManager._getString(7938) + ", " + GlStateManager._getString(7936);
    }
 
    public static int _getRefreshRate(Window windowIn) {
@@ -57,23 +58,19 @@ public class GLX {
 
    public static LongSupplier _initGlfw() {
       Window.m_85407_((codeIn, textIn) -> {
-         throw new IllegalStateException(String.format(Locale.ROOT, "GLFW error before init: [0x%X]%s", codeIn, textIn));
+         throw new IllegalStateException(String.m_12886_(Locale.ROOT, "GLFW error before init: [0x%X]%s", new Object[]{codeIn, textIn}));
       });
-      List list = Lists.newArrayList();
+      List<String> list = Lists.newArrayList();
       GLFWErrorCallback glfwerrorcallback = GLFW.glfwSetErrorCallback((codeIn, pointerIn) -> {
          String s1 = pointerIn == 0L ? "" : MemoryUtil.memUTF8(pointerIn);
-         list.add(String.format(Locale.ROOT, "GLFW error during init: [0x%X]%s", codeIn, s1));
+         list.add(String.m_12886_(Locale.ROOT, "GLFW error during init: [0x%X]%s", new Object[]{codeIn, s1}));
       });
       if (!GLFW.glfwInit()) {
          throw new IllegalStateException("Failed to initialize GLFW, errors: " + Joiner.on(",").join(list));
       } else {
-         LongSupplier longsupplier = () -> {
-            return (long)(GLFW.glfwGetTime() * 1.0E9);
-         };
-         Iterator var3 = list.iterator();
+         LongSupplier longsupplier = () -> (long)(GLFW.glfwGetTime() * 1.0E9);
 
-         while(var3.hasNext()) {
-            String s = (String)var3.next();
+         for (String s : list) {
             LOGGER.error("GLFW error collected during initialization: {}", s);
          }
 
@@ -87,7 +84,6 @@ public class GLX {
       if (glfwerrorcallback != null) {
          glfwerrorcallback.free();
       }
-
    }
 
    public static boolean _shouldClose(Window windowIn) {
@@ -99,8 +95,11 @@ public class GLX {
       GlStateManager.init(glcapabilities);
 
       try {
-         CentralProcessor centralprocessor = (new SystemInfo()).getHardware().getProcessor();
-         cpuInfo = String.format(Locale.ROOT, "%dx %s", centralprocessor.getLogicalProcessorCount(), centralprocessor.getProcessorIdentifier().getName()).replaceAll("\\s+", " ");
+         CentralProcessor centralprocessor = new SystemInfo().getHardware().getProcessor();
+         cpuInfo = String.m_12886_(
+               Locale.ROOT, "%dx %s", new Object[]{centralprocessor.getLogicalProcessorCount(), centralprocessor.getProcessorIdentifier().getName()}
+            )
+            .replaceAll("\\s+", " ");
       } catch (Throwable var4) {
       }
 
@@ -158,15 +157,14 @@ public class GLX {
          GlStateManager._enableCull();
          GlStateManager._depthMask(true);
       }
-
    }
 
-   public static Object make(Supplier supplierIn) {
-      return supplierIn.get();
+   public static <T> T make(Supplier<T> supplierIn) {
+      return (T)supplierIn.get();
    }
 
-   public static Object make(Object objIn, Consumer consumerIn) {
-      consumerIn.accept(objIn);
+   public static <T> T make(T objIn, Consumer<T> consumerIn) {
+      consumerIn.m_340568_(objIn);
       return objIn;
    }
 

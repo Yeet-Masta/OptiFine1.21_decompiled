@@ -8,20 +8,19 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.optifine.Config;
 
 public class HttpUtils {
    private static String playerItemsUrl = null;
-   public static final String SERVER_URL = "http://s.optifine.net";
-   public static final String POST_URL = "http://optifine.net";
+   public static String SERVER_URL;
+   public static String POST_URL;
 
    public static byte[] get(String urlStr) throws IOException {
       HttpURLConnection conn = null;
 
+      byte[] var10;
       try {
          URL url = new URL(urlStr);
          conn = (HttpURLConnection)url.openConnection(Minecraft.m_91087_().m_91096_());
@@ -34,52 +33,48 @@ public class HttpUtils {
             }
 
             throw new IOException("HTTP response: " + conn.getResponseCode());
-         } else {
-            InputStream in = conn.getInputStream();
-            byte[] bytes = new byte[conn.getContentLength()];
-            int pos = 0;
-
-            do {
-               int len = in.read(bytes, pos, bytes.length - pos);
-               if (len < 0) {
-                  throw new IOException("Input stream closed: " + urlStr);
-               }
-
-               pos += len;
-            } while(pos < bytes.length);
-
-            byte[] var10 = bytes;
-            return var10;
          }
+
+         InputStream in = conn.getInputStream();
+         byte[] bytes = new byte[conn.getContentLength()];
+         int pos = 0;
+
+         do {
+            int len = in.read(bytes, pos, bytes.length - pos);
+            if (len < 0) {
+               throw new IOException("Input stream closed: " + urlStr);
+            }
+
+            pos += len;
+         } while (pos < bytes.length);
+
+         var10 = bytes;
       } finally {
          if (conn != null) {
             conn.disconnect();
          }
-
       }
+
+      return var10;
    }
 
    public static String post(String urlStr, Map headers, byte[] content) throws IOException {
       HttpURLConnection conn = null;
 
+      String var11;
       try {
          URL url = new URL(urlStr);
          conn = (HttpURLConnection)url.openConnection(Minecraft.m_91087_().m_91096_());
          conn.setRequestMethod("POST");
          if (headers != null) {
-            Set keys = headers.keySet();
-            Iterator it = keys.iterator();
-
-            while(it.hasNext()) {
-               String key = (String)it.next();
-               Object var10000 = headers.get(key);
-               String val = "" + String.valueOf(var10000);
+            for (String key : headers.keySet()) {
+               String val = headers.get(key) + "";
                conn.setRequestProperty(key, val);
             }
          }
 
          conn.setRequestProperty("Content-Type", "text/plain");
-         conn.setRequestProperty("Content-Length", "" + content.length);
+         conn.setRequestProperty("Content-Length", content.length + "");
          conn.setRequestProperty("Content-Language", "en-US");
          conn.setUseCaches(false);
          conn.setDoInput(true);
@@ -94,20 +89,20 @@ public class HttpUtils {
          StringBuffer sb = new StringBuffer();
 
          String line;
-         while((line = br.readLine()) != null) {
+         while ((line = br.readLine()) != null) {
             sb.append(line);
             sb.append('\r');
          }
 
          br.close();
-         String var11 = sb.toString();
-         return var11;
+         var11 = sb.toString();
       } finally {
          if (conn != null) {
             conn.disconnect();
          }
-
       }
+
+      return var11;
    }
 
    public static synchronized String getPlayerItemsUrl() {
@@ -120,8 +115,7 @@ public class HttpUtils {
                playerItemsUrl = dirModels.toURI().toURL().toExternalForm();
             }
          } catch (Exception var3) {
-            String var10000 = var3.getClass().getName();
-            Config.warn(var10000 + ": " + var3.getMessage());
+            Config.warn(var3.getClass().getName() + ": " + var3.getMessage());
          }
 
          if (playerItemsUrl == null) {

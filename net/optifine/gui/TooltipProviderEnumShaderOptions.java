@@ -8,6 +8,7 @@ import net.optifine.shaders.gui.GuiButtonDownloadShaders;
 import net.optifine.shaders.gui.GuiButtonEnumShaderOption;
 
 public class TooltipProviderEnumShaderOptions implements TooltipProvider {
+   @Override
    public Rectangle getTooltipBounds(Screen guiScreen, int x, int y) {
       int x1 = guiScreen.f_96543_ - 450;
       int y1 = 35;
@@ -24,20 +25,20 @@ public class TooltipProviderEnumShaderOptions implements TooltipProvider {
       return new Rectangle(x1, y1, x2 - x1, y2 - y1);
    }
 
+   @Override
    public boolean isRenderBorder() {
       return true;
    }
 
+   @Override
    public String[] getTooltipLines(AbstractWidget btn, int width) {
       if (btn instanceof GuiButtonDownloadShaders) {
          return TooltipProviderOptions.getTooltipLines("of.options.shaders.DOWNLOAD");
-      } else if (!(btn instanceof GuiButtonEnumShaderOption)) {
+      } else if (!(btn instanceof GuiButtonEnumShaderOption gbeso)) {
          return null;
       } else {
-         GuiButtonEnumShaderOption gbeso = (GuiButtonEnumShaderOption)btn;
          EnumShaderOption option = gbeso.getEnumShaderOption();
-         String[] lines = this.getTooltipLines(option);
-         return lines;
+         return this.getTooltipLines(option);
       }
    }
 

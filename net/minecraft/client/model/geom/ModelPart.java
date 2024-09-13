@@ -6,9 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexMultiConsumer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +38,8 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-public final class ModelPart {
-   public static final float f_233552_ = 1.0F;
+public class ModelPart {
+   public static float f_233552_;
    public float f_104200_;
    public float f_104201_;
    public float f_104202_;
@@ -53,15 +51,14 @@ public final class ModelPart {
    public float f_233555_ = 1.0F;
    public boolean f_104207_ = true;
    public boolean f_233556_;
-   public final List f_104212_;
-   public final Map f_104213_;
+   public List<ModelPart.Cube> f_104212_;
+   public Map<String, ModelPart> f_104213_;
    private String name;
-   public List childModelsList;
-   public List spriteList = new ArrayList();
+   public List<ModelPart> childModelsList;
+   public List<ModelSprite> spriteList = new ArrayList();
    public boolean mirrorV = false;
    private ResourceLocation textureLocation = null;
-   // $FF: renamed from: id java.lang.String
-   private String field_49 = null;
+   private String f_11893_ = null;
    private ModelUpdater modelUpdater;
    private LevelRenderer renderGlobal = Config.getRenderGlobal();
    private boolean custom;
@@ -74,8 +71,8 @@ public final class ModelPart {
    public float textureOffsetX;
    public float textureOffsetY;
    public boolean mirror;
-   public static final Set ALL_VISIBLE = EnumSet.allOf(Direction.class);
-   private PartPose f_233557_;
+   public static Set<Direction> ALL_VISIBLE = EnumSet.allOf(Direction.class);
+   private PartPose f_233557_ = PartPose.f_171404_;
 
    public ModelPart setTextureOffset(float x, float y) {
       this.textureOffsetX = x;
@@ -89,22 +86,18 @@ public final class ModelPart {
       return this;
    }
 
-   public ModelPart(List cubeListIn, Map childModelsIn) {
-      this.f_233557_ = PartPose.f_171404_;
+   public ModelPart(List<ModelPart.Cube> cubeListIn, Map<String, ModelPart> childModelsIn) {
       if (cubeListIn instanceof ImmutableList) {
-         cubeListIn = new ArrayList((Collection)cubeListIn);
+         cubeListIn = new ArrayList(cubeListIn);
       }
 
-      this.f_104212_ = (List)cubeListIn;
+      this.f_104212_ = cubeListIn;
       this.f_104213_ = childModelsIn;
       this.childModelsList = new ArrayList(this.f_104213_.values());
-      Iterator var3 = this.childModelsList.iterator();
 
-      while(var3.hasNext()) {
-         ModelPart child = (ModelPart)var3.next();
+      for (ModelPart child : this.childModelsList) {
          child.setParent(this);
       }
-
    }
 
    public PartPose m_171308_() {
@@ -179,10 +172,10 @@ public final class ModelPart {
    }
 
    public void m_104306_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
-      this.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, true);
+      this.m_324219_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, true);
    }
 
-   public void render(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn, boolean updateModel) {
+   public void m_324219_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn, boolean updateModel) {
       if (this.f_104207_ && (!this.f_104212_.isEmpty() || !this.f_104213_.isEmpty() || !this.spriteList.isEmpty())) {
          RenderType lastRenderType = null;
          BufferBuilder lastBufferBuilder = null;
@@ -197,7 +190,7 @@ public final class ModelPart {
                VertexConsumer secondaryBuilder = bufferIn.getSecondaryBuilder();
                lastRenderType = renderTypeBuffer.getLastRenderType();
                lastBufferBuilder = renderTypeBuffer.getStartedBuffer(lastRenderType);
-               bufferIn = renderTypeBuffer.getBuffer(this.textureLocation, bufferIn);
+               bufferIn = renderTypeBuffer.m_6299_(this.textureLocation, bufferIn);
                if (secondaryBuilder != null) {
                   bufferIn = VertexMultiConsumer.m_86168_(secondaryBuilder, bufferIn);
                }
@@ -216,17 +209,16 @@ public final class ModelPart {
 
          int childModelsSize = this.childModelsList.size();
 
-         int spriteListSize;
-         for(spriteListSize = 0; spriteListSize < childModelsSize; ++spriteListSize) {
-            ModelPart modelpart = (ModelPart)this.childModelsList.get(spriteListSize);
-            modelpart.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, false);
+         for (int ix = 0; ix < childModelsSize; ix++) {
+            ModelPart modelpart = (ModelPart)this.childModelsList.get(ix);
+            modelpart.m_324219_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, false);
          }
 
-         spriteListSize = this.spriteList.size();
+         int spriteListSize = this.spriteList.size();
 
-         for(int ix = 0; ix < spriteListSize; ++ix) {
+         for (int ix = 0; ix < spriteListSize; ix++) {
             ModelSprite sprite = (ModelSprite)this.spriteList.get(ix);
-            sprite.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn);
+            sprite.m_324219_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn);
          }
 
          matrixStackIn.m_85849_();
@@ -234,50 +226,45 @@ public final class ModelPart {
             renderTypeBuffer.restoreRenderState(lastRenderType, lastBufferBuilder);
          }
       }
-
    }
 
-   public void m_171309_(PoseStack matrixStackIn, Visitor visitorIn) {
+   public void m_171309_(PoseStack matrixStackIn, ModelPart.Visitor visitorIn) {
       this.m_171312_(matrixStackIn, visitorIn, "");
    }
 
-   private void m_171312_(PoseStack matrixStackIn, Visitor visitorIn, String pathIn) {
+   private void m_171312_(PoseStack matrixStackIn, ModelPart.Visitor visitorIn, String pathIn) {
       if (!this.f_104212_.isEmpty() || !this.f_104213_.isEmpty()) {
          matrixStackIn.m_85836_();
          this.m_104299_(matrixStackIn);
          PoseStack.Pose posestack$pose = matrixStackIn.m_85850_();
 
-         for(int i = 0; i < this.f_104212_.size(); ++i) {
-            visitorIn.m_171341_(posestack$pose, pathIn, i, (Cube)this.f_104212_.get(i));
+         for (int i = 0; i < this.f_104212_.size(); i++) {
+            visitorIn.m_171341_(posestack$pose, pathIn, i, (ModelPart.Cube)this.f_104212_.get(i));
          }
 
          String s = pathIn + "/";
-         this.f_104213_.forEach((nameIn, partIn) -> {
-            partIn.m_171312_(matrixStackIn, visitorIn, s + nameIn);
-         });
+         this.f_104213_.forEach((nameIn, partIn) -> partIn.m_171312_(matrixStackIn, visitorIn, s + nameIn));
          matrixStackIn.m_85849_();
       }
-
    }
 
    public void m_104299_(PoseStack matrixStackIn) {
       matrixStackIn.m_252880_(this.f_104200_ / 16.0F, this.f_104201_ / 16.0F, this.f_104202_ / 16.0F);
       if (this.f_104203_ != 0.0F || this.f_104204_ != 0.0F || this.f_104205_ != 0.0F) {
-         matrixStackIn.m_252781_((new Quaternionf()).rotationZYX(this.f_104205_, this.f_104204_, this.f_104203_));
+         matrixStackIn.m_252781_(new Quaternionf().rotationZYX(this.f_104205_, this.f_104204_, this.f_104203_));
       }
 
       if (this.f_233553_ != 1.0F || this.f_233554_ != 1.0F || this.f_233555_ != 1.0F) {
          matrixStackIn.m_85841_(this.f_233553_, this.f_233554_, this.f_233555_);
       }
-
    }
 
    private void m_104290_(PoseStack.Pose matrixEntryIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
       boolean shadersVelocity = Config.isShaders() && Shaders.useVelocityAttrib && Config.isMinecraftThread();
       int cubeListSize = this.f_104212_.size();
 
-      for(int ic = 0; ic < cubeListSize; ++ic) {
-         Cube modelpart$cube = (Cube)this.f_104212_.get(ic);
+      for (int ic = 0; ic < cubeListSize; ic++) {
+         ModelPart.Cube modelpart$cube = (ModelPart.Cube)this.f_104212_.get(ic);
          VertexPosition[][] boxPos = null;
          if (shadersVelocity) {
             IRandomEntity entity = RandomEntities.getRandomEntityRendered();
@@ -286,13 +273,12 @@ public final class ModelPart {
             }
          }
 
-         modelpart$cube.compile(matrixEntryIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, boxPos);
+         modelpart$cube.m_289905_(matrixEntryIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, boxPos);
       }
-
    }
 
-   public Cube m_233558_(RandomSource randomIn) {
-      return (Cube)this.f_104212_.get(randomIn.m_188503_(this.f_104212_.size()));
+   public ModelPart.Cube m_233558_(RandomSource randomIn) {
+      return (ModelPart.Cube)this.f_104212_.get(randomIn.m_188503_(this.f_104212_.size()));
    }
 
    public boolean m_171326_() {
@@ -300,25 +286,25 @@ public final class ModelPart {
    }
 
    public void m_252854_(Vector3f posIn) {
-      this.f_104200_ += posIn.x();
-      this.f_104201_ += posIn.y();
-      this.f_104202_ += posIn.z();
+      this.f_104200_ = this.f_104200_ + posIn.m_305649_();
+      this.f_104201_ = this.f_104201_ + posIn.m_306225_();
+      this.f_104202_ = this.f_104202_ + posIn.m_240700_();
    }
 
    public void m_252899_(Vector3f rotIn) {
-      this.f_104203_ += rotIn.x();
-      this.f_104204_ += rotIn.y();
-      this.f_104205_ += rotIn.z();
+      this.f_104203_ = this.f_104203_ + rotIn.m_305649_();
+      this.f_104204_ = this.f_104204_ + rotIn.m_306225_();
+      this.f_104205_ = this.f_104205_ + rotIn.m_240700_();
    }
 
    public void m_253072_(Vector3f scaleIn) {
-      this.f_233553_ += scaleIn.x();
-      this.f_233554_ += scaleIn.y();
-      this.f_233555_ += scaleIn.z();
+      this.f_233553_ = this.f_233553_ + scaleIn.m_305649_();
+      this.f_233554_ = this.f_233554_ + scaleIn.m_306225_();
+      this.f_233555_ = this.f_233555_ + scaleIn.m_240700_();
    }
 
-   public Stream m_171331_() {
-      return Stream.concat(Stream.of(this), this.f_104213_.values().stream().flatMap(ModelPart::m_171331_));
+   public Stream<ModelPart> m_171331_() {
+      return Stream.concat(Stream.m_253057_(this), this.f_104213_.values().stream().flatMap(ModelPart::m_171331_));
    }
 
    public void addSprite(float posX, float posY, float posZ, int sizeX, int sizeY, int sizeZ, float sizeAdd) {
@@ -334,11 +320,11 @@ public final class ModelPart {
    }
 
    public String getId() {
-      return this.field_49;
+      return this.f_11893_;
    }
 
    public void setId(String id) {
-      this.field_49 = id;
+      this.f_11893_ = id;
    }
 
    public String getName() {
@@ -350,15 +336,34 @@ public final class ModelPart {
    }
 
    public void addBox(float[][] faceUvs, float x, float y, float z, float dx, float dy, float dz, float delta) {
-      this.f_104212_.add(new Cube(faceUvs, x, y, z, dx, dy, dz, delta, delta, delta, this.mirror, this.textureWidth, this.textureHeight));
+      this.f_104212_.add(new ModelPart.Cube(faceUvs, x, y, z, dx, dy, dz, delta, delta, delta, this.mirror, this.textureWidth, this.textureHeight));
    }
 
    public void addBox(float x, float y, float z, float width, float height, float depth, float delta) {
       this.addBox(this.textureOffsetX, this.textureOffsetY, x, y, z, width, height, depth, delta, delta, delta, this.mirror, false);
    }
 
-   private void addBox(float texOffX, float texOffY, float x, float y, float z, float width, float height, float depth, float deltaX, float deltaY, float deltaZ, boolean mirror, boolean dummyIn) {
-      this.f_104212_.add(new Cube(texOffX, texOffY, x, y, z, width, height, depth, deltaX, deltaY, deltaZ, mirror, this.textureWidth, this.textureHeight, ALL_VISIBLE));
+   private void addBox(
+      float texOffX,
+      float texOffY,
+      float x,
+      float y,
+      float z,
+      float width,
+      float height,
+      float depth,
+      float deltaX,
+      float deltaY,
+      float deltaZ,
+      boolean mirror,
+      boolean dummyIn
+   ) {
+      this.f_104212_
+         .add(
+            new ModelPart.Cube(
+               texOffX, texOffY, x, y, z, width, height, depth, deltaX, deltaY, deltaZ, mirror, this.textureWidth, this.textureHeight, ALL_VISIBLE
+            )
+         );
    }
 
    public ModelPart getChildModelDeep(String name) {
@@ -368,11 +373,7 @@ public final class ModelPart {
          return this.m_171324_(name);
       } else {
          if (this.f_104213_ != null) {
-            Set keys = this.f_104213_.keySet();
-            Iterator var3 = keys.iterator();
-
-            while(var3.hasNext()) {
-               String key = (String)var3.next();
+            for (String key : this.f_104213_.keySet()) {
                ModelPart child = (ModelPart)this.f_104213_.get(key);
                ModelPart mr = child.getChildModelDeep(name);
                if (mr != null) {
@@ -390,11 +391,7 @@ public final class ModelPart {
          return null;
       } else {
          if (this.f_104213_ != null) {
-            Set keys = this.f_104213_.keySet();
-            Iterator var3 = keys.iterator();
-
-            while(var3.hasNext()) {
-               String key = (String)var3.next();
+            for (String key : this.f_104213_.keySet()) {
                ModelPart child = (ModelPart)this.f_104213_.get(key);
                if (id.equals(child.getId())) {
                   return child;
@@ -415,11 +412,7 @@ public final class ModelPart {
             return mrChild;
          } else {
             if (this.f_104213_ != null) {
-               Set keys = this.f_104213_.keySet();
-               Iterator var4 = keys.iterator();
-
-               while(var4.hasNext()) {
-                  String key = (String)var4.next();
+               for (String key : this.f_104213_.keySet()) {
                   ModelPart child = (ModelPart)this.f_104213_.get(key);
                   ModelPart mr = child.getChildDeep(id);
                   if (mr != null) {
@@ -449,14 +442,13 @@ public final class ModelPart {
          if (part.getName() == null) {
             part.setName(name);
          }
-
       }
    }
 
    public String getUniqueChildModelName(String name) {
       String baseName = name;
 
-      for(int counter = 2; this.f_104213_.containsKey(name); ++counter) {
+      for (int counter = 2; this.f_104213_.containsKey(name); counter++) {
          name = baseName + "-" + counter;
       }
 
@@ -465,15 +457,14 @@ public final class ModelPart {
 
    private void updateModel() {
       if (this.modelUpdater != null) {
-         this.modelUpdater.update();
+         this.modelUpdater.m_252999_();
       } else {
          int childModelsSize = this.childModelsList.size();
 
-         for(int ix = 0; ix < childModelsSize; ++ix) {
+         for (int ix = 0; ix < childModelsSize; ix++) {
             ModelPart modelpart = (ModelPart)this.childModelsList.get(ix);
             modelpart.updateModel();
          }
-
       }
    }
 
@@ -528,16 +519,13 @@ public final class ModelPart {
       return this.attachmentPaths == null ? null : this.attachmentPaths.getVisiblePath(typeIn);
    }
 
-   private void collectAttachmentPaths(List parents, AttachmentPaths paths) {
+   private void collectAttachmentPaths(List<ModelPart> parents, AttachmentPaths paths) {
       parents.add(this);
       if (this.attachments != null) {
          paths.addPaths(parents, this.attachments);
       }
 
-      Iterator var3 = this.childModelsList.iterator();
-
-      while(var3.hasNext()) {
-         ModelPart mp = (ModelPart)var3.next();
+      for (ModelPart mp : this.childModelsList) {
          mp.collectAttachmentPaths(parents, paths);
       }
 
@@ -545,38 +533,73 @@ public final class ModelPart {
    }
 
    public String toString() {
-      String var10000 = this.name;
-      return "name: " + var10000 + ", id: " + this.field_49 + ", boxes: " + (this.f_104212_ != null ? this.f_104212_.size() : null) + ", submodels: " + (this.f_104213_ != null ? this.f_104213_.size() : null) + ", custom: " + this.custom;
-   }
-
-   @FunctionalInterface
-   public interface Visitor {
-      void m_171341_(PoseStack.Pose var1, String var2, int var3, Cube var4);
+      return "name: "
+         + this.name
+         + ", id: "
+         + this.f_11893_
+         + ", boxes: "
+         + (this.f_104212_ != null ? this.f_104212_.size() : null)
+         + ", submodels: "
+         + (this.f_104213_ != null ? this.f_104213_.size() : null)
+         + ", custom: "
+         + this.custom;
    }
 
    public static class Cube {
-      private final Polygon[] f_104341_;
-      public final float f_104335_;
-      public final float f_104336_;
-      public final float f_104337_;
-      public final float f_104338_;
-      public final float f_104339_;
-      public final float f_104340_;
+      private ModelPart.Polygon[] f_104341_;
+      public float f_104335_;
+      public float f_104336_;
+      public float f_104337_;
+      public float f_104338_;
+      public float f_104339_;
+      public float f_104340_;
       private BoxVertexPositions boxVertexPositions;
       private RenderPositions[] renderPositions;
 
-      public Cube(int texOffX, int texOffY, float x, float y, float z, float width, float height, float depth, float deltaX, float deltaY, float deltaZ, boolean mirror, float texWidth, float texHeight, Set directionsIn) {
+      public Cube(
+         int texOffX,
+         int texOffY,
+         float x,
+         float y,
+         float z,
+         float width,
+         float height,
+         float depth,
+         float deltaX,
+         float deltaY,
+         float deltaZ,
+         boolean mirror,
+         float texWidth,
+         float texHeight,
+         Set<Direction> directionsIn
+      ) {
          this((float)texOffX, (float)texOffY, x, y, z, width, height, depth, deltaX, deltaY, deltaZ, mirror, texWidth, texHeight, directionsIn);
       }
 
-      public Cube(float texOffX, float texOffY, float x, float y, float z, float width, float height, float depth, float deltaX, float deltaY, float deltaZ, boolean mirror, float texWidth, float texHeight, Set directionsIn) {
+      public Cube(
+         float texOffX,
+         float texOffY,
+         float x,
+         float y,
+         float z,
+         float width,
+         float height,
+         float depth,
+         float deltaX,
+         float deltaY,
+         float deltaZ,
+         boolean mirror,
+         float texWidth,
+         float texHeight,
+         Set<Direction> directionsIn
+      ) {
          this.f_104335_ = x;
          this.f_104336_ = y;
          this.f_104337_ = z;
          this.f_104338_ = x + width;
          this.f_104339_ = y + height;
          this.f_104340_ = z + depth;
-         this.f_104341_ = new Polygon[directionsIn.size()];
+         this.f_104341_ = new ModelPart.Polygon[directionsIn.size()];
          float f = x + width;
          float f1 = y + height;
          float f2 = z + depth;
@@ -592,14 +615,14 @@ public final class ModelPart {
             x = f3;
          }
 
-         Vertex modelpart$vertex7 = new Vertex(x, y, z, 0.0F, 0.0F);
-         Vertex modelpart$vertex = new Vertex(f, y, z, 0.0F, 8.0F);
-         Vertex modelpart$vertex1 = new Vertex(f, f1, z, 8.0F, 8.0F);
-         Vertex modelpart$vertex2 = new Vertex(x, f1, z, 8.0F, 0.0F);
-         Vertex modelpart$vertex3 = new Vertex(x, y, f2, 0.0F, 0.0F);
-         Vertex modelpart$vertex4 = new Vertex(f, y, f2, 0.0F, 8.0F);
-         Vertex modelpart$vertex5 = new Vertex(f, f1, f2, 8.0F, 8.0F);
-         Vertex modelpart$vertex6 = new Vertex(x, f1, f2, 8.0F, 0.0F);
+         ModelPart.Vertex modelpart$vertex7 = new ModelPart.Vertex(x, y, z, 0.0F, 0.0F);
+         ModelPart.Vertex modelpart$vertex = new ModelPart.Vertex(f, y, z, 0.0F, 8.0F);
+         ModelPart.Vertex modelpart$vertex1 = new ModelPart.Vertex(f, f1, z, 8.0F, 8.0F);
+         ModelPart.Vertex modelpart$vertex2 = new ModelPart.Vertex(x, f1, z, 8.0F, 0.0F);
+         ModelPart.Vertex modelpart$vertex3 = new ModelPart.Vertex(x, y, f2, 0.0F, 0.0F);
+         ModelPart.Vertex modelpart$vertex4 = new ModelPart.Vertex(f, y, f2, 0.0F, 8.0F);
+         ModelPart.Vertex modelpart$vertex5 = new ModelPart.Vertex(f, f1, f2, 8.0F, 8.0F);
+         ModelPart.Vertex modelpart$vertex6 = new ModelPart.Vertex(x, f1, f2, 8.0F, 0.0F);
          float f5 = texOffX + depth;
          float f6 = texOffX + depth + width;
          float f7 = texOffX + depth + width + width;
@@ -608,41 +631,115 @@ public final class ModelPart {
          float f11 = texOffY + depth;
          float f12 = texOffY + depth + height;
          int i = 0;
-         if (directionsIn.contains(Direction.DOWN)) {
-            this.f_104341_[i++] = new Polygon(new Vertex[]{modelpart$vertex4, modelpart$vertex3, modelpart$vertex7, modelpart$vertex}, f5, texOffY, f6, f11, texWidth, texHeight, mirror, Direction.DOWN);
+         if (directionsIn.m_274455_(Direction.DOWN)) {
+            this.f_104341_[i++] = new ModelPart.Polygon(
+               new ModelPart.Vertex[]{modelpart$vertex4, modelpart$vertex3, modelpart$vertex7, modelpart$vertex},
+               f5,
+               texOffY,
+               f6,
+               f11,
+               texWidth,
+               texHeight,
+               mirror,
+               Direction.DOWN
+            );
          }
 
-         if (directionsIn.contains(Direction.field_61)) {
-            this.f_104341_[i++] = new Polygon(new Vertex[]{modelpart$vertex1, modelpart$vertex2, modelpart$vertex6, modelpart$vertex5}, f6, f11, f7, texOffY, texWidth, texHeight, mirror, Direction.field_61);
+         if (directionsIn.m_274455_(Direction.UP)) {
+            this.f_104341_[i++] = new ModelPart.Polygon(
+               new ModelPart.Vertex[]{modelpart$vertex1, modelpart$vertex2, modelpart$vertex6, modelpart$vertex5},
+               f6,
+               f11,
+               f7,
+               texOffY,
+               texWidth,
+               texHeight,
+               mirror,
+               Direction.UP
+            );
          }
 
-         if (directionsIn.contains(Direction.WEST)) {
-            this.f_104341_[i++] = new Polygon(new Vertex[]{modelpart$vertex7, modelpart$vertex3, modelpart$vertex6, modelpart$vertex2}, texOffX, f11, f5, f12, texWidth, texHeight, mirror, Direction.WEST);
+         if (directionsIn.m_274455_(Direction.WEST)) {
+            this.f_104341_[i++] = new ModelPart.Polygon(
+               new ModelPart.Vertex[]{modelpart$vertex7, modelpart$vertex3, modelpart$vertex6, modelpart$vertex2},
+               texOffX,
+               f11,
+               f5,
+               f12,
+               texWidth,
+               texHeight,
+               mirror,
+               Direction.WEST
+            );
          }
 
-         if (directionsIn.contains(Direction.NORTH)) {
-            this.f_104341_[i++] = new Polygon(new Vertex[]{modelpart$vertex, modelpart$vertex7, modelpart$vertex2, modelpart$vertex1}, f5, f11, f6, f12, texWidth, texHeight, mirror, Direction.NORTH);
+         if (directionsIn.m_274455_(Direction.NORTH)) {
+            this.f_104341_[i++] = new ModelPart.Polygon(
+               new ModelPart.Vertex[]{modelpart$vertex, modelpart$vertex7, modelpart$vertex2, modelpart$vertex1},
+               f5,
+               f11,
+               f6,
+               f12,
+               texWidth,
+               texHeight,
+               mirror,
+               Direction.NORTH
+            );
          }
 
-         if (directionsIn.contains(Direction.EAST)) {
-            this.f_104341_[i++] = new Polygon(new Vertex[]{modelpart$vertex4, modelpart$vertex, modelpart$vertex1, modelpart$vertex5}, f6, f11, f8, f12, texWidth, texHeight, mirror, Direction.EAST);
+         if (directionsIn.m_274455_(Direction.EAST)) {
+            this.f_104341_[i++] = new ModelPart.Polygon(
+               new ModelPart.Vertex[]{modelpart$vertex4, modelpart$vertex, modelpart$vertex1, modelpart$vertex5},
+               f6,
+               f11,
+               f8,
+               f12,
+               texWidth,
+               texHeight,
+               mirror,
+               Direction.EAST
+            );
          }
 
-         if (directionsIn.contains(Direction.SOUTH)) {
-            this.f_104341_[i] = new Polygon(new Vertex[]{modelpart$vertex3, modelpart$vertex4, modelpart$vertex5, modelpart$vertex6}, f8, f11, f9, f12, texWidth, texHeight, mirror, Direction.SOUTH);
+         if (directionsIn.m_274455_(Direction.SOUTH)) {
+            this.f_104341_[i] = new ModelPart.Polygon(
+               new ModelPart.Vertex[]{modelpart$vertex3, modelpart$vertex4, modelpart$vertex5, modelpart$vertex6},
+               f8,
+               f11,
+               f9,
+               f12,
+               texWidth,
+               texHeight,
+               mirror,
+               Direction.SOUTH
+            );
          }
 
          this.renderPositions = collectRenderPositions(this.f_104341_);
       }
 
-      public Cube(float[][] faceUvs, float x, float y, float z, float width, float height, float depth, float deltaX, float deltaY, float deltaZ, boolean mirorIn, float texWidth, float texHeight) {
+      public Cube(
+         float[][] faceUvs,
+         float x,
+         float y,
+         float z,
+         float width,
+         float height,
+         float depth,
+         float deltaX,
+         float deltaY,
+         float deltaZ,
+         boolean mirorIn,
+         float texWidth,
+         float texHeight
+      ) {
          this.f_104335_ = x;
          this.f_104336_ = y;
          this.f_104337_ = z;
          this.f_104338_ = x + width;
          this.f_104339_ = y + height;
          this.f_104340_ = z + depth;
-         this.f_104341_ = new Polygon[6];
+         this.f_104341_ = new ModelPart.Polygon[6];
          float f = x + width;
          float f1 = y + height;
          float f2 = z + depth;
@@ -658,31 +755,41 @@ public final class ModelPart {
             x = f3;
          }
 
-         Vertex pos0 = new Vertex(x, y, z, 0.0F, 0.0F);
-         Vertex pos1 = new Vertex(f, y, z, 0.0F, 8.0F);
-         Vertex pos2 = new Vertex(f, f1, z, 8.0F, 8.0F);
-         Vertex pos3 = new Vertex(x, f1, z, 8.0F, 0.0F);
-         Vertex pos4 = new Vertex(x, y, f2, 0.0F, 0.0F);
-         Vertex pos5 = new Vertex(f, y, f2, 0.0F, 8.0F);
-         Vertex pos6 = new Vertex(f, f1, f2, 8.0F, 8.0F);
-         Vertex pos7 = new Vertex(x, f1, f2, 8.0F, 0.0F);
-         this.f_104341_[2] = this.makeTexturedQuad(new Vertex[]{pos5, pos4, pos0, pos1}, faceUvs[1], true, texWidth, texHeight, mirorIn, Direction.DOWN);
-         this.f_104341_[3] = this.makeTexturedQuad(new Vertex[]{pos2, pos3, pos7, pos6}, faceUvs[0], true, texWidth, texHeight, mirorIn, Direction.field_61);
-         this.f_104341_[1] = this.makeTexturedQuad(new Vertex[]{pos0, pos4, pos7, pos3}, faceUvs[5], false, texWidth, texHeight, mirorIn, Direction.WEST);
-         this.f_104341_[4] = this.makeTexturedQuad(new Vertex[]{pos1, pos0, pos3, pos2}, faceUvs[2], false, texWidth, texHeight, mirorIn, Direction.NORTH);
-         this.f_104341_[0] = this.makeTexturedQuad(new Vertex[]{pos5, pos1, pos2, pos6}, faceUvs[4], false, texWidth, texHeight, mirorIn, Direction.EAST);
-         this.f_104341_[5] = this.makeTexturedQuad(new Vertex[]{pos4, pos5, pos6, pos7}, faceUvs[3], false, texWidth, texHeight, mirorIn, Direction.SOUTH);
+         ModelPart.Vertex pos0 = new ModelPart.Vertex(x, y, z, 0.0F, 0.0F);
+         ModelPart.Vertex pos1 = new ModelPart.Vertex(f, y, z, 0.0F, 8.0F);
+         ModelPart.Vertex pos2 = new ModelPart.Vertex(f, f1, z, 8.0F, 8.0F);
+         ModelPart.Vertex pos3 = new ModelPart.Vertex(x, f1, z, 8.0F, 0.0F);
+         ModelPart.Vertex pos4 = new ModelPart.Vertex(x, y, f2, 0.0F, 0.0F);
+         ModelPart.Vertex pos5 = new ModelPart.Vertex(f, y, f2, 0.0F, 8.0F);
+         ModelPart.Vertex pos6 = new ModelPart.Vertex(f, f1, f2, 8.0F, 8.0F);
+         ModelPart.Vertex pos7 = new ModelPart.Vertex(x, f1, f2, 8.0F, 0.0F);
+         this.f_104341_[2] = this.makeTexturedQuad(
+            new ModelPart.Vertex[]{pos5, pos4, pos0, pos1}, faceUvs[1], true, texWidth, texHeight, mirorIn, Direction.DOWN
+         );
+         this.f_104341_[3] = this.makeTexturedQuad(new ModelPart.Vertex[]{pos2, pos3, pos7, pos6}, faceUvs[0], true, texWidth, texHeight, mirorIn, Direction.UP);
+         this.f_104341_[1] = this.makeTexturedQuad(
+            new ModelPart.Vertex[]{pos0, pos4, pos7, pos3}, faceUvs[5], false, texWidth, texHeight, mirorIn, Direction.WEST
+         );
+         this.f_104341_[4] = this.makeTexturedQuad(
+            new ModelPart.Vertex[]{pos1, pos0, pos3, pos2}, faceUvs[2], false, texWidth, texHeight, mirorIn, Direction.NORTH
+         );
+         this.f_104341_[0] = this.makeTexturedQuad(
+            new ModelPart.Vertex[]{pos5, pos1, pos2, pos6}, faceUvs[4], false, texWidth, texHeight, mirorIn, Direction.EAST
+         );
+         this.f_104341_[5] = this.makeTexturedQuad(
+            new ModelPart.Vertex[]{pos4, pos5, pos6, pos7}, faceUvs[3], false, texWidth, texHeight, mirorIn, Direction.SOUTH
+         );
          this.renderPositions = collectRenderPositions(this.f_104341_);
       }
 
-      private static RenderPositions[] collectRenderPositions(Polygon[] quads) {
-         Map map = new LinkedHashMap();
+      private static RenderPositions[] collectRenderPositions(ModelPart.Polygon[] quads) {
+         Map<Vector3f, RenderPositions> map = new LinkedHashMap();
 
-         for(int q = 0; q < quads.length; ++q) {
-            Polygon quad = quads[q];
+         for (int q = 0; q < quads.length; q++) {
+            ModelPart.Polygon quad = quads[q];
             if (quad != null) {
-               for(int v = 0; v < quad.f_104359_.length; ++v) {
-                  Vertex vert = quad.f_104359_[v];
+               for (int v = 0; v < quad.f_104359_.length; v++) {
+                  ModelPart.Vertex vert = quad.f_104359_[v];
                   RenderPositions rp = (RenderPositions)map.get(vert.f_104371_);
                   if (rp == null) {
                      rp = new RenderPositions(vert.f_104371_);
@@ -694,15 +801,28 @@ public final class ModelPart {
             }
          }
 
-         RenderPositions[] rps = (RenderPositions[])map.values().toArray(new RenderPositions[map.size()]);
-         return rps;
+         return (RenderPositions[])map.values().toArray(new RenderPositions[map.size()]);
       }
 
-      private Polygon makeTexturedQuad(Vertex[] positionTextureVertexs, float[] faceUvs, boolean reverseUV, float textureWidth, float textureHeight, boolean mirrorIn, Direction directionIn) {
+      private ModelPart.Polygon makeTexturedQuad(
+         ModelPart.Vertex[] positionTextureVertexs,
+         float[] faceUvs,
+         boolean reverseUV,
+         float textureWidth,
+         float textureHeight,
+         boolean mirrorIn,
+         Direction directionIn
+      ) {
          if (faceUvs == null) {
             return null;
          } else {
-            return reverseUV ? new Polygon(positionTextureVertexs, faceUvs[2], faceUvs[3], faceUvs[0], faceUvs[1], textureWidth, textureHeight, mirrorIn, directionIn) : new Polygon(positionTextureVertexs, faceUvs[0], faceUvs[1], faceUvs[2], faceUvs[3], textureWidth, textureHeight, mirrorIn, directionIn);
+            return reverseUV
+               ? new ModelPart.Polygon(
+                  positionTextureVertexs, faceUvs[2], faceUvs[3], faceUvs[0], faceUvs[1], textureWidth, textureHeight, mirrorIn, directionIn
+               )
+               : new ModelPart.Polygon(
+                  positionTextureVertexs, faceUvs[0], faceUvs[1], faceUvs[2], faceUvs[3], textureWidth, textureHeight, mirrorIn, directionIn
+               );
          }
       }
 
@@ -711,95 +831,88 @@ public final class ModelPart {
             this.boxVertexPositions = new BoxVertexPositions();
          }
 
-         return (VertexPosition[][])this.boxVertexPositions.get(key);
+         return this.boxVertexPositions.get(key);
       }
 
       public void m_171332_(PoseStack.Pose matrixEntryIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
-         this.compile(matrixEntryIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, (VertexPosition[][])null);
+         this.m_289905_(matrixEntryIn, bufferIn, packedLightIn, packedOverlayIn, colorIn, null);
       }
 
-      public void compile(PoseStack.Pose matrixEntryIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn, VertexPosition[][] boxPos) {
+      public void m_289905_(
+         PoseStack.Pose matrixEntryIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn, VertexPosition[][] boxPos
+      ) {
          Matrix4f matrix4f = matrixEntryIn.m_252922_();
          Vector3f vector3f = bufferIn.getTempVec3f();
-         RenderPositions[] var9 = this.renderPositions;
-         int quadsSize = var9.length;
 
-         int iq;
-         for(iq = 0; iq < quadsSize; ++iq) {
-            RenderPositions rp = var9[iq];
+         for (RenderPositions rp : this.renderPositions) {
             MathUtils.transform(matrix4f, rp.getPositionDiv16(), rp.getPositionRender());
          }
 
          boolean fastRender = bufferIn.canAddVertexFast();
-         quadsSize = this.f_104341_.length;
+         int quadsSize = this.f_104341_.length;
 
-         for(iq = 0; iq < quadsSize; ++iq) {
-            Polygon modelpart$polygon = this.f_104341_[iq];
+         for (int iq = 0; iq < quadsSize; iq++) {
+            ModelPart.Polygon modelpart$polygon = this.f_104341_[iq];
             if (modelpart$polygon != null) {
                if (boxPos != null) {
                   bufferIn.setQuadVertexPositions(boxPos[iq]);
                }
 
                Vector3f vector3f1 = matrixEntryIn.m_322076_(modelpart$polygon.f_104360_, vector3f);
-               float f = vector3f1.x();
-               float f1 = vector3f1.y();
-               float f2 = vector3f1.z();
+               float f = vector3f1.m_305649_();
+               float f1 = vector3f1.m_306225_();
+               float f2 = vector3f1.m_240700_();
                if (fastRender) {
                   int color = colorIn;
                   byte nx = BufferBuilder.m_338914_(f);
                   byte ny = BufferBuilder.m_338914_(f1);
                   byte nz = BufferBuilder.m_338914_(f2);
                   int normals = (nz & 255) << 16 | (ny & 255) << 8 | nx & 255;
-                  Vertex[] var22 = modelpart$polygon.f_104359_;
-                  int var23 = var22.length;
 
-                  for(int var24 = 0; var24 < var23; ++var24) {
-                     Vertex modelpart$vertex = var22[var24];
+                  for (ModelPart.Vertex modelpart$vertex : modelpart$polygon.f_104359_) {
                      Vector3f posRender = modelpart$vertex.renderPositions.getPositionRender();
-                     bufferIn.addVertexFast(posRender.x, posRender.y, posRender.z, color, modelpart$vertex.f_104372_, modelpart$vertex.f_104373_, packedOverlayIn, packedLightIn, normals);
+                     bufferIn.addVertexFast(
+                        posRender.ROT_90_Z_POS,
+                        posRender.INVERSION,
+                        posRender.INVERT_X,
+                        color,
+                        modelpart$vertex.f_104372_,
+                        modelpart$vertex.f_104373_,
+                        packedOverlayIn,
+                        packedLightIn,
+                        normals
+                     );
                   }
                } else {
-                  Vertex[] var17 = modelpart$polygon.f_104359_;
-                  int var18 = var17.length;
-
-                  for(int var19 = 0; var19 < var18; ++var19) {
-                     Vertex modelpart$vertex = var17[var19];
+                  for (ModelPart.Vertex modelpart$vertex : modelpart$polygon.f_104359_) {
                      Vector3f posRender = modelpart$vertex.renderPositions.getPositionRender();
-                     bufferIn.m_338367_(posRender.x, posRender.y, posRender.z, colorIn, modelpart$vertex.f_104372_, modelpart$vertex.f_104373_, packedOverlayIn, packedLightIn, f, f1, f2);
+                     bufferIn.m_338367_(
+                        posRender.ROT_90_Z_POS,
+                        posRender.INVERSION,
+                        posRender.INVERT_X,
+                        colorIn,
+                        modelpart$vertex.f_104372_,
+                        modelpart$vertex.f_104373_,
+                        packedOverlayIn,
+                        packedLightIn,
+                        f,
+                        f1,
+                        f2
+                     );
                   }
                }
             }
          }
-
-      }
-   }
-
-   static class Vertex {
-      public final Vector3f f_104371_;
-      public final float f_104372_;
-      public final float f_104373_;
-      public RenderPositions renderPositions;
-
-      public Vertex(float x, float y, float z, float texU, float texV) {
-         this(new Vector3f(x, y, z), texU, texV);
-      }
-
-      public Vertex m_104384_(float texU, float texV) {
-         return new Vertex(this.f_104371_, texU, texV);
-      }
-
-      public Vertex(Vector3f p_i253082_1_, float p_i253082_2_, float p_i253082_3_) {
-         this.f_104371_ = p_i253082_1_;
-         this.f_104372_ = p_i253082_2_;
-         this.f_104373_ = p_i253082_3_;
       }
    }
 
    static class Polygon {
-      public final Vertex[] f_104359_;
-      public final Vector3f f_104360_;
+      public ModelPart.Vertex[] f_104359_;
+      public Vector3f f_104360_;
 
-      public Polygon(Vertex[] positionsIn, float u1, float v1, float u2, float v2, float texWidth, float texHeight, boolean mirrorIn, Direction directionIn) {
+      public Polygon(
+         ModelPart.Vertex[] positionsIn, float u1, float v1, float u2, float v2, float texWidth, float texHeight, boolean mirrorIn, Direction directionIn
+      ) {
          this.f_104359_ = positionsIn;
          float f = 0.0F / texWidth;
          float f1 = 0.0F / texHeight;
@@ -822,8 +935,8 @@ public final class ModelPart {
          if (mirrorIn) {
             int i = positionsIn.length;
 
-            for(int j = 0; j < i / 2; ++j) {
-               Vertex modelpart$vertex = positionsIn[j];
+            for (int j = 0; j < i / 2; j++) {
+               ModelPart.Vertex modelpart$vertex = positionsIn[j];
                positionsIn[j] = positionsIn[i - 1 - j];
                positionsIn[i - 1 - j] = modelpart$vertex;
             }
@@ -833,7 +946,32 @@ public final class ModelPart {
          if (mirrorIn) {
             this.f_104360_.mul(-1.0F, 1.0F, 1.0F);
          }
-
       }
+   }
+
+   static class Vertex {
+      public Vector3f f_104371_;
+      public float f_104372_;
+      public float f_104373_;
+      public RenderPositions renderPositions;
+
+      public Vertex(float x, float y, float z, float texU, float texV) {
+         this(new Vector3f(x, y, z), texU, texV);
+      }
+
+      public ModelPart.Vertex m_104384_(float texU, float texV) {
+         return new ModelPart.Vertex(this.f_104371_, texU, texV);
+      }
+
+      public Vertex(Vector3f p_i253082_1_, float p_i253082_2_, float p_i253082_3_) {
+         this.f_104371_ = p_i253082_1_;
+         this.f_104372_ = p_i253082_2_;
+         this.f_104373_ = p_i253082_3_;
+      }
+   }
+
+   @FunctionalInterface
+   public interface Visitor {
+      void m_171341_(PoseStack.Pose var1, String var2, int var3, ModelPart.Cube var4);
    }
 }

@@ -13,7 +13,7 @@ import net.optifine.Config;
 import net.optifine.Lang;
 
 public class GuiScreenCapeOF extends GuiScreenOF {
-   private final Screen parentScreen;
+   private Screen parentScreen;
    private String message;
    private long messageHideTimeMs;
    private String linkUrl;
@@ -27,25 +27,35 @@ public class GuiScreenCapeOF extends GuiScreenOF {
    protected void m_7856_() {
       int i = 0;
       i += 2;
-      this.m_142416_(new GuiButtonOF(210, this.f_96543_ / 2 - 155, this.f_96544_ / 6 + 24 * (i >> 1), 150, 20, I18n.m_118938_("of.options.capeOF.openEditor", new Object[0])));
-      this.m_142416_(new GuiButtonOF(220, this.f_96543_ / 2 - 155 + 160, this.f_96544_ / 6 + 24 * (i >> 1), 150, 20, I18n.m_118938_("of.options.capeOF.reloadCape", new Object[0])));
+      this.m_142416_(
+         new GuiButtonOF(
+            210, this.f_96543_ / 2 - 155, this.f_96544_ / 6 + 24 * (i >> 1), 150, 20, I18n.m_118938_("of.options.capeOF.openEditor", new Object[0])
+         )
+      );
+      this.m_142416_(
+         new GuiButtonOF(
+            220, this.f_96543_ / 2 - 155 + 160, this.f_96544_ / 6 + 24 * (i >> 1), 150, 20, I18n.m_118938_("of.options.capeOF.reloadCape", new Object[0])
+         )
+      );
       i += 6;
-      this.buttonCopyLink = new GuiButtonOF(230, this.f_96543_ / 2 - 100, this.f_96544_ / 6 + 24 * (i >> 1), 200, 20, I18n.m_118938_("of.options.capeOF.copyEditorLink", new Object[0]));
+      this.buttonCopyLink = new GuiButtonOF(
+         230, this.f_96543_ / 2 - 100, this.f_96544_ / 6 + 24 * (i >> 1), 200, 20, I18n.m_118938_("of.options.capeOF.copyEditorLink", new Object[0])
+      );
       this.buttonCopyLink.f_93624_ = this.linkUrl != null;
       this.m_142416_(this.buttonCopyLink);
       i += 4;
       this.m_142416_(new GuiButtonOF(200, this.f_96543_ / 2 - 100, this.f_96544_ / 6 + 24 * (i >> 1), I18n.m_118938_("gui.done", new Object[0])));
    }
 
+   @Override
    protected void actionPerformed(AbstractWidget guiElement) {
       if (guiElement instanceof GuiButtonOF button) {
          if (button.f_93623_) {
-            if (button.field_45 == 200) {
+            if (button.f_11893_ == 200) {
                this.f_96541_.m_91152_(this.parentScreen);
             }
 
-            if (button.field_45 == 210) {
-               String var10000;
+            if (button.f_11893_ == 210) {
                try {
                   String userName = this.f_96541_.m_294346_().getName();
                   String userId = this.f_96541_.m_294346_().getId().toString().replace("-", "");
@@ -66,18 +76,18 @@ public class GuiScreenCapeOF extends GuiScreenOF {
                      this.setLinkUrl(urlStr);
                   }
                } catch (InvalidCredentialsException var14) {
-                  Config.showGuiMessage(I18n.m_118938_("of.message.capeOF.error1", new Object[0]), I18n.m_118938_("of.message.capeOF.error2", new Object[]{var14.getMessage()}));
+                  Config.showGuiMessage(
+                     I18n.m_118938_("of.message.capeOF.error1", new Object[0]), I18n.m_118938_("of.message.capeOF.error2", new Object[]{var14.getMessage()})
+                  );
                   Config.warn("Mojang authentication failed");
-                  var10000 = var14.getClass().getName();
-                  Config.warn(var10000 + ": " + var14.getMessage());
+                  Config.warn(var14.getClass().getName() + ": " + var14.getMessage());
                } catch (Exception var15) {
                   Config.warn("Error opening OptiFine cape link");
-                  var10000 = var15.getClass().getName();
-                  Config.warn(var10000 + ": " + var15.getMessage());
+                  Config.warn(var15.getClass().getName() + ": " + var15.getMessage());
                }
             }
 
-            if (button.field_45 == 220) {
+            if (button.f_11893_ == 220) {
                this.showMessage(Lang.get("of.message.capeOF.reloadCape"), 15000L);
                if (this.f_96541_.f_91074_ != null) {
                   long delayMs = 15000L;
@@ -86,18 +96,17 @@ public class GuiScreenCapeOF extends GuiScreenOF {
                }
             }
 
-            if (button.field_45 == 230 && this.linkUrl != null) {
+            if (button.f_11893_ == 230 && this.linkUrl != null) {
                this.f_96541_.f_91068_.m_90911_(this.linkUrl);
             }
          }
-
       }
    }
 
    private void showMessage(String msg, long timeMs) {
       this.message = msg;
       this.messageHideTimeMs = System.currentTimeMillis() + timeMs;
-      this.setLinkUrl((String)null);
+      this.setLinkUrl(null);
    }
 
    public void m_88315_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
@@ -107,10 +116,9 @@ public class GuiScreenCapeOF extends GuiScreenOF {
          drawCenteredString(graphicsIn, this.fontRenderer, this.message, this.f_96543_ / 2, this.f_96544_ / 6 + 60, 16777215);
          if (System.currentTimeMillis() > this.messageHideTimeMs) {
             this.message = null;
-            this.setLinkUrl((String)null);
+            this.setLinkUrl(null);
          }
       }
-
    }
 
    public void setLinkUrl(String linkUrl) {

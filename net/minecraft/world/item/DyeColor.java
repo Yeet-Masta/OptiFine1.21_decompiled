@@ -1,5 +1,6 @@
 package net.minecraft.world.item;
 
+import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.Arrays;
 import java.util.Map;
@@ -14,6 +15,7 @@ import net.minecraft.util.ByIdMap;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.util.ByIdMap.OutOfBoundsStrategy;
 import net.minecraft.util.FastColor.ARGB32;
+import net.minecraft.util.StringRepresentable.EnumCodec;
 import net.minecraft.world.level.material.MapColor;
 import net.optifine.reflect.Reflector;
 
@@ -35,30 +37,30 @@ public enum DyeColor implements StringRepresentable {
    RED(14, "red", 11546150, MapColor.f_283913_, 11743532, 16711680),
    BLACK(15, "black", 1908001, MapColor.f_283927_, 1973019, 0);
 
-   private static final IntFunction f_41032_ = ByIdMap.m_262839_(DyeColor::m_41060_, values(), OutOfBoundsStrategy.ZERO);
-   private static final Int2ObjectOpenHashMap f_41033_ = new Int2ObjectOpenHashMap((Map)Arrays.stream(values()).collect(Collectors.toMap((dyeColorIn) -> {
-      return dyeColorIn.f_41040_;
-   }, (p_41055_0_) -> {
-      return p_41055_0_;
-   })));
-   public static final StringRepresentable.EnumCodec f_262211_ = StringRepresentable.m_216439_(DyeColor::values);
-   public static final StreamCodec f_313960_ = ByteBufCodecs.m_321301_(f_41032_, DyeColor::m_41060_);
-   private final int f_41034_;
-   private final String f_41035_;
-   private final MapColor f_283766_;
+   private static IntFunction<DyeColor> f_41032_ = ByIdMap.m_262839_(DyeColor::m_41060_, values(), OutOfBoundsStrategy.ZERO);
+   private static Int2ObjectOpenHashMap<DyeColor> f_41033_ = new Int2ObjectOpenHashMap(
+      (Map)Arrays.stream(values()).collect(Collectors.toMap(dyeColorIn -> dyeColorIn.f_41040_, p_41055_0_ -> p_41055_0_))
+   );
+   public static EnumCodec<DyeColor> f_262211_ = StringRepresentable.m_216439_(DyeColor::values);
+   public static StreamCodec<ByteBuf, DyeColor> f_313960_ = ByteBufCodecs.m_321301_(f_41032_, DyeColor::m_41060_);
+   private int f_41034_;
+   private String f_41035_;
+   private MapColor f_283766_;
    private int f_337674_;
-   private final int f_41040_;
-   private final TagKey tag;
-   private final int f_41041_;
+   private int f_41040_;
+   private TagKey<Item> tag;
+   private int f_41041_;
 
-   private DyeColor(final int idIn, final String translationKeyIn, final int colorValueIn, final MapColor mapColorIn, final int fireworkColorIn, final int textColorIn) {
+   private DyeColor(
+      final int idIn, final String translationKeyIn, final int colorValueIn, final MapColor mapColorIn, final int fireworkColorIn, final int textColorIn
+   ) {
       this.f_41034_ = idIn;
       this.f_41035_ = translationKeyIn;
       this.f_283766_ = mapColorIn;
       this.f_41041_ = textColorIn;
       this.f_337674_ = ARGB32.m_321570_(colorValueIn);
       this.f_41040_ = fireworkColorIn;
-      this.tag = (TagKey)Reflector.ForgeItemTags_create.call((Object)(new ResourceLocation("forge", "dyes/" + translationKeyIn)));
+      this.tag = (TagKey<Item>)Reflector.ForgeItemTags_create.m_46374_(new ResourceLocation("forge", "dyes/" + translationKeyIn));
    }
 
    public int m_41060_() {
@@ -112,16 +114,16 @@ public enum DyeColor implements StringRepresentable {
       this.f_337674_ = color;
    }
 
-   public TagKey getTag() {
+   public TagKey<Item> getTag() {
       return this.tag;
    }
 
    @Nullable
-   public static DyeColor getColor(ItemStack stack) {
+   public static DyeColor m_130045_(ItemStack stack) {
       if (stack.m_41720_() instanceof DyeItem) {
          return ((DyeItem)stack.m_41720_()).m_41089_();
       } else {
-         for(int x = 0; x < BLACK.m_41060_(); ++x) {
+         for (int x = 0; x < BLACK.m_41060_(); x++) {
             DyeColor color = m_41053_(x);
             if (stack.m_204117_(color.getTag())) {
                return color;
@@ -130,10 +132,5 @@ public enum DyeColor implements StringRepresentable {
 
          return null;
       }
-   }
-
-   // $FF: synthetic method
-   private static DyeColor[] $values() {
-      return new DyeColor[]{WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME, PINK, GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK};
    }
 }

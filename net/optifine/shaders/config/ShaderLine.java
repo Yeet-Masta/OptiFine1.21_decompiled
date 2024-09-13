@@ -1,5 +1,6 @@
 package net.optifine.shaders.config;
 
+import java.lang.invoke.StringConcatFactory;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.phys.Vec2;
 import net.optifine.Config;
@@ -7,19 +8,19 @@ import net.optifine.util.StrUtils;
 import org.joml.Vector4f;
 
 public class ShaderLine {
-   private Type type;
+   private ShaderLine.Type type;
    private String name;
    private String value;
    private String line;
 
-   public ShaderLine(Type type, String name, String value, String line) {
+   public ShaderLine(ShaderLine.Type type, String name, String value, String line) {
       this.type = type;
       this.name = name;
       this.value = value;
       this.line = line;
    }
 
-   public Type getType() {
+   public ShaderLine.Type getType() {
       return this.type;
    }
 
@@ -184,7 +185,7 @@ public class ShaderLine {
          } else {
             int[] vals = new int[3];
 
-            for(int i = 0; i < parts.length; ++i) {
+            for (int i = 0; i < parts.length; i++) {
                String part = parts[i];
                int val = Config.parseInt(part, Integer.MIN_VALUE);
                if (val == Integer.MIN_VALUE) {
@@ -212,7 +213,7 @@ public class ShaderLine {
          } else {
             float[] fs = new float[2];
 
-            for(int i = 0; i < parts.length; ++i) {
+            for (int i = 0; i < parts.length; i++) {
                String part = parts[i];
                part = StrUtils.removeSuffix(part, new String[]{"F", "f"});
                float f = Config.parseFloat(part, Float.MAX_VALUE);
@@ -241,7 +242,7 @@ public class ShaderLine {
          } else {
             float[] fs = new float[4];
 
-            for(int i = 0; i < parts.length; ++i) {
+            for (int i = 0; i < parts.length; i++) {
                String part = parts[i];
                part = StrUtils.removeSuffix(part, new String[]{"F", "f"});
                float f = Config.parseFloat(part, Float.MAX_VALUE);
@@ -267,7 +268,7 @@ public class ShaderLine {
    }
 
    public String toString() {
-      return "" + this.line;
+      return StringConcatFactory.makeConcatWithConstants<"makeConcatWithConstants","\u0001">(this.line);
    }
 
    public static enum Type {
@@ -282,10 +283,5 @@ public class ShaderLine {
       PROPERTY,
       EXTENSION,
       LAYOUT;
-
-      // $FF: synthetic method
-      private static Type[] $values() {
-         return new Type[]{UNIFORM, ATTRIBUTE, CONST_INT, CONST_IVEC3, CONST_FLOAT, CONST_VEC2, CONST_VEC4, CONST_BOOL, PROPERTY, EXTENSION, LAYOUT};
-      }
    }
 }

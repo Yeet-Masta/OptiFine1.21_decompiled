@@ -8,16 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TokenParser {
-   public static Token[] parse(String str) throws IOException, ParseException {
+   public static Token[] m_82160_(String str) throws IOException, ParseException {
       Reader r = new StringReader(str);
       PushbackReader pr = new PushbackReader(r);
-      List list = new ArrayList();
+      List<Token> list = new ArrayList();
 
-      while(true) {
+      while (true) {
          int i = pr.read();
          if (i < 0) {
-            Token[] tokens = (Token[])list.toArray(new Token[list.size()]);
-            return tokens;
+            return (Token[])list.toArray(new Token[list.size()]);
          }
 
          char ch = (char)i;
@@ -37,7 +36,7 @@ public class TokenParser {
       StringBuffer sb = new StringBuffer();
       sb.append(chFirst);
 
-      while(true) {
+      while (true) {
          int i = pr.read();
          if (i < 0) {
             break;

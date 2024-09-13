@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import java.nio.IntBuffer;
 import java.util.Objects;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -17,21 +16,19 @@ import net.optifine.reflect.ReflectorForge;
 import net.optifine.render.GLConst;
 
 public abstract class RenderTarget {
-   private static final int f_166194_ = 0;
-   private static final int f_166195_ = 1;
-   private static final int f_166196_ = 2;
-   private static final int f_166197_ = 3;
+   private static int f_166194_;
+   private static int f_166195_;
+   private static int f_166196_;
+   private static int f_166197_;
    public int f_83915_;
    public int f_83916_;
    public int f_83917_;
    public int f_83918_;
-   public final boolean f_83919_;
+   public boolean f_83919_;
    public int f_83920_;
    protected int f_83923_;
    protected int f_83924_;
-   private final float[] f_83921_ = (float[])Util.m_137537_(() -> {
-      return new float[]{1.0F, 1.0F, 1.0F, 0.0F};
-   });
+   private float[] f_83921_ = Util.m_137537_(() -> new float[]{1.0F, 1.0F, 1.0F, 0.0F});
    public int f_83922_;
    private boolean stencilEnabled = false;
 
@@ -44,13 +41,10 @@ public abstract class RenderTarget {
 
    public void m_83941_(int widthIn, int heightIn, boolean onMacIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> {
-            this.m_83964_(widthIn, heightIn, onMacIn);
-         });
+         RenderSystem.recordRenderCall(() -> this.m_83964_(widthIn, heightIn, onMacIn));
       } else {
          this.m_83964_(widthIn, heightIn, onMacIn);
       }
-
    }
 
    private void m_83964_(int widthIn, int heightIn, boolean onMacIn) {
@@ -91,7 +85,6 @@ public abstract class RenderTarget {
             GlStateManager._glDeleteFramebuffers(this.f_83920_);
             this.f_83920_ = -1;
          }
-
       }
    }
 
@@ -127,9 +120,9 @@ public abstract class RenderTarget {
                GlStateManager._texParameter(3553, 10242, 33071);
                GlStateManager._texParameter(3553, 10243, 33071);
                if (this.stencilEnabled) {
-                  GlStateManager._texImage2D(3553, 0, 36013, this.f_83915_, this.f_83916_, 0, 34041, 36269, (IntBuffer)null);
+                  GlStateManager._texImage2D(3553, 0, 36013, this.f_83915_, this.f_83916_, 0, 34041, 36269, null);
                } else {
-                  GlStateManager._texImage2D(3553, 0, 6402, this.f_83915_, this.f_83916_, 0, 6402, 5126, (IntBuffer)null);
+                  GlStateManager._texImage2D(3553, 0, 6402, this.f_83915_, this.f_83916_, 0, 6402, 5126, null);
                }
             }
 
@@ -137,7 +130,7 @@ public abstract class RenderTarget {
             GlStateManager._bindTexture(this.f_83923_);
             GlStateManager._texParameter(3553, 10242, 33071);
             GlStateManager._texParameter(3553, 10243, 33071);
-            GlStateManager._texImage2D(3553, 0, 32856, this.f_83915_, this.f_83916_, 0, 6408, 5121, (IntBuffer)null);
+            GlStateManager._texImage2D(3553, 0, 32856, this.f_83915_, this.f_83916_, 0, 6408, 5121, null);
             GlStateManager._glBindFramebuffer(36160, this.f_83920_);
             GlStateManager._glFramebufferTexture2D(36160, 36064, 3553, this.f_83923_, 0);
             if (this.f_83919_) {
@@ -176,7 +169,6 @@ public abstract class RenderTarget {
             GlStateManager._texParameter(3553, 10240, framebufferFilterIn);
             GlStateManager._bindTexture(0);
          }
-
       }
    }
 
@@ -216,13 +208,10 @@ public abstract class RenderTarget {
 
    public void m_83947_(boolean setViewportIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> {
-            this.m_83961_(setViewportIn);
-         });
+         RenderSystem.recordRenderCall(() -> this.m_83961_(setViewportIn));
       } else {
          this.m_83961_(setViewportIn);
       }
-
    }
 
    private void m_83961_(boolean setViewportIn) {
@@ -232,20 +221,16 @@ public abstract class RenderTarget {
          if (setViewportIn) {
             GlStateManager._viewport(0, 0, this.f_83917_, this.f_83918_);
          }
-
       }
    }
 
    public void m_83970_() {
       if (GLX.isUsingFBOs()) {
          if (!RenderSystem.isOnRenderThread()) {
-            RenderSystem.recordRenderCall(() -> {
-               GlStateManager._glBindFramebuffer(36160, 0);
-            });
+            RenderSystem.recordRenderCall(() -> GlStateManager._glBindFramebuffer(36160, 0));
          } else {
             GlStateManager._glBindFramebuffer(36160, 0);
          }
-
       }
    }
 

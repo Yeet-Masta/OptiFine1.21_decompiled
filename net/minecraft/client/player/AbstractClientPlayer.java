@@ -20,37 +20,31 @@ import net.minecraft.world.phys.Vec3;
 import net.optifine.Config;
 import net.optifine.RandomEntities;
 import net.optifine.player.CapeUtils;
-import net.optifine.player.PlayerConfiguration;
 import net.optifine.player.PlayerConfigurations;
 import net.optifine.reflect.Reflector;
 
 public abstract class AbstractClientPlayer extends Player {
    @Nullable
    private PlayerInfo f_108546_;
-   protected Vec3 f_271420_;
+   protected Vec3 f_271420_ = Vec3.f_82478_;
    public float f_108542_;
    public float f_108543_;
    public float f_108544_;
-   public final ClientLevel f_108545_;
-   private ResourceLocation locationOfCape;
-   private long reloadCapeTimeMs;
-   private boolean elytraOfCape;
-   private String nameClear;
+   public ClientLevel f_108545_;
+   private ResourceLocation locationOfCape = null;
+   private long reloadCapeTimeMs = 0L;
+   private boolean elytraOfCape = false;
+   private String nameClear = null;
    public ShoulderRidingEntity entityShoulderLeft;
    public ShoulderRidingEntity entityShoulderRight;
    public ShoulderRidingEntity lastAttachedEntity;
    public float capeRotateX;
    public float capeRotateY;
    public float capeRotateZ;
-   private static final ResourceLocation TEXTURE_ELYTRA = new ResourceLocation("textures/entity/elytra.png");
+   private static ResourceLocation TEXTURE_ELYTRA = new ResourceLocation("textures/entity/elytra.png");
 
    public AbstractClientPlayer(ClientLevel worldIn, GameProfile profileIn) {
       super(worldIn, worldIn.m_220360_(), worldIn.m_220361_(), profileIn);
-      this.f_271420_ = Vec3.f_82478_;
-      this.locationOfCape = null;
-      this.reloadCapeTimeMs = 0L;
-      this.elytraOfCape = false;
-      this.nameClear = null;
       this.f_108545_ = worldIn;
       this.nameClear = profileIn.getName();
       if (this.nameClear != null && !this.nameClear.isEmpty()) {
@@ -87,7 +81,6 @@ public abstract class AbstractClientPlayer extends Player {
          RandomEntities.checkEntityShoulder(this.lastAttachedEntity, true);
          this.lastAttachedEntity = null;
       }
-
    }
 
    public Vec3 m_272267_(float partialTicks) {
@@ -127,7 +120,9 @@ public abstract class AbstractClientPlayer extends Player {
          }
       }
 
-      return Reflector.ForgeHooksClient_getFieldOfViewModifier.exists() ? Reflector.callFloat(Reflector.ForgeHooksClient_getFieldOfViewModifier, this, f) : Mth.m_14179_(((Double)Minecraft.m_91087_().f_91066_.m_231925_().m_231551_()).floatValue(), 1.0F, f);
+      return Reflector.ForgeHooksClient_getFieldOfViewModifier.exists()
+         ? Reflector.callFloat(Reflector.ForgeHooksClient_getFieldOfViewModifier, this, f)
+         : Mth.m_14179_(Minecraft.m_91087_().f_91066_.m_231925_().m_231551_().floatValue(), 1.0F, f);
    }
 
    public String getNameClear() {
@@ -175,7 +170,7 @@ public abstract class AbstractClientPlayer extends Player {
          if (this.reloadCapeTimeMs != 0L && System.currentTimeMillis() > this.reloadCapeTimeMs) {
             CapeUtils.reloadCape(this);
             this.reloadCapeTimeMs = 0L;
-            PlayerConfigurations.setPlayerConfiguration(this.getNameClear(), (PlayerConfiguration)null);
+            PlayerConfigurations.setPlayerConfiguration(this.getNameClear(), null);
          }
 
          return this.locationOfCape != null ? this.locationOfCape : this.m_294544_().f_291348_();

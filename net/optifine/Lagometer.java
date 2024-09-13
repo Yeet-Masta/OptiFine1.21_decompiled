@@ -20,18 +20,17 @@ import net.optifine.util.MemoryMonitor;
 import org.joml.Matrix4f;
 
 public class Lagometer {
-   // $FF: renamed from: mc net.minecraft.client.Minecraft
-   private static Minecraft field_5;
+   private static Minecraft f_303183_;
    private static Options gameSettings;
    private static ProfilerFiller profiler;
    public static boolean active = false;
-   public static TimerNano timerTick = new TimerNano();
-   public static TimerNano timerScheduledExecutables = new TimerNano();
-   public static TimerNano timerChunkUpload = new TimerNano();
-   public static TimerNano timerChunkUpdate = new TimerNano();
-   public static TimerNano timerVisibility = new TimerNano();
-   public static TimerNano timerTerrain = new TimerNano();
-   public static TimerNano timerServer = new TimerNano();
+   public static Lagometer.TimerNano timerTick = new Lagometer.TimerNano();
+   public static Lagometer.TimerNano timerScheduledExecutables = new Lagometer.TimerNano();
+   public static Lagometer.TimerNano timerChunkUpload = new Lagometer.TimerNano();
+   public static Lagometer.TimerNano timerChunkUpdate = new Lagometer.TimerNano();
+   public static Lagometer.TimerNano timerVisibility = new Lagometer.TimerNano();
+   public static Lagometer.TimerNano timerTerrain = new Lagometer.TimerNano();
+   public static Lagometer.TimerNano timerServer = new Lagometer.TimerNano();
    private static long[] timesFrame = new long[512];
    private static long[] timesTick = new long[512];
    private static long[] timesScheduledExecutables = new long[512];
@@ -46,20 +45,20 @@ public class Lagometer {
    private static long renderTimeNano = 0L;
 
    public static void updateLagometer() {
-      if (field_5 == null) {
-         field_5 = Minecraft.m_91087_();
-         gameSettings = field_5.f_91066_;
-         profiler = field_5.m_91307_();
+      if (f_303183_ == null) {
+         f_303183_ = Minecraft.m_91087_();
+         gameSettings = f_303183_.f_91066_;
+         profiler = f_303183_.m_91307_();
       }
 
-      if (field_5.m_293199_().f_291101_ && field_5.m_293199_().f_290551_) {
+      if (f_303183_.m_293199_().f_291101_ && f_303183_.m_293199_().f_290551_) {
          active = true;
          long timeNowNano = System.nanoTime();
          if (prevFrameTimeNano == -1L) {
             prevFrameTimeNano = timeNowNano;
          } else {
             int frameIndex = numRecordedFrameTimes & timesFrame.length - 1;
-            ++numRecordedFrameTimes;
+            numRecordedFrameTimes++;
             boolean gc = MemoryMonitor.isGcEvent();
             timesFrame[frameIndex] = timeNowNano - prevFrameTimeNano - renderTimeNano;
             timesTick[frameIndex] = timerTick.timeNano;
@@ -89,8 +88,8 @@ public class Lagometer {
       long timeRenderStartNano = System.nanoTime();
       GlStateManager.clear(256);
       RenderSystem.backupProjectionMatrix();
-      int displayWidth = field_5.m_91268_().m_85441_();
-      int displayHeight = field_5.m_91268_().m_85442_();
+      int displayWidth = f_303183_.m_91268_().m_85441_();
+      int displayHeight = f_303183_.m_91268_().m_85442_();
       float guiFarPlane = Reflector.ForgeHooksClient_getGuiFarPlane.exists() ? Reflector.ForgeHooksClient_getGuiFarPlane.callFloat() : 21000.0F;
       Matrix4f matrix4f = MathUtils.makeOrtho4f(0.0F, (float)displayWidth, 0.0F, (float)displayHeight, 1000.0F, guiFarPlane);
       RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.f_276633_);
@@ -105,24 +104,22 @@ public class Lagometer {
       Tesselator tess = Tesselator.m_85913_();
       BufferBuilder tessellator = tess.m_339075_(VertexFormat.Mode.LINES, DefaultVertexFormat.f_166851_);
 
-      int frameNum;
-      int lum;
-      for(frameNum = 0; frameNum < timesFrame.length; ++frameNum) {
-         lum = (frameNum - numRecordedFrameTimes & timesFrame.length - 1) * 100 / timesFrame.length;
+      for (int frameNum = 0; frameNum < timesFrame.length; frameNum++) {
+         int lum = (frameNum - numRecordedFrameTimes & timesFrame.length - 1) * 100 / timesFrame.length;
          lum += 155;
          float baseHeight = (float)displayHeight;
          long heightFrame = 0L;
          if (gcs[frameNum]) {
-            renderTime(frameNum, timesFrame[frameNum], lum, lum / 2, 0, baseHeight, tessellator);
+            heightFrame = renderTime(frameNum, timesFrame[frameNum], lum, lum / 2, 0, baseHeight, tessellator);
          } else {
-            renderTime(frameNum, timesFrame[frameNum], lum, lum, lum, baseHeight, tessellator);
+            heightFrame = renderTime(frameNum, timesFrame[frameNum], lum, lum, lum, baseHeight, tessellator);
             baseHeight -= (float)renderTime(frameNum, timesServer[frameNum], lum / 2, lum / 2, lum / 2, baseHeight, tessellator);
             baseHeight -= (float)renderTime(frameNum, timesTerrain[frameNum], 0, lum, 0, baseHeight, tessellator);
             baseHeight -= (float)renderTime(frameNum, timesVisibility[frameNum], lum, lum, 0, baseHeight, tessellator);
             baseHeight -= (float)renderTime(frameNum, timesChunkUpdate[frameNum], lum, 0, 0, baseHeight, tessellator);
             baseHeight -= (float)renderTime(frameNum, timesChunkUpload[frameNum], lum, 0, lum, baseHeight, tessellator);
             baseHeight -= (float)renderTime(frameNum, timesScheduledExecutables[frameNum], 0, 0, lum, baseHeight, tessellator);
-            float var10000 = baseHeight - (float)renderTime(frameNum, timesTick[frameNum], 0, lum, lum, baseHeight, tessellator);
+            baseHeight -= (float)renderTime(frameNum, timesTick[frameNum], 0, lum, lum, baseHeight, tessellator);
          }
       }
 
@@ -133,12 +130,12 @@ public class Lagometer {
       GlStateManager._depthMask(true);
       GlStateManager.enableTexture();
       matrixStackIn.m_85849_();
-      frameNum = displayHeight - 80;
-      lum = displayHeight - 160;
+      int y60 = displayHeight - 80;
+      int y30 = displayHeight - 160;
       String str30 = Config.isShowFrameTime() ? "33" : "30";
       String str60 = Config.isShowFrameTime() ? "17" : "60";
-      graphicsIn.m_280056_(field_5.f_91062_, str30, 1, lum, -3881788, false);
-      graphicsIn.m_280056_(field_5.f_91062_, str60, 1, frameNum, -3881788, false);
+      graphicsIn.m_280056_(f_303183_.f_91062_, str30, 1, y30, -3881788, false);
+      graphicsIn.m_280056_(f_303183_.f_91062_, str60, 1, y60, -3881788, false);
       RenderSystem.restoreProjectionMatrix();
       float lumMem = 1.0F - (float)((double)(System.currentTimeMillis() - MemoryMonitor.getStartTimeMs()) / 1000.0);
       lumMem = Config.limit(lumMem, 0.0F, 1.0F);
@@ -149,7 +146,7 @@ public class Lagometer {
       int posX = 512 / scaleFactor + 2;
       int posY = displayHeight / scaleFactor - 8;
       graphicsIn.m_280509_(posX - 1, posY - 1, posX + 50, posY + 10, -1605349296);
-      graphicsIn.m_280488_(field_5.f_91062_, " " + MemoryMonitor.getGcRateMb() + " MB/s", posX, posY, colMem);
+      graphicsIn.m_280488_(f_303183_.f_91062_, " " + MemoryMonitor.getGcRateMb() + " MB/s", posX, posY, colMem);
       renderTimeNano = System.nanoTime() - timeRenderStartNano;
    }
 
@@ -188,17 +185,15 @@ public class Lagometer {
             if (this.timeStartNano == 0L) {
                this.timeStartNano = System.nanoTime();
             }
-
          }
       }
 
       public void end() {
          if (Lagometer.active) {
             if (this.timeStartNano != 0L) {
-               this.timeNano += System.nanoTime() - this.timeStartNano;
+               this.timeNano = this.timeNano + (System.nanoTime() - this.timeStartNano);
                this.timeStartNano = 0L;
             }
-
          }
       }
 

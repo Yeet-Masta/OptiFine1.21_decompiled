@@ -7,9 +7,9 @@ import java.util.Iterator;
 public class GlErrors {
    private static boolean frameStarted = false;
    private static long timeCheckStartMs = -1L;
-   private static Int2ObjectOpenHashMap glErrors = new Int2ObjectOpenHashMap();
-   private static final long CHECK_INTERVAL_MS = 3000L;
-   private static final int CHECK_ERROR_MAX = 10;
+   private static Int2ObjectOpenHashMap<GlErrors.GlError> glErrors = new Int2ObjectOpenHashMap();
+   private static long CHECK_INTERVAL_MS;
+   private static int CHECK_ERROR_MAX;
 
    public static void frameStart() {
       frameStarted = true;
@@ -19,17 +19,16 @@ public class GlErrors {
          }
 
          if (System.currentTimeMillis() > timeCheckStartMs + 3000L) {
-            ObjectCollection errors = glErrors.values();
+            ObjectCollection<GlErrors.GlError> errors = glErrors.values();
             Iterator it = errors.iterator();
 
-            while(it.hasNext()) {
-               GlError glError = (GlError)it.next();
+            while (it.hasNext()) {
+               GlErrors.GlError glError = (GlErrors.GlError)it.next();
                glError.onFrameStart();
             }
 
             timeCheckStartMs = System.currentTimeMillis();
          }
-
       }
    }
 
@@ -37,15 +36,15 @@ public class GlErrors {
       if (!frameStarted) {
          return true;
       } else {
-         GlError glError = getGlError(error);
+         GlErrors.GlError glError = getGlError(error);
          return glError.isEnabled();
       }
    }
 
-   private static GlError getGlError(int error) {
-      GlError glError = (GlError)glErrors.get(error);
+   private static GlErrors.GlError getGlError(int error) {
+      GlErrors.GlError glError = (GlErrors.GlError)glErrors.get(error);
       if (glError == null) {
-         glError = new GlError(error);
+         glError = new GlErrors.GlError(error);
          glErrors.put(error, glError);
       }
 
@@ -53,20 +52,19 @@ public class GlErrors {
    }
 
    public static class GlError {
-      // $FF: renamed from: id int
-      private int field_74;
+      private int f_11893_;
       private int countErrors = 0;
       private int countErrorsSuppressed = 0;
       private boolean suppressed = false;
       private boolean oneErrorEnabled = false;
 
       public GlError(int id) {
-         this.field_74 = id;
+         this.f_11893_ = id;
       }
 
       public void onFrameStart() {
          if (this.countErrorsSuppressed > 0) {
-            Config.error("Suppressed " + this.countErrors + " OpenGL errors: " + this.field_74);
+            Config.error("Suppressed " + this.countErrors + " OpenGL errors: " + this.f_11893_);
          }
 
          this.suppressed = this.countErrors > 10;
@@ -76,13 +74,13 @@ public class GlErrors {
       }
 
       public boolean isEnabled() {
-         ++this.countErrors;
+         this.countErrors++;
          if (this.oneErrorEnabled) {
             this.oneErrorEnabled = false;
             return true;
          } else {
             if (this.suppressed) {
-               ++this.countErrorsSuppressed;
+               this.countErrorsSuppressed++;
             }
 
             return !this.suppressed;

@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +19,7 @@ import net.minecraft.client.model.BookModel;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.ShieldModel;
+import net.minecraft.client.model.SkullModelBase;
 import net.minecraft.client.model.TridentModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
@@ -38,6 +38,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.SkullBlock.Type;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -48,7 +49,6 @@ import net.optifine.RandomEntities;
 import net.optifine.RandomEntityContext;
 import net.optifine.RandomEntityProperties;
 import net.optifine.entity.model.anim.IModelRendererVariable;
-import net.optifine.entity.model.anim.IModelVariable;
 import net.optifine.entity.model.anim.ModelResolver;
 import net.optifine.entity.model.anim.ModelUpdater;
 import net.optifine.entity.model.anim.ModelVariableUpdater;
@@ -58,23 +58,23 @@ import net.optifine.util.StrUtils;
 
 public class CustomEntityModels {
    private static boolean active = false;
-   private static Map mapEntityProperties = new HashMap();
-   private static Map mapBlockEntityProperties = new HashMap();
+   private static Map<EntityType, RandomEntityProperties<IEntityRenderer>> mapEntityProperties = new HashMap();
+   private static Map<BlockEntityType, RandomEntityProperties<IEntityRenderer>> mapBlockEntityProperties = new HashMap();
    private static int matchingRuleIndex;
-   private static Map originalEntityRenderMap = null;
-   private static Map originalTileEntityRenderMap = null;
-   private static Map originalSkullModelMap = null;
-   private static List customTileEntityTypes = new ArrayList();
+   private static Map<EntityType, EntityRenderer> originalEntityRenderMap = null;
+   private static Map<BlockEntityType, BlockEntityRenderer> originalTileEntityRenderMap = null;
+   private static Map<Type, SkullModelBase> originalSkullModelMap = null;
+   private static List<BlockEntityType> customTileEntityTypes = new ArrayList();
    private static BookModel customBookModel;
    private static boolean debugModels = Boolean.getBoolean("cem.debug.models");
-   public static final String PREFIX_OPTIFINE_CEM = "optifine/cem/";
-   public static final String SUFFIX_JEM = ".jem";
-   public static final String SUFFIX_PROPERTIES = ".properties";
+   public static String PREFIX_OPTIFINE_CEM;
+   public static String SUFFIX_JEM;
+   public static String SUFFIX_PROPERTIES;
 
-   public static void update() {
-      Map entityRenderMap = getEntityRenderMap();
-      Map tileEntityRenderMap = getTileEntityRenderMap();
-      Map skullModelMap = getSkullModelMap();
+   public static void m_252999_() {
+      Map<EntityType, EntityRenderer> entityRenderMap = getEntityRenderMap();
+      Map<BlockEntityType, BlockEntityRenderer> tileEntityRenderMap = getTileEntityRenderMap();
+      Map<Type, SkullModelBase> skullModelMap = getSkullModelMap();
       if (entityRenderMap == null) {
          Config.warn("Entity render map not found, custom entity models are DISABLED.");
       } else if (tileEntityRenderMap == null) {
@@ -95,11 +95,7 @@ public class CustomEntityModels {
          customBookModel = null;
          BlockEntityRenderer.CACHED_TYPES.clear();
          if (Minecraft.m_91087_().f_91073_ != null) {
-            Iterable entities = Minecraft.m_91087_().f_91073_.m_104735_();
-            Iterator var5 = entities.iterator();
-
-            while(var5.hasNext()) {
-               Entity entity = (Entity)var5.next();
+            for (Entity entity : Minecraft.m_91087_().f_91073_.m_104735_()) {
                Map modelVariables = entity.m_20088_().modelVariables;
                if (modelVariables != null) {
                   modelVariables.clear();
@@ -114,15 +110,15 @@ public class CustomEntityModels {
             RendererCache rendererCache = context.getRendererCache();
             ResourceLocation[] locs = getModelLocations();
 
-            for(int i = 0; i < locs.length; ++i) {
+            for (int i = 0; i < locs.length; i++) {
                ResourceLocation loc = locs[i];
                Config.dbg("CustomEntityModel: " + loc.m_135815_());
                IEntityRenderer rc = parseEntityRender(loc, rendererCache, 0);
                if (rc != null) {
-                  Either type = rc.getType();
+                  Either<EntityType, BlockEntityType> type = rc.getType();
                   if (rc instanceof EntityRenderer) {
                      entityRenderMap.put((EntityType)type.getLeft().get(), (EntityRenderer)rc);
-                     rendererCache.put((EntityType)((EntityType)type.getLeft().get()), 0, (EntityRenderer)((EntityRenderer)rc));
+                     rendererCache.put((EntityType)type.getLeft().get(), 0, (EntityRenderer)rc);
                      if (rc instanceof ThrownTridentRenderer) {
                         ThrownTridentRenderer tr = (ThrownTridentRenderer)rc;
                         TridentModel tm = (TridentModel)Reflector.getFieldValue(tr, Reflector.RenderTrident_modelTrident);
@@ -140,9 +136,8 @@ public class CustomEntityModels {
                      }
                   } else if (rc instanceof BlockEntityRenderer) {
                      tileEntityRenderMap.put((BlockEntityType)type.getRight().get(), (BlockEntityRenderer)rc);
-                     rendererCache.put((BlockEntityType)((BlockEntityType)type.getRight().get()), 0, (BlockEntityRenderer)((BlockEntityRenderer)rc));
-                     if (rc instanceof EnchantTableRenderer) {
-                        EnchantTableRenderer etr = (EnchantTableRenderer)rc;
+                     rendererCache.put((BlockEntityType)type.getRight().get(), 0, (BlockEntityRenderer)rc);
+                     if (rc instanceof EnchantTableRenderer etr) {
                         BookModel bm = (BookModel)Reflector.getFieldValue(etr, Reflector.TileEntityEnchantmentTableRenderer_modelBook);
                         setEnchantmentScreenBookModel(bm);
                      }
@@ -175,10 +170,10 @@ public class CustomEntityModels {
       var10000 = new String[]{".jem", ".properties"};
       String[] names = CustomModelRegistry.getModelNames();
 
-      for(int i = 0; i < names.length; ++i) {
+      for (int i = 0; i < names.length; i++) {
          String name = names[i];
          ModelAdapter modelAdapter = CustomModelRegistry.getModelAdapter(name);
-         Either type = modelAdapter.getType();
+         Either<EntityType, BlockEntityType> type = modelAdapter.getType();
          RandomEntityProperties props = makeProperties(name, context);
          if (props == null) {
             props = makeProperties(name + "/" + name, context);
@@ -194,14 +189,13 @@ public class CustomEntityModels {
             }
          }
       }
-
    }
 
    private static RandomEntityProperties makeProperties(String name, RandomEntityContext.Models context) {
       ResourceLocation locJem = new ResourceLocation("optifine/cem/" + name + ".jem");
       ResourceLocation locProps = new ResourceLocation("optifine/cem/" + name + ".properties");
       if (Config.hasResource(locProps)) {
-         RandomEntityProperties props = RandomEntityProperties.parse(locProps, locJem, context);
+         RandomEntityProperties props = RandomEntityProperties.m_82160_(locProps, locJem, context);
          if (props != null) {
             return props;
          }
@@ -214,7 +208,7 @@ public class CustomEntityModels {
          if (variants == null) {
             return null;
          } else {
-            RandomEntityProperties props = new RandomEntityProperties(locJem.m_135815_(), locJem, variants, context);
+            RandomEntityProperties<IEntityRenderer> props = new RandomEntityProperties<>(locJem.m_135815_(), locJem, variants, context);
             return !props.isValid(locJem.m_135815_()) ? null : props;
          }
       }
@@ -224,9 +218,9 @@ public class CustomEntityModels {
       customBookModel = bookModel;
    }
 
-   private static Map getEntityRenderMap() {
+   private static Map<EntityType, EntityRenderer> getEntityRenderMap() {
       EntityRenderDispatcher rm = Minecraft.m_91087_().m_91290_();
-      Map entityRenderMap = rm.getEntityRenderMap();
+      Map<EntityType, EntityRenderer> entityRenderMap = rm.getEntityRenderMap();
       if (entityRenderMap == null) {
          return null;
       } else {
@@ -238,9 +232,9 @@ public class CustomEntityModels {
       }
    }
 
-   private static Map getTileEntityRenderMap() {
+   private static Map<BlockEntityType, BlockEntityRenderer> getTileEntityRenderMap() {
       BlockEntityRenderDispatcher blockEntityRenderDispatcher = Minecraft.m_91087_().m_167982_();
-      Map tileEntityRenderMap = blockEntityRenderDispatcher.getBlockEntityRenderMap();
+      Map<BlockEntityType, BlockEntityRenderer> tileEntityRenderMap = blockEntityRenderDispatcher.getBlockEntityRenderMap();
       if (originalTileEntityRenderMap == null) {
          originalTileEntityRenderMap = new HashMap(tileEntityRenderMap);
       }
@@ -248,27 +242,27 @@ public class CustomEntityModels {
       return tileEntityRenderMap;
    }
 
-   private static Map getSkullModelMap() {
-      Map skullModelMap = SkullBlockRenderer.models;
+   private static Map<Type, SkullModelBase> getSkullModelMap() {
+      Map<Type, SkullModelBase> skullModelMap = SkullBlockRenderer.models;
       if (skullModelMap == null) {
          Config.warn("Field not found: SkullBlockRenderer.MODELS");
          skullModelMap = new HashMap();
       }
 
       if (originalSkullModelMap == null) {
-         originalSkullModelMap = new HashMap((Map)skullModelMap);
+         originalSkullModelMap = new HashMap(skullModelMap);
       }
 
-      return (Map)skullModelMap;
+      return skullModelMap;
    }
 
    private static ResourceLocation[] getModelLocations() {
       String prefix = "optifine/cem/";
       String suffix = ".jem";
-      List resourceLocations = new ArrayList();
+      List<ResourceLocation> resourceLocations = new ArrayList();
       String[] names = CustomModelRegistry.getModelNames();
 
-      for(int i = 0; i < names.length; ++i) {
+      for (int i = 0; i < names.length; i++) {
          String name = names[i];
          String path = prefix + name + suffix;
          ResourceLocation loc = new ResourceLocation(path);
@@ -277,30 +271,25 @@ public class CustomEntityModels {
          }
       }
 
-      ResourceLocation[] locs = (ResourceLocation[])resourceLocations.toArray(new ResourceLocation[resourceLocations.size()]);
-      return locs;
+      return (ResourceLocation[])resourceLocations.toArray(new ResourceLocation[resourceLocations.size()]);
    }
 
    public static IEntityRenderer parseEntityRender(ResourceLocation location, RendererCache rendererCache, int index) {
-      String var10000;
       try {
          if (debugModels && index == 0) {
             return makeDebugEntityRenderer(location, rendererCache, index);
          } else {
             JsonObject jo = CustomEntityModelParser.loadJson(location);
-            IEntityRenderer render = parseEntityRender(jo, location.m_135815_(), rendererCache, index);
-            return render;
+            return parseEntityRender(jo, location.m_135815_(), rendererCache, index);
          }
       } catch (IOException var5) {
-         var10000 = var5.getClass().getName();
-         Config.error(var10000 + ": " + var5.getMessage());
+         Config.error(var5.getClass().getName() + ": " + var5.getMessage());
          return null;
       } catch (JsonParseException var6) {
-         var10000 = var6.getClass().getName();
-         Config.error(var10000 + ": " + var6.getMessage());
+         Config.error(var6.getClass().getName() + ": " + var6.getMessage());
          return null;
       } catch (Exception var7) {
-         Log.warn("Error loading CEM: " + String.valueOf(location), var7);
+         Log.warn("Error loading CEM: " + location, var7);
          return null;
       }
    }
@@ -315,7 +304,7 @@ public class CustomEntityModels {
       int offset = Math.abs(loc.hashCode()) % 256;
       String[] partNames = ma.getModelRendererNames();
 
-      for(int i = 0; i < partNames.length; ++i) {
+      for (int i = 0; i < partNames.length; i++) {
          String partName = partNames[i];
          ModelPart part = ma.getModelRenderer(model, partName);
          if (part != null) {
@@ -341,7 +330,7 @@ public class CustomEntityModels {
       name = StrUtils.trimTrailing(name, "0123456789");
       ModelAdapter modelAdapter = CustomModelRegistry.getModelAdapter(name);
       checkNull(modelAdapter, "Entity not found: " + name);
-      Either type = modelAdapter.getType();
+      Either<EntityType, BlockEntityType> type = modelAdapter.getType();
       IEntityRenderer render = makeEntityRender(modelAdapter, cer, rendererCache, index);
       if (render == null) {
          return null;
@@ -369,8 +358,7 @@ public class CustomEntityModels {
          } else {
             IEntityRenderer r = modelAdapter.makeEntityRender(model, shadowSize, rendererCache, index);
             if (r == null) {
-               String var10002 = modelAdapter.getName();
-               throw new JsonParseException("Entity renderer is null, model: " + var10002 + ", adapter: " + modelAdapter.getClass().getName());
+               throw new JsonParseException("Entity renderer is null, model: " + modelAdapter.getName() + ", adapter: " + modelAdapter.getClass().getName());
             } else {
                if (textureLocation != null) {
                   setTextureLocation(modelAdapter, model, r, textureLocation);
@@ -395,20 +383,19 @@ public class CustomEntityModels {
    public static void setTextureTopModelRenderers(ModelAdapter modelAdapter, Model model, ResourceLocation textureLocation) {
       String[] parts = modelAdapter.getModelRendererNames();
 
-      for(int i = 0; i < parts.length; ++i) {
+      for (int i = 0; i < parts.length; i++) {
          String part = parts[i];
          ModelPart modelRenderer = modelAdapter.getModelRenderer(model, part);
          if (modelRenderer != null && modelRenderer.getTextureLocation() == null) {
             modelRenderer.setTextureLocation(textureLocation);
          }
       }
-
    }
 
    private static boolean modifyModel(ModelAdapter modelAdapter, Model model, CustomModelRenderer[] modelRenderers, ModelResolver mr) {
-      List listVariableUpdaters = new ArrayList();
+      List<ModelVariableUpdater> listVariableUpdaters = new ArrayList();
 
-      for(int i = 0; i < modelRenderers.length; ++i) {
+      for (int i = 0; i < modelRenderers.length; i++) {
          CustomModelRenderer cmr = modelRenderers[i];
          if (!modifyModel(modelAdapter, model, cmr, mr)) {
             return false;
@@ -422,18 +409,16 @@ public class CustomEntityModels {
       ModelVariableUpdater[] mvus = (ModelVariableUpdater[])listVariableUpdaters.toArray(new ModelVariableUpdater[listVariableUpdaters.size()]);
       ModelUpdater globvalUpdater = new ModelUpdater(mvus);
 
-      int i;
-      for(i = 0; i < modelRenderers.length; ++i) {
-         CustomModelRenderer cmr = modelRenderers[i];
-         if (cmr.getModelRenderer().getModelUpdater() != null) {
-            cmr.getModelRenderer().setModelUpdater(globvalUpdater);
+      for (int i = 0; i < modelRenderers.length; i++) {
+         CustomModelRenderer cmrx = modelRenderers[i];
+         if (cmrx.getModelRenderer().getModelUpdater() != null) {
+            cmrx.getModelRenderer().setModelUpdater(globvalUpdater);
          }
       }
 
-      for(i = 0; i < mvus.length; ++i) {
-         ModelVariableUpdater mvu = mvus[i];
-         IModelVariable mv = mvu.getModelVariable();
-         if (mv instanceof IModelRendererVariable mrv) {
+      for (int ix = 0; ix < mvus.length; ix++) {
+         ModelVariableUpdater mvu = mvus[ix];
+         if (mvu.getModelVariable() instanceof IModelRendererVariable mrv) {
             mrv.getModelRenderer().setModelUpdater(globvalUpdater);
          }
       }
@@ -445,7 +430,7 @@ public class CustomEntityModels {
       String modelPart = customModelRenderer.getModelPart();
       ModelPart parent = modelAdapter.getModelRenderer(model, modelPart);
       if (parent == null) {
-         Config.warn("Model part not found: " + modelPart + ", model: " + String.valueOf(model));
+         Config.warn("Model part not found: " + modelPart + ", model: " + model);
          return false;
       } else {
          if (!customModelRenderer.isAttach()) {
@@ -459,15 +444,12 @@ public class CustomEntityModels {
 
             if (parent.f_104213_ != null) {
                ModelPart[] mrs = modelAdapter.getModelRenderers(model);
-               Set setMrs = Collections.newSetFromMap(new IdentityHashMap());
+               Set<ModelPart> setMrs = Collections.newSetFromMap(new IdentityHashMap());
                setMrs.addAll(Arrays.asList(mrs));
-               Set childModelKeys = new HashSet(parent.f_104213_.keySet());
-               Iterator var9 = childModelKeys.iterator();
 
-               while(var9.hasNext()) {
-                  String key = (String)var9.next();
+               for (String key : new HashSet(parent.f_104213_.keySet())) {
                   ModelPart mr = (ModelPart)parent.f_104213_.get(key);
-                  if (!setMrs.contains(mr)) {
+                  if (!setMrs.m_274455_(mr)) {
                      parent.f_104213_.remove(key);
                   }
                }
@@ -502,7 +484,7 @@ public class CustomEntityModels {
    }
 
    public static boolean isCustomModel(BlockState blockStateIn) {
-      for(int i = 0; i < customTileEntityTypes.size(); ++i) {
+      for (int i = 0; i < customTileEntityTypes.size(); i++) {
          BlockEntityType type = (BlockEntityType)customTileEntityTypes.get(i);
          if (type.m_155262_(blockStateIn)) {
             return true;
@@ -516,7 +498,6 @@ public class CustomEntityModels {
       if (customBookModel != null && screen instanceof EnchantmentScreen es) {
          Reflector.GuiEnchantment_bookModel.setValue(es, customBookModel);
       }
-
    }
 
    public static EntityRenderer getEntityRenderer(Entity entityIn, EntityRenderer renderer) {
@@ -527,17 +508,16 @@ public class CustomEntityModels {
          if (randomEntity == null) {
             return renderer;
          } else {
-            RandomEntityProperties props = (RandomEntityProperties)mapEntityProperties.get(entityIn.m_6095_());
+            RandomEntityProperties<IEntityRenderer> props = (RandomEntityProperties<IEntityRenderer>)mapEntityProperties.get(entityIn.m_6095_());
             if (props == null) {
                return renderer;
             } else {
-               IEntityRenderer ier = (IEntityRenderer)props.getResource(randomEntity, renderer);
+               IEntityRenderer ier = props.m_213713_(randomEntity, renderer);
                if (!(ier instanceof EntityRenderer)) {
                   return null;
                } else {
                   matchingRuleIndex = props.getMatchingRuleIndex();
-                  EntityRenderer er = (EntityRenderer)ier;
-                  return er;
+                  return (EntityRenderer)ier;
                }
             }
          }
@@ -552,17 +532,16 @@ public class CustomEntityModels {
          if (randomEntity == null) {
             return renderer;
          } else {
-            RandomEntityProperties props = (RandomEntityProperties)mapBlockEntityProperties.get(entityIn.m_58903_());
+            RandomEntityProperties<IEntityRenderer> props = (RandomEntityProperties<IEntityRenderer>)mapBlockEntityProperties.get(entityIn.m_58903_());
             if (props == null) {
                return renderer;
             } else {
-               IEntityRenderer ier = (IEntityRenderer)props.getResource(randomEntity, renderer);
+               IEntityRenderer ier = props.m_213713_(randomEntity, renderer);
                if (!(ier instanceof BlockEntityRenderer)) {
                   return null;
                } else {
                   matchingRuleIndex = props.getMatchingRuleIndex();
-                  BlockEntityRenderer ber = (BlockEntityRenderer)ier;
-                  return ber;
+                  return (BlockEntityRenderer)ier;
                }
             }
          }

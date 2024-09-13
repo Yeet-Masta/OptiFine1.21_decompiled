@@ -14,18 +14,19 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.RunningOnDifferentThreadException;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.thread.BlockableEventLoop;
+import net.minecraft.world.level.Level;
 import net.optifine.util.PacketRunnable;
 import org.slf4j.Logger;
 
 public class PacketUtils {
-   private static final Logger f_131354_ = LogUtils.getLogger();
-   public static ResourceKey lastDimensionType = null;
+   private static Logger f_131354_ = LogUtils.getLogger();
+   public static ResourceKey<Level> lastDimensionType = null;
 
-   public static void m_131359_(Packet packetIn, PacketListener processor, ServerLevel worldIn) throws RunningOnDifferentThreadException {
+   public static <T extends PacketListener> void m_131359_(Packet<T> packetIn, T processor, ServerLevel worldIn) throws RunningOnDifferentThreadException {
       m_131363_(packetIn, processor, worldIn.m_7654_());
    }
 
-   public static void m_131363_(Packet packetIn, PacketListener processor, BlockableEventLoop executor) throws RunningOnDifferentThreadException {
+   public static <T extends PacketListener> void m_131363_(Packet<T> packetIn, T processor, BlockableEventLoop<?> executor) throws RunningOnDifferentThreadException {
       if (!executor.m_18695_()) {
          executor.m_201446_(new PacketRunnable(packetIn, () -> {
             clientPreProcessPacket(packetIn);
@@ -33,11 +34,8 @@ public class PacketUtils {
                try {
                   packetIn.m_5797_(processor);
                } catch (Exception var4) {
-                  if (var4 instanceof ReportedException) {
-                     ReportedException reportedexception = (ReportedException)var4;
-                     if (reportedexception.getCause() instanceof OutOfMemoryError) {
-                        throw m_322247_(var4, packetIn, processor);
-                     }
+                  if (var4 instanceof ReportedException reportedexception && reportedexception.getCause() instanceof OutOfMemoryError) {
+                     throw m_322247_(var4, packetIn, processor);
                   }
 
                   processor.m_322364_(packetIn, var4);
@@ -45,7 +43,6 @@ public class PacketUtils {
             } else {
                f_131354_.debug("Ignoring packet due to disconnection: {}", packetIn);
             }
-
          }));
          throw RunningOnDifferentThreadException.f_136017_;
       } else {
@@ -65,10 +62,9 @@ public class PacketUtils {
       } else {
          lastDimensionType = null;
       }
-
    }
 
-   public static ReportedException m_322247_(Exception exceptionIn, Packet packetIn, PacketListener listenerIn) {
+   public static <T extends PacketListener> ReportedException m_322247_(Exception exceptionIn, Packet<T> packetIn, T listenerIn) {
       if (exceptionIn instanceof ReportedException reportedexception) {
          m_323092_(reportedexception.m_134761_(), listenerIn, packetIn);
          return reportedexception;
@@ -79,18 +75,12 @@ public class PacketUtils {
       }
    }
 
-   public static void m_323092_(CrashReport reportIn, PacketListener listenerIn, @Nullable Packet packetIn) {
+   public static <T extends PacketListener> void m_323092_(CrashReport reportIn, T listenerIn, @Nullable Packet<T> packetIn) {
       if (packetIn != null) {
          CrashReportCategory crashreportcategory = reportIn.m_127514_("Incoming Packet");
-         crashreportcategory.m_128165_("Type", () -> {
-            return packetIn.m_5779_().toString();
-         });
-         crashreportcategory.m_128165_("Is Terminal", () -> {
-            return Boolean.toString(packetIn.m_319635_());
-         });
-         crashreportcategory.m_128165_("Is Skippable", () -> {
-            return Boolean.toString(packetIn.m_6588_());
-         });
+         crashreportcategory.m_128165_("Type", () -> packetIn.m_5779_().toString());
+         crashreportcategory.m_128165_("Is Terminal", () -> Boolean.toString(packetIn.m_319635_()));
+         crashreportcategory.m_128165_("Is Skippable", () -> Boolean.toString(packetIn.m_6588_()));
       }
 
       listenerIn.m_307358_(reportIn);

@@ -12,12 +12,13 @@ public class PlayerConfigurationReceiver implements IFileDownloadListener {
       this.player = player;
    }
 
+   @Override
    public void fileDownloadFinished(String url, byte[] bytes, Throwable exception) {
       if (bytes != null) {
          try {
             String str = new String(bytes, "ASCII");
             JsonParser jp = new JsonParser();
-            JsonElement je = jp.parse(str);
+            JsonElement je = jp.m_82160_(str);
             PlayerConfigurationParser pcp = new PlayerConfigurationParser(this.player);
             PlayerConfiguration pc = pcp.parsePlayerConfiguration(je);
             if (pc != null) {
@@ -27,7 +28,6 @@ public class PlayerConfigurationReceiver implements IFileDownloadListener {
          } catch (Exception var9) {
             Config.dbg("Error parsing configuration: " + url + ", " + var9.getClass().getName() + ": " + var9.getMessage());
          }
-
       }
    }
 }

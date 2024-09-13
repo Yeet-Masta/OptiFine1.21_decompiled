@@ -15,10 +15,12 @@ public class ModelAdapterGoat extends ModelAdapterQuadruped {
       super(EntityType.f_147035_, "goat", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new GoatModel(bakeModelLayer(ModelLayers.f_171182_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof GoatModel modelGoat)) {
          return null;
@@ -42,12 +44,13 @@ public class ModelAdapterGoat extends ModelAdapterQuadruped {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       String[] names = super.getModelRendererNames();
-      names = (String[])Config.addObjectsToArray(names, new String[]{"left_horn", "right_horn", "nose"});
-      return names;
+      return (String[])Config.addObjectsToArray(names, new String[]{"left_horn", "right_horn", "nose"});
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       GoatRenderer render = new GoatRenderer(renderManager.getContext());

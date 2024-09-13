@@ -12,24 +12,24 @@ public class FieldLocatorTypes implements IFieldLocator {
 
    public FieldLocatorTypes(Class cls, Class[] preTypes, Class type, Class[] postTypes, String errorName) {
       Field[] fs = cls.getDeclaredFields();
-      List types = new ArrayList();
+      List<Class> types = new ArrayList();
 
-      for(int i = 0; i < fs.length; ++i) {
+      for (int i = 0; i < fs.length; i++) {
          Field field = fs[i];
          types.add(field.getType());
       }
 
-      List typesMatch = new ArrayList();
+      List<Class> typesMatch = new ArrayList();
       typesMatch.addAll(Arrays.asList(preTypes));
       typesMatch.add(type);
       typesMatch.addAll(Arrays.asList(postTypes));
       int index = Collections.indexOfSubList(types, typesMatch);
       if (index < 0) {
-         Log.log("(Reflector) Field not found: " + errorName);
+         Log.m_260877_("(Reflector) Field not found: " + errorName);
       } else {
          int index2 = Collections.indexOfSubList(types.subList(index + 1, types.size()), typesMatch);
          if (index2 >= 0) {
-            Log.log("(Reflector) More than one match found for field: " + errorName);
+            Log.m_260877_("(Reflector) More than one match found for field: " + errorName);
          } else {
             int indexField = index + preTypes.length;
             this.field = fs[indexField];
@@ -37,6 +37,7 @@ public class FieldLocatorTypes implements IFieldLocator {
       }
    }
 
+   @Override
    public Field getField() {
       return this.field;
    }

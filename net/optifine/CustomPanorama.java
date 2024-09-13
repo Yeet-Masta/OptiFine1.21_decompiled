@@ -12,13 +12,13 @@ import net.optifine.util.PropertiesOrdered;
 
 public class CustomPanorama {
    private static CustomPanoramaProperties customPanoramaProperties = null;
-   private static final Random random = new Random();
+   private static Random random = new Random();
 
    public static CustomPanoramaProperties getCustomPanoramaProperties() {
       return customPanoramaProperties;
    }
 
-   public static void update() {
+   public static void m_252999_() {
       customPanoramaProperties = null;
       String[] folders = getPanoramaFolders();
       if (folders.length > 1) {
@@ -35,16 +35,16 @@ public class CustomPanorama {
             props = new PropertiesOrdered();
          }
 
-         CustomPanoramaProperties cpp = new CustomPanoramaProperties(folder, (Properties)props);
+         CustomPanoramaProperties cpp = new CustomPanoramaProperties(folder, props);
          customPanoramaProperties = cpp;
       }
    }
 
    private static String[] getPanoramaFolders() {
-      List listFolders = new ArrayList();
+      List<String> listFolders = new ArrayList();
       listFolders.add("textures/gui/title/background");
 
-      for(int i = 0; i < 100; ++i) {
+      for (int i = 0; i < 100; i++) {
          String folder = "optifine/gui/background" + i;
          String path = folder + "/panorama_0.png";
          ResourceLocation loc = new ResourceLocation(path);
@@ -53,14 +53,13 @@ public class CustomPanorama {
          }
       }
 
-      String[] folders = (String[])listFolders.toArray(new String[listFolders.size()]);
-      return folders;
+      return (String[])listFolders.toArray(new String[listFolders.size()]);
    }
 
    private static Properties[] getPanoramaProperties(String[] folders) {
       Properties[] propsArr = new Properties[folders.length];
 
-      for(int i = 0; i < folders.length; ++i) {
+      for (int i = 0; i < folders.length; i++) {
          String folder = folders[i];
          if (i == 0) {
             folder = "optifine/gui";
@@ -89,7 +88,7 @@ public class CustomPanorama {
    private static int[] getWeights(Properties[] properties) {
       int[] weights = new int[properties.length];
 
-      for(int i = 0; i < weights.length; ++i) {
+      for (int i = 0; i < weights.length; i++) {
          Properties prop = properties[i];
          if (prop == null) {
             prop = properties[0];
@@ -98,7 +97,7 @@ public class CustomPanorama {
          if (prop == null) {
             weights[i] = 1;
          } else {
-            String str = prop.getProperty("weight", (String)null);
+            String str = prop.getProperty("weight", null);
             weights[i] = Config.parseInt(str, 1);
          }
       }
@@ -111,7 +110,7 @@ public class CustomPanorama {
       int r = random.nextInt(sumWeights);
       int sum = 0;
 
-      for(int i = 0; i < weights.length; ++i) {
+      for (int i = 0; i < weights.length; i++) {
          sum += weights[i];
          if (sum > r) {
             return i;

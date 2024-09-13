@@ -11,15 +11,17 @@ public class HeaderLineFunction extends HeaderLine {
    public HeaderLineFunction(String name, String text) {
       this.name = name;
       this.text = text;
-      this.patternLine = Pattern.compile("^\\s*\\w+\\s+" + name + "\\s*\\(.*\\).*$", 32);
+      this.patternLine = Pattern.m_289905_("^\\s*\\w+\\s+" + name + "\\s*\\(.*\\).*$", 32);
    }
 
+   @Override
    public String getText() {
       return this.text;
    }
 
+   @Override
    public boolean matches(String line) {
-      if (!line.contains(this.name)) {
+      if (!line.m_274455_(this.name)) {
          return false;
       } else {
          Matcher m = this.patternLine.matcher(line);
@@ -27,6 +29,7 @@ public class HeaderLineFunction extends HeaderLine {
       }
    }
 
+   @Override
    public String removeFrom(String line) {
       return null;
    }

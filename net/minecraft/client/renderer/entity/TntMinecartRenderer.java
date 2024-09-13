@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.MinecartTNT;
@@ -11,10 +12,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 import net.optifine.shaders.Shaders;
 
-public class TntMinecartRenderer extends MinecartRenderer {
-   private final BlockRenderDispatcher f_234660_;
+public class TntMinecartRenderer extends MinecartRenderer<MinecartTNT> {
+   private BlockRenderDispatcher f_234660_;
 
-   public TntMinecartRenderer(EntityRendererProvider.Context contextIn) {
+   public TntMinecartRenderer(Context contextIn) {
       super(contextIn, ModelLayers.f_171253_);
       this.f_234660_ = contextIn.m_234597_();
    }
@@ -33,7 +34,14 @@ public class TntMinecartRenderer extends MinecartRenderer {
       m_234661_(this.f_234660_, stateIn, matrixStackIn, bufferIn, packedLightIn, i > -1 && i / 5 % 2 == 0);
    }
 
-   public static void m_234661_(BlockRenderDispatcher renderDispatcherIn, BlockState blockStateIn, PoseStack matrixStackIn, MultiBufferSource renderTypeBuffer, int combinedLight, boolean doFullBright) {
+   public static void m_234661_(
+      BlockRenderDispatcher renderDispatcherIn,
+      BlockState blockStateIn,
+      PoseStack matrixStackIn,
+      MultiBufferSource renderTypeBuffer,
+      int combinedLight,
+      boolean doFullBright
+   ) {
       int i;
       if (doFullBright) {
          i = OverlayTexture.m_118093_(OverlayTexture.m_118088_(1.0F), 10);
@@ -49,6 +57,5 @@ public class TntMinecartRenderer extends MinecartRenderer {
       if (Config.isShaders()) {
          Shaders.setEntityColor(0.0F, 0.0F, 0.0F, 0.0F);
       }
-
    }
 }

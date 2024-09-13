@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,21 +13,18 @@ import net.minecraft.client.renderer.RenderType;
 public class RenderCache implements IBufferSourceListener {
    private long cacheTimeMs;
    private long updateTimeMs;
-   private Map renderTypeBuffers = new LinkedHashMap();
-   private Deque freeBuffers = new ArrayDeque();
+   private Map<RenderType, ByteBuffer> renderTypeBuffers = new LinkedHashMap();
+   private Deque<ByteBuffer> freeBuffers = new ArrayDeque();
 
    public RenderCache(long cacheTimeMs) {
       this.cacheTimeMs = cacheTimeMs;
    }
 
    public boolean drawCached(GuiGraphics graphicsIn) {
-      Iterator var2;
       if (System.currentTimeMillis() > this.updateTimeMs) {
          graphicsIn.m_280262_();
-         var2 = this.renderTypeBuffers.values().iterator();
 
-         while(var2.hasNext()) {
-            ByteBuffer bb = (ByteBuffer)var2.next();
+         for (ByteBuffer bb : this.renderTypeBuffers.values()) {
             this.freeBuffers.add(bb);
          }
 
@@ -36,10 +32,7 @@ public class RenderCache implements IBufferSourceListener {
          this.updateTimeMs = System.currentTimeMillis() + this.cacheTimeMs;
          return false;
       } else {
-         var2 = this.renderTypeBuffers.keySet().iterator();
-
-         while(var2.hasNext()) {
-            RenderType rt = (RenderType)var2.next();
+         for (RenderType rt : this.renderTypeBuffers.keySet()) {
             ByteBuffer bb = (ByteBuffer)this.renderTypeBuffers.get(rt);
             graphicsIn.putBulkData(rt, bb);
             bb.rewind();
@@ -59,7 +52,8 @@ public class RenderCache implements IBufferSourceListener {
       graphicsIn.m_280091_().removeListener(this);
    }
 
-   public void finish(RenderType renderTypeIn, BufferBuilder bufferIn) {
+   @Override
+   public void m_185413_(RenderType renderTypeIn, BufferBuilder bufferIn) {
       ByteBuffer bb = (ByteBuffer)this.renderTypeBuffers.get(renderTypeIn);
       if (bb == null) {
          bb = this.allocateByteBuffer(524288);

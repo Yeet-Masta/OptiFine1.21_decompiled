@@ -10,33 +10,29 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 
 public class ClearVertexBuffersTask implements Runnable {
-   List listBuffers;
+   List<VertexBuffer> listBuffers;
 
-   public ClearVertexBuffersTask(List listBuffers) {
+   public ClearVertexBuffersTask(List<VertexBuffer> listBuffers) {
       this.listBuffers = listBuffers;
    }
 
    public void run() {
-      for(int i = 0; i < this.listBuffers.size(); ++i) {
+      for (int i = 0; i < this.listBuffers.size(); i++) {
          VertexBuffer vb = (VertexBuffer)this.listBuffers.get(i);
          vb.clearData();
       }
-
    }
 
    public String toString() {
-      return "" + String.valueOf(this.listBuffers);
+      return this.listBuffers + "";
    }
 
-   public static ClearVertexBuffersTask make(Set renderedLayers, SectionRenderDispatcher.RenderSection renderChunk) {
-      List listBuffers = null;
-      RenderType[] var3 = SectionRenderDispatcher.BLOCK_RENDER_LAYERS;
-      int var4 = var3.length;
+   public static ClearVertexBuffersTask make(Set<RenderType> renderedLayers, SectionRenderDispatcher.RenderSection renderChunk) {
+      List<VertexBuffer> listBuffers = null;
 
-      for(int var5 = 0; var5 < var4; ++var5) {
-         RenderType rt = var3[var5];
+      for (RenderType rt : SectionRenderDispatcher.BLOCK_RENDER_LAYERS) {
          VertexBuffer vb = renderChunk.m_294581_(rt);
-         if (vb != null && !vb.isEmpty() && (renderedLayers == null || !renderedLayers.contains(rt))) {
+         if (vb != null && !vb.isEmpty() && (renderedLayers == null || !renderedLayers.m_274455_(rt))) {
             if (listBuffers == null) {
                listBuffers = new ArrayList();
             }
@@ -45,17 +41,11 @@ public class ClearVertexBuffersTask implements Runnable {
          }
       }
 
-      if (listBuffers == null) {
-         return null;
-      } else {
-         return new ClearVertexBuffersTask(listBuffers);
-      }
+      return listBuffers == null ? null : new ClearVertexBuffersTask(listBuffers);
    }
 
-   public static CompletableFuture makeFuture(Set renderedLayers, SectionRenderDispatcher.RenderSection renderChunk, Executor executor) {
+   public static CompletableFuture<Void> makeFuture(Set<RenderType> renderedLayers, SectionRenderDispatcher.RenderSection renderChunk, Executor executor) {
       ClearVertexBuffersTask task = make(renderedLayers, renderChunk);
-      return task == null ? null : CompletableFuture.runAsync(() -> {
-         task.run();
-      }, executor);
+      return task == null ? null : CompletableFuture.runAsync(() -> task.run(), executor);
    }
 }

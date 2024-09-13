@@ -14,10 +14,12 @@ public class ModelAdapterCod extends ModelAdapter {
       super(EntityType.f_20556_, "cod", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new CodModel(bakeModelLayer(ModelLayers.f_171278_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof CodModel modelCod)) {
          return null;
@@ -40,10 +42,12 @@ public class ModelAdapterCod extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "fin_back", "head", "nose", "fin_right", "fin_left", "tail", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       CodRenderer render = new CodRenderer(renderManager.getContext());

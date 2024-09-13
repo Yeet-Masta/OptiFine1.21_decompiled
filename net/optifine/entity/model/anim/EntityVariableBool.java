@@ -15,10 +15,12 @@ public class EntityVariableBool implements IModelVariableBool {
       this.renderManager = Minecraft.m_91087_().m_91290_();
    }
 
+   @Override
    public boolean eval() {
       return this.getValue();
    }
 
+   @Override
    public boolean getValue() {
       SynchedEntityData entityData = this.getEntityData();
       if (entityData == null) {
@@ -31,6 +33,7 @@ public class EntityVariableBool implements IModelVariableBool {
       }
    }
 
+   @Override
    public void setValue(boolean value) {
       SynchedEntityData entityData = this.getEntityData();
       if (entityData != null) {

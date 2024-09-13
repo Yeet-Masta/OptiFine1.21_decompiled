@@ -16,10 +16,12 @@ public class ModelAdapterShulkerBox extends ModelAdapter {
       super(BlockEntityType.f_58939_, "shulker_box", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new ShulkerModel(bakeModelLayer(ModelLayers.f_171180_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ShulkerModel modelShulker)) {
          return null;
@@ -32,15 +34,15 @@ public class ModelAdapterShulkerBox extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"base", "lid", "head"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58939_, index, () -> {
-         return new ShulkerBoxRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58939_, index, () -> new ShulkerBoxRenderer(dispatcher.getContext()));
       if (!(renderer instanceof ShulkerBoxRenderer)) {
          return null;
       } else if (!Reflector.TileEntityShulkerBoxRenderer_model.exists()) {

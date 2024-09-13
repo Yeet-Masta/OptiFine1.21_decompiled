@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import java.util.Collection;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +23,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockTintCache;
 import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
-import net.minecraft.client.particle.FireworkParticles;
+import net.minecraft.client.particle.FireworkParticles.Starter;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
@@ -35,6 +34,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Cursor3D;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -43,7 +43,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
@@ -62,6 +61,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionBrewing;
+import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ColorResolver;
@@ -69,6 +69,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.GameRules.BooleanValue;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.Biomes;
@@ -83,6 +84,8 @@ import net.minecraft.world.level.entity.LevelCallback;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.entity.TransientEntitySectionManager;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.gameevent.GameEvent.Context;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
@@ -108,41 +111,35 @@ import net.optifine.shaders.Shaders;
 import org.slf4j.Logger;
 
 public class ClientLevel extends Level {
-   private static final Logger f_233600_ = LogUtils.getLogger();
-   private static final double f_171629_ = 0.05;
-   private static final int f_194125_ = 10;
-   private static final int f_194126_ = 1000;
-   final EntityTickList f_171630_ = new EntityTickList();
-   private final TransientEntitySectionManager f_171631_ = new TransientEntitySectionManager(Entity.class, new EntityCallbacks());
-   private final ClientPacketListener f_104561_;
-   private final LevelRenderer f_104562_;
-   private final ClientLevelData f_104563_;
-   private final DimensionSpecialEffects f_104564_;
-   private final TickRateManager f_303463_;
-   private final Minecraft f_104565_ = Minecraft.m_91087_();
-   final List f_104566_ = Lists.newArrayList();
-   private final Map f_104556_ = Maps.newHashMap();
-   private static final long f_171628_ = 16777215L;
+   private static Logger f_233600_ = LogUtils.getLogger();
+   private static double f_171629_;
+   private static int f_194125_;
+   private static int f_194126_;
+   EntityTickList f_171630_ = new EntityTickList();
+   private TransientEntitySectionManager<Entity> f_171631_ = new TransientEntitySectionManager(Entity.class, new ClientLevel.EntityCallbacks());
+   private ClientPacketListener f_104561_;
+   private LevelRenderer f_104562_;
+   private ClientLevel.ClientLevelData f_104563_;
+   private DimensionSpecialEffects f_104564_;
+   private TickRateManager f_303463_;
+   private Minecraft f_104565_ = Minecraft.m_91087_();
+   List<AbstractClientPlayer> f_104566_ = Lists.newArrayList();
+   private Map<MapId, MapItemSavedData> f_104556_ = Maps.newHashMap();
+   private static long f_171628_;
    private int f_104557_;
-   private final Object2ObjectArrayMap f_104558_ = (Object2ObjectArrayMap)Util.m_137469_(new Object2ObjectArrayMap(3), (mapIn) -> {
-      mapIn.put(BiomeColors.f_108789_, new BlockTintCache((posIn) -> {
-         return this.m_104762_(posIn, BiomeColors.f_108789_);
-      }));
-      mapIn.put(BiomeColors.f_108790_, new BlockTintCache((posIn) -> {
-         return this.m_104762_(posIn, BiomeColors.f_108790_);
-      }));
-      mapIn.put(BiomeColors.f_108791_, new BlockTintCache((posIn) -> {
-         return this.m_104762_(posIn, BiomeColors.f_108791_);
-      }));
-      Reflector.ColorResolverManager_registerBlockTintCaches.call(this, mapIn);
+   private Object2ObjectArrayMap<ColorResolver, BlockTintCache> f_104558_ = Util.m_137469_(new Object2ObjectArrayMap(3), mapIn -> {
+      mapIn.put(BiomeColors.f_108789_, new BlockTintCache(posIn -> this.m_104762_(posIn, BiomeColors.f_108789_)));
+      mapIn.put(BiomeColors.f_108790_, new BlockTintCache(posIn -> this.m_104762_(posIn, BiomeColors.f_108790_)));
+      mapIn.put(BiomeColors.f_108791_, new BlockTintCache(posIn -> this.m_104762_(posIn, BiomeColors.f_108791_)));
+      Reflector.ColorResolverManager_registerBlockTintCaches.m_46374_(this, mapIn);
    });
-   private final ClientChunkCache f_104559_;
-   private final Deque f_194122_ = Queues.newArrayDeque();
+   private ClientChunkCache f_104559_;
+   private Deque<Runnable> f_194122_ = Queues.newArrayDeque();
    private int f_194123_;
-   private final BlockStatePredictionHandler f_233599_ = new BlockStatePredictionHandler();
-   private static final Set f_194124_;
-   private final Int2ObjectMap partEntities = new Int2ObjectOpenHashMap();
-   private final ModelDataManager modelDataManager = new ModelDataManager(this);
+   private BlockStatePredictionHandler f_233599_ = new BlockStatePredictionHandler();
+   private static Set<Item> f_194124_ = Set.m_253057_(Items.f_42127_, Items.f_151033_);
+   private Int2ObjectMap<PartEntity<?>> partEntities = new Int2ObjectOpenHashMap();
+   private ModelDataManager modelDataManager = new ModelDataManager(this);
    private boolean playerUpdate = false;
 
    public void m_233651_(int sequenceIn) {
@@ -153,7 +150,6 @@ public class ClientLevel extends Level {
       if (!this.f_233599_.m_233864_(posIn, stateIn)) {
          super.m_6933_(posIn, stateIn, flagsIn, 512);
       }
-
    }
 
    public void m_233647_(BlockPos posIn, BlockState stateIn, Vec3 vecIn) {
@@ -165,7 +161,6 @@ public class ClientLevel extends Level {
             player.m_20248_(vecIn.f_82479_, vecIn.f_82480_, vecIn.f_82481_);
          }
       }
-
    }
 
    BlockStatePredictionHandler m_233601_() {
@@ -186,7 +181,18 @@ public class ClientLevel extends Level {
       }
    }
 
-   public ClientLevel(ClientPacketListener connectionIn, ClientLevelData worldInfoIn, ResourceKey dimIn, Holder dimTypeIn, int viewDistIn, int simDistIn, Supplier profilerIn, LevelRenderer worldRendererIn, boolean debugIn, long seedIn) {
+   public ClientLevel(
+      ClientPacketListener connectionIn,
+      ClientLevel.ClientLevelData worldInfoIn,
+      ResourceKey<Level> dimIn,
+      Holder<DimensionType> dimTypeIn,
+      int viewDistIn,
+      int simDistIn,
+      Supplier<ProfilerFiller> profilerIn,
+      LevelRenderer worldRendererIn,
+      boolean debugIn,
+      long seedIn
+   ) {
       super(worldInfoIn, dimIn, connectionIn.m_105152_(), dimTypeIn, profilerIn, true, debugIn, seedIn, 1000000);
       this.f_104561_ = connectionIn;
       this.f_104559_ = new ClientChunkCache(this, viewDistIn);
@@ -199,7 +205,7 @@ public class ClientLevel extends Level {
       this.m_46465_();
       this.m_46466_();
       if (Reflector.CapabilityProvider_gatherCapabilities.exists() && Reflector.CapabilityProvider.getTargetClass().isAssignableFrom(this.getClass())) {
-         Reflector.call(this, Reflector.CapabilityProvider_gatherCapabilities);
+         Reflector.m_46374_(this, Reflector.CapabilityProvider_gatherCapabilities);
       }
 
       Reflector.postForgeBusEvent(Reflector.LevelEvent_Load_Constructor, this);
@@ -207,7 +213,6 @@ public class ClientLevel extends Level {
          this.f_104565_.f_91072_ = new PlayerControllerOF(this.f_104565_, this.f_104561_);
          CustomGuis.setPlayerControllerOF((PlayerControllerOF)this.f_104565_.f_91072_);
       }
-
    }
 
    public void m_194171_(Runnable updateIn) {
@@ -218,7 +223,7 @@ public class ClientLevel extends Level {
       int i = this.f_194122_.size();
       int j = i < 1000 ? Math.max(10, i / 10) : i;
 
-      for(int k = 0; k < j; ++k) {
+      for (int k = 0; k < j; k++) {
          Runnable runnable = (Runnable)this.f_194122_.poll();
          if (runnable == null) {
             break;
@@ -226,7 +231,6 @@ public class ClientLevel extends Level {
 
          runnable.run();
       }
-
    }
 
    public boolean m_194173_() {
@@ -257,7 +261,6 @@ public class ClientLevel extends Level {
       if (this.f_46442_.m_5470_().m_46207_(GameRules.f_46140_)) {
          this.m_104746_(this.f_46442_.m_6792_() + 1L);
       }
-
    }
 
    public void m_104637_(long timeIn) {
@@ -267,26 +270,25 @@ public class ClientLevel extends Level {
    public void m_104746_(long time) {
       if (time < 0L) {
          time = -time;
-         ((GameRules.BooleanValue)this.m_46469_().m_46170_(GameRules.f_46140_)).m_46246_(false, (MinecraftServer)null);
+         ((BooleanValue)this.m_46469_().m_46170_(GameRules.f_46140_)).m_46246_(false, null);
       } else {
-         ((GameRules.BooleanValue)this.m_46469_().m_46170_(GameRules.f_46140_)).m_46246_(true, (MinecraftServer)null);
+         ((BooleanValue)this.m_46469_().m_46170_(GameRules.f_46140_)).m_46246_(true, null);
       }
 
       this.f_104563_.m_104863_(time);
    }
 
-   public Iterable m_104735_() {
+   public Iterable<Entity> m_104735_() {
       return this.m_142646_().m_142273_();
    }
 
    public void m_104804_() {
       ProfilerFiller profilerfiller = this.m_46473_();
       profilerfiller.m_6180_("entities");
-      this.f_171630_.m_156910_((entityIn) -> {
+      this.f_171630_.m_156910_(entityIn -> {
          if (!entityIn.m_213877_() && !entityIn.m_20159_() && !this.f_303463_.m_305579_(entityIn)) {
             this.m_46653_(this::m_104639_, entityIn);
          }
-
       });
       profilerfiller.m_7238_();
       this.m_46463_();
@@ -298,10 +300,8 @@ public class ClientLevel extends Level {
 
    public void m_104639_(Entity entityIn) {
       entityIn.m_146867_();
-      ++entityIn.f_19797_;
-      this.m_46473_().m_6521_(() -> {
-         return BuiltInRegistries.f_256780_.m_7981_(entityIn.m_6095_()).toString();
-      });
+      entityIn.f_19797_++;
+      this.m_46473_().m_6521_(() -> BuiltInRegistries.f_256780_.m_7981_(entityIn.m_6095_()).toString());
       if (ReflectorForge.canUpdate(entityIn)) {
          entityIn.m_8119_();
       }
@@ -311,32 +311,26 @@ public class ClientLevel extends Level {
       }
 
       this.m_46473_().m_7238_();
-      Iterator var2 = entityIn.m_20197_().iterator();
 
-      while(var2.hasNext()) {
-         Entity entity = (Entity)var2.next();
+      for (Entity entity : entityIn.m_20197_()) {
          this.m_104641_(entityIn, entity);
       }
-
    }
 
    private void m_104641_(Entity entityIn, Entity entityPassangerIn) {
       if (!entityPassangerIn.m_213877_() && entityPassangerIn.m_20202_() == entityIn) {
          if (entityPassangerIn instanceof Player || this.f_171630_.m_156914_(entityPassangerIn)) {
             entityPassangerIn.m_146867_();
-            ++entityPassangerIn.f_19797_;
+            entityPassangerIn.f_19797_++;
             entityPassangerIn.m_6083_();
-            Iterator var3 = entityPassangerIn.m_20197_().iterator();
 
-            while(var3.hasNext()) {
-               Entity entity = (Entity)var3.next();
+            for (Entity entity : entityPassangerIn.m_20197_()) {
                this.m_104641_(entityPassangerIn, entity);
             }
          }
       } else {
          entityPassangerIn.m_8127_();
       }
-
    }
 
    public void m_104665_(LevelChunk chunkIn) {
@@ -346,17 +340,13 @@ public class ClientLevel extends Level {
    }
 
    public void m_171649_(ChunkPos chunkPosIn) {
-      this.f_104558_.forEach((resolverIn, cacheIn) -> {
-         cacheIn.m_92655_(chunkPosIn.f_45578_, chunkPosIn.f_45579_);
-      });
+      this.f_104558_.forEach((resolverIn, cacheIn) -> cacheIn.m_92655_(chunkPosIn.f_45578_, chunkPosIn.f_45579_));
       this.f_171631_.m_157651_(chunkPosIn);
       this.f_104562_.m_292785_(chunkPosIn);
    }
 
    public void m_104810_() {
-      this.f_104558_.forEach((resolverIn, cacheIn) -> {
-         cacheIn.m_92654_();
-      });
+      this.f_104558_.forEach((resolverIn, cacheIn) -> cacheIn.m_92654_());
    }
 
    public boolean m_7232_(int chunkX, int chunkZ) {
@@ -372,20 +362,19 @@ public class ClientLevel extends Level {
          this.m_171642_(entityIdIn.m_19879_(), RemovalReason.DISCARDED);
          this.f_171631_.m_157653_(entityIdIn);
          if (Reflector.IForgeEntity_onAddedToWorld.exists()) {
-            Reflector.call(entityIdIn, Reflector.IForgeEntity_onAddedToWorld);
+            Reflector.m_46374_(entityIdIn, Reflector.IForgeEntity_onAddedToWorld);
          }
 
          this.onEntityAdded(entityIdIn);
       }
    }
 
-   public void m_171642_(int entityIdIn, Entity.RemovalReason reasonIn) {
+   public void m_171642_(int entityIdIn, RemovalReason reasonIn) {
       Entity entity = (Entity)this.m_142646_().m_142597_(entityIdIn);
       if (entity != null) {
          entity.m_142467_(reasonIn);
          entity.m_142036_();
       }
-
    }
 
    @Nullable
@@ -398,16 +387,15 @@ public class ClientLevel extends Level {
    }
 
    public void m_104784_(int posX, int posY, int posZ) {
-      int i = true;
+      int i = 32;
       RandomSource randomsource = RandomSource.m_216327_();
       Block block = this.m_194187_();
-      BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+      MutableBlockPos blockpos$mutableblockpos = new MutableBlockPos();
 
-      for(int j = 0; j < 667; ++j) {
+      for (int j = 0; j < 667; j++) {
          this.m_233612_(posX, posY, posZ, 16, randomsource, block, blockpos$mutableblockpos);
          this.m_233612_(posX, posY, posZ, 32, randomsource, block, blockpos$mutableblockpos);
       }
-
    }
 
    @Nullable
@@ -415,8 +403,7 @@ public class ClientLevel extends Level {
       if (this.f_104565_.f_91072_.m_105295_() == GameType.CREATIVE) {
          ItemStack itemstack = this.f_104565_.f_91074_.m_21205_();
          Item item = itemstack.m_41720_();
-         if (f_194124_.contains(item) && item instanceof BlockItem) {
-            BlockItem blockitem = (BlockItem)item;
+         if (f_194124_.m_274455_(item) && item instanceof BlockItem blockitem) {
             return blockitem.m_40614_();
          }
       }
@@ -424,7 +411,7 @@ public class ClientLevel extends Level {
       return null;
    }
 
-   public void m_233612_(int posX, int posY, int posZ, int offsetIn, RandomSource randomIn, @Nullable Block blockIn, BlockPos.MutableBlockPos posIn) {
+   public void m_233612_(int posX, int posY, int posZ, int offsetIn, RandomSource randomIn, @Nullable Block blockIn, MutableBlockPos posIn) {
       int i = posX + this.f_46441_.m_188503_(offsetIn) - this.f_46441_.m_188503_(offsetIn);
       int j = posY + this.f_46441_.m_188503_(offsetIn) - this.f_46441_.m_188503_(offsetIn);
       int k = posZ + this.f_46441_.m_188503_(offsetIn) - this.f_46441_.m_188503_(offsetIn);
@@ -447,73 +434,96 @@ public class ClientLevel extends Level {
       }
 
       if (!blockstate.m_60838_(this, posIn)) {
-         ((Biome)this.m_204166_(posIn).m_203334_()).m_47562_().ifPresent((settingsIn) -> {
-            if (settingsIn.m_220527_(this.f_46441_)) {
-               this.m_7106_(settingsIn.m_47419_(), (double)posIn.m_123341_() + this.f_46441_.m_188500_(), (double)posIn.m_123342_() + this.f_46441_.m_188500_(), (double)posIn.m_123343_() + this.f_46441_.m_188500_(), 0.0, 0.0, 0.0);
-            }
-
-         });
+         ((Biome)this.m_204166_(posIn).m_203334_())
+            .m_47562_()
+            .ifPresent(
+               settingsIn -> {
+                  if (settingsIn.m_220527_(this.f_46441_)) {
+                     this.m_7106_(
+                        settingsIn.m_47419_(),
+                        (double)posIn.m_123341_() + this.f_46441_.m_188500_(),
+                        (double)posIn.m_123342_() + this.f_46441_.m_188500_(),
+                        (double)posIn.m_123343_() + this.f_46441_.m_188500_(),
+                        0.0,
+                        0.0,
+                        0.0
+                     );
+                  }
+               }
+            );
       }
-
    }
 
    private void m_104689_(BlockPos blockPosIn, BlockState blockStateIn, ParticleOptions particleDataIn, boolean shapeDownSolid) {
       if (blockStateIn.m_60819_().m_76178_()) {
          VoxelShape voxelshape = blockStateIn.m_60812_(this, blockPosIn);
-         double d0 = voxelshape.m_83297_(Direction.Axis.field_30);
+         double d0 = voxelshape.m_83297_(Direction.Axis.f_56474_);
          if (d0 < 1.0) {
             if (shapeDownSolid) {
-               this.m_104592_((double)blockPosIn.m_123341_(), (double)(blockPosIn.m_123341_() + 1), (double)blockPosIn.m_123343_(), (double)(blockPosIn.m_123343_() + 1), (double)(blockPosIn.m_123342_() + 1) - 0.05, particleDataIn);
+               this.m_104592_(
+                  (double)blockPosIn.m_123341_(),
+                  (double)(blockPosIn.m_123341_() + 1),
+                  (double)blockPosIn.m_123343_(),
+                  (double)(blockPosIn.m_123343_() + 1),
+                  (double)(blockPosIn.m_123342_() + 1) - 0.05,
+                  particleDataIn
+               );
             }
          } else if (!blockStateIn.m_204336_(BlockTags.f_13049_)) {
-            double d1 = voxelshape.m_83288_(Direction.Axis.field_30);
+            double d1 = voxelshape.m_83288_(Direction.Axis.f_56474_);
             if (d1 > 0.0) {
                this.m_104694_(blockPosIn, particleDataIn, voxelshape, (double)blockPosIn.m_123342_() + d1 - 0.05);
             } else {
                BlockPos blockpos = blockPosIn.m_7495_();
                BlockState blockstate = this.m_8055_(blockpos);
                VoxelShape voxelshape1 = blockstate.m_60812_(this, blockpos);
-               double d2 = voxelshape1.m_83297_(Direction.Axis.field_30);
+               double d2 = voxelshape1.m_83297_(Direction.Axis.f_56474_);
                if (d2 < 1.0 && blockstate.m_60819_().m_76178_()) {
                   this.m_104694_(blockPosIn, particleDataIn, voxelshape, (double)blockPosIn.m_123342_() - 0.05);
                }
             }
          }
       }
-
    }
 
    private void m_104694_(BlockPos posIn, ParticleOptions particleDataIn, VoxelShape voxelShapeIn, double y) {
-      this.m_104592_((double)posIn.m_123341_() + voxelShapeIn.m_83288_(Direction.Axis.field_29), (double)posIn.m_123341_() + voxelShapeIn.m_83297_(Direction.Axis.field_29), (double)posIn.m_123343_() + voxelShapeIn.m_83288_(Direction.Axis.field_31), (double)posIn.m_123343_() + voxelShapeIn.m_83297_(Direction.Axis.field_31), y, particleDataIn);
+      this.m_104592_(
+         (double)posIn.m_123341_() + voxelShapeIn.m_83288_(Direction.Axis.f_56473_),
+         (double)posIn.m_123341_() + voxelShapeIn.m_83297_(Direction.Axis.f_56473_),
+         (double)posIn.m_123343_() + voxelShapeIn.m_83288_(Direction.Axis.f_56475_),
+         (double)posIn.m_123343_() + voxelShapeIn.m_83297_(Direction.Axis.f_56475_),
+         y,
+         particleDataIn
+      );
    }
 
    private void m_104592_(double xStart, double xEnd, double zStart, double zEnd, double y, ParticleOptions particleDataIn) {
-      this.m_7106_(particleDataIn, Mth.m_14139_(this.f_46441_.m_188500_(), xStart, xEnd), y, Mth.m_14139_(this.f_46441_.m_188500_(), zStart, zEnd), 0.0, 0.0, 0.0);
+      this.m_7106_(
+         particleDataIn, Mth.m_14139_(this.f_46441_.m_188500_(), xStart, xEnd), y, Mth.m_14139_(this.f_46441_.m_188500_(), zStart, zEnd), 0.0, 0.0, 0.0
+      );
    }
 
    public CrashReportCategory m_6026_(CrashReport report) {
       CrashReportCategory crashreportcategory = super.m_6026_(report);
-      crashreportcategory.m_128165_("Server brand", () -> {
-         return this.f_104565_.f_91074_.f_108617_.m_295034_();
-      });
-      crashreportcategory.m_128165_("Server type", () -> {
-         return this.f_104565_.m_91092_() == null ? "Non-integrated multiplayer server" : "Integrated singleplayer server";
-      });
-      crashreportcategory.m_128165_("Tracked entity count", () -> {
-         return String.valueOf(this.m_104813_());
-      });
+      crashreportcategory.m_128165_("Server brand", () -> this.f_104565_.f_91074_.f_108617_.m_295034_());
+      crashreportcategory.m_128165_(
+         "Server type", () -> this.f_104565_.m_91092_() == null ? "Non-integrated multiplayer server" : "Integrated singleplayer server"
+      );
+      crashreportcategory.m_128165_("Tracked entity count", () -> String.valueOf(this.m_104813_()));
       return crashreportcategory;
    }
 
-   public void m_262808_(@Nullable Player player, double x, double y, double z, Holder soundIn, SoundSource category, float volume, float pitch, long randomSeedIn) {
+   public void m_262808_(
+      @Nullable Player player, double x, double y, double z, Holder<SoundEvent> soundIn, SoundSource category, float volume, float pitch, long randomSeedIn
+   ) {
       if (Reflector.ForgeEventFactory_onPlaySoundAtPosition.exists()) {
-         Object event = Reflector.ForgeEventFactory_onPlaySoundAtPosition.call(this, x, y, z, soundIn, category, volume, pitch);
-         if (Reflector.callBoolean(event, Reflector.Event_isCanceled) || Reflector.call(event, Reflector.PlayLevelSoundEvent_getSound) == null) {
+         Object event = Reflector.ForgeEventFactory_onPlaySoundAtPosition.m_46374_(this, x, y, z, soundIn, category, volume, pitch);
+         if (Reflector.callBoolean(event, Reflector.Event_isCanceled) || Reflector.m_46374_(event, Reflector.PlayLevelSoundEvent_getSound) == null) {
             return;
          }
 
-         soundIn = (Holder)Reflector.call(event, Reflector.PlayLevelSoundEvent_getSound);
-         category = (SoundSource)Reflector.call(event, Reflector.PlayLevelSoundEvent_getSource);
+         soundIn = (Holder<SoundEvent>)Reflector.m_46374_(event, Reflector.PlayLevelSoundEvent_getSound);
+         category = (SoundSource)Reflector.m_46374_(event, Reflector.PlayLevelSoundEvent_getSource);
          volume = Reflector.callFloat(event, Reflector.PlayLevelSoundEvent_getNewVolume);
          pitch = Reflector.callFloat(event, Reflector.PlayLevelSoundEvent_getNewPitch);
       }
@@ -521,18 +531,19 @@ public class ClientLevel extends Level {
       if (player == this.f_104565_.f_91074_) {
          this.m_233602_(x, y, z, (SoundEvent)soundIn.m_203334_(), category, volume, pitch, false, randomSeedIn);
       }
-
    }
 
-   public void m_213890_(@Nullable Player playerIn, Entity entityIn, Holder eventIn, SoundSource categoryIn, float volume, float pitch, long randomSeedIn) {
+   public void m_213890_(
+      @Nullable Player playerIn, Entity entityIn, Holder<SoundEvent> eventIn, SoundSource categoryIn, float volume, float pitch, long randomSeedIn
+   ) {
       if (Reflector.ForgeEventFactory_onPlaySoundAtEntity.exists()) {
-         Object event = Reflector.ForgeEventFactory_onPlaySoundAtEntity.call(entityIn, eventIn, categoryIn, volume, pitch);
-         if (Reflector.callBoolean(event, Reflector.Event_isCanceled) || Reflector.call(event, Reflector.PlayLevelSoundEvent_getSound) == null) {
+         Object event = Reflector.ForgeEventFactory_onPlaySoundAtEntity.m_46374_(entityIn, eventIn, categoryIn, volume, pitch);
+         if (Reflector.callBoolean(event, Reflector.Event_isCanceled) || Reflector.m_46374_(event, Reflector.PlayLevelSoundEvent_getSound) == null) {
             return;
          }
 
-         eventIn = (Holder)Reflector.call(event, Reflector.PlayLevelSoundEvent_getSound);
-         categoryIn = (SoundSource)Reflector.call(event, Reflector.PlayLevelSoundEvent_getSource);
+         eventIn = (Holder<SoundEvent>)Reflector.m_46374_(event, Reflector.PlayLevelSoundEvent_getSound);
+         categoryIn = (SoundSource)Reflector.m_46374_(event, Reflector.PlayLevelSoundEvent_getSource);
          volume = Reflector.callFloat(event, Reflector.PlayLevelSoundEvent_getNewVolume);
          pitch = Reflector.callFloat(event, Reflector.PlayLevelSoundEvent_getNewPitch);
       }
@@ -540,7 +551,6 @@ public class ClientLevel extends Level {
       if (playerIn == this.f_104565_.f_91074_) {
          this.f_104565_.m_91106_().m_120367_(new EntityBoundSoundInstance((SoundEvent)eventIn.m_203334_(), categoryIn, volume, pitch, entityIn, randomSeedIn));
       }
-
    }
 
    public void m_307553_(Entity playerIn, SoundEvent soundIn, SoundSource sourceIn, float volumeIn, float pitchIn) {
@@ -551,7 +561,9 @@ public class ClientLevel extends Level {
       this.m_233602_(x, y, z, soundIn, category, volume, pitch, distanceDelay, this.f_46441_.m_188505_());
    }
 
-   private void m_233602_(double x, double y, double z, SoundEvent soundIn, SoundSource category, float volume, float pitch, boolean delayedIn, long randomSeedIn) {
+   private void m_233602_(
+      double x, double y, double z, SoundEvent soundIn, SoundSource category, float volume, float pitch, boolean delayedIn, long randomSeedIn
+   ) {
       double d0 = this.f_104565_.f_91063_.m_109153_().m_90583_().m_82531_(x, y, z);
       SimpleSoundInstance simplesoundinstance = new SimpleSoundInstance(soundIn, category, volume, pitch, RandomSource.m_216335_(randomSeedIn), x, y, z);
       if (delayedIn && d0 > 100.0) {
@@ -560,21 +572,19 @@ public class ClientLevel extends Level {
       } else {
          this.f_104565_.m_91106_().m_120367_(simplesoundinstance);
       }
-
    }
 
-   public void m_7228_(double x, double y, double z, double motionX, double motionY, double motionZ, List compound) {
+   public void m_7228_(double x, double y, double z, double motionX, double motionY, double motionZ, List<FireworkExplosion> compound) {
       if (compound.isEmpty()) {
-         for(int i = 0; i < this.f_46441_.m_188503_(3) + 2; ++i) {
+         for (int i = 0; i < this.f_46441_.m_188503_(3) + 2; i++) {
             this.m_7106_(ParticleTypes.f_123759_, x, y, z, this.f_46441_.m_188583_() * 0.05, 0.005, this.f_46441_.m_188583_() * 0.05);
          }
       } else {
-         this.f_104565_.f_91061_.m_107344_(new FireworkParticles.Starter(this, x, y, z, motionX, motionY, motionZ, this.f_104565_.f_91061_, compound));
+         this.f_104565_.f_91061_.m_107344_(new Starter(this, x, y, z, motionX, motionY, motionZ, this.f_104565_.f_91061_, compound));
       }
-
    }
 
-   public void m_5503_(Packet packetIn) {
+   public void m_5503_(Packet<?> packetIn) {
       this.f_104561_.m_295327_(packetIn);
    }
 
@@ -586,11 +596,11 @@ public class ClientLevel extends Level {
       return this.f_303463_;
    }
 
-   public LevelTickAccess m_183326_() {
+   public LevelTickAccess<Block> m_183326_() {
       return BlackholeTickAccess.m_193145_();
    }
 
-   public LevelTickAccess m_183324_() {
+   public LevelTickAccess<Fluid> m_183324_() {
       return BlackholeTickAccess.m_193145_();
    }
 
@@ -606,12 +616,7 @@ public class ClientLevel extends Level {
    }
 
    private boolean isPlayerActing() {
-      if (this.f_104565_.f_91072_ instanceof PlayerControllerOF) {
-         PlayerControllerOF pcof = (PlayerControllerOF)this.f_104565_.f_91072_;
-         return pcof.isActing();
-      } else {
-         return false;
-      }
+      return this.f_104565_.f_91072_ instanceof PlayerControllerOF pcof ? pcof.isActing() : false;
    }
 
    public boolean isPlayerUpdate() {
@@ -623,7 +628,6 @@ public class ClientLevel extends Level {
       if (Config.isDynamicLights()) {
          DynamicLights.entityAdded(entityIn, Config.getRenderGlobal());
       }
-
    }
 
    public void onEntityRemoved(Entity entityIn) {
@@ -631,7 +635,6 @@ public class ClientLevel extends Level {
       if (Config.isDynamicLights()) {
          DynamicLights.entityRemoved(entityIn, Config.getRenderGlobal());
       }
-
    }
 
    @Nullable
@@ -704,17 +707,17 @@ public class ClientLevel extends Level {
       this.f_104562_.m_109752_(particleData, particleData.m_6012_().m_123742_() || ignoreRange, true, x, y, z, xSpeed, ySpeed, zSpeed);
    }
 
-   public List m_6907_() {
+   public List<AbstractClientPlayer> m_6907_() {
       return this.f_104566_;
    }
 
-   public Holder m_203675_(int x, int y, int z) {
+   public Holder<Biome> m_203675_(int x, int y, int z) {
       return this.m_9598_().m_175515_(Registries.f_256952_).m_246971_(Biomes.f_48202_);
    }
 
    public float m_104805_(float partialTicks) {
       float f = this.m_46942_(partialTicks);
-      float f1 = 1.0F - (Mth.m_14089_(f * 6.2831855F) * 2.0F + 0.2F);
+      float f1 = 1.0F - (Mth.m_14089_(f * (float) (Math.PI * 2)) * 2.0F + 0.2F);
       f1 = Mth.m_14036_(f1, 0.0F, 1.0F);
       f1 = 1.0F - f1;
       f1 *= 1.0F - this.m_46722_(partialTicks) * 5.0F / 16.0F;
@@ -727,38 +730,33 @@ public class ClientLevel extends Level {
       Vec3 vec3 = posIn.m_82492_(2.0, 2.0, 2.0).m_82490_(0.25);
       BiomeManager biomemanager = this.m_7062_();
       Vec3M vecCol = new Vec3M(0.0, 0.0, 0.0);
-      Vec3 vec31 = CubicSampler.sampleM(vec3, (xIn, yIn, zIn) -> {
-         return vecCol.fromRgbM(((Biome)biomemanager.m_204210_(xIn, yIn, zIn).m_203334_()).m_47463_());
-      });
-      float f1 = Mth.m_14089_(f * 6.2831855F) * 2.0F + 0.5F;
+      Vec3 vec31 = CubicSampler.sampleM(vec3, (xIn, yIn, zIn) -> vecCol.fromRgbM(((Biome)biomemanager.m_204210_(xIn, yIn, zIn).m_203334_()).m_47463_()));
+      float f1 = Mth.m_14089_(f * (float) (Math.PI * 2)) * 2.0F + 0.5F;
       f1 = Mth.m_14036_(f1, 0.0F, 1.0F);
       float f2 = (float)vec31.f_82479_ * f1;
       float f3 = (float)vec31.f_82480_ * f1;
       float f4 = (float)vec31.f_82481_ * f1;
       float f5 = this.m_46722_(partialTicksIn);
-      float f9;
-      float f10;
       if (f5 > 0.0F) {
-         f9 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.6F;
-         f10 = 1.0F - f5 * 0.75F;
-         f2 = f2 * f10 + f9 * (1.0F - f10);
-         f3 = f3 * f10 + f9 * (1.0F - f10);
-         f4 = f4 * f10 + f9 * (1.0F - f10);
+         float f6 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.6F;
+         float f7 = 1.0F - f5 * 0.75F;
+         f2 = f2 * f7 + f6 * (1.0F - f7);
+         f3 = f3 * f7 + f6 * (1.0F - f7);
+         f4 = f4 * f7 + f6 * (1.0F - f7);
       }
 
-      f9 = this.m_46661_(partialTicksIn);
-      float f11;
+      float f9 = this.m_46661_(partialTicksIn);
       if (f9 > 0.0F) {
-         f10 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.2F;
-         f11 = 1.0F - f9 * 0.75F;
-         f2 = f2 * f11 + f10 * (1.0F - f11);
-         f3 = f3 * f11 + f10 * (1.0F - f11);
-         f4 = f4 * f11 + f10 * (1.0F - f11);
+         float f10 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.2F;
+         float f8 = 1.0F - f9 * 0.75F;
+         f2 = f2 * f8 + f10 * (1.0F - f8);
+         f3 = f3 * f8 + f10 * (1.0F - f8);
+         f4 = f4 * f8 + f10 * (1.0F - f8);
       }
 
       int i = this.m_104819_();
       if (i > 0) {
-         f11 = (float)i - partialTicksIn;
+         float f11 = (float)i - partialTicksIn;
          if (f11 > 1.0F) {
             f11 = 1.0F;
          }
@@ -774,28 +772,26 @@ public class ClientLevel extends Level {
 
    public Vec3 m_104808_(float partialTicks) {
       float f = this.m_46942_(partialTicks);
-      float f1 = Mth.m_14089_(f * 6.2831855F) * 2.0F + 0.5F;
+      float f1 = Mth.m_14089_(f * (float) (Math.PI * 2)) * 2.0F + 0.5F;
       f1 = Mth.m_14036_(f1, 0.0F, 1.0F);
       float f2 = 1.0F;
       float f3 = 1.0F;
       float f4 = 1.0F;
       float f5 = this.m_46722_(partialTicks);
-      float f9;
-      float f10;
       if (f5 > 0.0F) {
-         f9 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.6F;
-         f10 = 1.0F - f5 * 0.95F;
-         f2 = f2 * f10 + f9 * (1.0F - f10);
-         f3 = f3 * f10 + f9 * (1.0F - f10);
-         f4 = f4 * f10 + f9 * (1.0F - f10);
+         float f6 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.6F;
+         float f7 = 1.0F - f5 * 0.95F;
+         f2 = f2 * f7 + f6 * (1.0F - f7);
+         f3 = f3 * f7 + f6 * (1.0F - f7);
+         f4 = f4 * f7 + f6 * (1.0F - f7);
       }
 
       f2 *= f1 * 0.9F + 0.1F;
       f3 *= f1 * 0.9F + 0.1F;
       f4 *= f1 * 0.85F + 0.15F;
-      f9 = this.m_46661_(partialTicks);
+      float f9 = this.m_46661_(partialTicks);
       if (f9 > 0.0F) {
-         f10 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.2F;
+         float f10 = (f2 * 0.3F + f3 * 0.59F + f4 * 0.11F) * 0.2F;
          float f8 = 1.0F - f9 * 0.95F;
          f2 = f2 * f8 + f10 * (1.0F - f8);
          f3 = f3 * f8 + f10 * (1.0F - f8);
@@ -807,13 +803,13 @@ public class ClientLevel extends Level {
 
    public float m_104811_(float partialTicks) {
       float f = this.m_46942_(partialTicks);
-      float f1 = 1.0F - (Mth.m_14089_(f * 6.2831855F) * 2.0F + 0.25F);
+      float f1 = 1.0F - (Mth.m_14089_(f * (float) (Math.PI * 2)) * 2.0F + 0.25F);
       f1 = Mth.m_14036_(f1, 0.0F, 1.0F);
       return f1 * f1 * 0.5F;
    }
 
    public int m_104819_() {
-      return (Boolean)this.f_104565_.f_91066_.m_231935_().m_231551_() ? 0 : this.f_104557_;
+      return this.f_104565_.f_91066_.m_231935_().m_231551_() ? 0 : this.f_104557_;
    }
 
    public void m_6580_(int timeFlashIn) {
@@ -826,20 +822,20 @@ public class ClientLevel extends Level {
       if (!shadeIn) {
          return flag ? 0.9F : 1.0F;
       } else {
-         switch (directionIn) {
-            case DOWN:
+         switch (<unrepresentable>.$SwitchMap$net$minecraft$core$Direction[directionIn.ordinal()]) {
+            case 1:
                return flag ? 0.9F : (shaders ? Shaders.blockLightLevel05 : 0.5F);
-            case field_61:
+            case 2:
                return flag ? 0.9F : 1.0F;
-            case NORTH:
-            case SOUTH:
+            case 3:
+            case 4:
                if (Config.isShaders()) {
                   return Shaders.blockLightLevel08;
                }
 
                return 0.8F;
-            case WEST:
-            case EAST:
+            case 5:
+            case 6:
                if (Config.isShaders()) {
                   return Shaders.blockLightLevel06;
                }
@@ -857,25 +853,39 @@ public class ClientLevel extends Level {
    }
 
    public int m_104762_(BlockPos blockPosIn, ColorResolver colorResolverIn) {
-      int i = (Integer)Minecraft.m_91087_().f_91066_.m_232121_().m_231551_();
+      int i = Minecraft.m_91087_().f_91066_.m_232121_().m_231551_();
       if (i == 0) {
-         return colorResolverIn.m_130045_(CustomColors.fixBiome((Biome)this.m_204166_(blockPosIn).m_203334_()), (double)blockPosIn.m_123341_(), (double)blockPosIn.m_123343_());
+         return colorResolverIn.m_130045_(
+            CustomColors.fixBiome((Biome)this.m_204166_(blockPosIn).m_203334_()), (double)blockPosIn.m_123341_(), (double)blockPosIn.m_123343_()
+         );
       } else {
          int j = (i * 2 + 1) * (i * 2 + 1);
          int k = 0;
          int l = 0;
          int i1 = 0;
-         Cursor3D cursor3d = new Cursor3D(blockPosIn.m_123341_() - i, blockPosIn.m_123342_(), blockPosIn.m_123343_() - i, blockPosIn.m_123341_() + i, blockPosIn.m_123342_(), blockPosIn.m_123343_() + i);
+         Cursor3D cursor3d = new Cursor3D(
+            blockPosIn.m_123341_() - i,
+            blockPosIn.m_123342_(),
+            blockPosIn.m_123343_() - i,
+            blockPosIn.m_123341_() + i,
+            blockPosIn.m_123342_(),
+            blockPosIn.m_123343_() + i
+         );
+         MutableBlockPos blockpos$mutableblockpos = new MutableBlockPos();
 
-         int j1;
-         for(BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos(); cursor3d.m_122304_(); i1 += j1 & 255) {
+         while (cursor3d.m_122304_()) {
             blockpos$mutableblockpos.m_122178_(cursor3d.m_122305_(), cursor3d.m_122306_(), cursor3d.m_122307_());
-            j1 = colorResolverIn.m_130045_(CustomColors.fixBiome((Biome)this.m_204166_(blockpos$mutableblockpos).m_203334_()), (double)blockpos$mutableblockpos.m_123341_(), (double)blockpos$mutableblockpos.m_123343_());
-            k += (j1 & 16711680) >> 16;
-            l += (j1 & '\uff00') >> 8;
+            int j1 = colorResolverIn.m_130045_(
+               CustomColors.fixBiome((Biome)this.m_204166_(blockpos$mutableblockpos).m_203334_()),
+               (double)blockpos$mutableblockpos.m_123341_(),
+               (double)blockpos$mutableblockpos.m_123343_()
+            );
+            k += (j1 & 0xFF0000) >> 16;
+            l += (j1 & 0xFF00) >> 8;
+            i1 += j1 & 0xFF;
          }
 
-         return (k / j & 255) << 16 | (l / j & 255) << 8 | i1 / j & 255;
+         return (k / j & 0xFF) << 16 | (l / j & 0xFF) << 8 | i1 / j & 0xFF;
       }
    }
 
@@ -887,28 +897,27 @@ public class ClientLevel extends Level {
       return "ClientLevel";
    }
 
-   public ClientLevelData m_6106_() {
+   public ClientLevel.ClientLevelData m_6106_() {
       return this.f_104563_;
    }
 
-   public void m_214171_(Holder eventIn, Vec3 posIn, GameEvent.Context contextIn) {
+   public void m_214171_(Holder<GameEvent> eventIn, Vec3 posIn, Context contextIn) {
    }
 
-   protected Map m_171684_() {
+   protected Map<MapId, MapItemSavedData> m_171684_() {
       return ImmutableMap.copyOf(this.f_104556_);
    }
 
-   protected void m_171672_(Map mapDataIn) {
+   protected void m_171672_(Map<MapId, MapItemSavedData> mapDataIn) {
       this.f_104556_.putAll(mapDataIn);
    }
 
-   protected LevelEntityGetter m_142646_() {
+   protected LevelEntityGetter<Entity> m_142646_() {
       return this.f_171631_.m_157645_();
    }
 
    public String m_46464_() {
-      String var10000 = this.f_104559_.m_6754_();
-      return "Chunks[C] W: " + var10000 + " E: " + this.f_171631_.m_157664_();
+      return "Chunks[C] W: " + this.f_104559_.m_6754_() + " E: " + this.f_171631_.m_157664_();
    }
 
    public void m_142052_(BlockPos blockPosIn, BlockState stateIn) {
@@ -939,7 +948,7 @@ public class ClientLevel extends Level {
       return EntitySection.getSectionStorage(this.f_171631_);
    }
 
-   public Collection getPartEntities() {
+   public Collection<PartEntity<?>> getPartEntities() {
       return this.partEntities.values();
    }
 
@@ -956,82 +965,10 @@ public class ClientLevel extends Level {
       }
    }
 
-   static {
-      f_194124_ = Set.of(Items.f_42127_, Items.f_151033_);
-   }
-
-   final class EntityCallbacks implements LevelCallback {
-      public void m_141989_(Entity entityIn) {
-      }
-
-      public void m_141986_(Entity entityIn) {
-      }
-
-      public void m_141987_(Entity entityIn) {
-         ClientLevel.this.f_171630_.m_156908_(entityIn);
-      }
-
-      public void m_141983_(Entity entityIn) {
-         ClientLevel.this.f_171630_.m_156912_(entityIn);
-      }
-
-      public void m_141985_(Entity entityIn) {
-         if (entityIn instanceof AbstractClientPlayer) {
-            ClientLevel.this.f_104566_.add((AbstractClientPlayer)entityIn);
-         }
-
-         if (Reflector.IForgeEntity_isMultipartEntity.exists() && Reflector.IForgeEntity_getParts.exists()) {
-            boolean multipartEntity = Reflector.callBoolean(entityIn, Reflector.IForgeEntity_isMultipartEntity);
-            if (multipartEntity) {
-               PartEntity[] parts = (PartEntity[])Reflector.call(entityIn, Reflector.IForgeEntity_getParts);
-               PartEntity[] var4 = parts;
-               int var5 = parts.length;
-
-               for(int var6 = 0; var6 < var5; ++var6) {
-                  PartEntity part = var4[var6];
-                  ClientLevel.this.partEntities.put(part.m_19879_(), part);
-               }
-            }
-         }
-
-      }
-
-      public void m_141981_(Entity entityIn) {
-         entityIn.m_19877_();
-         ClientLevel.this.f_104566_.remove(entityIn);
-         if (Reflector.IForgeEntity_onRemovedFromWorld.exists()) {
-            Reflector.call(entityIn, Reflector.IForgeEntity_onRemovedFromWorld);
-         }
-
-         if (Reflector.EntityLeaveLevelEvent_Constructor.exists()) {
-            Reflector.postForgeBusEvent(Reflector.EntityLeaveLevelEvent_Constructor, entityIn, ClientLevel.this);
-         }
-
-         if (Reflector.IForgeEntity_isMultipartEntity.exists() && Reflector.IForgeEntity_getParts.exists()) {
-            boolean multipartEntity = Reflector.callBoolean(entityIn, Reflector.IForgeEntity_isMultipartEntity);
-            if (multipartEntity) {
-               PartEntity[] parts = (PartEntity[])Reflector.call(entityIn, Reflector.IForgeEntity_getParts);
-               PartEntity[] var4 = parts;
-               int var5 = parts.length;
-
-               for(int var6 = 0; var6 < var5; ++var6) {
-                  PartEntity part = var4[var6];
-                  ClientLevel.this.partEntities.remove(part.m_19879_(), part);
-               }
-            }
-         }
-
-         ClientLevel.this.onEntityRemoved(entityIn);
-      }
-
-      public void m_214006_(Entity entityIn) {
-      }
-   }
-
    public static class ClientLevelData implements WritableLevelData {
-      private final boolean f_104830_;
-      private final GameRules f_104831_;
-      private final boolean f_104832_;
+      private boolean f_104830_;
+      private GameRules f_104831_;
+      private boolean f_104832_;
       private BlockPos f_316685_;
       private float f_104836_;
       private long f_104837_;
@@ -1123,6 +1060,67 @@ public class ClientLevel extends Level {
 
       public float m_205519_() {
          return this.f_104832_ ? 1.0F : 0.03125F;
+      }
+   }
+
+   class EntityCallbacks implements LevelCallback<Entity> {
+      public void m_141989_(Entity entityIn) {
+      }
+
+      public void m_141986_(Entity entityIn) {
+      }
+
+      public void m_141987_(Entity entityIn) {
+         ClientLevel.this.f_171630_.m_156908_(entityIn);
+      }
+
+      public void m_141983_(Entity entityIn) {
+         ClientLevel.this.f_171630_.m_156912_(entityIn);
+      }
+
+      public void m_141985_(Entity entityIn) {
+         if (entityIn instanceof AbstractClientPlayer) {
+            ClientLevel.this.f_104566_.add((AbstractClientPlayer)entityIn);
+         }
+
+         if (Reflector.IForgeEntity_isMultipartEntity.exists() && Reflector.IForgeEntity_getParts.exists()) {
+            boolean multipartEntity = Reflector.callBoolean(entityIn, Reflector.IForgeEntity_isMultipartEntity);
+            if (multipartEntity) {
+               PartEntity[] parts = (PartEntity[])Reflector.m_46374_(entityIn, Reflector.IForgeEntity_getParts);
+
+               for (PartEntity part : parts) {
+                  ClientLevel.this.partEntities.put(part.m_19879_(), part);
+               }
+            }
+         }
+      }
+
+      public void m_141981_(Entity entityIn) {
+         entityIn.m_19877_();
+         ClientLevel.this.f_104566_.remove(entityIn);
+         if (Reflector.IForgeEntity_onRemovedFromWorld.exists()) {
+            Reflector.m_46374_(entityIn, Reflector.IForgeEntity_onRemovedFromWorld);
+         }
+
+         if (Reflector.EntityLeaveLevelEvent_Constructor.exists()) {
+            Reflector.postForgeBusEvent(Reflector.EntityLeaveLevelEvent_Constructor, entityIn, ClientLevel.this);
+         }
+
+         if (Reflector.IForgeEntity_isMultipartEntity.exists() && Reflector.IForgeEntity_getParts.exists()) {
+            boolean multipartEntity = Reflector.callBoolean(entityIn, Reflector.IForgeEntity_isMultipartEntity);
+            if (multipartEntity) {
+               PartEntity[] parts = (PartEntity[])Reflector.m_46374_(entityIn, Reflector.IForgeEntity_getParts);
+
+               for (PartEntity part : parts) {
+                  ClientLevel.this.partEntities.remove(part.m_19879_(), part);
+               }
+            }
+         }
+
+         ClientLevel.this.onEntityRemoved(entityIn);
+      }
+
+      public void m_214006_(Entity entityIn) {
       }
    }
 }

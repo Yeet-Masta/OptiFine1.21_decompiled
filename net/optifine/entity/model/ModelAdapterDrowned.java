@@ -17,10 +17,12 @@ public class ModelAdapterDrowned extends ModelAdapterZombie {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new DrownedModel(bakeModelLayer(ModelLayers.f_171136_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       DrownedRenderer render = new DrownedRenderer(renderManager.getContext());

@@ -13,7 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterHoglin extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, Integer> mapParts = makeMapParts();
 
    public ModelAdapterHoglin() {
       super(EntityType.f_20456_, "hoglin", 0.7F);
@@ -23,10 +23,12 @@ public class ModelAdapterHoglin extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new HoglinModel(bakeModelLayer(ModelLayers.f_171184_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof HoglinModel modelBoar)) {
          return null;
@@ -38,13 +40,13 @@ public class ModelAdapterHoglin extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, Integer> makeMapParts() {
+      Map<String, Integer> map = new LinkedHashMap();
       map.put("head", 0);
       map.put("right_ear", 1);
       map.put("left_ear", 2);
@@ -57,6 +59,7 @@ public class ModelAdapterHoglin extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       HoglinRenderer render = new HoglinRenderer(renderManager.getContext());

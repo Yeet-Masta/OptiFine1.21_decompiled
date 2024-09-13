@@ -3,6 +3,7 @@ package net.minecraft.client.renderer.entity.layers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.ArmedModel;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -16,15 +17,26 @@ import net.minecraft.world.item.ItemStack;
 import net.optifine.entity.model.CustomEntityModels;
 import net.optifine.model.AttachmentType;
 
-public class ItemInHandLayer extends RenderLayer {
-   private final ItemInHandRenderer f_234844_;
+public class ItemInHandLayer<T extends LivingEntity, M extends EntityModel<T> & ArmedModel> extends RenderLayer<T, M> {
+   private ItemInHandRenderer f_234844_;
 
-   public ItemInHandLayer(RenderLayerParent p_i234845_1_, ItemInHandRenderer p_i234845_2_) {
+   public ItemInHandLayer(RenderLayerParent<T, M> p_i234845_1_, ItemInHandRenderer p_i234845_2_) {
       super(p_i234845_1_);
       this.f_234844_ = p_i234845_2_;
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, LivingEntity entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      T entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       boolean flag = entitylivingbaseIn.m_5737_() == HumanoidArm.RIGHT;
       ItemStack itemstack = flag ? entitylivingbaseIn.m_21206_() : entitylivingbaseIn.m_21205_();
       ItemStack itemstack1 = flag ? entitylivingbaseIn.m_21205_() : entitylivingbaseIn.m_21206_();
@@ -40,14 +52,21 @@ public class ItemInHandLayer extends RenderLayer {
          this.m_117184_(entitylivingbaseIn, itemstack, ItemDisplayContext.THIRD_PERSON_LEFT_HAND, HumanoidArm.LEFT, matrixStackIn, bufferIn, packedLightIn);
          matrixStackIn.m_85849_();
       }
-
    }
 
-   protected void m_117184_(LivingEntity entityIn, ItemStack itemStackIn, ItemDisplayContext contextIn, HumanoidArm armIn, PoseStack matrixStackIn, MultiBufferSource bufferSourceIn, int combinedLightIn) {
+   protected void m_117184_(
+      LivingEntity entityIn,
+      ItemStack itemStackIn,
+      ItemDisplayContext contextIn,
+      HumanoidArm armIn,
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferSourceIn,
+      int combinedLightIn
+   ) {
       if (!itemStackIn.m_41619_()) {
          matrixStackIn.m_85836_();
          if (!this.applyAttachmentTransform(armIn, matrixStackIn)) {
-            ((ArmedModel)this.m_117386_()).m_6002_(armIn, matrixStackIn);
+            this.m_117386_().m_6002_(armIn, matrixStackIn);
          }
 
          matrixStackIn.m_252781_(Axis.f_252529_.m_252977_(-90.0F));
@@ -57,7 +76,6 @@ public class ItemInHandLayer extends RenderLayer {
          this.f_234844_.m_269530_(entityIn, itemStackIn, contextIn, flag, matrixStackIn, bufferSourceIn, combinedLightIn);
          matrixStackIn.m_85849_();
       }
-
    }
 
    private boolean applyAttachmentTransform(HumanoidArm armIn, PoseStack matrixStackIn) {
@@ -75,13 +93,11 @@ public class ItemInHandLayer extends RenderLayer {
    }
 
    private ModelPart getRoot() {
-      ArmedModel model = (ArmedModel)this.m_117386_();
+      ArmedModel model = this.m_117386_();
       if (model instanceof HumanoidModel humanoidModel) {
          return humanoidModel.f_102810_.getParent();
-      } else if (model instanceof HierarchicalModel hierarchicalModel) {
-         return hierarchicalModel.m_142109_();
       } else {
-         return null;
+         return model instanceof HierarchicalModel hierarchicalModel ? hierarchicalModel.m_142109_() : null;
       }
    }
 }

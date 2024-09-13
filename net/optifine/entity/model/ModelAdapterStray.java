@@ -17,10 +17,12 @@ public class ModelAdapterStray extends ModelAdapterBiped {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new SkeletonModel(bakeModelLayer(ModelLayers.f_171247_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       StrayRenderer render = new StrayRenderer(renderManager.getContext());

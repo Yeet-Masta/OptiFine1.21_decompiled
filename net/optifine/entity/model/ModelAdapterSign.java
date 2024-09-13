@@ -1,10 +1,8 @@
 package net.optifine.entity.model;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -22,10 +20,12 @@ public class ModelAdapterSign extends ModelAdapter {
       super(BlockEntityType.f_58924_, "sign", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new SignRenderer.SignModel(bakeModelLayer(ModelLayers.m_171291_(WoodType.f_61830_)));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SignRenderer.SignModel modelSign)) {
          return null;
@@ -36,37 +36,35 @@ public class ModelAdapterSign extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"board", "stick"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58924_, index, () -> {
-         return new SignRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58924_, index, () -> new SignRenderer(dispatcher.getContext()));
       if (!(renderer instanceof SignRenderer)) {
          return null;
       } else if (!Reflector.TileEntitySignRenderer_signModels.exists()) {
          Config.warn("Field not found: TileEntitySignRenderer.signModels");
          return null;
       } else {
-         Map signModels = (Map)Reflector.getFieldValue(renderer, Reflector.TileEntitySignRenderer_signModels);
+         Map<WoodType, SignRenderer.SignModel> signModels = (Map<WoodType, SignRenderer.SignModel>)Reflector.getFieldValue(
+            renderer, Reflector.TileEntitySignRenderer_signModels
+         );
          if (signModels == null) {
             Config.warn("Field not found: TileEntitySignRenderer.signModels");
             return null;
          } else {
             if (signModels instanceof ImmutableMap) {
-               signModels = new HashMap((Map)signModels);
+               signModels = new HashMap(signModels);
                Reflector.TileEntitySignRenderer_signModels.setValue(renderer, signModels);
             }
 
-            Collection types = new HashSet(((Map)signModels).keySet());
-            Iterator var9 = types.iterator();
-
-            while(var9.hasNext()) {
-               WoodType type = (WoodType)var9.next();
-               ((Map)signModels).put(type, (SignRenderer.SignModel)modelBase);
+            for (WoodType type : new HashSet(signModels.keySet())) {
+               signModels.put(type, (SignRenderer.SignModel)modelBase);
             }
 
             return renderer;

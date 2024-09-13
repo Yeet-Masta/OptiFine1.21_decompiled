@@ -14,10 +14,12 @@ public class ModelAdapterBat extends ModelAdapter {
       super(EntityType.f_20549_, "bat", 0.25F);
    }
 
+   @Override
    public Model makeModel() {
       return new BatModel(bakeModelLayer(ModelLayers.f_171265_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BatModel modelBat)) {
          return null;
@@ -40,10 +42,12 @@ public class ModelAdapterBat extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "right_wing", "left_wing", "outer_right_wing", "outer_left_wing", "feet", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       BatRenderer render = new BatRenderer(renderManager.getContext());

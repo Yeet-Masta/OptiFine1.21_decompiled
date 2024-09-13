@@ -5,16 +5,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.FontManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.PreparableReloadListener.PreparationBarrier;
 import net.minecraft.util.profiling.InactiveProfiler;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
@@ -27,8 +25,7 @@ public class FontUtils {
       if (!fontFileName.endsWith(suffix)) {
          return props;
       } else {
-         String var10000 = fontFileName.substring(0, fontFileName.length() - suffix.length());
-         String fileName = var10000 + ".properties";
+         String fileName = fontFileName.substring(0, fontFileName.length() - suffix.length()) + ".properties";
 
          try {
             ResourceLocation locProp = new ResourceLocation(locationFontTexture.m_135827_(), fileName);
@@ -37,7 +34,7 @@ public class FontUtils {
                return props;
             }
 
-            Config.log("Loading " + fileName);
+            Config.m_260877_("Loading " + fileName);
             props.load(in);
             in.close();
          } catch (FileNotFoundException var7) {
@@ -49,13 +46,10 @@ public class FontUtils {
       }
    }
 
-   public static Int2ObjectMap readCustomCharWidths(Properties props) {
-      Int2ObjectMap map = new Int2ObjectOpenHashMap();
-      Set keySet = props.keySet();
-      Iterator iter = keySet.iterator();
+   public static Int2ObjectMap<Float> readCustomCharWidths(Properties props) {
+      Int2ObjectMap<Float> map = new Int2ObjectOpenHashMap();
 
-      while(iter.hasNext()) {
-         String key = (String)iter.next();
+      for (String key : props.keySet()) {
          String prefix = "width.";
          if (key.startsWith(prefix)) {
             String numStr = key.substring(prefix.length());
@@ -95,15 +89,13 @@ public class FontUtils {
          return defVal;
       } else {
          String strLow = str.toLowerCase().trim();
-         if (!strLow.equals("true") && !strLow.equals("on")) {
-            if (!strLow.equals("false") && !strLow.equals("off")) {
-               Config.warn("Invalid value for " + key + ": " + str);
-               return defVal;
-            } else {
-               return false;
-            }
-         } else {
+         if (strLow.equals("true") || strLow.equals("on")) {
             return true;
+         } else if (!strLow.equals("false") && !strLow.equals("off")) {
+            Config.warn("Invalid value for " + key + ": " + str);
+            return defVal;
+         } else {
+            return false;
          }
       }
    }
@@ -131,8 +123,8 @@ public class FontUtils {
    }
 
    public static void reloadFonts() {
-      PreparableReloadListener.PreparationBarrier stage = new PreparableReloadListener.PreparationBarrier() {
-         public CompletableFuture m_6769_(Object x) {
+      PreparationBarrier stage = new PreparationBarrier() {
+         public <T> CompletableFuture<T> m_6769_(T x) {
             return CompletableFuture.completedFuture(x);
          }
       };

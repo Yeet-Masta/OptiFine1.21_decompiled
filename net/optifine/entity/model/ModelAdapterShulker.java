@@ -15,10 +15,12 @@ public class ModelAdapterShulker extends ModelAdapter {
       super(EntityType.f_20521_, "shulker", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new ShulkerModel(bakeModelLayer(ModelLayers.f_171180_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ShulkerModel modelShulker)) {
          return null;
@@ -31,10 +33,12 @@ public class ModelAdapterShulker extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"base", "lid", "head"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ShulkerRenderer render = new ShulkerRenderer(renderManager.getContext());

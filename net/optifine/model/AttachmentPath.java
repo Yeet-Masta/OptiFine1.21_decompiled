@@ -21,7 +21,7 @@ public class AttachmentPath {
    }
 
    public boolean isVisible() {
-      for(int i = 0; i < this.modelParts.length; ++i) {
+      for (int i = 0; i < this.modelParts.length; i++) {
          ModelPart modelPart = this.modelParts[i];
          if (!modelPart.f_104207_) {
             return false;
@@ -32,7 +32,7 @@ public class AttachmentPath {
    }
 
    public void applyTransform(PoseStack matrixStackIn) {
-      for(int i = 0; i < this.modelParts.length; ++i) {
+      for (int i = 0; i < this.modelParts.length; i++) {
          ModelPart modelPart = this.modelParts[i];
          modelPart.m_104299_(matrixStackIn);
       }
@@ -41,7 +41,6 @@ public class AttachmentPath {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.attachment.getType());
-      return "attachment: " + var10000 + ", parents: " + this.modelParts.length;
+      return "attachment: " + this.attachment.getType() + ", parents: " + this.modelParts.length;
    }
 }

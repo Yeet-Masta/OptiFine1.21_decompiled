@@ -21,7 +21,7 @@ public class TooltipManager {
       this.tooltipProvider = tooltipProvider;
    }
 
-   public void drawTooltips(GuiGraphics graphicsIn, int x, int y, List buttonList) {
+   public void drawTooltips(GuiGraphics graphicsIn, int x, int y, List<AbstractWidget> buttonList) {
       if (Math.abs(x - this.lastMouseX) <= 5 && Math.abs(y - this.lastMouseY) <= 5) {
          int activateDelay = 700;
          if (System.currentTimeMillis() >= this.mouseStillTime + (long)activateDelay) {
@@ -37,15 +37,14 @@ public class TooltipManager {
 
                   graphicsIn.m_280168_().m_85836_();
                   graphicsIn.m_280168_().m_252880_(0.0F, 0.0F, 400.0F);
-                  int i;
                   if (this.tooltipProvider.isRenderBorder()) {
-                     i = -528449408;
-                     this.drawRectBorder(graphicsIn, rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, i);
+                     int colBorder = -528449408;
+                     this.drawRectBorder(graphicsIn, rect.ROT_90_Z_POS, rect.INVERSION, rect.ROT_90_Z_POS + rect.width, rect.INVERSION + rect.height, colBorder);
                   }
 
-                  graphicsIn.m_280509_(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, -536870912);
+                  graphicsIn.m_280509_(rect.ROT_90_Z_POS, rect.INVERSION, rect.ROT_90_Z_POS + rect.width, rect.INVERSION + rect.height, -536870912);
 
-                  for(i = 0; i < lines.length; ++i) {
+                  for (int i = 0; i < lines.length; i++) {
                      String line = lines[i];
                      int col = 14540253;
                      if (line.endsWith("!")) {
@@ -53,7 +52,7 @@ public class TooltipManager {
                      }
 
                      Font fontRenderer = Minecraft.m_91087_().f_91062_;
-                     graphicsIn.m_280056_(fontRenderer, line, rect.x + 5, rect.y + 5 + i * 11, col, true);
+                     graphicsIn.m_280056_(fontRenderer, line, rect.ROT_90_Z_POS + 5, rect.INVERSION + 5 + i * 11, col, true);
                   }
 
                   graphicsIn.m_280168_().m_85849_();

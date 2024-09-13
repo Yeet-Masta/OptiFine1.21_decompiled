@@ -6,20 +6,20 @@ import net.minecraft.core.Vec3i;
 import net.optifine.Config;
 
 public class ShaderParser {
-   public static Pattern PATTERN_UNIFORM = Pattern.compile("[\\w\\s(,=)]*uniform\\s+\\w+\\s+(\\w+).*");
-   public static Pattern PATTERN_ATTRIBUTE = Pattern.compile("\\s*attribute\\s+\\w+\\s+(\\w+).*");
-   public static Pattern PATTERN_IN = Pattern.compile("\\s*in\\s+\\w+\\s+(\\w+).*");
-   public static Pattern PATTERN_CONST_INT = Pattern.compile("\\s*const\\s+int\\s+(\\w+)\\s*=\\s*([-+.\\w]+)\\s*;.*");
-   public static Pattern PATTERN_CONST_IVEC3 = Pattern.compile("\\s*const\\s+ivec3\\s+(\\w+)\\s*=\\s*(.+)\\s*;.*");
-   public static Pattern PATTERN_CONST_FLOAT = Pattern.compile("\\s*const\\s+float\\s+(\\w+)\\s*=\\s*([-+.\\w]+)\\s*;.*");
-   public static Pattern PATTERN_CONST_VEC2 = Pattern.compile("\\s*const\\s+vec2\\s+(\\w+)\\s*=\\s*(.+)\\s*;.*");
-   public static Pattern PATTERN_CONST_VEC4 = Pattern.compile("\\s*const\\s+vec4\\s+(\\w+)\\s*=\\s*(.+)\\s*;.*");
-   public static Pattern PATTERN_CONST_BOOL = Pattern.compile("\\s*const\\s+bool\\s+(\\w+)\\s*=\\s*(\\w+)\\s*;.*");
-   public static Pattern PATTERN_PROPERTY = Pattern.compile("\\s*(/\\*|//)?\\s*([A-Z]+):\\s*([\\w.,]+)\\s*(\\*/.*|\\s*)");
-   public static Pattern PATTERN_EXTENSION = Pattern.compile("\\s*#\\s*extension\\s+(\\w+)\\s*:\\s*(\\w+).*");
-   public static Pattern PATTERN_LAYOUT = Pattern.compile("\\s*layout\\s*\\((.*)\\)\\s*(\\w+).*");
-   public static Pattern PATTERN_DRAW_BUFFERS = Pattern.compile("[0-9N]+");
-   public static Pattern PATTERN_RENDER_TARGETS = Pattern.compile("[0-9N,]+");
+   public static Pattern PATTERN_UNIFORM = Pattern.m_289905_("[\\w\\s(,=)]*uniform\\s+\\w+\\s+(\\w+).*");
+   public static Pattern PATTERN_ATTRIBUTE = Pattern.m_289905_("\\s*attribute\\s+\\w+\\s+(\\w+).*");
+   public static Pattern PATTERN_IN = Pattern.m_289905_("\\s*in\\s+\\w+\\s+(\\w+).*");
+   public static Pattern PATTERN_CONST_INT = Pattern.m_289905_("\\s*const\\s+int\\s+(\\w+)\\s*=\\s*([-+.\\w]+)\\s*;.*");
+   public static Pattern PATTERN_CONST_IVEC3 = Pattern.m_289905_("\\s*const\\s+ivec3\\s+(\\w+)\\s*=\\s*(.+)\\s*;.*");
+   public static Pattern PATTERN_CONST_FLOAT = Pattern.m_289905_("\\s*const\\s+float\\s+(\\w+)\\s*=\\s*([-+.\\w]+)\\s*;.*");
+   public static Pattern PATTERN_CONST_VEC2 = Pattern.m_289905_("\\s*const\\s+vec2\\s+(\\w+)\\s*=\\s*(.+)\\s*;.*");
+   public static Pattern PATTERN_CONST_VEC4 = Pattern.m_289905_("\\s*const\\s+vec4\\s+(\\w+)\\s*=\\s*(.+)\\s*;.*");
+   public static Pattern PATTERN_CONST_BOOL = Pattern.m_289905_("\\s*const\\s+bool\\s+(\\w+)\\s*=\\s*(\\w+)\\s*;.*");
+   public static Pattern PATTERN_PROPERTY = Pattern.m_289905_("\\s*(/\\*|//)?\\s*([A-Z]+):\\s*([\\w.,]+)\\s*(\\*/.*|\\s*)");
+   public static Pattern PATTERN_EXTENSION = Pattern.m_289905_("\\s*#\\s*extension\\s+(\\w+)\\s*:\\s*(\\w+).*");
+   public static Pattern PATTERN_LAYOUT = Pattern.m_289905_("\\s*layout\\s*\\((.*)\\)\\s*(\\w+).*");
+   public static Pattern PATTERN_DRAW_BUFFERS = Pattern.m_289905_("[0-9N]+");
+   public static Pattern PATTERN_RENDER_TARGETS = Pattern.m_289905_("[0-9N,]+");
 
    public static ShaderLine parseLine(String line, ShaderType shaderType) {
       Matcher mu = PATTERN_UNIFORM.matcher(line);
@@ -30,15 +30,14 @@ public class ShaderParser {
          if (ma.matches()) {
             return new ShaderLine(ShaderLine.Type.ATTRIBUTE, ma.group(1), "", line);
          } else {
-            Matcher mci;
             if (shaderType == ShaderType.VERTEX) {
-               mci = PATTERN_IN.matcher(line);
-               if (mci.matches()) {
-                  return new ShaderLine(ShaderLine.Type.ATTRIBUTE, mci.group(1), "", line);
+               Matcher mi = PATTERN_IN.matcher(line);
+               if (mi.matches()) {
+                  return new ShaderLine(ShaderLine.Type.ATTRIBUTE, mi.group(1), "", line);
                }
             }
 
-            mci = PATTERN_CONST_INT.matcher(line);
+            Matcher mci = PATTERN_CONST_INT.matcher(line);
             if (mci.matches()) {
                return new ShaderLine(ShaderLine.Type.CONST_INT, mci.group(1), mci.group(2), line);
             } else {
@@ -106,11 +105,19 @@ public class ShaderParser {
    }
 
    public static int getShadowColorIndex(String uniform) {
-      switch (uniform) {
-         case "shadowcolor":
-            return 0;
+      byte var2 = -1;
+      switch (uniform.hashCode()) {
+         case -1560188349:
+            if (uniform.equals("shadowcolor")) {
+               var2 = 0;
+            }
          default:
-            return getIndex(uniform, "shadowcolor", 0, 1);
+            switch (var2) {
+               case 0:
+                  return 0;
+               default:
+                  return getIndex(uniform, "shadowcolor", 0, 1);
+            }
       }
    }
 
@@ -138,7 +145,7 @@ public class ShaderParser {
          str = str.trim();
          String[] strs = new String[str.length()];
 
-         for(int i = 0; i < strs.length; ++i) {
+         for (int i = 0; i < strs.length; i++) {
             strs[i] = String.valueOf(str.charAt(i));
          }
 
@@ -151,8 +158,7 @@ public class ShaderParser {
          return null;
       } else {
          str = str.trim();
-         String[] strs = Config.tokenize(str, ",");
-         return strs;
+         return Config.tokenize(str, ",");
       }
    }
 
@@ -162,7 +168,7 @@ public class ShaderParser {
       int z = 1;
       String[] parts = Config.tokenize(value, ",");
 
-      for(int i = 0; i < parts.length; ++i) {
+      for (int i = 0; i < parts.length; i++) {
          String part = parts[i];
          String[] tokens = Config.tokenize(part, "=");
          if (tokens.length == 2) {
@@ -187,10 +193,6 @@ public class ShaderParser {
          }
       }
 
-      if (x == 1 && y == 1 && z == 1) {
-         return null;
-      } else {
-         return new Vec3i(x, y, z);
-      }
+      return x == 1 && y == 1 && z == 1 ? null : new Vec3i(x, y, z);
    }
 }

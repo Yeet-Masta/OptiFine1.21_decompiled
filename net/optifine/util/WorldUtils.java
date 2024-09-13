@@ -8,7 +8,7 @@ public class WorldUtils {
       return world == null ? 0 : getDimensionId(world.m_46472_());
    }
 
-   public static int getDimensionId(ResourceKey dimension) {
+   public static int getDimensionId(ResourceKey<Level> dimension) {
       if (dimension == Level.f_46429_) {
          return -1;
       } else if (dimension == Level.f_46428_) {
@@ -23,7 +23,7 @@ public class WorldUtils {
    }
 
    public static boolean isOverworld(Level world) {
-      ResourceKey dimension = world.m_46472_();
+      ResourceKey<Level> dimension = world.m_46472_();
       return getDimensionId(dimension) == 0;
    }
 

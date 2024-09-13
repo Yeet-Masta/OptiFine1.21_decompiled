@@ -30,22 +30,22 @@ public class TextureAtlasSprite {
    private float f_118352_;
    private float f_118353_;
    private float f_118354_;
-   private int indexInMap;
+   private int indexInMap = -1;
    public float baseU;
    public float baseV;
    public int sheetWidth;
    public int sheetHeight;
-   private final ResourceLocation name;
-   public int glSpriteTextureId;
-   public TextureAtlasSprite spriteSingle;
-   public boolean isSpriteSingle;
-   public static final String SUFFIX_SPRITE_SINGLE = ".sprite_single";
-   public TextureAtlasSprite spriteNormal;
-   public TextureAtlasSprite spriteSpecular;
-   public ShadersTextureType spriteShadersType;
-   public TextureAtlasSprite spriteEmissive;
-   public boolean isSpriteEmissive;
-   protected int animationIndex;
+   private ResourceLocation name;
+   public int glSpriteTextureId = -1;
+   public TextureAtlasSprite spriteSingle = null;
+   public boolean isSpriteSingle = false;
+   public static String SUFFIX_SPRITE_SINGLE;
+   public TextureAtlasSprite spriteNormal = null;
+   public TextureAtlasSprite spriteSpecular = null;
+   public ShadersTextureType spriteShadersType = null;
+   public TextureAtlasSprite spriteEmissive = null;
+   public boolean isSpriteEmissive = false;
+   protected int animationIndex = -1;
    private boolean terrain;
    private boolean shaders;
    private boolean multiTexture;
@@ -55,20 +55,9 @@ public class TextureAtlasSprite {
    private TextureAtlas atlasTexture;
    private SpriteContents.Ticker spriteContentsTicker;
    private TextureAtlasSprite parentSprite;
-   protected boolean usesParentAnimationTime;
+   protected boolean usesParentAnimationTime = false;
 
    public TextureAtlasSprite(ResourceLocation atlasLocation, ResourceLocation name) {
-      this.indexInMap = -1;
-      this.glSpriteTextureId = -1;
-      this.spriteSingle = null;
-      this.isSpriteSingle = false;
-      this.spriteNormal = null;
-      this.spriteSpecular = null;
-      this.spriteShadersType = null;
-      this.spriteEmissive = null;
-      this.isSpriteEmissive = false;
-      this.animationIndex = -1;
-      this.usesParentAnimationTime = false;
       this.f_244141_ = atlasLocation;
       this.name = name;
       this.f_244165_ = null;
@@ -84,21 +73,15 @@ public class TextureAtlasSprite {
    }
 
    private TextureAtlasSprite(TextureAtlasSprite parent) {
-      this.indexInMap = -1;
-      this.glSpriteTextureId = -1;
-      this.spriteSingle = null;
-      this.isSpriteSingle = false;
-      this.spriteNormal = null;
-      this.spriteSpecular = null;
-      this.spriteShadersType = null;
-      this.spriteEmissive = null;
-      this.isSpriteEmissive = false;
-      this.animationIndex = -1;
-      this.usesParentAnimationTime = false;
       this.atlasTexture = parent.atlasTexture;
       this.name = parent.getName();
       SpriteContents parentContents = parent.f_244165_;
-      this.f_244165_ = new SpriteContents(parentContents.m_246162_(), new FrameSize(parentContents.f_244302_, parentContents.f_244600_), parentContents.getOriginalImage(), parentContents.m_293312_());
+      this.f_244165_ = new SpriteContents(
+         parentContents.m_246162_(),
+         new FrameSize(parentContents.f_244302_, parentContents.f_244600_),
+         parentContents.getOriginalImage(),
+         parentContents.m_293312_()
+      );
       this.f_244165_.setSprite(this);
       this.f_244165_.setScaleFactor(parentContents.getScaleFactor());
       this.imageWidth = parent.imageWidth;
@@ -122,7 +105,6 @@ public class TextureAtlasSprite {
       if (this.spriteContentsTicker != null && parent.spriteContentsTicker != null) {
          this.spriteContentsTicker.animationActive = parent.spriteContentsTicker.animationActive;
       }
-
    }
 
    public void init(ResourceLocation locationIn, SpriteContents contentsIn, int atlasWidthIn, int atlasHeightIn, int xIn, int yIn) {
@@ -144,21 +126,19 @@ public class TextureAtlasSprite {
    }
 
    protected TextureAtlasSprite(ResourceLocation locationIn, SpriteContents contentsIn, int atlasWidthIn, int atlasHeightIn, int xIn, int yIn) {
-      this(locationIn, contentsIn, atlasWidthIn, atlasHeightIn, xIn, yIn, (TextureAtlas)null, (ShadersTextureType)null);
+      this(locationIn, contentsIn, atlasWidthIn, atlasHeightIn, xIn, yIn, null, null);
    }
 
-   protected TextureAtlasSprite(ResourceLocation locationIn, SpriteContents contentsIn, int atlasWidthIn, int atlasHeightIn, int xIn, int yIn, TextureAtlas atlas, ShadersTextureType spriteShadersTypeIn) {
-      this.indexInMap = -1;
-      this.glSpriteTextureId = -1;
-      this.spriteSingle = null;
-      this.isSpriteSingle = false;
-      this.spriteNormal = null;
-      this.spriteSpecular = null;
-      this.spriteShadersType = null;
-      this.spriteEmissive = null;
-      this.isSpriteEmissive = false;
-      this.animationIndex = -1;
-      this.usesParentAnimationTime = false;
+   protected TextureAtlasSprite(
+      ResourceLocation locationIn,
+      SpriteContents contentsIn,
+      int atlasWidthIn,
+      int atlasHeightIn,
+      int xIn,
+      int yIn,
+      TextureAtlas atlas,
+      ShadersTextureType spriteShadersTypeIn
+   ) {
       this.atlasTexture = atlas;
       this.spriteShadersType = spriteShadersTypeIn;
       this.f_244141_ = locationIn;
@@ -200,25 +180,29 @@ public class TextureAtlasSprite {
    }
 
    @Nullable
-   public Ticker m_247406_() {
+   public TextureAtlasSprite.Ticker m_247406_() {
       final SpriteTicker spriteticker = this.f_244165_.m_246786_();
       if (spriteticker != null) {
          spriteticker.setSprite(this);
       }
 
-      return spriteticker != null ? new Ticker() {
+      return spriteticker != null ? new TextureAtlasSprite.Ticker() {
+         @Override
          public void m_245385_() {
             spriteticker.m_247697_(TextureAtlasSprite.this.f_118349_, TextureAtlasSprite.this.f_118350_);
          }
 
+         @Override
          public void close() {
             spriteticker.close();
          }
 
+         @Override
          public TextureAtlasSprite getSprite() {
             return TextureAtlasSprite.this;
          }
 
+         @Override
          public SpriteTicker getSpriteTicker() {
             return spriteticker;
          }
@@ -258,8 +242,19 @@ public class TextureAtlasSprite {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.name);
-      return "TextureAtlasSprite{name= " + var10000 + ", contents='" + String.valueOf(this.f_244165_) + "', u0=" + this.f_118351_ + ", u1=" + this.f_118352_ + ", v0=" + this.f_118353_ + ", v1=" + this.f_118354_ + "}";
+      return "TextureAtlasSprite{name= "
+         + this.name
+         + ", contents='"
+         + this.f_244165_
+         + "', u0="
+         + this.f_118351_
+         + ", u1="
+         + this.f_118352_
+         + ", v0="
+         + this.f_118353_
+         + ", v1="
+         + this.f_118354_
+         + "}";
    }
 
    public void m_118416_() {
@@ -296,7 +291,6 @@ public class TextureAtlasSprite {
          if (this.indexInMap < 0) {
             this.indexInMap = counterInt.nextValue();
          }
-
       }
    }
 
@@ -317,7 +311,6 @@ public class TextureAtlasSprite {
       if (this.spriteSpecular != null) {
          this.spriteSpecular.setAnimationIndex(animationIndex);
       }
-
    }
 
    public boolean isAnimationActive() {
@@ -338,40 +331,33 @@ public class TextureAtlasSprite {
          long blueSum = 0L;
          long count = 0L;
 
-         int redAvg;
-         int greenAvg;
-         int blueAvg;
-         int colAvg;
-         int i;
-         int col;
-         for(redAvg = 0; redAvg < data.length; ++redAvg) {
-            greenAvg = data[redAvg];
-            blueAvg = greenAvg >> 24 & 255;
-            if (blueAvg >= 16) {
-               colAvg = greenAvg >> 16 & 255;
-               i = greenAvg >> 8 & 255;
-               col = greenAvg & 255;
-               redSum += (long)colAvg;
-               greenSum += (long)i;
-               blueSum += (long)col;
-               ++count;
+         for (int i = 0; i < data.length; i++) {
+            int col = data[i];
+            int alpha = col >> 24 & 0xFF;
+            if (alpha >= 16) {
+               int red = col >> 16 & 0xFF;
+               int green = col >> 8 & 0xFF;
+               int blue = col & 0xFF;
+               redSum += (long)red;
+               greenSum += (long)green;
+               blueSum += (long)blue;
+               count++;
             }
          }
 
          if (count > 0L) {
-            redAvg = (int)(redSum / count);
-            greenAvg = (int)(greenSum / count);
-            blueAvg = (int)(blueSum / count);
-            colAvg = redAvg << 16 | greenAvg << 8 | blueAvg;
+            int redAvg = (int)(redSum / count);
+            int greenAvg = (int)(greenSum / count);
+            int blueAvg = (int)(blueSum / count);
+            int colAvg = redAvg << 16 | greenAvg << 8 | blueAvg;
 
-            for(i = 0; i < data.length; ++i) {
-               col = data[i];
-               int alpha = col >> 24 & 255;
+            for (int ix = 0; ix < data.length; ix++) {
+               int col = data[ix];
+               int alpha = col >> 24 & 0xFF;
                if (alpha <= 16) {
-                  data[i] = colAvg;
+                  data[ix] = colAvg;
                }
             }
-
          }
       }
    }
@@ -390,7 +376,7 @@ public class TextureAtlasSprite {
       if (this.glSpriteTextureId < 0) {
          this.glSpriteTextureId = TextureUtil.generateTextureId();
          int mipmapLevels = this.getMipmapLevels();
-         TextureUtil.prepareImage(this.glSpriteTextureId, mipmapLevels, this.getWidth(), this.getHeight());
+         TextureUtil.prepareImage(this.glSpriteTextureId, mipmapLevels, this.m_92515_(), this.getHeight());
          boolean blend = this.atlasTexture.isTextureBlend(this.spriteShadersType);
          if (blend) {
             TextureUtils.applyAnisotropicLevel();
@@ -414,16 +400,14 @@ public class TextureAtlasSprite {
 
    public float toSingleU(float u) {
       u -= this.baseU;
-      float ku = (float)this.sheetWidth / (float)this.getWidth();
-      u *= ku;
-      return u;
+      float ku = (float)this.sheetWidth / (float)this.m_92515_();
+      return u * ku;
    }
 
    public float toSingleV(float v) {
       v -= this.baseV;
       float kv = (float)this.sheetHeight / (float)this.getHeight();
-      v *= kv;
-      return v;
+      return v * kv;
    }
 
    public NativeImage[] getMipmapImages() {
@@ -483,10 +467,9 @@ public class TextureAtlasSprite {
       if (this.spriteSpecular != null) {
          this.spriteSpecular.setTextureAtlas(atlas);
       }
-
    }
 
-   public int getWidth() {
+   public int m_92515_() {
       return this.f_244165_.getSpriteWidth();
    }
 
@@ -502,24 +485,23 @@ public class TextureAtlasSprite {
 
    public TextureAtlasSprite makeSpriteShaders(ShadersTextureType type, int colDef, SpriteContents.AnimatedTexture parentAnimatedTexture) {
       String suffix = type.getSuffix();
-      String var10002 = this.getName().m_135827_();
-      String var10003 = this.getName().m_135815_();
-      ResourceLocation loc = new ResourceLocation(var10002, var10003 + suffix);
+      ResourceLocation loc = new ResourceLocation(this.getName().m_135827_(), this.getName().m_135815_() + suffix);
       ResourceLocation locPng = this.atlasTexture.getSpritePath(loc);
       TextureAtlasSprite ss = null;
-      Optional optRes = this.resourceManager.m_213713_(locPng);
+      Optional<Resource> optRes = this.resourceManager.m_213713_(locPng);
       if (optRes.isPresent()) {
          try {
             Resource iresource = (Resource)optRes.get();
-            this.resourceManager.m_215593_(locPng);
+            Resource resPngSize = this.resourceManager.m_215593_(locPng);
             NativeImage image = NativeImage.m_85058_(iresource.m_215507_());
             ResourceMetadata resMeta = iresource.m_215509_();
-            AnimationMetadataSection animMeta = (AnimationMetadataSection)resMeta.m_214059_(AnimationMetadataSection.f_119011_).orElse(AnimationMetadataSection.f_119012_);
+            AnimationMetadataSection animMeta = (AnimationMetadataSection)resMeta.m_214059_(AnimationMetadataSection.f_119011_)
+               .orElse(AnimationMetadataSection.f_119012_);
             FrameSize frameSize = animMeta.m_245821_(image.m_84982_(), image.m_85084_());
-            if (image.m_84982_() != this.getWidth()) {
-               NativeImage imageScaled = TextureUtils.scaleImage(image, this.getWidth());
+            if (image.m_84982_() != this.m_92515_()) {
+               NativeImage imageScaled = TextureUtils.scaleImage(image, this.m_92515_());
                if (imageScaled != image) {
-                  double scaleFactor = 1.0 * (double)this.getWidth() / (double)image.m_84982_();
+                  double scaleFactor = 1.0 * (double)this.m_92515_() / (double)image.m_84982_();
                   image.close();
                   image = imageScaled;
                   frameSize = new FrameSize((int)((double)frameSize.f_244129_() * scaleFactor), (int)((double)frameSize.f_244503_() * scaleFactor));
@@ -527,18 +509,22 @@ public class TextureAtlasSprite {
             }
 
             SpriteContents contentsShaders = new SpriteContents(loc, frameSize, image, resMeta);
-            ss = new TextureAtlasSprite(this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type);
+            ss = new TextureAtlasSprite(
+               this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type
+            );
             ss.parentSprite = this;
          } catch (IOException var18) {
          }
       }
 
       if (ss == null) {
-         NativeImage image = new NativeImage(this.getWidth(), this.getHeight(), false);
+         NativeImage image = new NativeImage(this.m_92515_(), this.getHeight(), false);
          int colAbgr = TextureUtils.toAbgr(colDef);
          image.m_84997_(0, 0, image.m_84982_(), image.m_85084_(), colAbgr);
-         SpriteContents contentsShaders = new SpriteContents(loc, new FrameSize(this.getWidth(), this.getHeight()), image, ResourceMetadata.f_215577_);
-         ss = new TextureAtlasSprite(this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type);
+         SpriteContents contentsShaders = new SpriteContents(loc, new FrameSize(this.m_92515_(), this.getHeight()), image, ResourceMetadata.f_215577_);
+         ss = new TextureAtlasSprite(
+            this.f_244141_, contentsShaders, this.sheetWidth, this.sheetHeight, this.f_118349_, this.f_118350_, this.atlasTexture, type
+         );
       }
 
       if (this.terrain && this.multiTexture && !this.isSpriteSingle) {
@@ -594,54 +580,51 @@ public class TextureAtlasSprite {
             this.spriteSpecular = this.makeSpriteShaders(ShadersTextureType.SPECULAR, 0, this.f_244165_.getAnimatedTexture());
          }
       }
-
    }
 
    private static boolean matchesTiming(SpriteContents.AnimatedTexture at1, SpriteContents.AnimatedTexture at2) {
-      if (at1 != null && at2 != null) {
-         if (at1 == at2) {
-            return true;
+      if (at1 == null || at2 == null) {
+         return false;
+      } else if (at1 == at2) {
+         return true;
+      } else {
+         boolean ip1 = at1.f_244317_;
+         boolean ip2 = at2.f_244317_;
+         if (ip1 != ip2) {
+            return false;
          } else {
-            boolean ip1 = at1.f_244317_;
-            boolean ip2 = at2.f_244317_;
-            if (ip1 != ip2) {
-               return false;
-            } else {
-               List frames1 = at1.f_243714_;
-               List frames2 = at2.f_243714_;
-               if (frames1 != null && frames2 != null) {
-                  if (frames1.size() != frames2.size()) {
-                     return false;
-                  } else {
-                     for(int i = 0; i < frames1.size(); ++i) {
-                        SpriteContents.FrameInfo fi1 = (SpriteContents.FrameInfo)frames1.get(i);
-                        SpriteContents.FrameInfo fi2 = (SpriteContents.FrameInfo)frames2.get(i);
-                        if (fi1 == null || fi2 == null) {
-                           return false;
-                        }
-
-                        if (fi1.f_243751_ != fi2.f_243751_) {
-                           return false;
-                        }
-
-                        if (fi1.f_244553_ != fi2.f_244553_) {
-                           return false;
-                        }
+            List<SpriteContents.FrameInfo> frames1 = at1.f_243714_;
+            List<SpriteContents.FrameInfo> frames2 = at2.f_243714_;
+            if (frames1 != null && frames2 != null) {
+               if (frames1.size() != frames2.size()) {
+                  return false;
+               } else {
+                  for (int i = 0; i < frames1.size(); i++) {
+                     SpriteContents.FrameInfo fi1 = (SpriteContents.FrameInfo)frames1.get(i);
+                     SpriteContents.FrameInfo fi2 = (SpriteContents.FrameInfo)frames2.get(i);
+                     if (fi1 == null || fi2 == null) {
+                        return false;
                      }
 
-                     return true;
+                     if (fi1.f_243751_ != fi2.f_243751_) {
+                        return false;
+                     }
+
+                     if (fi1.f_244553_ != fi2.f_244553_) {
+                        return false;
+                     }
                   }
-               } else {
-                  return false;
+
+                  return true;
                }
+            } else {
+               return false;
             }
          }
-      } else {
-         return false;
       }
    }
 
-   public void update(ResourceManager resourceManager) {
+   public void m_252999_(ResourceManager resourceManager) {
       this.resourceManager = resourceManager;
       this.updateIndexInMap(this.atlasTexture.getCounterIndexInMap());
       this.setTerrain(this.atlasTexture.isTerrain());
@@ -651,7 +634,6 @@ public class TextureAtlasSprite {
       if (this.spriteContentsTicker != null) {
          this.spriteContentsTicker.m_247697_(this.f_118349_, this.f_118350_);
       }
-
    }
 
    public void preTick() {
@@ -670,7 +652,6 @@ public class TextureAtlasSprite {
             this.spriteSpecular.spriteContentsTicker.f_244631_ = this.spriteContentsTicker.f_244631_;
             this.spriteSpecular.spriteContentsTicker.f_244511_ = this.spriteContentsTicker.f_244511_;
          }
-
       }
    }
 
@@ -696,15 +677,12 @@ public class TextureAtlasSprite {
       if (this.spriteContentsTicker != null && this.parentSprite != null && this.parentSprite.f_244165_ != null) {
          this.usesParentAnimationTime = matchesTiming(this.f_244165_.getAnimatedTexture(), this.parentSprite.f_244165_.getAnimatedTexture());
       }
-
    }
 
-   public void setTicker(Ticker ticker) {
-      SpriteTicker spriteTicker = ticker.getSpriteTicker();
-      if (spriteTicker instanceof SpriteContents.Ticker spriteContentsTicker) {
+   public void setTicker(TextureAtlasSprite.Ticker ticker) {
+      if (ticker.getSpriteTicker() instanceof SpriteContents.Ticker spriteContentsTicker) {
          this.setSpriteContentsTicker(spriteContentsTicker);
       }
-
    }
 
    public void increaseMipLevel(int mipLevelIn) {
@@ -716,7 +694,6 @@ public class TextureAtlasSprite {
       if (this.spriteSpecular != null) {
          this.spriteSpecular.increaseMipLevel(mipLevelIn);
       }
-
    }
 
    public interface Ticker extends AutoCloseable {

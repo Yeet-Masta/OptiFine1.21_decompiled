@@ -7,13 +7,14 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 
-public class WitherArmorLayer extends EnergySwirlLayer {
-   private static final ResourceLocation f_117695_ = ResourceLocation.m_340282_("textures/entity/wither/wither_armor.png");
-   public WitherBossModel f_117696_;
+public class WitherArmorLayer extends EnergySwirlLayer<WitherBoss, WitherBossModel<WitherBoss>> {
+   private static ResourceLocation f_117695_ = ResourceLocation.m_340282_("textures/entity/wither/wither_armor.png");
+   public WitherBossModel<WitherBoss> f_117696_;
    public ResourceLocation customTextureLocation;
 
-   public WitherArmorLayer(RenderLayerParent p_i174553_1_, EntityModelSet p_i174553_2_) {
+   public WitherArmorLayer(RenderLayerParent<WitherBoss, WitherBossModel<WitherBoss>> p_i174553_1_, EntityModelSet p_i174553_2_) {
       super(p_i174553_1_);
       this.f_117696_ = new WitherBossModel(p_i174553_2_.m_171103_(ModelLayers.f_171215_));
    }
@@ -26,7 +27,7 @@ public class WitherArmorLayer extends EnergySwirlLayer {
       return this.customTextureLocation != null ? this.customTextureLocation : f_117695_;
    }
 
-   protected EntityModel m_7193_() {
+   protected EntityModel<WitherBoss> m_7193_() {
       return this.f_117696_;
    }
 }

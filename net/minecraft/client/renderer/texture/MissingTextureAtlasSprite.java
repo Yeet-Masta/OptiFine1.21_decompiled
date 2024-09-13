@@ -9,13 +9,16 @@ import net.minecraft.client.resources.metadata.animation.AnimationMetadataSectio
 import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
+import net.minecraft.server.packs.resources.ResourceMetadata.Builder;
 
-public final class MissingTextureAtlasSprite {
-   private static final int f_174688_ = 16;
-   private static final int f_174689_ = 16;
-   private static final String f_174690_ = "missingno";
-   private static final ResourceLocation f_118059_ = ResourceLocation.m_340282_("missingno");
-   private static final ResourceMetadata f_290987_;
+public class MissingTextureAtlasSprite {
+   private static int f_174688_;
+   private static int f_174689_;
+   private static String f_174690_;
+   private static ResourceLocation f_118059_ = ResourceLocation.m_340282_("missingno");
+   private static ResourceMetadata f_290987_ = new Builder()
+      .m_294003_(AnimationMetadataSection.f_119011_, new AnimationMetadataSection(ImmutableList.m_253057_(new AnimationFrame(0, -1)), 16, 16, 1, false))
+      .m_293106_();
    @Nullable
    private static DynamicTexture f_118060_;
 
@@ -24,8 +27,8 @@ public final class MissingTextureAtlasSprite {
       int i = -16777216;
       int j = -524040;
 
-      for(int k = 0; k < heightIn; ++k) {
-         for(int l = 0; l < widthIn; ++l) {
+      for (int k = 0; k < heightIn; k++) {
+         for (int l = 0; l < widthIn; l++) {
             if (k < heightIn / 2 ^ l < widthIn / 2) {
                nativeimage.m_84988_(l, k, -524040);
             } else {
@@ -59,9 +62,5 @@ public final class MissingTextureAtlasSprite {
 
    public static boolean isMisingSprite(TextureAtlasSprite sprite) {
       return sprite.getName() == f_118059_;
-   }
-
-   static {
-      f_290987_ = (new ResourceMetadata.Builder()).m_294003_(AnimationMetadataSection.f_119011_, new AnimationMetadataSection(ImmutableList.of(new AnimationFrame(0, -1)), 16, 16, 1, false)).m_293106_();
    }
 }

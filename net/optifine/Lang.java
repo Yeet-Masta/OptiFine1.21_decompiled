@@ -23,12 +23,12 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 
 public class Lang {
-   private static final Splitter splitter = Splitter.on('=').limit(2);
-   private static final Pattern pattern = Pattern.compile("%(\\d+\\$)?[\\d\\.]*[df]");
+   private static Splitter splitter = Splitter.on('=').limit(2);
+   private static Pattern pattern = Pattern.m_289905_("%(\\d+\\$)?[\\d\\.]*[df]");
 
    public static void resourcesReloaded() {
       Map localeProperties = new HashMap();
-      List listFiles = new ArrayList();
+      List<String> listFiles = new ArrayList();
       String PREFIX = "optifine/lang/";
       String EN_US = "en_us";
       String SUFFIX = ".lang";
@@ -38,22 +38,21 @@ public class Lang {
       }
 
       String[] files = (String[])listFiles.toArray(new String[listFiles.size()]);
-      loadResources((PackResources)Config.getDefaultResourcePack(), (String[])files, localeProperties);
+      loadResources(Config.getDefaultResourcePack(), files, localeProperties);
       PackResources[] resourcePacks = Config.getResourcePacks();
 
-      for(int i = 0; i < resourcePacks.length; ++i) {
+      for (int i = 0; i < resourcePacks.length; i++) {
          PackResources rp = resourcePacks[i];
-         loadResources((PackResources)rp, (String[])files, localeProperties);
+         loadResources(rp, files, localeProperties);
       }
-
    }
 
    private static void loadResources(PackResources rp, String[] files, Map localeProperties) {
       try {
-         for(int i = 0; i < files.length; ++i) {
+         for (int i = 0; i < files.length; i++) {
             String file = files[i];
             ResourceLocation loc = new ResourceLocation(file);
-            IoSupplier supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
+            IoSupplier<InputStream> supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
             if (supplier != null) {
                InputStream in = (InputStream)supplier.m_247737_();
                if (in != null) {
@@ -64,17 +63,16 @@ public class Lang {
       } catch (IOException var8) {
          var8.printStackTrace();
       }
-
    }
 
    public static void loadLocaleData(InputStream is, Map localeProperties) throws IOException {
       Iterator it = IOUtils.readLines(is, Charsets.UTF_8).iterator();
       is.close();
 
-      while(it.hasNext()) {
+      while (it.hasNext()) {
          String line = (String)it.next();
          if (!line.isEmpty() && line.charAt(0) != '#') {
-            String[] parts = (String[])Iterables.toArray(splitter.split(line), String.class);
+            String[] parts = (String[])Iterables.toArray(splitter.m_269487_(line), String.class);
             if (parts != null && parts.length == 2) {
                String key = parts[0];
                String value = pattern.matcher(parts[1]).replaceAll("%$1s");
@@ -82,10 +80,9 @@ public class Lang {
             }
          }
       }
-
    }
 
-   public static void loadResources(ResourceManager resourceManager, String langCode, Map map) {
+   public static void loadResources(ResourceManager resourceManager, String langCode, Map<String, String> map) {
       try {
          String pathLang = "optifine/lang/" + langCode + ".lang";
          ResourceLocation locLang = new ResourceLocation(pathLang);
@@ -94,7 +91,6 @@ public class Lang {
          loadLocaleData(is, map);
       } catch (IOException var7) {
       }
-
    }
 
    public static String get(String key) {

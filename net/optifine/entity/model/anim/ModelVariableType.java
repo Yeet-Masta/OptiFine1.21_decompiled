@@ -39,87 +39,87 @@ public enum ModelVariableType {
    }
 
    public float getFloat(ModelPart mr) {
-      switch (this.ordinal()) {
-         case 0:
+      switch (this) {
+         case POS_X:
             return mr.f_104200_;
-         case 1:
+         case POS_Y:
             return mr.f_104201_;
-         case 2:
+         case POS_Z:
             return mr.f_104202_;
-         case 3:
+         case ANGLE_X:
             return mr.f_104203_;
-         case 4:
+         case ANGLE_Y:
             return mr.f_104204_;
-         case 5:
+         case ANGLE_Z:
             return mr.f_104205_;
-         case 6:
+         case SCALE_X:
             return mr.f_233553_;
-         case 7:
+         case SCALE_Y:
             return mr.f_233554_;
-         case 8:
+         case SCALE_Z:
             return mr.f_233555_;
          default:
-            Config.warn("GetFloat not supported for: " + String.valueOf(this));
+            Config.warn("GetFloat not supported for: " + this);
             return 0.0F;
       }
    }
 
    public void setFloat(ModelPart mr, float val) {
-      switch (this.ordinal()) {
-         case 0:
+      switch (this) {
+         case POS_X:
             mr.f_104200_ = val;
             return;
-         case 1:
+         case POS_Y:
             mr.f_104201_ = val;
             return;
-         case 2:
+         case POS_Z:
             mr.f_104202_ = val;
             return;
-         case 3:
+         case ANGLE_X:
             mr.f_104203_ = val;
             return;
-         case 4:
+         case ANGLE_Y:
             mr.f_104204_ = val;
             return;
-         case 5:
+         case ANGLE_Z:
             mr.f_104205_ = val;
             return;
-         case 6:
+         case SCALE_X:
             mr.f_233553_ = val;
             return;
-         case 7:
+         case SCALE_Y:
             mr.f_233554_ = val;
             return;
-         case 8:
+         case SCALE_Z:
             mr.f_233555_ = val;
             return;
          default:
-            Config.warn("SetFloat not supported for: " + String.valueOf(this));
+            Config.warn("SetFloat not supported for: " + this);
       }
    }
 
    public boolean getBool(ModelPart mr) {
-      switch (this.ordinal()) {
-         case 9:
+      switch (this) {
+         case VISIBLE:
             return mr.f_104207_;
-         case 10:
+         case VISIBLE_BOXES:
             return !mr.f_233556_;
          default:
-            Config.warn("GetBool not supported for: " + String.valueOf(this));
+            Config.warn("GetBool not supported for: " + this);
             return false;
       }
    }
 
    public void setBool(ModelPart mr, boolean val) {
-      switch (this.ordinal()) {
-         case 9:
+      switch (this) {
+         case VISIBLE:
             mr.f_104207_ = val;
             return;
-         case 10:
+         case VISIBLE_BOXES:
             mr.f_233556_ = !val;
             return;
          default:
-            Config.warn("SetBool not supported for: " + String.valueOf(this));
+            Config.warn("SetBool not supported for: " + this);
       }
    }
 
@@ -129,13 +129,13 @@ public enum ModelVariableType {
       } else if (this.type == ExpressionType.BOOL) {
          return new ModelVariableBool(name, mr, this);
       } else {
-         Config.warn("Unknown model variable type: " + String.valueOf(this.type));
+         Config.warn("Unknown model variable type: " + this.type);
          return null;
       }
    }
 
-   public static ModelVariableType parse(String str) {
-      for(int i = 0; i < VALUES.length; ++i) {
+   public static ModelVariableType m_82160_(String str) {
+      for (int i = 0; i < VALUES.length; i++) {
          ModelVariableType var = VALUES[i];
          if (var.getName().equals(str)) {
             return var;
@@ -143,10 +143,5 @@ public enum ModelVariableType {
       }
 
       return null;
-   }
-
-   // $FF: synthetic method
-   private static ModelVariableType[] $values() {
-      return new ModelVariableType[]{POS_X, POS_Y, POS_Z, ANGLE_X, ANGLE_Y, ANGLE_Z, SCALE_X, SCALE_Y, SCALE_Z, VISIBLE, VISIBLE_BOXES};
    }
 }

@@ -9,11 +9,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 public class RenderRegionCache {
-   private final Long2ObjectMap f_200460_ = new Long2ObjectOpenHashMap();
+   private Long2ObjectMap<RenderRegionCache.ChunkInfo> f_200460_ = new Long2ObjectOpenHashMap();
 
    @Nullable
    public RenderChunkRegion m_200465_(Level worldIn, SectionPos sectionPosIn) {
-      ChunkInfo renderregioncache$chunkinfo = this.m_340552_(worldIn, sectionPosIn.m_123170_(), sectionPosIn.m_123222_());
+      RenderRegionCache.ChunkInfo renderregioncache$chunkinfo = this.m_340552_(worldIn, sectionPosIn.m_123170_(), sectionPosIn.m_123222_());
       if (renderregioncache$chunkinfo.m_200480_().m_339293_(sectionPosIn.m_123206_())) {
          return null;
       } else {
@@ -23,10 +23,12 @@ public class RenderRegionCache {
          int l = sectionPosIn.m_123222_() + 1;
          RenderChunk[] arenderchunk = new RenderChunk[9];
 
-         for(int i1 = j; i1 <= l; ++i1) {
-            for(int j1 = i; j1 <= k; ++j1) {
+         for (int i1 = j; i1 <= l; i1++) {
+            for (int j1 = i; j1 <= k; j1++) {
                int k1 = RenderChunkRegion.m_339116_(i, j, j1, i1);
-               ChunkInfo renderregioncache$chunkinfo1 = j1 == sectionPosIn.m_123170_() && i1 == sectionPosIn.m_123222_() ? renderregioncache$chunkinfo : this.m_340552_(worldIn, j1, i1);
+               RenderRegionCache.ChunkInfo renderregioncache$chunkinfo1 = j1 == sectionPosIn.m_123170_() && i1 == sectionPosIn.m_123222_()
+                  ? renderregioncache$chunkinfo
+                  : this.m_340552_(worldIn, j1, i1);
                arenderchunk[k1] = renderregioncache$chunkinfo1.m_200481_();
             }
          }
@@ -35,14 +37,15 @@ public class RenderRegionCache {
       }
    }
 
-   private ChunkInfo m_340552_(Level worldIn, int x, int z) {
-      return (ChunkInfo)this.f_200460_.computeIfAbsent(ChunkPos.m_45589_(x, z), (longPosIn) -> {
-         return new ChunkInfo(worldIn.m_6325_(ChunkPos.m_45592_(longPosIn), ChunkPos.m_45602_(longPosIn)));
-      });
+   private RenderRegionCache.ChunkInfo m_340552_(Level worldIn, int x, int z) {
+      return (RenderRegionCache.ChunkInfo)this.f_200460_
+         .computeIfAbsent(
+            ChunkPos.m_45589_(x, z), longPosIn -> new RenderRegionCache.ChunkInfo(worldIn.m_6325_(ChunkPos.m_45592_(longPosIn), ChunkPos.m_45602_(longPosIn)))
+         );
    }
 
-   static final class ChunkInfo {
-      private final LevelChunk f_200476_;
+   static class ChunkInfo {
+      private LevelChunk f_200476_;
       @Nullable
       private RenderChunk f_200477_;
 

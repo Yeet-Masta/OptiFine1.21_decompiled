@@ -14,6 +14,7 @@ public class CustomTexture implements ICustomTexture {
       this.texture = texture;
    }
 
+   @Override
    public int getTextureUnit() {
       return this.textureUnit;
    }
@@ -26,16 +27,17 @@ public class CustomTexture implements ICustomTexture {
       return this.texture;
    }
 
+   @Override
    public int getTextureId() {
       return this.texture.m_117963_();
    }
 
+   @Override
    public void deleteTexture() {
       TextureUtil.releaseTextureId(this.texture.m_117963_());
    }
 
    public String toString() {
-      int var10000 = this.textureUnit;
-      return "textureUnit: " + var10000 + ", path: " + this.path + ", glTextureId: " + this.getTextureId();
+      return "textureUnit: " + this.textureUnit + ", path: " + this.path + ", glTextureId: " + this.getTextureId();
    }
 }

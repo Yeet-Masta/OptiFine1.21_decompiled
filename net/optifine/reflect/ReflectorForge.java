@@ -2,7 +2,6 @@ package net.optifine.reflect;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -35,10 +34,10 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class ReflectorForge {
-   public static Object EVENT_RESULT_ALLOW;
-   public static Object EVENT_RESULT_DENY;
-   public static Object EVENT_RESULT_DEFAULT;
-   public static final boolean FORGE_ENTITY_CAN_UPDATE;
+   public static Object EVENT_RESULT_ALLOW = Reflector.getFieldValue(Reflector.Event_Result_ALLOW);
+   public static Object EVENT_RESULT_DENY = Reflector.getFieldValue(Reflector.Event_Result_DENY);
+   public static Object EVENT_RESULT_DEFAULT = Reflector.getFieldValue(Reflector.Event_Result_DEFAULT);
+   public static boolean FORGE_ENTITY_CAN_UPDATE = Reflector.IForgeEntity_canUpdate.exists();
 
    public static void putLaunchBlackboard(String key, Object value) {
       Map blackboard = (Map)Reflector.getFieldValue(Reflector.Launch_blackboard);
@@ -52,22 +51,18 @@ public class ReflectorForge {
          return null;
       } else {
          path = StrUtils.removePrefix(path, "/");
-         InputStream in = (InputStream)Reflector.call(Reflector.OptiFineResourceLocator_getOptiFineResourceStream, path);
-         return in;
+         return (InputStream)Reflector.m_46374_(Reflector.OptiFineResourceLocator_getOptiFineResourceStream, path);
       }
    }
 
    public static ReflectorClass getReflectorClassOptiFineResourceLocator() {
       String className = "optifine.OptiFineResourceLocator";
-      Object ofrlClass = System.getProperties().get(className + ".class");
-      if (ofrlClass instanceof Class cls) {
-         return new ReflectorClass(cls);
-      } else {
-         return new ReflectorClass(className);
-      }
+      return System.getProperties().get(className + ".class") instanceof Class cls ? new ReflectorClass(cls) : new ReflectorClass(className);
    }
 
-   public static boolean calculateFaceWithoutAO(BlockAndTintGetter getter, BlockState state, BlockPos pos, BakedQuad quad, boolean isFaceCubic, float[] brightness, int[] lightmap) {
+   public static boolean calculateFaceWithoutAO(
+      BlockAndTintGetter getter, BlockState state, BlockPos pos, BakedQuad quad, boolean isFaceCubic, float[] brightness, int[] lightmap
+   ) {
       if (quad.hasAmbientOcclusion()) {
          return false;
       } else {
@@ -91,16 +86,14 @@ public class ReflectorForge {
       if (!Reflector.ModList.exists()) {
          return new String[0];
       } else {
-         Object modList = Reflector.ModList_get.call();
+         Object modList = Reflector.ModList_get.m_46374_();
          List listMods = (List)Reflector.getFieldValue(modList, Reflector.ModList_mods);
          if (listMods == null) {
             return new String[0];
          } else {
-            List listModIds = new ArrayList();
-            Iterator it = listMods.iterator();
+            List<String> listModIds = new ArrayList();
 
-            while(it.hasNext()) {
-               Object modContainer = it.next();
+            for (Object modContainer : listMods) {
                if (Reflector.ModContainer.isInstance(modContainer)) {
                   String modId = Reflector.callString(modContainer, Reflector.ModContainer_getModId);
                   if (modId != null && !modId.equals("minecraft") && !modId.equals("forge")) {
@@ -109,41 +102,40 @@ public class ReflectorForge {
                }
             }
 
-            String[] modIds = (String[])listModIds.toArray(new String[listModIds.size()]);
-            return modIds;
+            return (String[])listModIds.toArray(new String[listModIds.size()]);
          }
       }
    }
 
    public static boolean canDisableShield(ItemStack itemstack, ItemStack itemstack1, Player entityplayer, Mob entityLiving) {
-      return Reflector.IForgeItemStack_canDisableShield.exists() ? Reflector.callBoolean(itemstack, Reflector.IForgeItemStack_canDisableShield, itemstack1, entityplayer, entityLiving) : itemstack.m_41720_() instanceof AxeItem;
+      return Reflector.IForgeItemStack_canDisableShield.exists()
+         ? Reflector.callBoolean(itemstack, Reflector.IForgeItemStack_canDisableShield, itemstack1, entityplayer, entityLiving)
+         : itemstack.m_41720_() instanceof AxeItem;
    }
 
    public static Button makeButtonMods(TitleScreen guiMainMenu, int yIn, int rowHeightIn) {
-      if (!Reflector.ModListScreen_Constructor.exists()) {
-         return null;
-      } else {
-         Button modButton = Button.m_253074_(Component.m_237115_("fml.menu.mods"), (button) -> {
-            Screen modListScreen = (Screen)Reflector.ModListScreen_Constructor.newInstance(guiMainMenu);
-            Minecraft.m_91087_().m_91152_(modListScreen);
-         }).m_252794_(guiMainMenu.f_96543_ / 2 - 100, yIn + rowHeightIn * 2).m_253046_(98, 20).m_253136_();
-         return modButton;
-      }
+      return !Reflector.ModListScreen_Constructor.exists() ? null : Button.m_253074_(Component.m_237115_("fml.menu.mods"), button -> {
+         Screen modListScreen = (Screen)Reflector.ModListScreen_Constructor.newInstance(guiMainMenu);
+         Minecraft.m_91087_().m_91152_(modListScreen);
+      }).m_252794_(guiMainMenu.f_96543_ / 2 - 100, yIn + rowHeightIn * 2).m_253046_(98, 20).m_253136_();
    }
 
    public static void setForgeLightPipelineEnabled(boolean value) {
       if (Reflector.ForgeConfig_Client_forgeLightPipelineEnabled.exists()) {
          setConfigClientBoolean(Reflector.ForgeConfig_Client_forgeLightPipelineEnabled, value);
       }
-
    }
 
    public static boolean getForgeUseCombinedDepthStencilAttachment() {
-      return Reflector.ForgeConfig_Client_useCombinedDepthStencilAttachment.exists() ? getConfigClientBoolean(Reflector.ForgeConfig_Client_useCombinedDepthStencilAttachment, false) : false;
+      return Reflector.ForgeConfig_Client_useCombinedDepthStencilAttachment.exists()
+         ? getConfigClientBoolean(Reflector.ForgeConfig_Client_useCombinedDepthStencilAttachment, false)
+         : false;
    }
 
    public static boolean getForgeCalculateAllNormals() {
-      return Reflector.ForgeConfig_Client_calculateAllNormals.exists() ? getConfigClientBoolean(Reflector.ForgeConfig_Client_calculateAllNormals, false) : false;
+      return Reflector.ForgeConfig_Client_calculateAllNormals.exists()
+         ? getConfigClientBoolean(Reflector.ForgeConfig_Client_calculateAllNormals, false)
+         : false;
    }
 
    public static boolean getConfigClientBoolean(ReflectorField configField, boolean def) {
@@ -155,12 +147,7 @@ public class ReflectorForge {
             return def;
          } else {
             Object configValue = Reflector.getFieldValue(client, configField);
-            if (configValue == null) {
-               return def;
-            } else {
-               boolean value = Reflector.callBoolean(configValue, Reflector.ForgeConfigSpec_ConfigValue_get);
-               return value;
-            }
+            return configValue == null ? def : Reflector.callBoolean(configValue, Reflector.ForgeConfigSpec_ConfigValue_get);
          }
       }
    }
@@ -171,7 +158,7 @@ public class ReflectorForge {
          if (client != null) {
             Object configValue = Reflector.getFieldValue(client, clientField);
             if (configValue != null) {
-               Supplier bs = new Supplier() {
+               Supplier<Boolean> bs = new Supplier<Boolean>() {
                   public Boolean get() {
                      return value;
                   }
@@ -179,11 +166,10 @@ public class ReflectorForge {
                Reflector.setFieldValue(configValue, Reflector.ForgeConfigSpec_ConfigValue_defaultSupplier, bs);
                Object spec = Reflector.getFieldValue(configValue, Reflector.ForgeConfigSpec_ConfigValue_spec);
                if (spec != null) {
-                  Reflector.setFieldValue(spec, Reflector.ForgeConfigSpec_childConfig, (Object)null);
+                  Reflector.setFieldValue(spec, Reflector.ForgeConfigSpec_childConfig, null);
                }
 
-               String var10000 = clientField.getTargetField().getName();
-               Log.dbg("Set ForgeConfig.CLIENT." + var10000 + "=" + value);
+               Log.dbg("Set ForgeConfig.CLIENT." + clientField.getTargetField().getName() + "=" + value);
             }
          }
       }
@@ -217,16 +203,15 @@ public class ReflectorForge {
          v2.normalize();
       }
 
-      int x = (byte)Math.round(v2.x() * 127.0F) & 255;
-      int y = (byte)Math.round(v2.y() * 127.0F) & 255;
-      int z = (byte)Math.round(v2.z() * 127.0F) & 255;
+      int x = (byte)Math.round(v2.m_305649_() * 127.0F) & 255;
+      int y = (byte)Math.round(v2.m_306225_() * 127.0F) & 255;
+      int z = (byte)Math.round(v2.m_240700_() * 127.0F) & 255;
       int normal = x | y << 8 | z << 16;
       int step = faceData.length / 4;
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          faceData[i * step + 7] = normal;
       }
-
    }
 
    private static Vector3f getVertexPos(int[] data, int vertex) {
@@ -247,26 +232,21 @@ public class ReflectorForge {
 
    public static void postModLoaderEvent(Object event) {
       if (event != null) {
-         Object modLoader = Reflector.ModLoader_get.call();
+         Object modLoader = Reflector.ModLoader_get.m_46374_();
          if (modLoader != null) {
             Reflector.callVoid(modLoader, Reflector.ModLoader_postEvent, event);
          }
       }
    }
 
-   public static void dispatchRenderStageS(ReflectorField stageField, LevelRenderer levelRenderer, Matrix4f matrixView, Matrix4f matrixProjection, int ticks, Camera camera, Frustum frustum) {
+   public static void dispatchRenderStageS(
+      ReflectorField stageField, LevelRenderer levelRenderer, Matrix4f matrixView, Matrix4f matrixProjection, int ticks, Camera camera, Frustum frustum
+   ) {
       if (Reflector.RenderLevelStageEvent_dispatch.exists()) {
          if (stageField.exists()) {
             Object stage = stageField.getValue();
-            Reflector.call(stage, Reflector.RenderLevelStageEvent_dispatch, levelRenderer, matrixView, matrixProjection, ticks, camera, frustum);
+            Reflector.m_46374_(stage, Reflector.RenderLevelStageEvent_dispatch, levelRenderer, matrixView, matrixProjection, ticks, camera, frustum);
          }
       }
-   }
-
-   static {
-      EVENT_RESULT_ALLOW = Reflector.getFieldValue(Reflector.Event_Result_ALLOW);
-      EVENT_RESULT_DENY = Reflector.getFieldValue(Reflector.Event_Result_DENY);
-      EVENT_RESULT_DEFAULT = Reflector.getFieldValue(Reflector.Event_Result_DEFAULT);
-      FORGE_ENTITY_CAN_UPDATE = Reflector.IForgeEntity_canUpdate.exists();
    }
 }

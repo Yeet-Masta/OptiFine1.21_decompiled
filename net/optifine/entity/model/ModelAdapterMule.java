@@ -19,27 +19,33 @@ public class ModelAdapterMule extends ModelAdapterHorse {
       super(EntityType.f_20503_, "mule", 0.75F);
    }
 
+   @Override
    public Model makeModel() {
       return new ChestedHorseModel(bakeModelLayer(ModelLayers.f_171200_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ChestedHorseModel modelHorseChests)) {
          return null;
       } else if (modelPart.equals("left_chest")) {
          return (ModelPart)Reflector.ModelHorseChests_ModelRenderers.getValue(modelHorseChests, 0);
       } else {
-         return modelPart.equals("right_chest") ? (ModelPart)Reflector.ModelHorseChests_ModelRenderers.getValue(modelHorseChests, 1) : super.getModelRenderer(model, modelPart);
+         return modelPart.equals("right_chest")
+            ? (ModelPart)Reflector.ModelHorseChests_ModelRenderers.getValue(modelHorseChests, 1)
+            : super.getModelRenderer(model, modelPart);
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      List list = new ArrayList(Arrays.asList(super.getModelRendererNames()));
+      List<String> list = new ArrayList(Arrays.asList(super.getModelRendererNames()));
       list.add("left_chest");
       list.add("right_chest");
       return (String[])list.toArray(new String[list.size()]);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ChestedHorseRenderer render = new ChestedHorseRenderer(renderManager.getContext(), 0.92F, ModelLayers.f_171200_);

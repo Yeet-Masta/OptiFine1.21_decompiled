@@ -4,7 +4,6 @@ import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -25,15 +24,30 @@ public class GuiOtherSettingsOF extends GuiScreenOF {
    public void m_7856_() {
       this.m_169413_();
       OptionInstance fullscreenResolution = OptionFullscreenResolution.make();
-      OptionInstance[] options = new OptionInstance[]{Option.LAGOMETER, Option.PROFILER, this.settings.ATTACK_INDICATOR, Option.ADVANCED_TOOLTIPS, Option.WEATHER, Option.TIME, this.settings.FULLSCREEN, Option.AUTOSAVE_TICKS, Option.SCREENSHOT_SIZE, Option.SHOW_GL_ERRORS, Option.TELEMETRY, null, fullscreenResolution, null};
+      OptionInstance[] options = new OptionInstance[]{
+         Option.LAGOMETER,
+         Option.PROFILER,
+         this.settings.ATTACK_INDICATOR,
+         Option.ADVANCED_TOOLTIPS,
+         Option.WEATHER,
+         Option.TIME,
+         this.settings.FULLSCREEN,
+         Option.AUTOSAVE_TICKS,
+         Option.SCREENSHOT_SIZE,
+         Option.SHOW_GL_ERRORS,
+         Option.TELEMETRY,
+         null,
+         fullscreenResolution,
+         null
+      };
 
-      for(int i = 0; i < options.length; ++i) {
+      for (int i = 0; i < options.length; i++) {
          OptionInstance option = options[i];
          if (option != null) {
             int x = this.f_96543_ / 2 - 155 + i % 2 * 160;
             int y = this.f_96544_ / 6 + 21 * (i / 2) - 12;
             AbstractWidget guielement = (AbstractWidget)this.m_142416_(option.m_231507_(this.f_96541_.f_91066_, x, y, 150));
-            guielement.m_257544_((Tooltip)null);
+            guielement.m_257544_(null);
             if (option == fullscreenResolution) {
                guielement.m_93674_(310);
             }
@@ -44,22 +58,22 @@ public class GuiOtherSettingsOF extends GuiScreenOF {
       this.m_142416_(new GuiButtonOF(200, this.f_96543_ / 2 - 100, this.f_96544_ / 6 + 168 + 11, I18n.m_118938_("gui.done", new Object[0])));
    }
 
+   @Override
    protected void actionPerformed(AbstractWidget guiElement) {
       if (guiElement instanceof GuiButtonOF guibutton) {
          if (guibutton.f_93623_) {
-            if (guibutton.field_45 == 200) {
+            if (guibutton.f_11893_ == 200) {
                this.f_96541_.f_91066_.m_92169_();
                this.f_96541_.m_91268_().m_85437_();
                this.f_96541_.m_91152_(this.prevScreen);
             }
 
-            if (guibutton.field_45 == 210) {
+            if (guibutton.f_11893_ == 210) {
                this.f_96541_.f_91066_.m_92169_();
                String msg = I18n.m_118938_("of.message.other.reset", new Object[0]);
                ConfirmScreen guiyesno = new ConfirmScreen(this::confirmResult, Component.m_237113_(msg), Component.m_237113_(""));
                this.f_96541_.m_91152_(guiyesno);
             }
-
          }
       }
    }

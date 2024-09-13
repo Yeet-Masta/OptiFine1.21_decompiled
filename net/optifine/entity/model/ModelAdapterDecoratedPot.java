@@ -13,10 +13,12 @@ public class ModelAdapterDecoratedPot extends ModelAdapter {
       super(BlockEntityType.f_271291_, "decorated_pot", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new DecoratedPotModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof DecoratedPotModel modelDecoratedPot)) {
          return null;
@@ -37,24 +39,22 @@ public class ModelAdapterDecoratedPot extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"neck", "front", "back", "left", "right", "top", "bottom"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model model, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_271291_, index, () -> {
-         return new DecoratedPotRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_271291_, index, () -> new DecoratedPotRenderer(dispatcher.getContext()));
       if (!(renderer instanceof DecoratedPotRenderer)) {
          return null;
-      } else if (!(model instanceof DecoratedPotModel)) {
-         Config.warn("Not a decorated pot model: " + String.valueOf(model));
+      } else if (!(model instanceof DecoratedPotModel decoratedPotModel)) {
+         Config.warn("Not a decorated pot model: " + model);
          return null;
       } else {
-         DecoratedPotModel decoratedPotModel = (DecoratedPotModel)model;
-         renderer = decoratedPotModel.updateRenderer(renderer);
-         return renderer;
+         return decoratedPotModel.updateRenderer(renderer);
       }
    }
 }

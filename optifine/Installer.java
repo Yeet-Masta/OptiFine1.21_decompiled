@@ -1,6 +1,5 @@
 package optifine;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.io.File;
@@ -49,9 +48,8 @@ public class Installer {
          textArea.setFont(f2);
          JScrollPane scrollPane = new JScrollPane(textArea);
          scrollPane.setPreferredSize(new Dimension(600, 400));
-         JOptionPane.showMessageDialog((Component)null, scrollPane, "Error", 0);
+         JOptionPane.showMessageDialog(null, scrollPane, "Error", 0);
       }
-
    }
 
    public static void doInstall(File dirMc) throws Exception {
@@ -119,7 +117,7 @@ public class Installer {
       Utils.dbg("Update launcher JSON: " + fileJson);
       String json = Utils.readFile(fileJson, "UTF-8");
       JSONParser jp = new JSONParser();
-      JSONObject root = (JSONObject)jp.parse(json);
+      JSONObject root = (JSONObject)jp.m_82160_(json);
       JSONObject profiles = (JSONObject)root.get("profiles");
       JSONObject prof = (JSONObject)profiles.get("OptiFine");
       if (prof == null) {
@@ -140,7 +138,7 @@ public class Installer {
 
       if (jvmArgs instanceof String) {
          String jvmArgsStr = (String)jvmArgs;
-         if (!jvmArgsStr.contains("net.minecraft.client.main.Main")) {
+         if (!jvmArgsStr.m_274455_("net.minecraft.client.main.Main")) {
             jvmArgsStr = jvmArgsStr + " -Ddiscordfix=net.minecraft.client.main.Main";
             prof.put("javaArgs", jvmArgsStr);
          }
@@ -161,7 +159,7 @@ public class Installer {
       String json = Utils.readFile(fileJson, "UTF-8");
       JSONParser jp = new JSONParser();
       Utils.dbg("Update JSON: " + fileJson);
-      JSONObject root = (JSONObject)jp.parse(json);
+      JSONObject root = (JSONObject)jp.m_82160_(json);
       JSONObject rootNew = new JSONObject();
       rootNew.put("id", mcVerOf);
       rootNew.put("inheritsFrom", mcVer);
@@ -175,20 +173,19 @@ public class Installer {
          mainClass = "net.minecraft.launchwrapper.Launch";
          rootNew.put("mainClass", mainClass);
          String mcArgs = (String)root.get("minecraftArguments");
-         JSONObject libLw;
          if (mcArgs != null) {
             mcArgs = mcArgs + "  --tweakClass optifine.OptiFineTweaker";
             rootNew.put("minecraftArguments", mcArgs);
          } else {
-            libLw = new JSONObject();
+            JSONObject args = new JSONObject();
             JSONArray argsGame = new JSONArray();
             argsGame.add("--tweakClass");
             argsGame.add("optifine.OptiFineTweaker");
-            libLw.put("game", argsGame);
-            rootNew.put("arguments", libLw);
+            args.put("game", argsGame);
+            rootNew.put("arguments", args);
          }
 
-         libLw = new JSONObject();
+         JSONObject libLw = new JSONObject();
          libLw.put("name", "optifine:launchwrapper-of:" + getLaunchwrapperVersion());
          libs.add(0, libLw);
       }
@@ -207,19 +204,17 @@ public class Installer {
    private static Object formatDate(Date date) {
       try {
          SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-         String str = dateFormat.format(date);
+         String str = dateFormat.m_12886_(date);
          return str;
       } catch (Exception var4) {
-         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-         String str = dateFormat.format(date);
-         return str;
+         SimpleDateFormat dateFormatx = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+         return dateFormatx.m_12886_(date);
       }
    }
 
    private static Object formatDateMs(Date date) {
       SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
-      String str = dateFormat.format(date);
-      return str;
+      return dateFormat.m_12886_(date);
    }
 
    public static String getOptiFineEdition(String[] ofVers) {
@@ -228,7 +223,7 @@ public class Installer {
       } else {
          String ofEd = "";
 
-         for(int i = 2; i < ofVers.length; ++i) {
+         for (int i = 2; i < ofVers.length; i++) {
             if (i > 2) {
                ofEd = ofEd + "_";
             }
@@ -248,7 +243,7 @@ public class Installer {
          fileDest = new File(fileSrc.getParentFile(), "OptiFine_" + mcVer + "_" + ofEd + "_MOD.jar");
          JFileChooser jfc = new JFileChooser(fileDest.getParentFile());
          jfc.setSelectedFile(fileDest);
-         int ret = jfc.showSaveDialog((Component)null);
+         int ret = jfc.showSaveDialog(null);
          if (ret != 0) {
             return false;
          }
@@ -256,7 +251,7 @@ public class Installer {
          fileDest = jfc.getSelectedFile();
          if (fileDest.exists()) {
             JOptionPane.setDefaultLocale(Locale.ENGLISH);
-            int ret2 = JOptionPane.showConfirmDialog((Component)null, "The file \"" + fileDest.getName() + "\" already exists.\nDo you want to overwrite it?", "Save", 1);
+            int ret2 = JOptionPane.showConfirmDialog(null, "The file \"" + fileDest.getName() + "\" already exists.\nDo you want to overwrite it?", "Save", 1);
             if (ret2 != 0) {
                return false;
             }
@@ -264,7 +259,7 @@ public class Installer {
       }
 
       if (fileDest.equals(fileSrc)) {
-         JOptionPane.showMessageDialog((Component)null, "Source and target file are the same.", "Save", 0);
+         JOptionPane.showMessageDialog(null, "Source and target file are the same.", "Save", 0);
          return false;
       } else {
          Utils.dbg("Source: " + fileSrc);
@@ -279,7 +274,7 @@ public class Installer {
                fileDest.getParentFile().mkdirs();
             }
 
-            Patcher.process(fileBase, fileSrc, fileDest);
+            Patcher.m_288227_(fileBase, fileSrc, fileDest);
             return true;
          }
       }
@@ -313,8 +308,7 @@ public class Installer {
       URL url = Installer.class.getProtectionDomain().getCodeSource().getLocation();
       Utils.dbg("URL: " + url);
       URI uri = url.toURI();
-      File fileZip = new File(uri);
-      return fileZip;
+      return new File(uri);
    }
 
    public static boolean isPatchFile() throws Exception {
@@ -322,7 +316,7 @@ public class Installer {
       ZipFile zipFile = new ZipFile(fileZip);
 
       try {
-         Enumeration entries = zipFile.entries();
+         Enumeration<ZipEntry> entries = zipFile.entries();
 
          ZipEntry zipEntry;
          do {
@@ -331,7 +325,7 @@ public class Installer {
             }
 
             zipEntry = (ZipEntry)entries.nextElement();
-         } while(!zipEntry.getName().startsWith("patch/"));
+         } while (!zipEntry.getName().startsWith("patch/"));
       } finally {
          zipFile.close();
       }
@@ -419,17 +413,14 @@ public class Installer {
       if (pos < 0) {
          return null;
       } else {
-         int startPos = pos;
-
-         for(pos = pos; pos < bytes.length; ++pos) {
+         for (pos = pos; pos < bytes.length; pos++) {
             byte b = bytes[pos];
             if (b < 32 || b > 122) {
                break;
             }
          }
 
-         String ver = new String(bytes, startPos, pos - startPos, "ASCII");
-         return ver;
+         return new String(bytes, pos, pos - pos, "ASCII");
       }
    }
 
@@ -438,12 +429,7 @@ public class Installer {
          return null;
       } else {
          String[] ofVers = Utils.tokenize(ofVer, "_");
-         if (ofVers.length < 2) {
-            return null;
-         } else {
-            String mcVer = ofVers[1];
-            return mcVer;
-         }
+         return ofVers.length < 2 ? null : ofVers[1];
       }
    }
 

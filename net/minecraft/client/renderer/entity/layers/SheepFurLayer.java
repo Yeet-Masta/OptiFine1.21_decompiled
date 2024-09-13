@@ -18,23 +18,33 @@ import net.minecraft.world.item.DyeColor;
 import net.optifine.Config;
 import net.optifine.CustomColors;
 
-public class SheepFurLayer extends RenderLayer {
-   private static final ResourceLocation f_117404_ = ResourceLocation.m_340282_("textures/entity/sheep/sheep_fur.png");
-   public SheepFurModel f_117405_;
+public class SheepFurLayer extends RenderLayer<Sheep, SheepModel<Sheep>> {
+   private static ResourceLocation f_117404_ = ResourceLocation.m_340282_("textures/entity/sheep/sheep_fur.png");
+   public SheepFurModel<Sheep> f_117405_;
 
-   public SheepFurLayer(RenderLayerParent parentIn, EntityModelSet modelSetIn) {
+   public SheepFurLayer(RenderLayerParent<Sheep, SheepModel<Sheep>> parentIn, EntityModelSet modelSetIn) {
       super(parentIn);
       this.f_117405_ = new SheepFurModel(modelSetIn.m_171103_(ModelLayers.f_171178_));
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Sheep entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      Sheep entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       if (!entitylivingbaseIn.m_29875_()) {
-         boolean j;
          if (entitylivingbaseIn.m_20145_()) {
             Minecraft minecraft = Minecraft.m_91087_();
-            j = minecraft.m_91314_(entitylivingbaseIn);
-            if (j) {
-               ((SheepModel)this.m_117386_()).m_102624_(this.f_117405_);
+            boolean flag = minecraft.m_91314_(entitylivingbaseIn);
+            if (flag) {
+               this.m_117386_().m_102624_(this.f_117405_);
                this.f_117405_.m_6839_(entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks);
                this.f_117405_.m_6973_(entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
                VertexConsumer vertexconsumer = bufferIn.m_6299_(RenderType.m_110491_(f_117404_));
@@ -43,7 +53,7 @@ public class SheepFurLayer extends RenderLayer {
          } else {
             int i;
             if (entitylivingbaseIn.m_8077_() && "jeb_".equals(entitylivingbaseIn.m_7755_().getString())) {
-               j = true;
+               int j = 25;
                int k = entitylivingbaseIn.f_19797_ / 25 + entitylivingbaseIn.m_19879_();
                int l = DyeColor.values().length;
                int i1 = k % l;
@@ -64,9 +74,23 @@ public class SheepFurLayer extends RenderLayer {
                }
             }
 
-            m_117359_(this.m_117386_(), this.f_117405_, f_117404_, matrixStackIn, bufferIn, packedLightIn, entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, partialTicks, i);
+            m_117359_(
+               this.m_117386_(),
+               this.f_117405_,
+               f_117404_,
+               matrixStackIn,
+               bufferIn,
+               packedLightIn,
+               entitylivingbaseIn,
+               limbSwing,
+               limbSwingAmount,
+               ageInTicks,
+               netHeadYaw,
+               headPitch,
+               partialTicks,
+               i
+            );
          }
       }
-
    }
 }

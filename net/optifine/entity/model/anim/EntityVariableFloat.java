@@ -14,10 +14,12 @@ public class EntityVariableFloat implements IModelVariableFloat {
       this.name = name;
    }
 
+   @Override
    public float eval() {
       return this.getValue();
    }
 
+   @Override
    public float getValue() {
       return getEntityValue(this.name);
    }
@@ -34,6 +36,7 @@ public class EntityVariableFloat implements IModelVariableFloat {
       }
    }
 
+   @Override
    public void setValue(float value) {
       setEntityValue(this.name, value);
    }

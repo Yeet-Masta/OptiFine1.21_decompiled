@@ -12,16 +12,22 @@ import net.minecraft.util.RandomSource;
 import org.joml.Vector3f;
 
 public class Vec3 implements Position {
-   public static final Codec f_231074_;
-   public static final Vec3 f_82478_;
+   public static Codec<Vec3> f_231074_ = Codec.DOUBLE
+      .listOf()
+      .comapFlatMap(
+         p_318574_0_ -> Util.m_143795_(p_318574_0_, 3)
+               .map(p_231080_0_ -> new Vec3((Double)p_231080_0_.get(0), (Double)p_231080_0_.get(1), (Double)p_231080_0_.get(2))),
+         p_231082_0_ -> List.m_253057_(p_231082_0_.m_7096_(), p_231082_0_.m_7098_(), p_231082_0_.m_7094_())
+      );
+   public static Vec3 f_82478_ = new Vec3(0.0, 0.0, 0.0);
    public double f_82479_;
    public double f_82480_;
    public double f_82481_;
 
    public static Vec3 m_82501_(int p_82501_0_) {
-      double d0 = (double)(p_82501_0_ >> 16 & 255) / 255.0;
-      double d1 = (double)(p_82501_0_ >> 8 & 255) / 255.0;
-      double d2 = (double)(p_82501_0_ & 255) / 255.0;
+      double d0 = (double)(p_82501_0_ >> 16 & 0xFF) / 255.0;
+      double d1 = (double)(p_82501_0_ >> 8 & 0xFF) / 255.0;
+      double d2 = (double)(p_82501_0_ & 0xFF) / 255.0;
       return new Vec3(d0, d1, d2);
    }
 
@@ -30,7 +36,9 @@ public class Vec3 implements Position {
    }
 
    public static Vec3 m_272021_(Vec3i p_272021_0_, double p_272021_1_, double p_272021_3_, double p_272021_5_) {
-      return new Vec3((double)p_272021_0_.m_123341_() + p_272021_1_, (double)p_272021_0_.m_123342_() + p_272021_3_, (double)p_272021_0_.m_123343_() + p_272021_5_);
+      return new Vec3(
+         (double)p_272021_0_.m_123341_() + p_272021_1_, (double)p_272021_0_.m_123342_() + p_272021_3_, (double)p_272021_0_.m_123343_() + p_272021_5_
+      );
    }
 
    public static Vec3 m_82512_(Vec3i p_82512_0_) {
@@ -52,7 +60,7 @@ public class Vec3 implements Position {
    }
 
    public Vec3(Vector3f p_i252809_1_) {
-      this((double)p_i252809_1_.x(), (double)p_i252809_1_.y(), (double)p_i252809_1_.z());
+      this((double)p_i252809_1_.m_305649_(), (double)p_i252809_1_.m_306225_(), (double)p_i252809_1_.m_240700_());
    }
 
    public Vec3 m_82505_(Vec3 vec) {
@@ -69,7 +77,11 @@ public class Vec3 implements Position {
    }
 
    public Vec3 m_82537_(Vec3 vec) {
-      return new Vec3(this.f_82480_ * vec.f_82481_ - this.f_82481_ * vec.f_82480_, this.f_82481_ * vec.f_82479_ - this.f_82479_ * vec.f_82481_, this.f_82479_ * vec.f_82480_ - this.f_82480_ * vec.f_82479_);
+      return new Vec3(
+         this.f_82480_ * vec.f_82481_ - this.f_82481_ * vec.f_82480_,
+         this.f_82481_ * vec.f_82479_ - this.f_82479_ * vec.f_82481_,
+         this.f_82479_ * vec.f_82480_ - this.f_82480_ * vec.f_82479_
+      );
    }
 
    public Vec3 m_82546_(Vec3 vec) {
@@ -137,7 +149,11 @@ public class Vec3 implements Position {
    }
 
    public Vec3 m_272010_(RandomSource p_272010_1_, float p_272010_2_) {
-      return this.m_82520_((double)((p_272010_1_.m_188501_() - 0.5F) * p_272010_2_), (double)((p_272010_1_.m_188501_() - 0.5F) * p_272010_2_), (double)((p_272010_1_.m_188501_() - 0.5F) * p_272010_2_));
+      return this.m_82520_(
+         (double)((p_272010_1_.m_188501_() - 0.5F) * p_272010_2_),
+         (double)((p_272010_1_.m_188501_() - 0.5F) * p_272010_2_),
+         (double)((p_272010_1_.m_188501_() - 0.5F) * p_272010_2_)
+      );
    }
 
    public double m_82553_() {
@@ -159,8 +175,7 @@ public class Vec3 implements Position {
    public boolean equals(Object p_equals_1_) {
       if (this == p_equals_1_) {
          return true;
-      } else if (p_equals_1_ instanceof Vec3) {
-         Vec3 vec3 = (Vec3)p_equals_1_;
+      } else if (p_equals_1_ instanceof Vec3 vec3) {
          if (Double.compare(vec3.f_82479_, this.f_82479_) != 0) {
             return false;
          } else {
@@ -185,7 +200,11 @@ public class Vec3 implements Position {
    }
 
    public Vec3 m_165921_(Vec3 p_165921_1_, double p_165921_2_) {
-      return new Vec3(Mth.m_14139_(p_165921_2_, this.f_82479_, p_165921_1_.f_82479_), Mth.m_14139_(p_165921_2_, this.f_82480_, p_165921_1_.f_82480_), Mth.m_14139_(p_165921_2_, this.f_82481_, p_165921_1_.f_82481_));
+      return new Vec3(
+         Mth.m_14139_(p_165921_2_, this.f_82479_, p_165921_1_.f_82479_),
+         Mth.m_14139_(p_165921_2_, this.f_82480_, p_165921_1_.f_82480_),
+         Mth.m_14139_(p_165921_2_, this.f_82481_, p_165921_1_.f_82481_)
+      );
    }
 
    public Vec3 m_82496_(float pitch) {
@@ -220,17 +239,17 @@ public class Vec3 implements Position {
    }
 
    public static Vec3 m_82498_(float pitch, float yaw) {
-      float f = Mth.m_14089_(-yaw * 0.017453292F - 3.1415927F);
-      float f1 = Mth.m_14031_(-yaw * 0.017453292F - 3.1415927F);
-      float f2 = -Mth.m_14089_(-pitch * 0.017453292F);
-      float f3 = Mth.m_14031_(-pitch * 0.017453292F);
+      float f = Mth.m_14089_(-yaw * (float) (Math.PI / 180.0) - (float) Math.PI);
+      float f1 = Mth.m_14031_(-yaw * (float) (Math.PI / 180.0) - (float) Math.PI);
+      float f2 = -Mth.m_14089_(-pitch * (float) (Math.PI / 180.0));
+      float f3 = Mth.m_14031_(-pitch * (float) (Math.PI / 180.0));
       return new Vec3((double)(f1 * f2), (double)f3, (double)(f * f2));
    }
 
-   public Vec3 m_82517_(EnumSet axes) {
-      double d0 = axes.contains(Direction.Axis.field_29) ? (double)Mth.m_14107_(this.f_82479_) : this.f_82479_;
-      double d1 = axes.contains(Direction.Axis.field_30) ? (double)Mth.m_14107_(this.f_82480_) : this.f_82480_;
-      double d2 = axes.contains(Direction.Axis.field_31) ? (double)Mth.m_14107_(this.f_82481_) : this.f_82481_;
+   public Vec3 m_82517_(EnumSet<Direction.Axis> axes) {
+      double d0 = axes.m_274455_(Direction.Axis.f_56473_) ? (double)Mth.m_14107_(this.f_82479_) : this.f_82479_;
+      double d1 = axes.m_274455_(Direction.Axis.f_56474_) ? (double)Mth.m_14107_(this.f_82480_) : this.f_82480_;
+      double d2 = axes.m_274455_(Direction.Axis.f_56475_) ? (double)Mth.m_14107_(this.f_82481_) : this.f_82481_;
       return new Vec3(d0, d1, d2);
    }
 
@@ -239,41 +258,34 @@ public class Vec3 implements Position {
    }
 
    public Vec3 m_193103_(Direction.Axis p_193103_1_, double p_193103_2_) {
-      double d0 = p_193103_1_ == Direction.Axis.field_29 ? p_193103_2_ : this.f_82479_;
-      double d1 = p_193103_1_ == Direction.Axis.field_30 ? p_193103_2_ : this.f_82480_;
-      double d2 = p_193103_1_ == Direction.Axis.field_31 ? p_193103_2_ : this.f_82481_;
+      double d0 = p_193103_1_ == Direction.Axis.f_56473_ ? p_193103_2_ : this.f_82479_;
+      double d1 = p_193103_1_ == Direction.Axis.f_56474_ ? p_193103_2_ : this.f_82480_;
+      double d2 = p_193103_1_ == Direction.Axis.f_56475_ ? p_193103_2_ : this.f_82481_;
       return new Vec3(d0, d1, d2);
    }
 
    public Vec3 m_231075_(Direction p_231075_1_, double p_231075_2_) {
       Vec3i vec3i = p_231075_1_.m_122436_();
-      return new Vec3(this.f_82479_ + p_231075_2_ * (double)vec3i.m_123341_(), this.f_82480_ + p_231075_2_ * (double)vec3i.m_123342_(), this.f_82481_ + p_231075_2_ * (double)vec3i.m_123343_());
+      return new Vec3(
+         this.f_82479_ + p_231075_2_ * (double)vec3i.m_123341_(),
+         this.f_82480_ + p_231075_2_ * (double)vec3i.m_123342_(),
+         this.f_82481_ + p_231075_2_ * (double)vec3i.m_123343_()
+      );
    }
 
-   public final double m_7096_() {
+   public double m_7096_() {
       return this.f_82479_;
    }
 
-   public final double m_7098_() {
+   public double m_7098_() {
       return this.f_82480_;
    }
 
-   public final double m_7094_() {
+   public double m_7094_() {
       return this.f_82481_;
    }
 
    public Vector3f m_252839_() {
       return new Vector3f((float)this.f_82479_, (float)this.f_82480_, (float)this.f_82481_);
-   }
-
-   static {
-      f_231074_ = Codec.DOUBLE.listOf().comapFlatMap((p_318574_0_) -> {
-         return Util.m_143795_(p_318574_0_, 3).map((p_231080_0_) -> {
-            return new Vec3((Double)p_231080_0_.get(0), (Double)p_231080_0_.get(1), (Double)p_231080_0_.get(2));
-         });
-      }, (p_231082_0_) -> {
-         return List.of(p_231082_0_.m_7096_(), p_231082_0_.m_7098_(), p_231082_0_.m_7094_());
-      });
-      f_82478_ = new Vec3(0.0, 0.0, 0.0);
    }
 }

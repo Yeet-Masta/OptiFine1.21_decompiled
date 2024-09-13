@@ -1,7 +1,6 @@
 package net.optifine.player;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import java.io.File;
 import java.util.regex.Pattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -14,37 +13,33 @@ import net.optifine.Config;
 import net.optifine.util.TextureUtils;
 
 public class CapeUtils {
-   private static final Pattern PATTERN_USERNAME = Pattern.compile("[a-zA-Z0-9_]+");
+   private static Pattern PATTERN_USERNAME = Pattern.m_289905_("[a-zA-Z0-9_]+");
 
    public static void downloadCape(AbstractClientPlayer player) {
       String username = player.getNameClear();
-      if (username != null && !username.isEmpty() && !username.contains("\u0000") && PATTERN_USERNAME.matcher(username).matches()) {
+      if (username != null && !username.isEmpty() && !username.m_274455_("\u0000") && PATTERN_USERNAME.matcher(username).matches()) {
          String ofCapeUrl = "http://s.optifine.net/capes/" + username + ".png";
          ResourceLocation rl = new ResourceLocation("capeof/" + username);
          TextureManager textureManager = Minecraft.m_91087_().m_91097_();
-         AbstractTexture tex = textureManager.m_174786_(rl, (AbstractTexture)null);
-         if (tex != null && tex instanceof HttpTexture) {
-            HttpTexture tdid = (HttpTexture)tex;
-            if (tdid.imageFound != null) {
-               if (tdid.imageFound) {
-                  player.setLocationOfCape(rl);
-                  if (tdid.getProcessTask() instanceof CapeImageBuffer) {
-                     CapeImageBuffer cib = (CapeImageBuffer)tdid.getProcessTask();
-                     player.setElytraOfCape(cib.isElytraOfCape());
-                  }
+         AbstractTexture tex = textureManager.m_174786_(rl, null);
+         if (tex != null && tex instanceof HttpTexture tdid && tdid.imageFound != null) {
+            if (tdid.imageFound) {
+               player.setLocationOfCape(rl);
+               if (tdid.getProcessTask() instanceof CapeImageBuffer) {
+                  CapeImageBuffer cib = (CapeImageBuffer)tdid.getProcessTask();
+                  player.setElytraOfCape(cib.isElytraOfCape());
                }
-
-               return;
             }
+
+            return;
          }
 
          CapeImageBuffer cib = new CapeImageBuffer(player, rl);
          ResourceLocation locEmpty = TextureUtils.LOCATION_TEXTURE_EMPTY;
-         HttpTexture textureCape = new HttpTexture((File)null, ofCapeUrl, locEmpty, false, cib);
+         HttpTexture textureCape = new HttpTexture(null, ofCapeUrl, locEmpty, false, cib);
          textureCape.pipeline = true;
          textureManager.m_118495_(rl, textureCape);
       }
-
    }
 
    public static NativeImage parseCape(NativeImage img) {
@@ -52,7 +47,7 @@ public class CapeUtils {
       int imageHeight = 32;
       int srcWidth = img.m_84982_();
 
-      for(int srcHeight = img.m_85084_(); imageWidth < srcWidth || imageHeight < srcHeight; imageHeight *= 2) {
+      for (int srcHeight = img.m_85084_(); imageWidth < srcWidth || imageHeight < srcHeight; imageHeight *= 2) {
          imageWidth *= 2;
       }
 
@@ -70,13 +65,12 @@ public class CapeUtils {
       String nameClear = player.getNameClear();
       ResourceLocation rl = new ResourceLocation("capeof/" + nameClear);
       TextureManager textureManager = Config.getTextureManager();
-      AbstractTexture tex = textureManager.m_118506_(rl);
-      if (tex instanceof SimpleTexture simpleTex) {
+      if (textureManager.m_118506_(rl) instanceof SimpleTexture simpleTex) {
          simpleTex.m_117964_();
          textureManager.m_118513_(rl);
       }
 
-      player.setLocationOfCape((ResourceLocation)null);
+      player.setLocationOfCape(null);
       player.setElytraOfCape(false);
       downloadCape(player);
    }

@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,12 +43,14 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.RedStoneWireBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
@@ -68,30 +68,35 @@ import net.optifine.render.RenderTypes;
 import net.optifine.util.ChunkUtils;
 
 public class SectionRenderDispatcher {
-   private static final int f_291537_ = 2;
-   private final PriorityBlockingQueue f_290449_ = Queues.newPriorityBlockingQueue();
-   private final Queue f_291696_ = Queues.newLinkedBlockingDeque();
+   private static int f_291537_;
+   private PriorityBlockingQueue<SectionRenderDispatcher.RenderSection.CompileTask> f_290449_ = Queues.newPriorityBlockingQueue();
+   private Queue<SectionRenderDispatcher.RenderSection.CompileTask> f_291696_ = Queues.newLinkedBlockingDeque();
    private int f_291840_ = 2;
-   private final Queue f_290841_ = Queues.newConcurrentLinkedQueue();
-   final SectionBufferBuilderPack f_290794_;
-   private final SectionBufferBuilderPool f_302374_;
+   private Queue<Runnable> f_290841_ = Queues.newConcurrentLinkedQueue();
+   SectionBufferBuilderPack f_290794_;
+   private SectionBufferBuilderPool f_302374_;
    private volatile int f_290603_;
    private volatile boolean f_302977_;
-   private final ProcessorMailbox f_290713_;
-   private final Executor f_291206_;
+   private ProcessorMailbox<Runnable> f_290713_;
+   private Executor f_291206_;
    ClientLevel f_291400_;
-   final LevelRenderer f_290611_;
-   private Vec3 f_290602_;
-   final SectionCompiler f_337370_;
+   LevelRenderer f_290611_;
+   private Vec3 f_290602_ = Vec3.f_82478_;
+   SectionCompiler f_337370_;
    private int countRenderBuilders;
-   private List listPausedBuilders;
-   public static final RenderType[] BLOCK_RENDER_LAYERS = (RenderType[])RenderType.m_110506_().toArray(new RenderType[0]);
-   public static final boolean FORGE;
+   private List<SectionBufferBuilderPack> listPausedBuilders = new ArrayList();
+   public static RenderType[] BLOCK_RENDER_LAYERS = (RenderType[])RenderType.m_110506_().toArray(new RenderType[0]);
+   public static boolean FORGE = Reflector.ForgeHooksClient.exists();
    public static int renderChunksUpdated;
 
-   public SectionRenderDispatcher(ClientLevel worldIn, LevelRenderer worldRendererIn, Executor executorIn, RenderBuffers fixedBuffersIn, BlockRenderDispatcher blockRendererIn, BlockEntityRenderDispatcher blockEntityRendererIn) {
-      this.f_290602_ = Vec3.f_82478_;
-      this.listPausedBuilders = new ArrayList();
+   public SectionRenderDispatcher(
+      ClientLevel worldIn,
+      LevelRenderer worldRendererIn,
+      Executor executorIn,
+      RenderBuffers fixedBuffersIn,
+      BlockRenderDispatcher blockRendererIn,
+      BlockEntityRenderDispatcher blockEntityRendererIn
+   ) {
       this.f_291400_ = worldIn;
       this.f_290611_ = worldRendererIn;
       this.f_290794_ = fixedBuffersIn.m_110098_();
@@ -110,7 +115,7 @@ public class SectionRenderDispatcher {
 
    private void m_293371_() {
       if (!this.f_302977_ && !this.f_302374_.m_307681_()) {
-         RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask = this.m_293164_();
+         SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask = this.m_293164_();
          if (sectionrenderdispatcher$rendersection$compiletask != null) {
             SectionBufferBuilderPack sectionbufferbuilderpack = (SectionBufferBuilderPack)Objects.requireNonNull(this.f_302374_.m_307873_());
             if (sectionbufferbuilderpack == null) {
@@ -119,55 +124,58 @@ public class SectionRenderDispatcher {
             }
 
             this.f_290603_ = this.f_290449_.size() + this.f_291696_.size();
-            CompletableFuture.supplyAsync(Util.m_183946_(sectionrenderdispatcher$rendersection$compiletask.m_294775_(), () -> {
-               return sectionrenderdispatcher$rendersection$compiletask.m_294443_(sectionbufferbuilderpack);
-            }), this.f_291206_).thenCompose((resultIn) -> {
-               return resultIn;
-            }).whenComplete((taskResultIn, throwableIn) -> {
-               if (throwableIn != null) {
-                  Minecraft.m_91087_().m_231412_(CrashReport.m_127521_(throwableIn, "Batching sections"));
-               } else {
-                  this.f_290713_.m_6937_(() -> {
-                     if (taskResultIn == SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL) {
-                        sectionbufferbuilderpack.m_294577_();
-                     } else {
-                        sectionbufferbuilderpack.m_293358_();
-                     }
+            CompletableFuture.supplyAsync(
+                  Util.m_183946_(
+                     sectionrenderdispatcher$rendersection$compiletask.m_294775_(),
+                     () -> sectionrenderdispatcher$rendersection$compiletask.m_294443_(sectionbufferbuilderpack)
+                  ),
+                  this.f_291206_
+               )
+               .thenCompose(resultIn -> resultIn)
+               .whenComplete((taskResultIn, throwableIn) -> {
+                  if (throwableIn != null) {
+                     Minecraft.m_91087_().m_231412_(CrashReport.m_127521_(throwableIn, "Batching sections"));
+                  } else {
+                     this.f_290713_.m_6937_((Runnable)() -> {
+                        if (taskResultIn == SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL) {
+                           sectionbufferbuilderpack.m_294577_();
+                        } else {
+                           sectionbufferbuilderpack.m_293358_();
+                        }
 
-                     this.f_302374_.m_306477_(sectionbufferbuilderpack);
-                     this.m_293371_();
-                  });
-               }
-
-            });
+                        this.f_302374_.m_306477_(sectionbufferbuilderpack);
+                        this.m_293371_();
+                     });
+                  }
+               });
          }
       }
-
    }
 
    @Nullable
-   private RenderSection.CompileTask m_293164_() {
-      RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask1;
+   private SectionRenderDispatcher.RenderSection.CompileTask m_293164_() {
       if (this.f_291840_ <= 0) {
-         sectionrenderdispatcher$rendersection$compiletask1 = (RenderSection.CompileTask)this.f_291696_.poll();
-         if (sectionrenderdispatcher$rendersection$compiletask1 != null) {
+         SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask = (SectionRenderDispatcher.RenderSection.CompileTask)this.f_291696_
+            .poll();
+         if (sectionrenderdispatcher$rendersection$compiletask != null) {
             this.f_291840_ = 2;
-            return sectionrenderdispatcher$rendersection$compiletask1;
+            return sectionrenderdispatcher$rendersection$compiletask;
          }
       }
 
-      sectionrenderdispatcher$rendersection$compiletask1 = (RenderSection.CompileTask)this.f_290449_.poll();
+      SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask1 = (SectionRenderDispatcher.RenderSection.CompileTask)this.f_290449_
+         .poll();
       if (sectionrenderdispatcher$rendersection$compiletask1 != null) {
-         --this.f_291840_;
+         this.f_291840_--;
          return sectionrenderdispatcher$rendersection$compiletask1;
       } else {
          this.f_291840_ = 2;
-         return (RenderSection.CompileTask)this.f_291696_.poll();
+         return (SectionRenderDispatcher.RenderSection.CompileTask)this.f_291696_.poll();
       }
    }
 
    public String m_292950_() {
-      return String.format(Locale.ROOT, "pC: %03d, pU: %02d, aB: %02d", this.f_290603_, this.f_290841_.size(), this.f_302374_.m_306121_());
+      return String.m_12886_(Locale.ROOT, "pC: %03d, pU: %02d, aB: %02d", new Object[]{this.f_290603_, this.f_290841_.size(), this.f_302374_.m_306121_()});
    }
 
    public int m_293066_() {
@@ -192,13 +200,12 @@ public class SectionRenderDispatcher {
 
    public void m_295287_() {
       Runnable runnable;
-      while((runnable = (Runnable)this.f_290841_.poll()) != null) {
+      while ((runnable = (Runnable)this.f_290841_.poll()) != null) {
          runnable.run();
       }
-
    }
 
-   public void m_295202_(RenderSection chunkRenderIn, RenderRegionCache regionCacheIn) {
+   public void m_295202_(SectionRenderDispatcher.RenderSection chunkRenderIn, RenderRegionCache regionCacheIn) {
       chunkRenderIn.m_295370_(regionCacheIn);
    }
 
@@ -206,9 +213,9 @@ public class SectionRenderDispatcher {
       this.m_295487_();
    }
 
-   public void m_294204_(RenderSection.CompileTask renderTaskIn) {
+   public void m_294204_(SectionRenderDispatcher.RenderSection.CompileTask renderTaskIn) {
       if (!this.f_302977_) {
-         this.f_290713_.m_6937_(() -> {
+         this.f_290713_.m_6937_((Runnable)() -> {
             if (!this.f_302977_) {
                if (renderTaskIn.f_290632_) {
                   this.f_290449_.offer(renderTaskIn);
@@ -219,69 +226,46 @@ public class SectionRenderDispatcher {
                this.f_290603_ = this.f_290449_.size() + this.f_291696_.size();
                this.m_293371_();
             }
-
          });
       }
-
    }
 
-   public CompletableFuture m_292947_(MeshData bufferIn, VertexBuffer vertexBufferIn) {
-      CompletableFuture var10000;
-      if (this.f_302977_) {
-         var10000 = CompletableFuture.completedFuture((Object)null);
-      } else {
-         Runnable var3 = () -> {
-            if (vertexBufferIn.m_231230_()) {
-               bufferIn.close();
-            } else {
-               vertexBufferIn.m_85921_();
-               vertexBufferIn.m_231221_(bufferIn);
-               VertexBuffer.m_85931_();
-            }
-
-         };
-         Queue var10001 = this.f_290841_;
-         Objects.requireNonNull(var10001);
-         var10000 = CompletableFuture.runAsync(var3, var10001::add);
-      }
-
-      return var10000;
+   public CompletableFuture<Void> m_292947_(MeshData bufferIn, VertexBuffer vertexBufferIn) {
+      return this.f_302977_ ? CompletableFuture.completedFuture(null) : CompletableFuture.runAsync(() -> {
+         if (vertexBufferIn.m_231230_()) {
+            bufferIn.close();
+         } else {
+            vertexBufferIn.m_85921_();
+            vertexBufferIn.m_231221_(bufferIn);
+            VertexBuffer.m_85931_();
+         }
+      }, this.f_290841_::add);
    }
 
-   public CompletableFuture m_339467_(ByteBufferBuilder.Result resultIn, VertexBuffer bufferIn) {
-      CompletableFuture var10000;
-      if (this.f_302977_) {
-         var10000 = CompletableFuture.completedFuture((Object)null);
-      } else {
-         Runnable var3 = () -> {
-            if (bufferIn.m_231230_()) {
-               resultIn.close();
-            } else {
-               bufferIn.m_85921_();
-               bufferIn.m_338802_(resultIn);
-               VertexBuffer.m_85931_();
-            }
-
-         };
-         Queue var10001 = this.f_290841_;
-         Objects.requireNonNull(var10001);
-         var10000 = CompletableFuture.runAsync(var3, var10001::add);
-      }
-
-      return var10000;
+   public CompletableFuture<Void> m_339467_(ByteBufferBuilder.Result resultIn, VertexBuffer bufferIn) {
+      return this.f_302977_ ? CompletableFuture.completedFuture(null) : CompletableFuture.runAsync(() -> {
+         if (bufferIn.m_231230_()) {
+            resultIn.close();
+         } else {
+            bufferIn.m_85921_();
+            bufferIn.m_338802_(resultIn);
+            VertexBuffer.m_85931_();
+         }
+      }, this.f_290841_::add);
    }
 
    private void m_295487_() {
-      RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask1;
-      while(!this.f_290449_.isEmpty()) {
-         sectionrenderdispatcher$rendersection$compiletask1 = (RenderSection.CompileTask)this.f_290449_.poll();
-         if (sectionrenderdispatcher$rendersection$compiletask1 != null) {
-            sectionrenderdispatcher$rendersection$compiletask1.m_292880_();
+      while (!this.f_290449_.isEmpty()) {
+         SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask = (SectionRenderDispatcher.RenderSection.CompileTask)this.f_290449_
+            .poll();
+         if (sectionrenderdispatcher$rendersection$compiletask != null) {
+            sectionrenderdispatcher$rendersection$compiletask.m_292880_();
          }
       }
 
-      while(!this.f_291696_.isEmpty()) {
-         sectionrenderdispatcher$rendersection$compiletask1 = (RenderSection.CompileTask)this.f_291696_.poll();
+      while (!this.f_291696_.isEmpty()) {
+         SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask1 = (SectionRenderDispatcher.RenderSection.CompileTask)this.f_291696_
+            .poll();
          if (sectionrenderdispatcher$rendersection$compiletask1 != null) {
             sectionrenderdispatcher$rendersection$compiletask1.m_292880_();
          }
@@ -303,7 +287,7 @@ public class SectionRenderDispatcher {
    public void pauseChunkUpdates() {
       long timeStartMs = System.currentTimeMillis();
       if (this.listPausedBuilders.size() <= 0) {
-         while(this.listPausedBuilders.size() != this.countRenderBuilders) {
+         while (this.listPausedBuilders.size() != this.countRenderBuilders) {
             this.m_295287_();
             SectionBufferBuilderPack builder = this.f_302374_.m_307873_();
             if (builder != null) {
@@ -314,27 +298,23 @@ public class SectionRenderDispatcher {
                break;
             }
          }
-
       }
    }
 
    public void resumeChunkUpdates() {
-      Iterator var1 = this.listPausedBuilders.iterator();
-
-      while(var1.hasNext()) {
-         SectionBufferBuilderPack builder = (SectionBufferBuilderPack)var1.next();
+      for (SectionBufferBuilderPack builder : this.listPausedBuilders) {
          this.f_302374_.m_306477_(builder);
       }
 
       this.listPausedBuilders.clear();
    }
 
-   public boolean updateChunkNow(RenderSection renderChunk, RenderRegionCache regionCacheIn) {
+   public boolean updateChunkNow(SectionRenderDispatcher.RenderSection renderChunk, RenderRegionCache regionCacheIn) {
       this.m_295202_(renderChunk, regionCacheIn);
       return true;
    }
 
-   public boolean updateChunkLater(RenderSection renderChunk, RenderRegionCache regionCacheIn) {
+   public boolean updateChunkLater(SectionRenderDispatcher.RenderSection renderChunk, RenderRegionCache regionCacheIn) {
       if (this.f_302374_.m_307681_()) {
          return false;
       } else {
@@ -343,7 +323,7 @@ public class SectionRenderDispatcher {
       }
    }
 
-   public boolean updateTransparencyLater(RenderSection renderChunk) {
+   public boolean updateTransparencyLater(SectionRenderDispatcher.RenderSection renderChunk) {
       return this.f_302374_.m_307681_() ? false : renderChunk.m_294021_(RenderTypes.TRANSLUCENT, this);
    }
 
@@ -353,79 +333,123 @@ public class SectionRenderDispatcher {
       }
    }
 
-   static {
-      FORGE = Reflector.ForgeHooksClient.exists();
+   public static class CompiledSection {
+      public static SectionRenderDispatcher.CompiledSection f_290410_ = new SectionRenderDispatcher.CompiledSection() {
+         @Override
+         public boolean m_293115_(Direction facing, Direction facing2) {
+            return false;
+         }
+
+         public void setAnimatedSprites(RenderType layer, BitSet animatedSprites) {
+            throw new UnsupportedOperationException();
+         }
+      };
+      public static SectionRenderDispatcher.CompiledSection f_336992_ = new SectionRenderDispatcher.CompiledSection() {
+         @Override
+         public boolean m_293115_(Direction facing, Direction facing2) {
+            return true;
+         }
+      };
+      Set<RenderType> f_290391_ = new ChunkLayerSet();
+      List<BlockEntity> f_290409_ = Lists.newArrayList();
+      VisibilitySet f_290920_ = new VisibilitySet();
+      @Nullable
+      MeshData.SortState f_291674_;
+      private BitSet[] animatedSprites = new BitSet[RenderType.CHUNK_RENDER_TYPES.length];
+
+      public boolean m_295467_() {
+         return this.f_290391_.isEmpty();
+      }
+
+      public boolean m_294492_(RenderType renderTypeIn) {
+         return !this.f_290391_.m_274455_(renderTypeIn);
+      }
+
+      public List<BlockEntity> m_293674_() {
+         return this.f_290409_;
+      }
+
+      public boolean m_293115_(Direction facing, Direction facing2) {
+         return this.f_290920_.m_112983_(facing, facing2);
+      }
+
+      public BitSet getAnimatedSprites(RenderType layer) {
+         return this.animatedSprites[layer.ordinal()];
+      }
+
+      public void setAnimatedSprites(BitSet[] animatedSprites) {
+         this.animatedSprites = animatedSprites;
+      }
+
+      public boolean isLayerUsed(RenderType renderTypeIn) {
+         return this.f_290391_.m_274455_(renderTypeIn);
+      }
+
+      public void setLayerUsed(RenderType renderTypeIn) {
+         this.f_290391_.add(renderTypeIn);
+      }
+
+      public boolean hasTerrainBlockEntities() {
+         return !this.m_295467_() || !this.m_293674_().isEmpty();
+      }
+
+      public Set<RenderType> getLayersUsed() {
+         return this.f_290391_;
+      }
    }
 
    public class RenderSection {
-      public static final int f_291071_ = 16;
-      public final int f_290488_;
-      public final AtomicReference f_290312_;
-      private final AtomicInteger f_291503_;
+      public static int f_291071_;
+      public int f_290488_;
+      public AtomicReference<SectionRenderDispatcher.CompiledSection> f_290312_ = new AtomicReference(SectionRenderDispatcher.CompiledSection.f_290410_);
+      private AtomicInteger f_291503_ = new AtomicInteger(0);
       @Nullable
-      private RebuildTask f_291315_;
+      private SectionRenderDispatcher.RenderSection.RebuildTask f_291315_;
       @Nullable
-      private ResortTransparencyTask f_291330_;
-      private final Set f_291787_;
-      private final ChunkLayerMap f_291754_;
+      private SectionRenderDispatcher.RenderSection.ResortTransparencyTask f_291330_;
+      private Set<BlockEntity> f_291787_ = Sets.newHashSet();
+      private ChunkLayerMap<VertexBuffer> f_291754_ = new ChunkLayerMap<>(renderType -> new VertexBuffer(VertexBuffer.Usage.STATIC));
       private AABB f_290371_;
-      private boolean f_291619_;
-      final BlockPos.MutableBlockPos f_291850_;
-      private final BlockPos.MutableBlockPos[] f_291827_;
+      private boolean f_291619_ = true;
+      MutableBlockPos f_291850_ = new MutableBlockPos(-1, -1, -1);
+      private MutableBlockPos[] f_291827_ = Util.m_137469_(new MutableBlockPos[6], posArrIn -> {
+         for (int i = 0; i < posArrIn.length; i++) {
+            posArrIn[i] = new MutableBlockPos();
+         }
+      });
       private boolean f_291709_;
-      private final boolean isMipmaps;
-      private boolean playerUpdate;
+      private boolean isMipmaps = Config.isMipmaps();
+      private boolean playerUpdate = false;
       private boolean needsBackgroundPriorityUpdate;
-      private boolean renderRegions;
+      private boolean renderRegions = Config.isRenderRegions();
       public int regionX;
       public int regionZ;
       public int regionDX;
       public int regionDY;
       public int regionDZ;
-      private final RenderSection[] renderChunksOfset16;
-      private boolean renderChunksOffset16Updated;
+      private SectionRenderDispatcher.RenderSection[] renderChunksOfset16 = new SectionRenderDispatcher.RenderSection[6];
+      private boolean renderChunksOffset16Updated = false;
       private LevelChunk chunk;
-      private RenderSection[] renderChunkNeighbours;
-      private RenderSection[] renderChunkNeighboursValid;
-      private boolean renderChunkNeighboursUpated;
-      private SectionOcclusionGraph.Node renderInfo;
+      private SectionRenderDispatcher.RenderSection[] renderChunkNeighbours = new SectionRenderDispatcher.RenderSection[Direction.f_122346_.length];
+      private SectionRenderDispatcher.RenderSection[] renderChunkNeighboursValid = new SectionRenderDispatcher.RenderSection[Direction.f_122346_.length];
+      private boolean renderChunkNeighboursUpated = false;
+      private SectionOcclusionGraph.Node renderInfo = new SectionOcclusionGraph.Node(this, null, 0);
       public AabbFrame boundingBoxParent;
       private SectionPos sectionPosition;
 
       public RenderSection(final int indexIn, final int x, final int y, final int z) {
-         this.f_290312_ = new AtomicReference(SectionRenderDispatcher.CompiledSection.f_290410_);
-         this.f_291503_ = new AtomicInteger(0);
-         this.f_291787_ = Sets.newHashSet();
-         this.f_291754_ = new ChunkLayerMap((renderType) -> {
-            return new VertexBuffer(VertexBuffer.Usage.STATIC);
-         });
-         this.f_291619_ = true;
-         this.f_291850_ = new BlockPos.MutableBlockPos(-1, -1, -1);
-         this.f_291827_ = (BlockPos.MutableBlockPos[])Util.m_137469_(new BlockPos.MutableBlockPos[6], (posArrIn) -> {
-            for(int i = 0; i < posArrIn.length; ++i) {
-               posArrIn[i] = new BlockPos.MutableBlockPos();
-            }
-
-         });
-         this.isMipmaps = Config.isMipmaps();
-         this.playerUpdate = false;
-         this.renderRegions = Config.isRenderRegions();
-         this.renderChunksOfset16 = new RenderSection[6];
-         this.renderChunksOffset16Updated = false;
-         this.renderChunkNeighbours = new RenderSection[Direction.f_122346_.length];
-         this.renderChunkNeighboursValid = new RenderSection[Direction.f_122346_.length];
-         this.renderChunkNeighboursUpated = false;
-         this.renderInfo = new SectionOcclusionGraph.Node(this, (Direction)null, 0);
          this.f_290488_ = indexIn;
          this.m_292814_(x, y, z);
       }
 
       private boolean m_294104_(BlockPos blockPosIn) {
-         return SectionRenderDispatcher.this.f_291400_.m_6522_(SectionPos.m_123171_(blockPosIn.m_123341_()), SectionPos.m_123171_(blockPosIn.m_123343_()), ChunkStatus.f_315432_, false) != null;
+         return SectionRenderDispatcher.this.f_291400_
+               .m_6522_(SectionPos.m_123171_(blockPosIn.m_123341_()), SectionPos.m_123171_(blockPosIn.m_123343_()), ChunkStatus.f_315432_, false)
+            != null;
       }
 
       public boolean m_294718_() {
-         int i = true;
+         int i = 24;
          return !(this.m_293828_() > 576.0) ? true : this.m_294104_(this.f_291850_);
       }
 
@@ -434,37 +458,33 @@ public class SectionRenderDispatcher {
       }
 
       public VertexBuffer m_294581_(RenderType renderTypeIn) {
-         return (VertexBuffer)this.f_291754_.get(renderTypeIn);
+         return this.f_291754_.get(renderTypeIn);
       }
 
       public void m_292814_(int x, int y, int z) {
          this.m_293096_();
          this.f_291850_.m_122178_(x, y, z);
          this.sectionPosition = SectionPos.m_123199_(this.f_291850_);
-         int i;
          if (this.renderRegions) {
-            i = 8;
-            this.regionX = x >> i << i;
-            this.regionZ = z >> i << i;
+            int bits = 8;
+            this.regionX = x >> bits << bits;
+            this.regionZ = z >> bits << bits;
             this.regionDX = x - this.regionX;
             this.regionDY = y;
             this.regionDZ = z - this.regionZ;
          }
 
          this.f_290371_ = new AABB((double)x, (double)y, (double)z, (double)(x + 16), (double)(y + 16), (double)(z + 16));
-         Direction[] var8 = Direction.f_122346_;
-         int var5 = var8.length;
 
-         for(int var6 = 0; var6 < var5; ++var6) {
-            Direction direction = var8[var6];
+         for (Direction direction : Direction.f_122346_) {
             this.f_291827_[direction.ordinal()].m_122190_(this.f_291850_).m_122175_(direction, 16);
          }
 
          this.renderChunksOffset16Updated = false;
          this.renderChunkNeighboursUpated = false;
 
-         for(i = 0; i < this.renderChunkNeighbours.length; ++i) {
-            RenderSection neighbour = this.renderChunkNeighbours[i];
+         for (int i = 0; i < this.renderChunkNeighbours.length; i++) {
+            SectionRenderDispatcher.RenderSection neighbour = this.renderChunkNeighbours[i];
             if (neighbour != null) {
                neighbour.renderChunkNeighboursUpated = false;
             }
@@ -482,8 +502,8 @@ public class SectionRenderDispatcher {
          return d0 * d0 + d1 * d1 + d2 * d2;
       }
 
-      public CompiledSection m_293175_() {
-         return (CompiledSection)this.f_290312_.get();
+      public SectionRenderDispatcher.CompiledSection m_293175_() {
+         return (SectionRenderDispatcher.CompiledSection)this.f_290312_.get();
       }
 
       private void m_293096_() {
@@ -512,7 +532,6 @@ public class SectionRenderDispatcher {
          if (!flag) {
             SectionRenderDispatcher.this.f_290611_.onChunkRenderNeedsUpdate(this);
          }
-
       }
 
       public void m_294599_() {
@@ -535,18 +554,20 @@ public class SectionRenderDispatcher {
       }
 
       public boolean m_294021_(RenderType renderTypeIn, SectionRenderDispatcher renderDispatcherIn) {
-         CompiledSection sectionrenderdispatcher$compiledsection = this.m_293175_();
+         SectionRenderDispatcher.CompiledSection sectionrenderdispatcher$compiledsection = this.m_293175_();
          if (this.f_291330_ != null) {
             this.f_291330_.m_292880_();
          }
 
-         if (!sectionrenderdispatcher$compiledsection.f_290391_.contains(renderTypeIn)) {
+         if (!sectionrenderdispatcher$compiledsection.f_290391_.m_274455_(renderTypeIn)) {
             return false;
          } else {
             if (SectionRenderDispatcher.FORGE) {
-               this.f_291330_ = new ResortTransparencyTask(new ChunkPos(this.m_295500_()), this.m_293828_(), sectionrenderdispatcher$compiledsection);
+               this.f_291330_ = new SectionRenderDispatcher.RenderSection.ResortTransparencyTask(
+                  new ChunkPos(this.m_295500_()), this.m_293828_(), sectionrenderdispatcher$compiledsection
+               );
             } else {
-               this.f_291330_ = new ResortTransparencyTask(this.m_293828_(), sectionrenderdispatcher$compiledsection);
+               this.f_291330_ = new SectionRenderDispatcher.RenderSection.ResortTransparencyTask(this.m_293828_(), sectionrenderdispatcher$compiledsection);
             }
 
             renderDispatcherIn.m_294204_(this.f_291330_);
@@ -570,7 +591,7 @@ public class SectionRenderDispatcher {
          return flag;
       }
 
-      public CompileTask m_295128_(RenderRegionCache regionCacheIn) {
+      public SectionRenderDispatcher.RenderSection.CompileTask m_295128_(RenderRegionCache regionCacheIn) {
          boolean flag = this.m_294642_();
          RenderChunkRegion renderchunkregion = regionCacheIn.m_200465_(SectionRenderDispatcher.this.f_291400_, SectionPos.m_123199_(this.f_291850_));
          boolean flag1 = this.f_290312_.get() == SectionRenderDispatcher.CompiledSection.f_290410_;
@@ -579,19 +600,21 @@ public class SectionRenderDispatcher {
          }
 
          ChunkPos forgeChunkPos = SectionRenderDispatcher.FORGE ? new ChunkPos(this.m_295500_()) : null;
-         this.f_291315_ = new RebuildTask(forgeChunkPos, this.m_293828_(), renderchunkregion, !flag1 || this.f_291503_.get() > 2);
+         this.f_291315_ = new SectionRenderDispatcher.RenderSection.RebuildTask(
+            forgeChunkPos, this.m_293828_(), renderchunkregion, !flag1 || this.f_291503_.get() > 2
+         );
          return this.f_291315_;
       }
 
       public void m_294845_(SectionRenderDispatcher dispatcherIn, RenderRegionCache regionCacheIn) {
-         CompileTask sectionrenderdispatcher$rendersection$compiletask = this.m_295128_(regionCacheIn);
+         SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask = this.m_295128_(regionCacheIn);
          dispatcherIn.m_294204_(sectionrenderdispatcher$rendersection$compiletask);
       }
 
-      void m_295492_(Collection globalEntitiesIn) {
-         Set set = Sets.newHashSet(globalEntitiesIn);
-         HashSet set1;
-         synchronized(this.f_291787_) {
+      void m_295492_(Collection<BlockEntity> globalEntitiesIn) {
+         Set<BlockEntity> set = Sets.newHashSet(globalEntitiesIn);
+         Set<BlockEntity> set1;
+         synchronized (this.f_291787_) {
             set1 = Sets.newHashSet(this.f_291787_);
             set.removeAll(this.f_291787_);
             set1.removeAll(globalEntitiesIn);
@@ -603,16 +626,18 @@ public class SectionRenderDispatcher {
       }
 
       public void m_295370_(RenderRegionCache regionCacheIn) {
-         CompileTask sectionrenderdispatcher$rendersection$compiletask = this.m_295128_(regionCacheIn);
+         SectionRenderDispatcher.RenderSection.CompileTask sectionrenderdispatcher$rendersection$compiletask = this.m_295128_(regionCacheIn);
          sectionrenderdispatcher$rendersection$compiletask.m_294443_(SectionRenderDispatcher.this.f_290794_);
       }
 
       public boolean m_292850_(int x, int y, int z) {
          BlockPos blockpos = this.m_295500_();
-         return x == SectionPos.m_123171_(blockpos.m_123341_()) || z == SectionPos.m_123171_(blockpos.m_123343_()) || y == SectionPos.m_123171_(blockpos.m_123342_());
+         return x == SectionPos.m_123171_(blockpos.m_123341_())
+            || z == SectionPos.m_123171_(blockpos.m_123343_())
+            || y == SectionPos.m_123171_(blockpos.m_123342_());
       }
 
-      void m_339503_(CompiledSection sectionIn) {
+      void m_339503_(SectionRenderDispatcher.CompiledSection sectionIn) {
          this.f_290312_.set(sectionIn);
          this.f_291503_.set(0);
          SectionRenderDispatcher.this.f_290611_.m_294499_(this);
@@ -620,7 +645,11 @@ public class SectionRenderDispatcher {
 
       VertexSorting m_338425_() {
          Vec3 vec3 = SectionRenderDispatcher.this.m_293014_();
-         return VertexSorting.m_277071_((float)this.regionDX + (float)(vec3.f_82479_ - (double)this.f_291850_.m_123341_()), (float)this.regionDY + (float)(vec3.f_82480_ - (double)this.f_291850_.m_123342_()), (float)this.regionDZ + (float)(vec3.f_82481_ - (double)this.f_291850_.m_123343_()));
+         return VertexSorting.m_277071_(
+            (float)this.regionDX + (float)(vec3.f_82479_ - (double)this.f_291850_.m_123341_()),
+            (float)this.regionDY + (float)(vec3.f_82480_ - (double)this.f_291850_.m_123342_()),
+            (float)this.regionDZ + (float)(vec3.f_82481_ - (double)this.f_291850_.m_123343_())
+         );
       }
 
       private boolean isWorldPlayerUpdate() {
@@ -672,9 +701,9 @@ public class SectionRenderDispatcher {
          return layer;
       }
 
-      public RenderSection getRenderChunkOffset16(ViewArea viewFrustum, Direction facing) {
+      public SectionRenderDispatcher.RenderSection getRenderChunkOffset16(ViewArea viewFrustum, Direction facing) {
          if (!this.renderChunksOffset16Updated) {
-            for(int i = 0; i < Direction.f_122346_.length; ++i) {
+            for (int i = 0; i < Direction.f_122346_.length; i++) {
                Direction ef = Direction.f_122346_[i];
                BlockPos posOffset16 = this.m_292593_(ef);
                this.renderChunksOfset16[i] = viewFrustum.m_292642_(posOffset16);
@@ -711,12 +740,12 @@ public class SectionRenderDispatcher {
          return this.getChunk(posIn).m_5566_(yStart, yEnd);
       }
 
-      public void setRenderChunkNeighbour(Direction facing, RenderSection neighbour) {
+      public void setRenderChunkNeighbour(Direction facing, SectionRenderDispatcher.RenderSection neighbour) {
          this.renderChunkNeighbours[facing.ordinal()] = neighbour;
          this.renderChunkNeighboursValid[facing.ordinal()] = neighbour;
       }
 
-      public RenderSection getRenderChunkNeighbour(Direction facing) {
+      public SectionRenderDispatcher.RenderSection getRenderChunkNeighbour(Direction facing) {
          if (!this.renderChunkNeighboursUpated) {
             this.updateRenderChunkNeighboursValid();
          }
@@ -740,8 +769,12 @@ public class SectionRenderDispatcher {
          int south = Direction.SOUTH.ordinal();
          int west = Direction.WEST.ordinal();
          int east = Direction.EAST.ordinal();
-         this.renderChunkNeighboursValid[north] = this.renderChunkNeighbours[north].m_295500_().m_123343_() == z - 16 ? this.renderChunkNeighbours[north] : null;
-         this.renderChunkNeighboursValid[south] = this.renderChunkNeighbours[south].m_295500_().m_123343_() == z + 16 ? this.renderChunkNeighbours[south] : null;
+         this.renderChunkNeighboursValid[north] = this.renderChunkNeighbours[north].m_295500_().m_123343_() == z - 16
+            ? this.renderChunkNeighbours[north]
+            : null;
+         this.renderChunkNeighboursValid[south] = this.renderChunkNeighbours[south].m_295500_().m_123343_() == z + 16
+            ? this.renderChunkNeighbours[south]
+            : null;
          this.renderChunkNeighboursValid[west] = this.renderChunkNeighbours[west].m_295500_().m_123341_() == x - 16 ? this.renderChunkNeighbours[west] : null;
          this.renderChunkNeighboursValid[east] = this.renderChunkNeighbours[east].m_295500_().m_123341_() == x + 16 ? this.renderChunkNeighbours[east] : null;
          this.renderChunkNeighboursUpated = true;
@@ -786,26 +819,149 @@ public class SectionRenderDispatcher {
       }
 
       public String toString() {
-         return "pos: " + String.valueOf(this.m_295500_());
+         return "pos: " + this.m_295500_();
       }
 
-      class ResortTransparencyTask extends CompileTask {
-         private final CompiledSection f_291899_;
+      abstract class CompileTask implements Comparable<SectionRenderDispatcher.RenderSection.CompileTask> {
+         protected double f_290350_;
+         protected AtomicBoolean f_291175_ = new AtomicBoolean(false);
+         protected boolean f_290632_;
+         protected Map<BlockPos, ModelData> modelData;
 
-         public ResortTransparencyTask(final double distanceSqIn, final CompiledSection compiledChunkIn) {
-            this((ChunkPos)null, distanceSqIn, compiledChunkIn);
+         public CompileTask(final double distanceSqIn, final boolean highPriorityIn) {
+            this(null, distanceSqIn, highPriorityIn);
          }
 
-         public ResortTransparencyTask(ChunkPos pos, double distanceSqIn, CompiledSection compiledChunkIn) {
-            super(RenderSection.this, pos, distanceSqIn, true);
+         public CompileTask(ChunkPos pos, double distanceSqIn, boolean highPriorityIn) {
+            this.f_290350_ = distanceSqIn;
+            this.f_290632_ = highPriorityIn;
+            if (pos == null) {
+               this.modelData = Collections.emptyMap();
+            } else {
+               this.modelData = Minecraft.m_91087_().f_91073_.getModelDataManager().getAt(pos);
+            }
+         }
+
+         public abstract CompletableFuture<SectionRenderDispatcher.SectionTaskResult> m_294443_(SectionBufferBuilderPack var1);
+
+         public abstract void m_292880_();
+
+         protected abstract String m_294775_();
+
+         public int compareTo(SectionRenderDispatcher.RenderSection.CompileTask p_compareTo_1_) {
+            return Doubles.compare(this.f_290350_, p_compareTo_1_.f_290350_);
+         }
+
+         public ModelData getModelData(BlockPos pos) {
+            return (ModelData)this.modelData.getOrDefault(pos, ModelData.EMPTY);
+         }
+      }
+
+      class RebuildTask extends SectionRenderDispatcher.RenderSection.CompileTask {
+         @Nullable
+         protected RenderChunkRegion f_290484_;
+
+         public RebuildTask(@Nullable final double distanceSqIn, final RenderChunkRegion renderCacheIn, final boolean highPriorityIn) {
+            this(null, distanceSqIn, renderCacheIn, highPriorityIn);
+         }
+
+         public RebuildTask(ChunkPos pos, @Nullable double distanceSqIn, RenderChunkRegion renderCacheIn, boolean highPriorityIn) {
+            super(pos, distanceSqIn, highPriorityIn);
+            this.f_290484_ = renderCacheIn;
+         }
+
+         @Override
+         protected String m_294775_() {
+            return "rend_chk_rebuild";
+         }
+
+         @Override
+         public CompletableFuture<SectionRenderDispatcher.SectionTaskResult> m_294443_(SectionBufferBuilderPack builderIn) {
+            if (this.f_291175_.get()) {
+               return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
+            } else if (!RenderSection.this.m_294718_()) {
+               this.m_292880_();
+               return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
+            } else if (this.f_291175_.get()) {
+               return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
+            } else {
+               RenderChunkRegion renderchunkregion = this.f_290484_;
+               this.f_290484_ = null;
+               if (renderchunkregion == null) {
+                  RenderSection.this.m_339503_(SectionRenderDispatcher.CompiledSection.f_336992_);
+                  return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL);
+               } else {
+                  SectionPos sectionpos = SectionPos.m_123199_(RenderSection.this.f_291850_);
+                  SectionCompiler.Results sectioncompiler$results = SectionRenderDispatcher.this.f_337370_
+                     .m_289905_(
+                        sectionpos,
+                        renderchunkregion,
+                        RenderSection.this.m_338425_(),
+                        builderIn,
+                        RenderSection.this.regionDX,
+                        RenderSection.this.regionDY,
+                        RenderSection.this.regionDZ
+                     );
+                  RenderSection.this.m_295492_(sectioncompiler$results.f_337223_);
+                  if (this.f_291175_.get()) {
+                     sectioncompiler$results.m_340536_();
+                     return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
+                  } else {
+                     SectionRenderDispatcher.CompiledSection sectionrenderdispatcher$compiledsection = new SectionRenderDispatcher.CompiledSection();
+                     sectionrenderdispatcher$compiledsection.f_290920_ = sectioncompiler$results.f_337613_;
+                     sectionrenderdispatcher$compiledsection.f_290409_.addAll(sectioncompiler$results.f_337248_);
+                     sectionrenderdispatcher$compiledsection.f_291674_ = sectioncompiler$results.f_337382_;
+                     sectionrenderdispatcher$compiledsection.setAnimatedSprites(sectioncompiler$results.animatedSprites);
+                     List<CompletableFuture<Void>> list = new ArrayList(sectioncompiler$results.f_336965_.size());
+                     sectioncompiler$results.f_336965_.forEach((renderTypeIn, bufferIn) -> {
+                        list.add(SectionRenderDispatcher.this.m_292947_(bufferIn, RenderSection.this.m_294581_(renderTypeIn)));
+                        sectionrenderdispatcher$compiledsection.f_290391_.add(renderTypeIn);
+                     });
+                     return Util.m_143840_(list).m_121563_((voidIn, throwableIn) -> {
+                        if (throwableIn != null && !(throwableIn instanceof CancellationException) && !(throwableIn instanceof InterruptedException)) {
+                           Minecraft.m_91087_().m_231412_(CrashReport.m_127521_(throwableIn, "Rendering section"));
+                        }
+
+                        if (this.f_291175_.get()) {
+                           return SectionRenderDispatcher.SectionTaskResult.CANCELLED;
+                        } else {
+                           RenderSection.this.m_339503_(sectionrenderdispatcher$compiledsection);
+                           return SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL;
+                        }
+                     });
+                  }
+               }
+            }
+         }
+
+         @Override
+         public void m_292880_() {
+            this.f_290484_ = null;
+            if (this.f_291175_.compareAndSet(false, true)) {
+               RenderSection.this.m_292780_(false);
+            }
+         }
+      }
+
+      class ResortTransparencyTask extends SectionRenderDispatcher.RenderSection.CompileTask {
+         private SectionRenderDispatcher.CompiledSection f_291899_;
+
+         public ResortTransparencyTask(final double distanceSqIn, final SectionRenderDispatcher.CompiledSection compiledChunkIn) {
+            this(null, distanceSqIn, compiledChunkIn);
+         }
+
+         public ResortTransparencyTask(ChunkPos pos, double distanceSqIn, SectionRenderDispatcher.CompiledSection compiledChunkIn) {
+            super(pos, distanceSqIn, true);
             this.f_291899_ = compiledChunkIn;
          }
 
+         @Override
          protected String m_294775_() {
             return "rend_chk_sort";
          }
 
-         public CompletableFuture m_294443_(SectionBufferBuilderPack builderIn) {
+         @Override
+         public CompletableFuture<SectionRenderDispatcher.SectionTaskResult> m_294443_(SectionBufferBuilderPack builderIn) {
             if (this.f_291175_.get()) {
                return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
             } else if (!RenderSection.this.m_294718_()) {
@@ -824,16 +980,21 @@ public class SectionRenderDispatcher {
                      bytebufferbuilder$result.close();
                      return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
                   } else {
-                     CompletableFuture completablefuture = SectionRenderDispatcher.this.m_339467_(bytebufferbuilder$result, RenderSection.this.m_294581_(RenderType.m_110466_())).thenApply((voidIn) -> {
-                        return SectionRenderDispatcher.SectionTaskResult.CANCELLED;
-                     });
-                     return completablefuture.handle((taskResultIn, throwableIn) -> {
-                        if (throwableIn != null && !(throwableIn instanceof CancellationException) && !(throwableIn instanceof InterruptedException)) {
-                           Minecraft.m_91087_().m_231412_(CrashReport.m_127521_(throwableIn, "Rendering section"));
-                        }
+                     CompletableFuture<SectionRenderDispatcher.SectionTaskResult> completablefuture = SectionRenderDispatcher.this.m_339467_(
+                           bytebufferbuilder$result, RenderSection.this.m_294581_(RenderType.m_110466_())
+                        )
+                        .thenApply(voidIn -> SectionRenderDispatcher.SectionTaskResult.CANCELLED);
+                     return completablefuture.m_121563_(
+                        (taskResultIn, throwableIn) -> {
+                           if (throwableIn != null && !(throwableIn instanceof CancellationException) && !(throwableIn instanceof InterruptedException)) {
+                              Minecraft.m_91087_().m_231412_(CrashReport.m_127521_(throwableIn, "Rendering section"));
+                           }
 
-                        return this.f_291175_.get() ? SectionRenderDispatcher.SectionTaskResult.CANCELLED : SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL;
-                     });
+                           return this.f_291175_.get()
+                              ? SectionRenderDispatcher.SectionTaskResult.CANCELLED
+                              : SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL;
+                        }
+                     );
                   }
                } else {
                   return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
@@ -841,120 +1002,9 @@ public class SectionRenderDispatcher {
             }
          }
 
+         @Override
          public void m_292880_() {
             this.f_291175_.set(true);
-         }
-      }
-
-      abstract class CompileTask implements Comparable {
-         protected final double f_290350_;
-         protected final AtomicBoolean f_291175_;
-         protected final boolean f_290632_;
-         protected Map modelData;
-
-         public CompileTask(final RenderSection this$1, final double distanceSqIn, final boolean highPriorityIn) {
-            this(this$1, (ChunkPos)null, distanceSqIn, highPriorityIn);
-         }
-
-         public CompileTask(final RenderSection this$1, ChunkPos pos, double distanceSqIn, boolean highPriorityIn) {
-            this.f_291175_ = new AtomicBoolean(false);
-            this.f_290350_ = distanceSqIn;
-            this.f_290632_ = highPriorityIn;
-            if (pos == null) {
-               this.modelData = Collections.emptyMap();
-            } else {
-               this.modelData = Minecraft.m_91087_().f_91073_.getModelDataManager().getAt((ChunkPos)pos);
-            }
-
-         }
-
-         public abstract CompletableFuture m_294443_(SectionBufferBuilderPack var1);
-
-         public abstract void m_292880_();
-
-         protected abstract String m_294775_();
-
-         public int compareTo(CompileTask p_compareTo_1_) {
-            return Doubles.compare(this.f_290350_, p_compareTo_1_.f_290350_);
-         }
-
-         public ModelData getModelData(BlockPos pos) {
-            return (ModelData)this.modelData.getOrDefault(pos, ModelData.EMPTY);
-         }
-      }
-
-      class RebuildTask extends CompileTask {
-         @Nullable
-         protected RenderChunkRegion f_290484_;
-
-         public RebuildTask(@Nullable final double distanceSqIn, final RenderChunkRegion renderCacheIn, final boolean highPriorityIn) {
-            this((ChunkPos)null, distanceSqIn, renderCacheIn, highPriorityIn);
-         }
-
-         public RebuildTask(ChunkPos pos, @Nullable double distanceSqIn, RenderChunkRegion renderCacheIn, boolean highPriorityIn) {
-            super(RenderSection.this, pos, distanceSqIn, highPriorityIn);
-            this.f_290484_ = renderCacheIn;
-         }
-
-         protected String m_294775_() {
-            return "rend_chk_rebuild";
-         }
-
-         public CompletableFuture m_294443_(SectionBufferBuilderPack builderIn) {
-            if (this.f_291175_.get()) {
-               return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
-            } else if (!RenderSection.this.m_294718_()) {
-               this.m_292880_();
-               return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
-            } else if (this.f_291175_.get()) {
-               return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
-            } else {
-               RenderChunkRegion renderchunkregion = this.f_290484_;
-               this.f_290484_ = null;
-               if (renderchunkregion == null) {
-                  RenderSection.this.m_339503_(SectionRenderDispatcher.CompiledSection.f_336992_);
-                  return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL);
-               } else {
-                  SectionPos sectionpos = SectionPos.m_123199_(RenderSection.this.f_291850_);
-                  SectionCompiler.Results sectioncompiler$results = SectionRenderDispatcher.this.f_337370_.compile(sectionpos, renderchunkregion, RenderSection.this.m_338425_(), builderIn, RenderSection.this.regionDX, RenderSection.this.regionDY, RenderSection.this.regionDZ);
-                  RenderSection.this.m_295492_(sectioncompiler$results.f_337223_);
-                  if (this.f_291175_.get()) {
-                     sectioncompiler$results.m_340536_();
-                     return CompletableFuture.completedFuture(SectionRenderDispatcher.SectionTaskResult.CANCELLED);
-                  } else {
-                     CompiledSection sectionrenderdispatcher$compiledsection = new CompiledSection();
-                     sectionrenderdispatcher$compiledsection.f_290920_ = sectioncompiler$results.f_337613_;
-                     sectionrenderdispatcher$compiledsection.f_290409_.addAll(sectioncompiler$results.f_337248_);
-                     sectionrenderdispatcher$compiledsection.f_291674_ = sectioncompiler$results.f_337382_;
-                     sectionrenderdispatcher$compiledsection.setAnimatedSprites(sectioncompiler$results.animatedSprites);
-                     List list = new ArrayList(sectioncompiler$results.f_336965_.size());
-                     sectioncompiler$results.f_336965_.forEach((renderTypeIn, bufferIn) -> {
-                        list.add(SectionRenderDispatcher.this.m_292947_(bufferIn, RenderSection.this.m_294581_(renderTypeIn)));
-                        sectionrenderdispatcher$compiledsection.f_290391_.add(renderTypeIn);
-                     });
-                     return Util.m_143840_(list).handle((voidIn, throwableIn) -> {
-                        if (throwableIn != null && !(throwableIn instanceof CancellationException) && !(throwableIn instanceof InterruptedException)) {
-                           Minecraft.m_91087_().m_231412_(CrashReport.m_127521_(throwableIn, "Rendering section"));
-                        }
-
-                        if (this.f_291175_.get()) {
-                           return SectionRenderDispatcher.SectionTaskResult.CANCELLED;
-                        } else {
-                           RenderSection.this.m_339503_(sectionrenderdispatcher$compiledsection);
-                           return SectionRenderDispatcher.SectionTaskResult.SUCCESSFUL;
-                        }
-                     });
-                  }
-               }
-            }
-         }
-
-         public void m_292880_() {
-            this.f_290484_ = null;
-            if (this.f_291175_.compareAndSet(false, true)) {
-               RenderSection.this.m_292780_(false);
-            }
-
          }
       }
    }
@@ -962,77 +1012,5 @@ public class SectionRenderDispatcher {
    static enum SectionTaskResult {
       SUCCESSFUL,
       CANCELLED;
-
-      // $FF: synthetic method
-      private static SectionTaskResult[] $values() {
-         return new SectionTaskResult[]{SUCCESSFUL, CANCELLED};
-      }
-   }
-
-   public static class CompiledSection {
-      public static final CompiledSection f_290410_ = new CompiledSection() {
-         public boolean m_293115_(Direction facing, Direction facing2) {
-            return false;
-         }
-
-         public void setAnimatedSprites(RenderType layer, BitSet animatedSprites) {
-            throw new UnsupportedOperationException();
-         }
-      };
-      public static final CompiledSection f_336992_ = new CompiledSection() {
-         public boolean m_293115_(Direction facing, Direction facing2) {
-            return true;
-         }
-      };
-      final Set f_290391_ = new ChunkLayerSet();
-      final List f_290409_ = Lists.newArrayList();
-      VisibilitySet f_290920_ = new VisibilitySet();
-      @Nullable
-      MeshData.SortState f_291674_;
-      private BitSet[] animatedSprites;
-
-      public CompiledSection() {
-         this.animatedSprites = new BitSet[RenderType.CHUNK_RENDER_TYPES.length];
-      }
-
-      public boolean m_295467_() {
-         return this.f_290391_.isEmpty();
-      }
-
-      public boolean m_294492_(RenderType renderTypeIn) {
-         return !this.f_290391_.contains(renderTypeIn);
-      }
-
-      public List m_293674_() {
-         return this.f_290409_;
-      }
-
-      public boolean m_293115_(Direction facing, Direction facing2) {
-         return this.f_290920_.m_112983_(facing, facing2);
-      }
-
-      public BitSet getAnimatedSprites(RenderType layer) {
-         return this.animatedSprites[layer.ordinal()];
-      }
-
-      public void setAnimatedSprites(BitSet[] animatedSprites) {
-         this.animatedSprites = animatedSprites;
-      }
-
-      public boolean isLayerUsed(RenderType renderTypeIn) {
-         return this.f_290391_.contains(renderTypeIn);
-      }
-
-      public void setLayerUsed(RenderType renderTypeIn) {
-         this.f_290391_.add(renderTypeIn);
-      }
-
-      public boolean hasTerrainBlockEntities() {
-         return !this.m_295467_() || !this.m_293674_().isEmpty();
-      }
-
-      public Set getLayersUsed() {
-         return this.f_290391_;
-      }
    }
 }

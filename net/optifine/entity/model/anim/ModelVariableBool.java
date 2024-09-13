@@ -14,18 +14,22 @@ public class ModelVariableBool implements IExpressionBool, IModelVariableBool, I
       this.enumModelVariable = enumModelVariable;
    }
 
+   @Override
    public ModelPart getModelRenderer() {
       return this.modelRenderer;
    }
 
+   @Override
    public boolean eval() {
       return this.getValue();
    }
 
+   @Override
    public boolean getValue() {
       return this.enumModelVariable.getBool(this.modelRenderer);
    }
 
+   @Override
    public void setValue(boolean value) {
       this.enumModelVariable.setBool(this.modelRenderer, value);
    }

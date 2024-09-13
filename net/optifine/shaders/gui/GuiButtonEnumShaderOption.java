@@ -18,30 +18,29 @@ public class GuiButtonEnumShaderOption extends GuiButtonOF {
    }
 
    private static String getButtonText(EnumShaderOption eso) {
-      String var10000 = eso.getResourceKey();
-      String nameText = I18n.m_118938_(var10000, new Object[0]) + ": ";
-      switch (eso) {
-         case ANTIALIASING:
+      String nameText = I18n.m_118938_(eso.getResourceKey(), new Object[0]) + ": ";
+      switch (<unrepresentable>.$SwitchMap$net$optifine$shaders$config$EnumShaderOption[eso.ordinal()]) {
+         case 1:
             return nameText + GuiShaders.toStringAa(Shaders.configAntialiasingLevel);
-         case NORMAL_MAP:
+         case 2:
             return nameText + GuiShaders.toStringOnOff(Shaders.configNormalMap);
-         case SPECULAR_MAP:
+         case 3:
             return nameText + GuiShaders.toStringOnOff(Shaders.configSpecularMap);
-         case RENDER_RES_MUL:
+         case 4:
             return nameText + GuiShaders.toStringQuality(Shaders.configRenderResMul);
-         case SHADOW_RES_MUL:
+         case 5:
             return nameText + GuiShaders.toStringQuality(Shaders.configShadowResMul);
-         case HAND_DEPTH_MUL:
+         case 6:
             return nameText + GuiShaders.toStringHandDepth(Shaders.configHandDepthMul);
-         case CLOUD_SHADOW:
+         case 7:
             return nameText + GuiShaders.toStringOnOff(Shaders.configCloudShadow);
-         case OLD_HAND_LIGHT:
+         case 8:
             return nameText + Shaders.configOldHandLight.getUserValue();
-         case OLD_LIGHTING:
+         case 9:
             return nameText + Shaders.configOldLighting.getUserValue();
-         case SHADOW_CLIP_FRUSTRUM:
+         case 10:
             return nameText + GuiShaders.toStringOnOff(Shaders.configShadowClipFrustrum);
-         case TWEAK_BLOCK_DAMAGE:
+         case 11:
             return nameText + GuiShaders.toStringOnOff(Shaders.configTweakBlockDamage);
          default:
             return nameText + Shaders.getEnumShaderOption(eso);

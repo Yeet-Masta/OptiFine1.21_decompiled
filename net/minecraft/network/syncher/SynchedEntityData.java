@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,34 +21,29 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 
 public class SynchedEntityData {
-   private static final Logger f_135342_ = LogUtils.getLogger();
-   private static final int f_179843_ = 254;
-   static final ClassTreeIdRegistry f_316642_ = new ClassTreeIdRegistry();
-   private final SyncedDataHolder f_135344_;
-   private final DataItem[] f_135345_;
+   private static Logger f_135342_ = LogUtils.getLogger();
+   private static int f_179843_;
+   static ClassTreeIdRegistry f_316642_ = new ClassTreeIdRegistry();
+   private SyncedDataHolder f_135344_;
+   private SynchedEntityData.DataItem<?>[] f_135345_;
    private boolean f_135348_;
-   public Biome spawnBiome;
-   public BlockPos spawnPosition;
-   public BlockState blockStateOn;
-   public long blockStateOnUpdateMs;
-   public Map modelVariables;
+   public Biome spawnBiome = BiomeUtils.PLAINS;
+   public BlockPos spawnPosition = BlockPos.f_121853_;
+   public BlockState blockStateOn = Blocks.f_50016_.m_49966_();
+   public long blockStateOnUpdateMs = 0L;
+   public Map<String, Object> modelVariables;
    public CompoundTag nbtTag;
-   public long nbtTagUpdateMs;
+   public long nbtTagUpdateMs = 0L;
 
-   SynchedEntityData(SyncedDataHolder entityIn, DataItem[] entriesIn) {
-      this.spawnBiome = BiomeUtils.PLAINS;
-      this.spawnPosition = BlockPos.f_121853_;
-      this.blockStateOn = Blocks.f_50016_.m_49966_();
-      this.blockStateOnUpdateMs = 0L;
-      this.nbtTagUpdateMs = 0L;
+   SynchedEntityData(SyncedDataHolder entityIn, SynchedEntityData.DataItem<?>[] entriesIn) {
       this.f_135344_ = entityIn;
       this.f_135345_ = entriesIn;
    }
 
-   public static EntityDataAccessor m_135353_(Class clazz, EntityDataSerializer serializer) {
+   public static <T> EntityDataAccessor<T> m_135353_(Class<? extends SyncedDataHolder> clazz, EntityDataSerializer<T> serializer) {
       if (f_135342_.isDebugEnabled()) {
          try {
-            Class oclass = Class.forName(Thread.currentThread().getStackTrace()[2].getClassName());
+            Class<?> oclass = Class.forName(Thread.currentThread().getStackTrace()[2].getClassName());
             if (!oclass.equals(clazz)) {
                f_135342_.debug("defineId called for: {} from {}", new Object[]{clazz, oclass, new RuntimeException()});
             }
@@ -65,20 +59,20 @@ public class SynchedEntityData {
       }
    }
 
-   private DataItem m_135379_(EntityDataAccessor key) {
-      return this.f_135345_[key.f_135010_()];
+   private <T> SynchedEntityData.DataItem<T> m_135379_(EntityDataAccessor<T> key) {
+      return (SynchedEntityData.DataItem<T>)this.f_135345_[key.f_135010_()];
    }
 
-   public Object m_135370_(EntityDataAccessor key) {
-      return this.m_135379_(key).m_135403_();
+   public <T> T m_135370_(EntityDataAccessor<T> key) {
+      return this.<T>m_135379_(key).m_135403_();
    }
 
-   public void m_135381_(EntityDataAccessor key, Object value) {
+   public <T> void m_135381_(EntityDataAccessor<T> key, T value) {
       this.m_276349_(key, value, false);
    }
 
-   public void m_276349_(EntityDataAccessor accessorIn, Object valueIn, boolean forcedIn) {
-      DataItem dataitem = this.m_135379_(accessorIn);
+   public <T> void m_276349_(EntityDataAccessor<T> accessorIn, T valueIn, boolean forcedIn) {
+      SynchedEntityData.DataItem<T> dataitem = this.m_135379_(accessorIn);
       if (forcedIn || ObjectUtils.notEqual(valueIn, dataitem.m_135403_())) {
          dataitem.m_135397_(valueIn);
          this.f_135344_.m_7350_(accessorIn);
@@ -86,7 +80,6 @@ public class SynchedEntityData {
          this.f_135348_ = true;
          this.nbtTag = null;
       }
-
    }
 
    public boolean m_135352_() {
@@ -94,17 +87,14 @@ public class SynchedEntityData {
    }
 
    @Nullable
-   public List m_135378_() {
+   public List<SynchedEntityData.DataValue<?>> m_135378_() {
       if (!this.f_135348_) {
          return null;
       } else {
          this.f_135348_ = false;
-         List list = new ArrayList();
-         DataItem[] var2 = this.f_135345_;
-         int var3 = var2.length;
+         List<SynchedEntityData.DataValue<?>> list = new ArrayList();
 
-         for(int var4 = 0; var4 < var3; ++var4) {
-            DataItem dataitem = var2[var4];
+         for (SynchedEntityData.DataItem<?> dataitem : this.f_135345_) {
             if (dataitem.m_135406_()) {
                dataitem.m_135401_(false);
                list.add(dataitem.m_253123_());
@@ -116,13 +106,10 @@ public class SynchedEntityData {
    }
 
    @Nullable
-   public List m_252804_() {
-      List list = null;
-      DataItem[] var2 = this.f_135345_;
-      int var3 = var2.length;
+   public List<SynchedEntityData.DataValue<?>> m_252804_() {
+      List<SynchedEntityData.DataValue<?>> list = null;
 
-      for(int var4 = 0; var4 < var3; ++var4) {
-         DataItem dataitem = var2[var4];
+      for (SynchedEntityData.DataItem<?> dataitem : this.f_135345_) {
          if (!dataitem.m_252838_()) {
             if (list == null) {
                list = new ArrayList();
@@ -135,46 +122,88 @@ public class SynchedEntityData {
       return list;
    }
 
-   public void m_135356_(List entriesIn) {
-      for(Iterator var2 = entriesIn.iterator(); var2.hasNext(); this.nbtTag = null) {
-         DataValue datavalue = (DataValue)var2.next();
-         DataItem dataitem = this.f_135345_[datavalue.f_252469_];
+   public void m_135356_(List<SynchedEntityData.DataValue<?>> entriesIn) {
+      for (SynchedEntityData.DataValue<?> datavalue : entriesIn) {
+         SynchedEntityData.DataItem<?> dataitem = this.f_135345_[datavalue.f_252469_];
          this.m_135375_(dataitem, datavalue);
          this.f_135344_.m_7350_(dataitem.m_135396_());
+         this.nbtTag = null;
       }
 
       this.f_135344_.m_269505_(entriesIn);
    }
 
-   private void m_135375_(DataItem target, DataValue source) {
+   private <T> void m_135375_(SynchedEntityData.DataItem<T> target, SynchedEntityData.DataValue<?> source) {
       if (!Objects.equals(source.f_252511_(), target.f_135390_.f_135011_())) {
-         throw new IllegalStateException(String.format(Locale.ROOT, "Invalid entity data item type for field %d on entity %s: old=%s(%s), new=%s(%s)", target.f_135390_.f_135010_(), this.f_135344_, target.f_135391_, target.f_135391_.getClass(), source.f_252525_, source.f_252525_.getClass()));
+         throw new IllegalStateException(
+            String.m_12886_(
+               Locale.ROOT,
+               "Invalid entity data item type for field %d on entity %s: old=%s(%s), new=%s(%s)",
+               new Object[]{
+                  target.f_135390_.f_135010_(), this.f_135344_, target.f_135391_, target.f_135391_.getClass(), source.f_252525_, source.f_252525_.getClass()
+               }
+            )
+         );
       } else {
-         target.m_135397_(source.f_252525_);
+         target.m_135397_((T)source.f_252525_);
       }
    }
 
-   public static class DataItem {
-      final EntityDataAccessor f_135390_;
-      Object f_135391_;
-      private final Object f_252454_;
+   public static class Builder {
+      private SyncedDataHolder f_314721_;
+      private SynchedEntityData.DataItem<?>[] f_313958_;
+
+      public Builder(SyncedDataHolder p_i319630_1_) {
+         this.f_314721_ = p_i319630_1_;
+         this.f_313958_ = new SynchedEntityData.DataItem[SynchedEntityData.f_316642_.m_321486_(p_i319630_1_.getClass())];
+      }
+
+      public <T> SynchedEntityData.Builder m_318949_(EntityDataAccessor<T> accessorIn, T valueIn) {
+         int i = accessorIn.f_135010_();
+         if (i > this.f_313958_.length) {
+            throw new IllegalArgumentException("Data value id is too big with " + i + "! (Max is " + this.f_313958_.length + ")");
+         } else if (this.f_313958_[i] != null) {
+            throw new IllegalArgumentException("Duplicate id value for " + i + "!");
+         } else if (EntityDataSerializers.m_135052_(accessorIn.f_135011_()) < 0) {
+            throw new IllegalArgumentException("Unregistered serializer " + accessorIn.f_135011_() + " for " + i + "!");
+         } else {
+            this.f_313958_[accessorIn.f_135010_()] = new SynchedEntityData.DataItem(accessorIn, valueIn);
+            return this;
+         }
+      }
+
+      public SynchedEntityData m_320942_() {
+         for (int i = 0; i < this.f_313958_.length; i++) {
+            if (this.f_313958_[i] == null) {
+               throw new IllegalStateException("Entity " + this.f_314721_.getClass() + " has not defined synched data value " + i);
+            }
+         }
+
+         return new SynchedEntityData(this.f_314721_, this.f_313958_);
+      }
+   }
+
+   public static class DataItem<T> {
+      EntityDataAccessor<T> f_135390_;
+      T f_135391_;
+      private T f_252454_;
       private boolean f_135392_;
 
-      public DataItem(EntityDataAccessor keyIn, Object valueIn) {
+      public DataItem(EntityDataAccessor<T> keyIn, T valueIn) {
          this.f_135390_ = keyIn;
          this.f_252454_ = valueIn;
          this.f_135391_ = valueIn;
       }
 
-      public EntityDataAccessor m_135396_() {
+      public EntityDataAccessor<T> m_135396_() {
          return this.f_135390_;
       }
 
-      public void m_135397_(Object valueIn) {
+      public void m_135397_(T valueIn) {
          this.f_135391_ = valueIn;
       }
 
-      public Object m_135403_() {
+      public T m_135403_() {
          return this.f_135391_;
       }
 
@@ -190,27 +219,22 @@ public class SynchedEntityData {
          return this.f_252454_.equals(this.f_135391_);
       }
 
-      public DataValue m_253123_() {
+      public SynchedEntityData.DataValue<T> m_253123_() {
          return SynchedEntityData.DataValue.m_252847_(this.f_135390_, this.f_135391_);
       }
    }
 
-   public static record DataValue(int f_252469_, EntityDataSerializer f_252511_, Object f_252525_) {
-      public DataValue(int id, EntityDataSerializer serializer, Object value) {
-         this.f_252469_ = id;
-         this.f_252511_ = serializer;
-         this.f_252525_ = value;
-      }
+   public static record DataValue<T>(int f_252469_, EntityDataSerializer<T> f_252511_, T f_252525_) {
 
-      public static DataValue m_252847_(EntityDataAccessor accessorIn, Object dataIn) {
-         EntityDataSerializer entitydataserializer = accessorIn.f_135011_();
-         return new DataValue(accessorIn.f_135010_(), entitydataserializer, entitydataserializer.m_7020_(dataIn));
+      public static <T> SynchedEntityData.DataValue<T> m_252847_(EntityDataAccessor<T> accessorIn, T dataIn) {
+         EntityDataSerializer<T> entitydataserializer = accessorIn.f_135011_();
+         return new SynchedEntityData.DataValue<>(accessorIn.f_135010_(), entitydataserializer, (T)entitydataserializer.m_7020_(dataIn));
       }
 
       public void m_252897_(RegistryFriendlyByteBuf byteBufIn) {
          int i = EntityDataSerializers.m_135052_(this.f_252511_);
          if (i < 0) {
-            throw new EncoderException("Unknown serializer type " + String.valueOf(this.f_252511_));
+            throw new EncoderException("Unknown serializer type " + this.f_252511_);
          } else {
             byteBufIn.writeByte(this.f_252469_);
             byteBufIn.m_130130_(i);
@@ -218,66 +242,18 @@ public class SynchedEntityData {
          }
       }
 
-      public static DataValue m_252860_(RegistryFriendlyByteBuf byteBufIn, int lengthIn) {
+      public static SynchedEntityData.DataValue<?> m_252860_(RegistryFriendlyByteBuf byteBufIn, int lengthIn) {
          int i = byteBufIn.m_130242_();
-         EntityDataSerializer entitydataserializer = EntityDataSerializers.m_135048_(i);
+         EntityDataSerializer<?> entitydataserializer = EntityDataSerializers.m_135048_(i);
          if (entitydataserializer == null) {
             throw new DecoderException("Unknown serializer type " + i);
          } else {
-            return m_252951_(byteBufIn, lengthIn, entitydataserializer);
+            return m_252951_(byteBufIn, lengthIn, (EntityDataSerializer<T>)entitydataserializer);
          }
       }
 
-      private static DataValue m_252951_(RegistryFriendlyByteBuf byteBufIn, int idIn, EntityDataSerializer serializerIn) {
-         return new DataValue(idIn, serializerIn, serializerIn.m_321181_().m_318688_(byteBufIn));
-      }
-
-      public int f_252469_() {
-         return this.f_252469_;
-      }
-
-      public EntityDataSerializer f_252511_() {
-         return this.f_252511_;
-      }
-
-      public Object f_252525_() {
-         return this.f_252525_;
-      }
-   }
-
-   public static class Builder {
-      private final SyncedDataHolder f_314721_;
-      private final DataItem[] f_313958_;
-
-      public Builder(SyncedDataHolder p_i319630_1_) {
-         this.f_314721_ = p_i319630_1_;
-         this.f_313958_ = new DataItem[SynchedEntityData.f_316642_.m_321486_(p_i319630_1_.getClass())];
-      }
-
-      public Builder m_318949_(EntityDataAccessor accessorIn, Object valueIn) {
-         int i = accessorIn.f_135010_();
-         if (i > this.f_313958_.length) {
-            throw new IllegalArgumentException("Data value id is too big with " + i + "! (Max is " + this.f_313958_.length + ")");
-         } else if (this.f_313958_[i] != null) {
-            throw new IllegalArgumentException("Duplicate id value for " + i + "!");
-         } else if (EntityDataSerializers.m_135052_(accessorIn.f_135011_()) < 0) {
-            String var10002 = String.valueOf(accessorIn.f_135011_());
-            throw new IllegalArgumentException("Unregistered serializer " + var10002 + " for " + i + "!");
-         } else {
-            this.f_313958_[accessorIn.f_135010_()] = new DataItem(accessorIn, valueIn);
-            return this;
-         }
-      }
-
-      public SynchedEntityData m_320942_() {
-         for(int i = 0; i < this.f_313958_.length; ++i) {
-            if (this.f_313958_[i] == null) {
-               String var10002 = String.valueOf(this.f_314721_.getClass());
-               throw new IllegalStateException("Entity " + var10002 + " has not defined synched data value " + i);
-            }
-         }
-
-         return new SynchedEntityData(this.f_314721_, this.f_313958_);
+      private static <T> SynchedEntityData.DataValue<T> m_252951_(RegistryFriendlyByteBuf byteBufIn, int idIn, EntityDataSerializer<T> serializerIn) {
+         return new SynchedEntityData.DataValue<>(idIn, serializerIn, (T)serializerIn.m_321181_().m_318688_(byteBufIn));
       }
    }
 }

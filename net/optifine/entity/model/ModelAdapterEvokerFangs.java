@@ -16,10 +16,12 @@ public class ModelAdapterEvokerFangs extends ModelAdapter {
       super(EntityType.f_20569_, "evoker_fangs", 0.0F, new String[]{"evocation_fangs"});
    }
 
+   @Override
    public Model makeModel() {
       return new EvokerFangsModel(bakeModelLayer(ModelLayers.f_171147_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof EvokerFangsModel modelEvokerFangs)) {
          return null;
@@ -34,10 +36,12 @@ public class ModelAdapterEvokerFangs extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"base", "upper_jaw", "lower_jaw", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       EvokerFangsRenderer render = new EvokerFangsRenderer(renderManager.getContext());

@@ -75,8 +75,7 @@ public enum ShaderParameterFloat {
       this.name = uniform.getName();
       this.uniform = uniform;
       if (!instanceOf(uniform, ShaderUniform1f.class, ShaderUniform1i.class)) {
-         String var10002 = String.valueOf(this);
-         throw new IllegalArgumentException("Invalid uniform type for enum: " + var10002 + ", uniform: " + uniform.getClass().getName());
+         throw new IllegalArgumentException("Invalid uniform type for enum: " + this + ", uniform: " + uniform.getClass().getName());
       }
    }
 
@@ -85,8 +84,7 @@ public enum ShaderParameterFloat {
       this.uniform = uniform;
       this.indexNames1 = indexNames1;
       if (!instanceOf(uniform, ShaderUniform2i.class, ShaderUniform2f.class, ShaderUniform3f.class, ShaderUniform4f.class)) {
-         String var10002 = String.valueOf(this);
-         throw new IllegalArgumentException("Invalid uniform type for enum: " + var10002 + ", uniform: " + uniform.getClass().getName());
+         throw new IllegalArgumentException("Invalid uniform type for enum: " + this + ", uniform: " + uniform.getClass().getName());
       }
    }
 
@@ -96,8 +94,7 @@ public enum ShaderParameterFloat {
       this.indexNames1 = indexNames1;
       this.indexNames2 = indexNames2;
       if (!instanceOf(uniform, ShaderUniformM4.class)) {
-         String var10002 = String.valueOf(this);
-         throw new IllegalArgumentException("Invalid uniform type for enum: " + var10002 + ", uniform: " + uniform.getClass().getName());
+         throw new IllegalArgumentException("Invalid uniform type for enum: " + this + ", uniform: " + uniform.getClass().getName());
       }
    }
 
@@ -118,36 +115,34 @@ public enum ShaderParameterFloat {
    }
 
    public float eval(int index1, int index2) {
-      String var10000;
       if (this.indexNames1 == null || index1 >= 0 && index1 <= this.indexNames1.length) {
-         if (this.indexNames2 != null && (index2 < 0 || index2 > this.indexNames2.length)) {
-            var10000 = String.valueOf(this);
-            Config.warn("Invalid index2, parameter: " + var10000 + ", index: " + index2);
-            return 0.0F;
-         } else {
-            BlockPos pos;
-            Holder biome;
-            switch (this.ordinal()) {
-               case 0:
-                  pos = Shaders.getWorldCameraPosition();
-                  biome = Shaders.getCurrentWorld().m_204166_(pos);
+         if (this.indexNames2 == null || index2 >= 0 && index2 <= this.indexNames2.length) {
+            switch (this) {
+               case BIOME: {
+                  BlockPos pos = Shaders.getWorldCameraPosition();
+                  Holder<Biome> biome = Shaders.getCurrentWorld().m_204166_(pos);
                   return (float)BiomeUtils.getId((Biome)biome.m_203334_());
-               case 1:
-                  pos = Shaders.getWorldCameraPosition();
-                  biome = Shaders.getCurrentWorld().m_204166_(pos);
+               }
+               case BIOME_CATEGORY: {
+                  BlockPos pos = Shaders.getWorldCameraPosition();
+                  Holder<Biome> biome = Shaders.getCurrentWorld().m_204166_(pos);
                   return biome != null ? (float)BiomeUtils.getBiomeCategory(biome).ordinal() : 0.0F;
-               case 2:
-                  pos = Shaders.getWorldCameraPosition();
-                  biome = Shaders.getCurrentWorld().m_204166_(pos);
+               }
+               case BIOME_PRECIPITATION: {
+                  BlockPos pos = Shaders.getWorldCameraPosition();
+                  Holder<Biome> biome = Shaders.getCurrentWorld().m_204166_(pos);
                   return biome != null ? (float)BiomeUtils.getPrecipitation((Biome)biome.m_203334_()).ordinal() : 0.0F;
-               case 3:
-                  pos = Shaders.getWorldCameraPosition();
-                  biome = Shaders.getCurrentWorld().m_204166_(pos);
+               }
+               case TEMPERATURE: {
+                  BlockPos pos = Shaders.getWorldCameraPosition();
+                  Holder<Biome> biome = Shaders.getCurrentWorld().m_204166_(pos);
                   return biome != null ? ((Biome)biome.m_203334_()).m_47554_() : 0.0F;
-               case 4:
-                  pos = Shaders.getWorldCameraPosition();
-                  biome = Shaders.getCurrentWorld().m_204166_(pos);
+               }
+               case RAINFALL: {
+                  BlockPos pos = Shaders.getWorldCameraPosition();
+                  Holder<Biome> biome = Shaders.getCurrentWorld().m_204166_(pos);
                   return biome != null ? BiomeUtils.getDownfall((Biome)biome.m_203334_()) : 0.0F;
+               }
                default:
                   if (this.uniform instanceof ShaderUniform1f) {
                      return ((ShaderUniform1f)this.uniform).getValue();
@@ -164,13 +159,15 @@ public enum ShaderParameterFloat {
                   } else if (this.uniform instanceof ShaderUniformM4) {
                      return ((ShaderUniformM4)this.uniform).getValue(index1, index2);
                   } else {
-                     throw new IllegalArgumentException("Unknown uniform type: " + String.valueOf(this));
+                     throw new IllegalArgumentException("Unknown uniform type: " + this);
                   }
             }
+         } else {
+            Config.warn("Invalid index2, parameter: " + this + ", index: " + index2);
+            return 0.0F;
          }
       } else {
-         var10000 = String.valueOf(this);
-         Config.warn("Invalid index1, parameter: " + var10000 + ", index: " + index1);
+         Config.warn("Invalid index1, parameter: " + this + ", index: " + index1);
          return 0.0F;
       }
    }
@@ -181,7 +178,7 @@ public enum ShaderParameterFloat {
       } else {
          Class objClass = obj.getClass();
 
-         for(int i = 0; i < classes.length; ++i) {
+         for (int i = 0; i < classes.length; i++) {
             Class cls = classes[i];
             if (cls.isAssignableFrom(objClass)) {
                return true;
@@ -190,10 +187,5 @@ public enum ShaderParameterFloat {
 
          return false;
       }
-   }
-
-   // $FF: synthetic method
-   private static ShaderParameterFloat[] $values() {
-      return new ShaderParameterFloat[]{BIOME, BIOME_CATEGORY, BIOME_PRECIPITATION, TEMPERATURE, RAINFALL, HELD_ITEM_ID, HELD_BLOCK_LIGHT_VALUE, HELD_ITEM_ID2, HELD_BLOCK_LIGHT_VALUE2, WORLD_TIME, WORLD_DAY, MOON_PHASE, FRAME_COUNTER, FRAME_TIME, FRAME_TIME_COUNTER, SUN_ANGLE, SHADOW_ANGLE, RAIN_STRENGTH, ASPECT_RATIO, VIEW_WIDTH, VIEW_HEIGHT, NEAR, FAR, WETNESS, EYE_ALTITUDE, EYE_BRIGHTNESS, TERRAIN_TEXTURE_SIZE, TERRRAIN_ICON_SIZE, IS_EYE_IN_WATER, NIGHT_VISION, BLINDNESS, SCREEN_BRIGHTNESS, HIDE_GUI, CENTER_DEPT_SMOOTH, ATLAS_SIZE, PLAYER_MOOD, CAMERA_POSITION, PREVIOUS_CAMERA_POSITION, SUN_POSITION, MOON_POSITION, SHADOW_LIGHT_POSITION, UP_POSITION, SKY_COLOR, GBUFFER_PROJECTION, GBUFFER_PROJECTION_INVERSE, GBUFFER_PREVIOUS_PROJECTION, GBUFFER_MODEL_VIEW, GBUFFER_MODEL_VIEW_INVERSE, GBUFFER_PREVIOUS_MODEL_VIEW, SHADOW_PROJECTION, SHADOW_PROJECTION_INVERSE, SHADOW_MODEL_VIEW, SHADOW_MODEL_VIEW_INVERSE};
    }
 }

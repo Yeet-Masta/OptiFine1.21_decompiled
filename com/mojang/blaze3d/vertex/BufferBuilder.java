@@ -5,9 +5,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.BitSet;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -31,21 +29,21 @@ import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
 public class BufferBuilder implements VertexConsumer {
-   private static final long f_337720_ = -1L;
-   private static final long f_337398_ = -1L;
-   private static final boolean f_337242_;
-   private final ByteBufferBuilder f_85648_;
-   private long f_337311_;
+   private static long f_337720_;
+   private static long f_337398_;
+   private static boolean f_337242_ = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
+   private ByteBufferBuilder f_85648_;
+   private long f_337311_ = -1L;
    private int f_85654_;
-   private final VertexFormat f_85658_;
-   private final VertexFormat.Mode f_85657_;
-   private final boolean f_85659_;
-   private final boolean f_85660_;
-   private final int f_337268_;
+   private VertexFormat f_85658_;
+   private VertexFormat.Mode f_85657_;
+   private boolean f_85659_;
+   private boolean f_85660_;
+   private int f_337268_;
    private int f_336837_;
-   private final int[] f_336980_;
+   private int[] f_336980_;
    private int f_337476_;
-   private boolean f_85661_;
+   private boolean f_85661_ = true;
    private RenderType renderType;
    private BufferBuilderCache cache;
    protected TextureAtlasSprite[] quadSprites;
@@ -59,12 +57,10 @@ public class BufferBuilder implements VertexConsumer {
    private Vector3f midBlock;
 
    public BufferBuilder(ByteBufferBuilder byteBufferIn, VertexFormat.Mode drawModeIn, VertexFormat vertexFormatIn) {
-      this(byteBufferIn, drawModeIn, vertexFormatIn, (RenderType)null);
+      this(byteBufferIn, drawModeIn, vertexFormatIn, null);
    }
 
    public BufferBuilder(ByteBufferBuilder byteBufferIn, VertexFormat.Mode drawModeIn, VertexFormat vertexFormatIn, RenderType renderTypeIn) {
-      this.f_337311_ = -1L;
-      this.f_85661_ = true;
       if (!vertexFormatIn.m_339292_(VertexFormatElement.f_336661_)) {
          throw new IllegalArgumentException("Cannot build mesh with no position element");
       } else {
@@ -105,7 +101,6 @@ public class BufferBuilder implements VertexConsumer {
          } else if (this.animatedSprites != null) {
             this.animatedSprites = null;
          }
-
       }
    }
 
@@ -156,7 +151,7 @@ public class BufferBuilder implements VertexConsumer {
          } else {
             int i = this.f_85657_.m_166958_(this.f_85654_);
             VertexFormat.IndexType vertexformat$indextype = VertexFormat.IndexType.m_166933_(this.f_85654_);
-            MultiTextureData mtd = this.multiTextureBuilder.build(this.f_85654_, this.renderType, this.quadSprites, (int[])null);
+            MultiTextureData mtd = this.multiTextureBuilder.build(this.f_85654_, this.renderType, this.quadSprites, null);
             return new MeshData(bytebufferbuilder$result, new MeshData.DrawState(this.f_85658_, this.f_85654_, i, this.f_85657_, vertexformat$indextype), mtd);
          }
       }
@@ -165,7 +160,7 @@ public class BufferBuilder implements VertexConsumer {
    private long m_340494_() {
       this.m_231176_();
       this.m_339377_();
-      ++this.f_85654_;
+      this.f_85654_++;
       long i = this.f_85648_.m_338881_(this.f_337268_);
       this.checkCapacity();
       this.f_337311_ = i;
@@ -201,20 +196,16 @@ public class BufferBuilder implements VertexConsumer {
    private void m_339377_() {
       if (this.f_85654_ != 0) {
          if (this.f_337476_ != 0) {
-            Stream var10000 = VertexFormatElement.m_339640_(this.f_337476_);
-            VertexFormat var10001 = this.f_85658_;
-            Objects.requireNonNull(var10001);
-            String s = (String)var10000.map(var10001::m_340604_).collect(Collectors.joining(", "));
+            String s = (String)VertexFormatElement.m_339640_(this.f_337476_).map(this.f_85658_::m_340604_).collect(Collectors.joining(", "));
             throw new IllegalStateException("Missing elements in vertex: " + s);
          }
 
          if (this.f_85657_ == VertexFormat.Mode.LINES || this.f_85657_ == VertexFormat.Mode.LINE_STRIP) {
             long i = this.f_85648_.m_338881_(this.f_337268_);
             MemoryUtil.memCopy(i - (long)this.f_337268_, i, (long)this.f_337268_);
-            ++this.f_85654_;
+            this.f_85654_++;
          }
       }
-
    }
 
    private static void m_340259_(long ptrIn, int argbIn) {
@@ -226,12 +217,12 @@ public class BufferBuilder implements VertexConsumer {
       if (f_337242_) {
          MemoryUtil.memPutInt(ptrIn, uvIn);
       } else {
-         MemoryUtil.memPutShort(ptrIn, (short)(uvIn & '\uffff'));
-         MemoryUtil.memPutShort(ptrIn + 2L, (short)(uvIn >> 16 & '\uffff'));
+         MemoryUtil.memPutShort(ptrIn, (short)(uvIn & 65535));
+         MemoryUtil.memPutShort(ptrIn + 2L, (short)(uvIn >> 16 & 65535));
       }
-
    }
 
+   @Override
    public VertexConsumer m_167146_(float x, float y, float z) {
       long i = this.m_340494_() + (long)this.f_336980_[VertexFormatElement.f_336661_.f_337730_()];
       this.f_337476_ = this.f_336837_;
@@ -241,6 +232,7 @@ public class BufferBuilder implements VertexConsumer {
       return this;
    }
 
+   @Override
    public VertexConsumer m_167129_(int red, int green, int blue, int alpha) {
       long i = this.m_339847_(VertexFormatElement.f_336914_);
       if (i != -1L) {
@@ -257,6 +249,7 @@ public class BufferBuilder implements VertexConsumer {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338399_(int argb) {
       long i = this.m_339847_(VertexFormatElement.f_336914_);
       if (i != -1L) {
@@ -270,6 +263,7 @@ public class BufferBuilder implements VertexConsumer {
       return this;
    }
 
+   @Override
    public VertexConsumer m_167083_(float u, float v) {
       if (this.quadSprite != null && this.quadSprites != null) {
          u = this.quadSprite.toSingleU(u);
@@ -290,10 +284,12 @@ public class BufferBuilder implements VertexConsumer {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338369_(int u, int v) {
       return this.m_338494_((short)u, (short)v, VertexFormatElement.f_337543_);
    }
 
+   @Override
    public VertexConsumer m_338943_(int overlayUV) {
       long i = this.m_339847_(VertexFormatElement.f_337543_);
       if (i != -1L) {
@@ -307,10 +303,12 @@ public class BufferBuilder implements VertexConsumer {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338813_(int u, int v) {
       return this.m_338494_((short)u, (short)v, VertexFormatElement.f_337050_);
    }
 
+   @Override
    public VertexConsumer m_338973_(int lightmapUV) {
       long i = this.m_339847_(VertexFormatElement.f_337050_);
       if (i != -1L) {
@@ -338,6 +336,7 @@ public class BufferBuilder implements VertexConsumer {
       return this;
    }
 
+   @Override
    public VertexConsumer m_338525_(float x, float y, float z) {
       long i = this.m_339847_(VertexFormatElement.f_336839_);
       if (i != -1L) {
@@ -354,10 +353,13 @@ public class BufferBuilder implements VertexConsumer {
    }
 
    public static byte m_338914_(float val) {
-      return (byte)((int)(Mth.m_14036_(val, -1.0F, 1.0F) * 127.0F) & 255);
+      return (byte)((int)(Mth.m_14036_(val, -1.0F, 1.0F) * 127.0F) & 0xFF);
    }
 
-   public void m_338367_(float x, float y, float z, int argb, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ) {
+   @Override
+   public void m_338367_(
+      float x, float y, float z, int argb, float texU, float texV, int overlayUV, int lightmapUV, float normalX, float normalY, float normalZ
+   ) {
       if (this.f_85659_) {
          long i = this.m_340494_();
          MemoryUtil.memPutFloat(i + 0L, x);
@@ -384,9 +386,9 @@ public class BufferBuilder implements VertexConsumer {
       } else {
          VertexConsumer.super.m_338367_(x, y, z, argb, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
       }
-
    }
 
+   @Override
    public void putSprite(TextureAtlasSprite sprite) {
       if (this.animatedSprites != null && sprite != null && sprite.isTerrain() && sprite.getAnimationIndex() >= 0) {
          this.animatedSprites.set(sprite.getAnimationIndex());
@@ -396,9 +398,9 @@ public class BufferBuilder implements VertexConsumer {
          int countQuads = this.f_85654_ / 4;
          this.quadSprites[countQuads] = sprite;
       }
-
    }
 
+   @Override
    public void setSprite(TextureAtlasSprite sprite) {
       if (this.animatedSprites != null && sprite != null && sprite.isTerrain() && sprite.getAnimationIndex() >= 0) {
          this.animatedSprites.set(sprite.getAnimationIndex());
@@ -407,13 +409,14 @@ public class BufferBuilder implements VertexConsumer {
       if (this.quadSprites != null) {
          this.quadSprite = sprite;
       }
-
    }
 
+   @Override
    public boolean isMultiTexture() {
       return this.quadSprites != null;
    }
 
+   @Override
    public RenderType getRenderType() {
       return this.renderType;
    }
@@ -434,7 +437,6 @@ public class BufferBuilder implements VertexConsumer {
                   if (this.quadSprites == null || this.quadSprites.length < this.getBufferQuadSize()) {
                      this.quadSprites = new TextureAtlasSprite[this.getBufferQuadSize()];
                   }
-
                }
             }
          }
@@ -443,10 +445,10 @@ public class BufferBuilder implements VertexConsumer {
 
    private int getBufferQuadSize() {
       int vertexSize = this.f_85648_.getCapacity() / this.f_85658_.m_86020_();
-      int quadSize = vertexSize / 4;
-      return quadSize;
+      return vertexSize / 4;
    }
 
+   @Override
    public RenderEnv getRenderEnv(BlockState blockStateIn, BlockPos blockPosIn) {
       if (this.renderEnv == null) {
          this.renderEnv = new RenderEnv(blockStateIn, blockPosIn);
@@ -463,7 +465,7 @@ public class BufferBuilder implements VertexConsumer {
       byteBuffer.rewind();
       byteBufferTriangles.clear();
 
-      for(int v = 0; v < vertexCount; v += 4) {
+      for (int v = 0; v < vertexCount; v += 4) {
          byteBuffer.limit((v + 3) * vertexSize);
          byteBuffer.position(v * vertexSize);
          byteBufferTriangles.put(byteBuffer);
@@ -484,14 +486,17 @@ public class BufferBuilder implements VertexConsumer {
       return this.f_85657_;
    }
 
+   @Override
    public int getVertexCount() {
       return this.f_85654_;
    }
 
+   @Override
    public Vector3f getTempVec3f() {
       return this.cache.getTempVec3f();
    }
 
+   @Override
    public float[] getTempFloat4(float f1, float f2, float f3, float f4) {
       float[] tempFloat4 = this.cache.getTempFloat4();
       tempFloat4[0] = f1;
@@ -501,6 +506,7 @@ public class BufferBuilder implements VertexConsumer {
       return tempFloat4;
    }
 
+   @Override
    public int[] getTempInt4(int i1, int i2, int i3, int i4) {
       int[] tempInt4 = this.cache.getTempInt4();
       tempInt4[0] = i1;
@@ -514,6 +520,7 @@ public class BufferBuilder implements VertexConsumer {
       return this.f_85654_ * this.f_85658_.getIntegerSize();
    }
 
+   @Override
    public MultiBufferSource.BufferSource getRenderTypeBuffer() {
       return this.renderTypeBuffer;
    }
@@ -523,11 +530,7 @@ public class BufferBuilder implements VertexConsumer {
    }
 
    public boolean canAddVertexText() {
-      if (this.f_85658_.m_86020_() != DefaultVertexFormat.f_85820_.m_86020_()) {
-         return false;
-      } else {
-         return this.f_337476_ == 0;
-      }
+      return this.f_85658_.m_86020_() != DefaultVertexFormat.f_85820_.m_86020_() ? false : this.f_337476_ == 0;
    }
 
    public void addVertexText(Matrix4f mat4, float x, float y, float z, int col, float texU, float texV, int lightmapUV) {
@@ -551,13 +554,14 @@ public class BufferBuilder implements VertexConsumer {
       if (Config.isShaders()) {
          SVertexBuilder.endAddVertex(this);
       }
-
    }
 
+   @Override
    public boolean canAddVertexFast() {
       return this.f_85659_ && this.f_337476_ == 0 && this.f_85660_;
    }
 
+   @Override
    public void addVertexFast(float x, float y, float z, int color, float texU, float texV, int overlayUV, int lightmapUV, int normals) {
       long i = this.m_340494_();
       MemoryUtil.memPutFloat(i + 0L, x);
@@ -572,9 +576,9 @@ public class BufferBuilder implements VertexConsumer {
       if (Config.isShaders()) {
          SVertexBuilder.endAddVertex(this);
       }
-
    }
 
+   @Override
    public void setQuadVertexPositions(VertexPosition[] vps) {
       this.quadVertexPositions = vps;
    }
@@ -583,6 +587,7 @@ public class BufferBuilder implements VertexConsumer {
       return this.quadVertexPositions;
    }
 
+   @Override
    public void setMidBlock(float mx, float my, float mz) {
       this.midBlock.set(mx, my, mz);
    }
@@ -591,6 +596,7 @@ public class BufferBuilder implements VertexConsumer {
       return this.midBlock;
    }
 
+   @Override
    public void putBulkData(ByteBuffer bufferIn) {
       if (Config.isShaders()) {
          SVertexBuilder.beginAddVertexData(this, bufferIn);
@@ -605,9 +611,9 @@ public class BufferBuilder implements VertexConsumer {
       if (Config.isShaders()) {
          SVertexBuilder.endAddVertexData(this);
       }
-
    }
 
+   @Override
    public void getBulkData(ByteBuffer bufferIn) {
       ByteBuffer bb = this.getByteBuffer();
       bb.position(this.f_85648_.getNextResultOffset());
@@ -651,10 +657,9 @@ public class BufferBuilder implements VertexConsumer {
          if (this.quadSprites.length < quadSize) {
             this.quadSprites = new TextureAtlasSprite[quadSize];
             System.arraycopy(sprites, 0, this.quadSprites, 0, Math.min(sprites.length, this.quadSprites.length));
-            this.cache.setQuadSpritesPrev((TextureAtlasSprite[])null);
+            this.cache.setQuadSpritesPrev(null);
          }
       }
-
    }
 
    public boolean isDrawing() {
@@ -662,11 +667,22 @@ public class BufferBuilder implements VertexConsumer {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.renderType != null ? this.renderType.getName() : this.renderType);
-      return "renderType: " + var10000 + ", vertexFormat: " + this.f_85658_.getName() + ", vertexSize: " + this.f_337268_ + ", drawMode: " + String.valueOf(this.f_85657_) + ", vertexCount: " + this.f_85654_ + ", elementsLeft: " + Integer.bitCount(this.f_337476_) + "/" + Integer.bitCount(this.f_336837_) + ", byteBuffer: (" + String.valueOf(this.f_85648_) + ")";
-   }
-
-   static {
-      f_337242_ = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
+      return "renderType: "
+         + (this.renderType != null ? this.renderType.getName() : this.renderType)
+         + ", vertexFormat: "
+         + this.f_85658_.getName()
+         + ", vertexSize: "
+         + this.f_337268_
+         + ", drawMode: "
+         + this.f_85657_
+         + ", vertexCount: "
+         + this.f_85654_
+         + ", elementsLeft: "
+         + Integer.bitCount(this.f_337476_)
+         + "/"
+         + Integer.bitCount(this.f_336837_)
+         + ", byteBuffer: ("
+         + this.f_85648_
+         + ")";
    }
 }

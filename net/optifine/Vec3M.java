@@ -40,12 +40,17 @@ public class Vec3M extends Vec3 implements Position {
       return d0 < 1.0E-4 ? this.set(0.0, 0.0, 0.0) : this.set(this.f_82479_ / d0, this.f_82480_ / d0, this.f_82481_ / d0);
    }
 
+   @Override
    public double m_82526_(Vec3 vec) {
       return this.f_82479_ * vec.f_82479_ + this.f_82480_ * vec.f_82480_ + this.f_82481_ * vec.f_82481_;
    }
 
    public Vec3M crossProduct(Vec3 vec) {
-      return this.set(this.f_82480_ * vec.f_82481_ - this.f_82481_ * vec.f_82480_, this.f_82481_ * vec.f_82479_ - this.f_82479_ * vec.f_82481_, this.f_82479_ * vec.f_82480_ - this.f_82480_ * vec.f_82479_);
+      return this.set(
+         this.f_82480_ * vec.f_82481_ - this.f_82481_ * vec.f_82480_,
+         this.f_82481_ * vec.f_82479_ - this.f_82479_ * vec.f_82481_,
+         this.f_82479_ * vec.f_82480_ - this.f_82480_ * vec.f_82479_
+      );
    }
 
    public Vec3M subtract(Vec3 vec) {
@@ -81,7 +86,11 @@ public class Vec3M extends Vec3 implements Position {
    }
 
    public Vec3M lerp(Vec3M vec, double factor) {
-      return this.set(Mth.m_14139_(factor, this.f_82479_, vec.f_82479_), Mth.m_14139_(factor, this.f_82480_, vec.f_82480_), Mth.m_14139_(factor, this.f_82481_, vec.f_82481_));
+      return this.set(
+         Mth.m_14139_(factor, this.f_82479_, vec.f_82479_),
+         Mth.m_14139_(factor, this.f_82480_, vec.f_82480_),
+         Mth.m_14139_(factor, this.f_82481_, vec.f_82481_)
+      );
    }
 
    public Vec3M rotatePitch(float pitch) {
@@ -111,28 +120,29 @@ public class Vec3M extends Vec3 implements Position {
       return this.set(d0, d1, d2);
    }
 
-   public Vec3M align(EnumSet axes) {
-      double d0 = axes.contains(Direction.Axis.field_29) ? (double)Mth.m_14107_(this.f_82479_) : this.f_82479_;
-      double d1 = axes.contains(Direction.Axis.field_30) ? (double)Mth.m_14107_(this.f_82480_) : this.f_82480_;
-      double d2 = axes.contains(Direction.Axis.field_31) ? (double)Mth.m_14107_(this.f_82481_) : this.f_82481_;
+   public Vec3M align(EnumSet<Direction.Axis> axes) {
+      double d0 = axes.m_274455_(Direction.Axis.f_56473_) ? (double)Mth.m_14107_(this.f_82479_) : this.f_82479_;
+      double d1 = axes.m_274455_(Direction.Axis.f_56474_) ? (double)Mth.m_14107_(this.f_82480_) : this.f_82480_;
+      double d2 = axes.m_274455_(Direction.Axis.f_56475_) ? (double)Mth.m_14107_(this.f_82481_) : this.f_82481_;
       return this.set(d0, d1, d2);
    }
 
+   @Override
    public double m_82507_(Direction.Axis axis) {
       return axis.m_6150_(this.f_82479_, this.f_82480_, this.f_82481_);
    }
 
    public Vec3M with(Direction.Axis axis, double distance) {
-      double d0 = axis == Direction.Axis.field_29 ? distance : this.f_82479_;
-      double d1 = axis == Direction.Axis.field_30 ? distance : this.f_82480_;
-      double d2 = axis == Direction.Axis.field_31 ? distance : this.f_82481_;
+      double d0 = axis == Direction.Axis.f_56473_ ? distance : this.f_82479_;
+      double d1 = axis == Direction.Axis.f_56474_ ? distance : this.f_82480_;
+      double d2 = axis == Direction.Axis.f_56475_ ? distance : this.f_82481_;
       return this.set(d0, d1, d2);
    }
 
    public void setRgb(int rgb) {
-      double r = (double)(rgb >> 16 & 255) / 255.0;
-      double g = (double)(rgb >> 8 & 255) / 255.0;
-      double b = (double)(rgb & 255) / 255.0;
+      double r = (double)(rgb >> 16 & 0xFF) / 255.0;
+      double g = (double)(rgb >> 8 & 0xFF) / 255.0;
+      double b = (double)(rgb & 0xFF) / 255.0;
       this.set(r, g, b);
    }
 

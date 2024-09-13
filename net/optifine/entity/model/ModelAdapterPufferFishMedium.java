@@ -17,10 +17,12 @@ public class ModelAdapterPufferFishMedium extends ModelAdapter {
       super(EntityType.f_20516_, "puffer_fish_medium", 0.2F);
    }
 
+   @Override
    public Model makeModel() {
       return new PufferfishMidModel(bakeModelLayer(ModelLayers.f_171172_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PufferfishMidModel modelPufferFishMedium)) {
          return null;
@@ -51,19 +53,32 @@ public class ModelAdapterPufferFishMedium extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      return new String[]{"body", "fin_right", "fin_left", "spikes_front_top", "spikes_back_top", "spikes_front_right", "spikes_back_right", "spikes_back_left", "spikes_front_left", "spikes_back_bottom", "spikes_front_bottom", "root"};
+      return new String[]{
+         "body",
+         "fin_right",
+         "fin_left",
+         "spikes_front_top",
+         "spikes_back_top",
+         "spikes_front_right",
+         "spikes_back_right",
+         "spikes_back_left",
+         "spikes_front_left",
+         "spikes_back_bottom",
+         "spikes_front_bottom",
+         "root"
+      };
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PufferfishRenderer customRenderer = new PufferfishRenderer(renderManager.getContext());
       customRenderer.f_114477_ = shadowSize;
-      EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> {
-         return customRenderer;
-      });
+      EntityRenderer render = rendererCache.get(EntityType.f_20516_, index, () -> customRenderer);
       if (!(render instanceof PufferfishRenderer renderFish)) {
-         Config.warn("Not a PufferfishRenderer: " + String.valueOf(render));
+         Config.warn("Not a PufferfishRenderer: " + render);
          return null;
       } else if (!Reflector.RenderPufferfish_modelMedium.exists()) {
          Config.warn("Model field not found: RenderPufferfish.modelMedium");

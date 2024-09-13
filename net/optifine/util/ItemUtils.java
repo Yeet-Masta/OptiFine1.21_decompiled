@@ -24,12 +24,7 @@ public class ItemUtils {
          return EMPTY_TAG;
       } else {
          PatchedDataComponentMap components = (PatchedDataComponentMap)Reflector.ItemStack_components.getValue(itemStack);
-         if (components == null) {
-            return EMPTY_TAG;
-         } else {
-            CompoundTag tag = components.getTag();
-            return tag;
-         }
+         return components == null ? EMPTY_TAG : components.getTag();
       }
    }
 }

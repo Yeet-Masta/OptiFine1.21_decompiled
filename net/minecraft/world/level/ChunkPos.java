@@ -1,6 +1,6 @@
 package net.minecraft.world.level;
 
-import java.util.Spliterators;
+import java.util.Spliterators.AbstractSpliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -9,20 +9,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 
 public class ChunkPos {
-   private static final int f_199440_ = 1056;
-   public static final long f_45577_ = m_45589_(1875066, 1875066);
-   public static final ChunkPos f_186419_ = new ChunkPos(0, 0);
-   private static final long f_151375_ = 32L;
-   private static final long f_151376_ = 4294967295L;
-   private static final int f_151377_ = 5;
-   public static final int f_220335_ = 32;
-   private static final int f_151378_ = 31;
-   public static final int f_220336_ = 31;
-   public final int f_45578_;
-   public final int f_45579_;
-   private static final int f_151379_ = 1664525;
-   private static final int f_151380_ = 1013904223;
-   private static final int f_151381_ = -559038737;
+   private static int f_199440_;
+   public static long f_45577_ = m_45589_(1875066, 1875066);
+   public static ChunkPos f_186419_ = new ChunkPos(0, 0);
+   private static long f_151375_;
+   private static long f_151376_;
+   private static int f_151377_;
+   public static int f_220335_;
+   private static int f_151378_;
+   public static int f_220336_;
+   public int f_45578_;
+   public int f_45579_;
+   private static int f_151379_;
+   private static int f_151380_;
+   private static int f_151381_;
    private int cachedHashCode = 0;
 
    public ChunkPos(int x, int z) {
@@ -87,15 +87,7 @@ public class ChunkPos {
       if (this == p_equals_1_) {
          return true;
       } else {
-         boolean var10000;
-         if (p_equals_1_ instanceof ChunkPos) {
-            ChunkPos chunkpos = (ChunkPos)p_equals_1_;
-            var10000 = this.f_45578_ == chunkpos.f_45578_ && this.f_45579_ == chunkpos.f_45579_;
-         } else {
-            var10000 = false;
-         }
-
-         return var10000;
+         return p_equals_1_ instanceof ChunkPos chunkpos ? this.f_45578_ == chunkpos.f_45578_ && this.f_45579_ == chunkpos.f_45579_ : false;
       }
    }
 
@@ -185,20 +177,20 @@ public class ChunkPos {
       return i * i + j * j;
    }
 
-   public static Stream m_45596_(ChunkPos center, int radius) {
+   public static Stream<ChunkPos> m_45596_(ChunkPos center, int radius) {
       return m_45599_(new ChunkPos(center.f_45578_ - radius, center.f_45579_ - radius), new ChunkPos(center.f_45578_ + radius, center.f_45579_ + radius));
    }
 
-   public static Stream m_45599_(final ChunkPos start, final ChunkPos end) {
+   public static Stream<ChunkPos> m_45599_(final ChunkPos start, final ChunkPos end) {
       int i = Math.abs(start.f_45578_ - end.f_45578_) + 1;
       int j = Math.abs(start.f_45579_ - end.f_45579_) + 1;
       final int k = start.f_45578_ < end.f_45578_ ? 1 : -1;
       final int l = start.f_45579_ < end.f_45579_ ? 1 : -1;
-      return StreamSupport.stream(new Spliterators.AbstractSpliterator((long)(i * j), 64) {
+      return StreamSupport.stream(new AbstractSpliterator<ChunkPos>((long)(i * j), 64) {
          @Nullable
          private ChunkPos f_45621_;
 
-         public boolean tryAdvance(Consumer p_tryAdvance_1_) {
+         public boolean tryAdvance(Consumer<? super ChunkPos> p_tryAdvance_1_) {
             if (this.f_45621_ == null) {
                this.f_45621_ = start;
             } else {
@@ -215,7 +207,7 @@ public class ChunkPos {
                }
             }
 
-            p_tryAdvance_1_.accept(this.f_45621_);
+            p_tryAdvance_1_.m_340568_(this.f_45621_);
             return true;
          }
       }, false);

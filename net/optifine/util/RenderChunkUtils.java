@@ -18,8 +18,7 @@ public class RenderChunkUtils {
 
    public static double getRelativeBufferSize(SectionRenderDispatcher.RenderSection renderChunk) {
       int blockCount = getCountBlocks(renderChunk);
-      double vertexCountRel = getRelativeBufferSize(blockCount);
-      return vertexCountRel;
+      return getRelativeBufferSize(blockCount);
    }
 
    public static double getRelativeBufferSize(int blockCount) {

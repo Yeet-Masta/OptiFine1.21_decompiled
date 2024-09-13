@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DynamicLightsMap {
-   private Int2ObjectMap map = new Int2ObjectOpenHashMap();
-   private List list = new ArrayList();
+   private Int2ObjectMap<DynamicLight> map = new Int2ObjectOpenHashMap();
+   private List<DynamicLight> list = new ArrayList();
    private boolean dirty = false;
 
    public DynamicLight put(int id, DynamicLight dynamicLight) {
@@ -43,7 +43,7 @@ public class DynamicLightsMap {
       this.dirty = true;
    }
 
-   public List valueList() {
+   public List<DynamicLight> valueList() {
       if (this.dirty) {
          this.list.clear();
          this.list.addAll(this.map.values());

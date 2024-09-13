@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL20;
 
 public class ShaderUniform1f extends ShaderUniformBase {
    private float[] programValues;
-   private static final float VALUE_UNKNOWN = -3.4028235E38F;
+   private static float VALUE_UNKNOWN;
 
    public ShaderUniform1f(String name) {
       super(name);
@@ -27,26 +27,26 @@ public class ShaderUniform1f extends ShaderUniformBase {
 
    public float getValue() {
       int program = this.getProgram();
-      float value = this.programValues[program];
-      return value;
+      return this.programValues[program];
    }
 
+   @Override
    protected void onProgramSet(int program) {
       if (program >= this.programValues.length) {
          float[] valuesOld = this.programValues;
          float[] valuesNew = new float[program + 10];
          System.arraycopy(valuesOld, 0, valuesNew, 0, valuesOld.length);
 
-         for(int i = valuesOld.length; i < valuesNew.length; ++i) {
-            valuesNew[i] = -3.4028235E38F;
+         for (int i = valuesOld.length; i < valuesNew.length; i++) {
+            valuesNew[i] = -Float.MAX_VALUE;
          }
 
          this.programValues = valuesNew;
       }
-
    }
 
+   @Override
    protected void resetValue() {
-      this.programValues = new float[]{-3.4028235E38F};
+      this.programValues = new float[]{-Float.MAX_VALUE};
    }
 }

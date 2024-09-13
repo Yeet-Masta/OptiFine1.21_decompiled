@@ -9,21 +9,21 @@ import net.optifine.expr.IExpression;
 import net.optifine.expr.IExpressionResolver;
 
 public class MacroExpressionResolver implements IExpressionResolver {
-   private Map mapMacroValues = null;
+   private Map<String, String> mapMacroValues = null;
 
-   public MacroExpressionResolver(Map mapMacroValues) {
+   public MacroExpressionResolver(Map<String, String> mapMacroValues) {
       this.mapMacroValues = mapMacroValues;
    }
 
+   @Override
    public IExpression getExpression(String name) {
       String PREFIX_DEFINED = "defined_";
-      String nameNext;
       if (name.startsWith(PREFIX_DEFINED)) {
-         nameNext = name.substring(PREFIX_DEFINED.length());
-         return this.mapMacroValues.containsKey(nameNext) ? new FunctionBool(FunctionType.TRUE, (IExpression[])null) : new FunctionBool(FunctionType.FALSE, (IExpression[])null);
+         String macro = name.substring(PREFIX_DEFINED.length());
+         return this.mapMacroValues.containsKey(macro) ? new FunctionBool(FunctionType.TRUE, null) : new FunctionBool(FunctionType.FALSE, null);
       } else {
-         while(this.mapMacroValues.containsKey(name)) {
-            nameNext = (String)this.mapMacroValues.get(name);
+         while (this.mapMacroValues.containsKey(name)) {
+            String nameNext = (String)this.mapMacroValues.get(name);
             if (nameNext == null || nameNext.equals(name)) {
                break;
             }

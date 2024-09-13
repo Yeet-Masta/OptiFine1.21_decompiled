@@ -20,22 +20,22 @@ import net.optifine.render.RenderEnv;
 import net.optifine.util.ArrayCache;
 
 public class ChunkCacheOF implements BlockAndTintGetter {
-   private final RenderChunkRegion chunkCache;
-   private final int posX;
-   private final int posY;
-   private final int posZ;
-   private final int sizeX;
-   private final int sizeY;
-   private final int sizeZ;
-   private final int sizeXZ;
+   private RenderChunkRegion chunkCache;
+   private int posX;
+   private int posY;
+   private int posZ;
+   private int sizeX;
+   private int sizeY;
+   private int sizeZ;
+   private int sizeXZ;
    private int[] combinedLights;
    private BlockState[] blockStates;
    private Biome[] biomes;
-   private final int arraySize;
+   private int arraySize;
    private RenderEnv renderEnv;
-   private static final ArrayCache cacheCombinedLights;
-   private static final ArrayCache cacheBlockStates;
-   private static final ArrayCache cacheBiomes;
+   private static ArrayCache cacheCombinedLights = new ArrayCache(int.class, 16);
+   private static ArrayCache cacheBlockStates = new ArrayCache(BlockState.class, 16);
+   private static ArrayCache cacheBiomes = new ArrayCache(Biome.class, 16);
 
    public ChunkCacheOF(RenderChunkRegion chunkCache, SectionPos sectionPos) {
       this.chunkCache = chunkCache;
@@ -103,8 +103,8 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       }
 
       Arrays.fill(this.combinedLights, -1);
-      Arrays.fill(this.blockStates, (Object)null);
-      Arrays.fill(this.biomes, (Object)null);
+      Arrays.fill(this.blockStates, null);
+      Arrays.fill(this.biomes, null);
       this.loadBlockStates();
    }
 
@@ -113,13 +113,13 @@ public class ChunkCacheOF implements BlockAndTintGetter {
          LevelChunk chunk = this.chunkCache.getLevelChunk(SectionPos.m_123171_(this.posX) + 1, SectionPos.m_123171_(this.posZ) + 1);
          BlockPosM pos = new BlockPosM();
 
-         for(int y = 16; y < 32; ++y) {
+         for (int y = 16; y < 32; y++) {
             int dy = y * this.sizeXZ;
 
-            for(int z = 16; z < 32; ++z) {
+            for (int z = 16; z < 32; z++) {
                int dz = z * this.sizeX;
 
-               for(int x = 16; x < 32; ++x) {
+               for (int x = 16; x < 32; x++) {
                   pos.setXyz(this.posX + x, this.posY + y, this.posZ + z);
                   int index = dy + dz + x;
                   BlockState bs = chunk.m_8055_(pos);
@@ -127,7 +127,6 @@ public class ChunkCacheOF implements BlockAndTintGetter {
                }
             }
          }
-
       }
    }
 
@@ -138,7 +137,7 @@ public class ChunkCacheOF implements BlockAndTintGetter {
       this.blockStates = null;
       cacheBiomes.free(this.biomes);
       this.biomes = null;
-      this.chunkCache.finish();
+      this.chunkCache.m_185413_();
    }
 
    public int getCombinedLight(BlockState blockStateIn, BlockAndTintGetter worldIn, BlockPos blockPosIn) {
@@ -209,11 +208,5 @@ public class ChunkCacheOF implements BlockAndTintGetter {
 
    public int m_141937_() {
       return this.chunkCache.m_141937_();
-   }
-
-   static {
-      cacheCombinedLights = new ArrayCache(Integer.TYPE, 16);
-      cacheBlockStates = new ArrayCache(BlockState.class, 16);
-      cacheBiomes = new ArrayCache(Biome.class, 16);
    }
 }

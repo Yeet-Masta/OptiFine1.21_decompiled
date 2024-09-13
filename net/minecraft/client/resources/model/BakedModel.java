@@ -2,6 +2,7 @@ package net.minecraft.client.resources.model;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -11,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.extensions.IForgeBakedModel;
 
 public interface BakedModel extends IForgeBakedModel {
-   List m_213637_(@Nullable BlockState var1, @Nullable Direction var2, RandomSource var3);
+   List<BakedQuad> m_213637_(@Nullable BlockState var1, @Nullable Direction var2, RandomSource var3);
 
    boolean m_7541_();
 

@@ -12,6 +12,7 @@ public class ModelAdapterElderGuardian extends ModelAdapterGuardian {
       super(EntityType.f_20563_, "elder_guardian", 0.5F);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ElderGuardianRenderer render = new ElderGuardianRenderer(renderManager.getContext());

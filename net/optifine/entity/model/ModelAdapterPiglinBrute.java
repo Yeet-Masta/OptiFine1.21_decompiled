@@ -13,10 +13,12 @@ public class ModelAdapterPiglinBrute extends ModelAdapterPiglin {
       super(EntityType.f_20512_, "piglin_brute", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new PiglinModel(bakeModelLayer(ModelLayers.f_171207_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PiglinRenderer render = new PiglinRenderer(renderManager.getContext(), ModelLayers.f_171207_, ModelLayers.f_171156_, ModelLayers.f_171157_, false);

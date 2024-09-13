@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,68 +46,62 @@ import org.joml.Matrix4f;
 import org.slf4j.Logger;
 
 public class ShaderInstance implements Shader, AutoCloseable {
-   public static final String f_173321_ = "shaders";
-   private static final String f_244364_ = "shaders/core/";
-   private static final String f_173322_ = "shaders/include/";
-   static final Logger f_173323_ = LogUtils.getLogger();
-   private static final AbstractUniform f_173324_ = new AbstractUniform();
-   private static final boolean f_173325_ = true;
+   public static String f_173321_;
+   private static String f_244364_;
+   private static String f_173322_;
+   static Logger f_173323_ = LogUtils.getLogger();
+   private static AbstractUniform f_173324_ = new AbstractUniform();
+   private static boolean f_173325_;
    private static ShaderInstance f_173326_;
    private static int f_173327_ = -1;
-   private final Map f_173328_;
-   private final List f_173329_;
-   private final List f_173330_;
-   private final List f_173331_;
-   private final List f_173332_;
-   private final Map f_173333_;
-   private final int f_173299_;
-   private final String f_173300_;
+   private Map<String, Object> f_173328_ = Maps.newHashMap();
+   private List<String> f_173329_ = Lists.newArrayList();
+   private List<Integer> f_173330_ = Lists.newArrayList();
+   private List<Uniform> f_173331_ = Lists.newArrayList();
+   private List<Integer> f_173332_ = Lists.newArrayList();
+   private Map<String, Uniform> f_173333_ = Maps.newHashMap();
+   private int f_173299_;
+   private String f_173300_;
    private boolean f_173301_;
-   private final Program f_173305_;
-   private final Program f_173306_;
-   private final VertexFormat f_173307_;
+   private Program f_173305_;
+   private Program f_173306_;
+   private VertexFormat f_173307_;
    @Nullable
-   public final Uniform f_173308_;
+   public Uniform f_173308_;
    @Nullable
-   public final Uniform f_173309_;
+   public Uniform f_173309_;
    @Nullable
-   public final Uniform f_173310_;
+   public Uniform f_173310_;
    @Nullable
-   public final Uniform f_173311_;
+   public Uniform f_173311_;
    @Nullable
-   public final Uniform f_173312_;
+   public Uniform f_173312_;
    @Nullable
-   public final Uniform f_173313_;
+   public Uniform f_173313_;
    @Nullable
-   public final Uniform f_173314_;
+   public Uniform f_173314_;
    @Nullable
-   public final Uniform f_267422_;
+   public Uniform f_267422_;
    @Nullable
-   public final Uniform f_173315_;
+   public Uniform f_173315_;
    @Nullable
-   public final Uniform f_173316_;
+   public Uniform f_173316_;
    @Nullable
-   public final Uniform f_173317_;
+   public Uniform f_173317_;
    @Nullable
-   public final Uniform f_202432_;
+   public Uniform f_202432_;
    @Nullable
-   public final Uniform f_173318_;
+   public Uniform f_173318_;
    @Nullable
-   public final Uniform f_173319_;
+   public Uniform f_173319_;
    @Nullable
-   public final Uniform f_173320_;
+   public Uniform f_173320_;
 
    public ShaderInstance(ResourceProvider providerIn, String nameIn, VertexFormat formatIn) throws IOException {
       this(providerIn, new ResourceLocation(nameIn), formatIn);
    }
 
    public ShaderInstance(ResourceProvider providerIn, ResourceLocation shaderLocation, VertexFormat formatIn) throws IOException {
-      this.f_173328_ = Maps.newHashMap();
-      this.f_173329_ = Lists.newArrayList();
-      this.f_173330_ = Lists.newArrayList();
-      this.f_173331_ = Lists.newArrayList();
-      this.f_173332_ = Lists.newArrayList();
-      this.f_173333_ = Maps.newHashMap();
       this.f_173300_ = shaderLocation.m_135827_().equals("minecraft") ? shaderLocation.m_135815_() : shaderLocation.toString();
       this.f_173307_ = formatIn;
       ResourceLocation resourcelocation = ResourceLocation.m_339182_(shaderLocation.m_135827_(), "shaders/core/" + shaderLocation.m_135815_() + ".json");
@@ -120,13 +113,11 @@ public class ShaderInstance implements Shader, AutoCloseable {
             JsonObject jsonobject = GsonHelper.m_13859_(reader);
             String s1 = GsonHelper.m_13906_(jsonobject, "vertex");
             String s = GsonHelper.m_13906_(jsonobject, "fragment");
-            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", (JsonArray)null);
+            JsonArray jsonarray = GsonHelper.m_13832_(jsonobject, "samplers", null);
             if (jsonarray != null) {
                int i = 0;
 
-               for(Iterator var11 = jsonarray.iterator(); var11.hasNext(); ++i) {
-                  JsonElement jsonelement = (JsonElement)var11.next();
-
+               for (JsonElement jsonelement : jsonarray) {
                   try {
                      this.m_173344_(jsonelement);
                   } catch (Exception var18) {
@@ -134,18 +125,16 @@ public class ShaderInstance implements Shader, AutoCloseable {
                      chainedjsonexception1.m_135908_("samplers[" + i + "]");
                      throw chainedjsonexception1;
                   }
+
+                  i++;
                }
             }
 
-            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "uniforms", (JsonArray)null);
-            int j;
-            Iterator var25;
+            JsonArray jsonarray1 = GsonHelper.m_13832_(jsonobject, "uniforms", null);
             if (jsonarray1 != null) {
-               j = 0;
+               int j = 0;
 
-               for(var25 = jsonarray1.iterator(); var25.hasNext(); ++j) {
-                  JsonElement jsonelement1 = (JsonElement)var25.next();
-
+               for (JsonElement jsonelement1 : jsonarray1) {
                   try {
                      this.m_173354_(jsonelement1);
                   } catch (Exception var17) {
@@ -153,22 +142,22 @@ public class ShaderInstance implements Shader, AutoCloseable {
                      chainedjsonexception2.m_135908_("uniforms[" + j + "]");
                      throw chainedjsonexception2;
                   }
+
+                  j++;
                }
             }
 
             this.f_173305_ = m_173340_(providerIn, Program.Type.VERTEX, s1);
             this.f_173306_ = m_173340_(providerIn, Program.Type.FRAGMENT, s);
             this.f_173299_ = ProgramManager.m_85577_();
-            int k = false;
-            var25 = formatIn.m_166911_().iterator();
+            int k = 0;
 
-            while(var25.hasNext()) {
-               String s2 = (String)var25.next();
+            for (String s2 : formatIn.m_166911_()) {
                VertexFormatElement vfe = (VertexFormatElement)this.f_173307_.getElementMapping().get(s2);
-               j = vfe.getAttributeIndex();
-               if (j >= 0) {
-                  Uniform.m_166710_(this.f_173299_, j, s2);
-                  ++j;
+               k = vfe.getAttributeIndex();
+               if (k >= 0) {
+                  Uniform.m_166710_(this.f_173299_, k, s2);
+                  k++;
                }
             }
 
@@ -218,30 +207,27 @@ public class ShaderInstance implements Shader, AutoCloseable {
       Program program;
       if (program1 == null) {
          ResourceLocation loc = ResourceLocation.m_340282_(nameIn);
-         String var10000 = loc.m_135815_();
-         String s = "shaders/core/" + var10000 + typeIn.m_85569_();
+         String s = "shaders/core/" + loc.m_135815_() + typeIn.m_85569_();
          Resource resource = providerIn.m_215593_(ResourceLocation.m_339182_(loc.m_135827_(), s));
          InputStream inputstream = resource.m_215507_();
 
          try {
             final String s1 = FileUtil.m_179922_(s);
             program = Program.m_166604_(typeIn, nameIn, inputstream, resource.m_215506_(), new GlslPreprocessor() {
-               private final Set f_173369_ = Sets.newHashSet();
+               private Set<String> f_173369_ = Sets.newHashSet();
 
                public String m_142138_(boolean localIn, String fileIn) {
-                  ResourceLocation resourcelocation;
                   if (Reflector.ForgeHooksClient_getShaderImportLocation.exists()) {
-                     resourcelocation = (ResourceLocation)Reflector.ForgeHooksClient_getShaderImportLocation.call(s1, localIn, fileIn);
-                     fileIn = resourcelocation.toString();
+                     ResourceLocation resLocForge = (ResourceLocation)Reflector.ForgeHooksClient_getShaderImportLocation.m_46374_(s1, localIn, fileIn);
+                     fileIn = resLocForge.toString();
                   } else {
-                     String var10000 = localIn ? s1 : "shaders/include/";
-                     fileIn = FileUtil.m_179924_(var10000 + fileIn);
+                     fileIn = FileUtil.m_179924_((localIn ? s1 : "shaders/include/") + fileIn);
                   }
 
                   if (!this.f_173369_.add(fileIn)) {
                      return null;
                   } else {
-                     resourcelocation = ResourceLocation.m_338530_(fileIn);
+                     ResourceLocation resourcelocation = ResourceLocation.m_338530_(fileIn);
 
                      try {
                         Reader reader = providerIn.m_215597_(resourcelocation);
@@ -296,10 +282,7 @@ public class ShaderInstance implements Shader, AutoCloseable {
    }
 
    public void close() {
-      Iterator var1 = this.f_173331_.iterator();
-
-      while(var1.hasNext()) {
-         Uniform uniform = (Uniform)var1.next();
+      for (Uniform uniform : this.f_173331_) {
          uniform.close();
       }
 
@@ -312,10 +295,10 @@ public class ShaderInstance implements Shader, AutoCloseable {
       f_173326_ = null;
       int i = GlStateManager._getActiveTexture();
       if (Boolean.FALSE) {
-         for(int j = 0; j < this.f_173330_.size(); ++j) {
+         for (int j = 0; j < this.f_173330_.size(); j++) {
             if (this.f_173328_.get(this.f_173329_.get(j)) != null) {
                int textureUnit = this.getTextureUnit((String)this.f_173329_.get(j), j);
-               GlStateManager._activeTexture('蓀' + textureUnit);
+               GlStateManager._activeTexture(33984 + textureUnit);
                GlStateManager._bindTexture(0);
             }
          }
@@ -335,13 +318,13 @@ public class ShaderInstance implements Shader, AutoCloseable {
 
       int i = GlStateManager._getActiveTexture();
 
-      for(int j = 0; j < this.f_173330_.size(); ++j) {
+      for (int j = 0; j < this.f_173330_.size(); j++) {
          String s = (String)this.f_173329_.get(j);
          if (this.f_173328_.get(s) != null) {
             int k = Uniform.m_85624_(this.f_173299_, s);
             int textureUnit = this.getTextureUnit(s, j);
             Uniform.m_85616_(k, textureUnit);
-            RenderSystem.activeTexture('蓀' + textureUnit);
+            RenderSystem.activeTexture(33984 + textureUnit);
             Object object = this.f_173328_.get(s);
             int l = -1;
             if (object instanceof RenderTarget) {
@@ -363,10 +346,8 @@ public class ShaderInstance implements Shader, AutoCloseable {
       }
 
       GlStateManager._activeTexture(i);
-      Iterator var8 = this.f_173331_.iterator();
 
-      while(var8.hasNext()) {
-         Uniform uniform = (Uniform)var8.next();
+      for (Uniform uniform : this.f_173331_) {
          uniform.m_85633_();
       }
 
@@ -376,7 +357,6 @@ public class ShaderInstance implements Shader, AutoCloseable {
          Shaders.uniform_atlasSize.setValue(Shaders.atlasSizeX, Shaders.atlasSizeY);
          RenderUtils.setFlushRenderBuffers(oldFlush);
       }
-
    }
 
    public void m_108957_() {
@@ -398,28 +378,24 @@ public class ShaderInstance implements Shader, AutoCloseable {
       RenderSystem.assertOnRenderThread();
       IntList intlist = new IntArrayList();
 
-      int l;
-      for(l = 0; l < this.f_173329_.size(); ++l) {
-         String s = (String)this.f_173329_.get(l);
+      for (int i = 0; i < this.f_173329_.size(); i++) {
+         String s = (String)this.f_173329_.get(i);
          int j = Uniform.m_85624_(this.f_173299_, s);
          if (j == -1) {
             f_173323_.warn("Shader {} could not find sampler named {} in the specified shader program.", this.f_173300_, s);
             this.f_173328_.remove(s);
-            intlist.add(l);
+            intlist.add(i);
          } else {
             this.f_173330_.add(j);
          }
       }
 
-      for(l = intlist.size() - 1; l >= 0; --l) {
+      for (int l = intlist.size() - 1; l >= 0; l--) {
          int i1 = intlist.getInt(l);
          this.f_173329_.remove(i1);
       }
 
-      Iterator var6 = this.f_173331_.iterator();
-
-      while(var6.hasNext()) {
-         Uniform uniform = (Uniform)var6.next();
+      for (Uniform uniform : this.f_173331_) {
          String s1 = uniform.m_85599_();
          int k = Uniform.m_85624_(this.f_173299_, s1);
          if (k == -1) {
@@ -430,19 +406,17 @@ public class ShaderInstance implements Shader, AutoCloseable {
             this.f_173333_.put(s1, uniform);
          }
       }
-
    }
 
    private void m_173344_(JsonElement jsonElementIn) {
       JsonObject jsonobject = GsonHelper.m_13918_(jsonElementIn, "sampler");
       String s = GsonHelper.m_13906_(jsonobject, "name");
       if (!GsonHelper.m_13813_(jsonobject, "file")) {
-         this.f_173328_.put(s, (Object)null);
+         this.f_173328_.put(s, null);
          this.f_173329_.add(s);
       } else {
          this.f_173329_.add(s);
       }
-
    }
 
    public void m_173350_(String nameIn, Object samplerIn) {
@@ -462,9 +436,7 @@ public class ShaderInstance implements Shader, AutoCloseable {
       } else {
          int k = 0;
 
-         for(Iterator var9 = jsonarray.iterator(); var9.hasNext(); ++k) {
-            JsonElement jsonelement = (JsonElement)var9.next();
-
+         for (JsonElement jsonelement : jsonarray) {
             try {
                afloat[k] = GsonHelper.m_13888_(jsonelement, "value");
             } catch (Exception var13) {
@@ -472,12 +444,14 @@ public class ShaderInstance implements Shader, AutoCloseable {
                chainedjsonexception.m_135908_("values[" + k + "]");
                throw chainedjsonexception;
             }
+
+            k++;
          }
 
          if (j > 1 && jsonarray.size() == 1) {
-            while(k < j) {
+            while (k < j) {
                afloat[k] = afloat[0];
-               ++k;
+               k++;
             }
          }
 
@@ -521,7 +495,7 @@ public class ShaderInstance implements Shader, AutoCloseable {
    }
 
    public void m_340471_(VertexFormat.Mode modeIn, Matrix4f viewIn, Matrix4f projectionIn, Window windowIn) {
-      for(int i = 0; i < 12; ++i) {
+      for (int i = 0; i < 12; i++) {
          int j = RenderSystem.getShaderTexture(i);
          this.setSampler(i, j);
       }

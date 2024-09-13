@@ -4,10 +4,8 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ViewArea;
 import net.minecraft.core.BlockPos;
@@ -15,15 +13,16 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.entity.EntitySection;
 import net.optifine.Config;
 
 public class ChunkVisibility {
-   public static final int MASK_FACINGS = 63;
-   public static final Direction[][] enumFacingArrays = makeEnumFacingArrays(false);
-   public static final Direction[][] enumFacingOppositeArrays = makeEnumFacingArrays(true);
+   public static int MASK_FACINGS;
+   public static Direction[][] enumFacingArrays = makeEnumFacingArrays(false);
+   public static Direction[][] enumFacingOppositeArrays = makeEnumFacingArrays(true);
    private static int counter = 0;
    private static int iMaxStatic = -1;
    private static int iMaxStaticFinal = 16;
@@ -78,9 +77,8 @@ public class ChunkVisibility {
             czStart = pcz;
       }
 
-      int i;
-      for(int cx = cxStart; cx < cxEnd; ++cx) {
-         for(int cz = czStart; cz < czEnd; ++cz) {
+      for (int cx = cxStart; cx < cxEnd; cx++) {
+         for (int cz = czStart; cz < czEnd; cz++) {
             LevelChunk chunk = world.m_6325_(cx, cz);
             if (chunk.m_6430_()) {
                if (multiplayer) {
@@ -92,7 +90,7 @@ public class ChunkVisibility {
             } else {
                LevelChunkSection[] ebss = chunk.m_7103_();
 
-               for(i = ebss.length - 1; i > iMax; --i) {
+               for (int i = ebss.length - 1; i > iMax; i--) {
                   LevelChunkSection ebs = ebss[i];
                   if (ebs != null && !ebs.m_188008_()) {
                      if (i > iMax) {
@@ -103,16 +101,12 @@ public class ChunkVisibility {
                }
 
                try {
-                  Map mapTileEntities = chunk.m_62954_();
+                  Map<BlockPos, BlockEntity> mapTileEntities = chunk.m_62954_();
                   if (!mapTileEntities.isEmpty()) {
-                     Set keys = mapTileEntities.keySet();
-                     Iterator it = keys.iterator();
-
-                     while(it.hasNext()) {
-                        BlockPos pos = (BlockPos)it.next();
-                        int i = pos.m_123342_() - minHeight >> 4;
-                        if (i > iMax) {
-                           iMax = i;
+                     for (BlockPos pos : mapTileEntities.keySet()) {
+                        int ix = pos.m_123342_() - minHeight >> 4;
+                        if (ix > iMax) {
+                           iMax = ix;
                         }
                      }
                   }
@@ -126,22 +120,12 @@ public class ChunkVisibility {
          LongSet sectionKeys = world.getSectionStorage().getSectionKeys();
          LongIterator it = sectionKeys.iterator();
 
-         label89:
-         while(true) {
-            long sectionKey;
-            int i;
-            do {
-               if (!it.hasNext()) {
-                  break label89;
-               }
-
-               sectionKey = it.nextLong();
-               i = SectionPos.m_123225_(sectionKey);
-               i = i - minChunkHeight;
-            } while(sectionKey == playerSectionKey && i == pcy && playerSection != null && playerSection.getEntityList().size() == 1);
-
-            if (i > iMax) {
-               iMax = i;
+         while (it.hasNext()) {
+            long sectionKey = it.nextLong();
+            int sectionY = SectionPos.m_123225_(sectionKey);
+            int ix = sectionY - minChunkHeight;
+            if ((sectionKey != playerSectionKey || ix != pcy || playerSection == null || playerSection.getEntityList().size() != 1) && ix > iMax) {
+               iMax = ix;
             }
          }
       }
@@ -166,10 +150,10 @@ public class ChunkVisibility {
       int count = 64;
       Direction[][] arrs = new Direction[count][];
 
-      for(int i = 0; i < count; ++i) {
-         List list = new ArrayList();
+      for (int i = 0; i < count; i++) {
+         List<Direction> list = new ArrayList();
 
-         for(int ix = 0; ix < Direction.f_122346_.length; ++ix) {
+         for (int ix = 0; ix < Direction.f_122346_.length; ix++) {
             Direction facing = Direction.f_122346_[ix];
             Direction facingMask = opposite ? facing.m_122424_() : facing;
             int mask = 1 << facingMask.ordinal();

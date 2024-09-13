@@ -5,6 +5,7 @@ import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.ClipboardManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.platform.InputConstants.Key;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.Locale;
@@ -53,9 +54,9 @@ import net.optifine.shaders.gui.GuiShaderOptions;
 import net.optifine.util.RandomUtils;
 
 public class KeyboardHandler {
-   public static final int f_167812_ = 10000;
-   private final Minecraft f_90867_;
-   private final ClipboardManager f_90869_ = new ClipboardManager();
+   public static int f_167812_;
+   private Minecraft f_90867_;
+   private ClipboardManager f_90869_ = new ClipboardManager();
    private long f_90870_ = -1L;
    private long f_90871_ = -1L;
    private long f_90872_ = -1L;
@@ -105,7 +106,15 @@ public class KeyboardHandler {
    }
 
    private void m_167824_(ChatFormatting formatIn, Component componentIn) {
-      this.f_90867_.f_91065_.m_93076_().m_93785_(Component.m_237119_().m_7220_(Component.m_237115_("debug.prefix").m_130944_(new ChatFormatting[]{formatIn, ChatFormatting.BOLD})).m_7220_(CommonComponents.f_263701_).m_7220_(componentIn));
+      this.f_90867_
+         .f_91065_
+         .m_93076_()
+         .m_93785_(
+            Component.m_237119_()
+               .m_7220_(Component.m_237115_("debug.prefix").m_130944_(new ChatFormatting[]{formatIn, ChatFormatting.BOLD}))
+               .m_7220_(CommonComponents.f_263701_)
+               .m_7220_(componentIn)
+         );
    }
 
    private void m_167822_(Component componentIn) {
@@ -121,7 +130,7 @@ public class KeyboardHandler {
    }
 
    private void m_167837_(String message, Object... params) {
-      this.m_167822_(Component.m_237113_(MessageFormat.format(message, params)));
+      this.m_167822_(Component.m_237113_(MessageFormat.m_12886_(message, params)));
    }
 
    private boolean m_90932_(int key) {
@@ -159,7 +168,20 @@ public class KeyboardHandler {
                   }
 
                   this.m_90913_("debug.copy_location.message");
-                  this.m_90911_(String.format(Locale.ROOT, "/execute in %s run tp @s %.2f %.2f %.2f %.2f %.2f", this.f_90867_.f_91074_.m_9236_().m_46472_().m_135782_(), this.f_90867_.f_91074_.m_20185_(), this.f_90867_.f_91074_.m_20186_(), this.f_90867_.f_91074_.m_20189_(), this.f_90867_.f_91074_.m_146908_(), this.f_90867_.f_91074_.m_146909_()));
+                  this.m_90911_(
+                     String.m_12886_(
+                        Locale.ROOT,
+                        "/execute in %s run tp @s %.2f %.2f %.2f %.2f %.2f",
+                        new Object[]{
+                           this.f_90867_.f_91074_.m_9236_().m_46472_().m_135782_(),
+                           this.f_90867_.f_91074_.m_20185_(),
+                           this.f_90867_.f_91074_.m_20186_(),
+                           this.f_90867_.f_91074_.m_20189_(),
+                           this.f_90867_.f_91074_.m_146908_(),
+                           this.f_90867_.f_91074_.m_146909_()
+                        }
+                     )
+                  );
                   return true;
                }
             case 68:
@@ -195,15 +217,16 @@ public class KeyboardHandler {
                } else if (!this.f_90867_.f_91074_.m_5833_()) {
                   this.f_90867_.f_91074_.f_108617_.m_246979_("gamemode spectator");
                } else {
-                  ClientPacketListener var10000 = this.f_90867_.f_91074_.f_108617_;
-                  GameType var10001 = this.f_90867_.f_91072_.m_105294_();
-                  var10000.m_246979_("gamemode " + ((GameType)MoreObjects.firstNonNull(var10001, GameType.CREATIVE)).m_46405_());
+                  this.f_90867_
+                     .f_91074_
+                     .f_108617_
+                     .m_246979_("gamemode " + ((GameType)MoreObjects.firstNonNull(this.f_90867_.f_91072_.m_105294_(), GameType.CREATIVE)).m_46405_());
                }
 
                return true;
             case 79:
                if (Config.isShaders()) {
-                  GuiShaderOptions gui = new GuiShaderOptions((Screen)null, Config.getGameSettings());
+                  GuiShaderOptions gui = new GuiShaderOptions(null, Config.getGameSettings());
                   Config.getMinecraft().m_91152_(gui);
                }
 
@@ -243,9 +266,9 @@ public class KeyboardHandler {
                Path path = this.f_90867_.f_91069_.toPath().toAbsolutePath();
                Path path1 = TextureUtil.getDebugTexturePath(path);
                this.f_90867_.m_91097_().m_276085_(path1);
-               Component component = Component.m_237113_(path.relativize(path1).toString()).m_130940_(ChatFormatting.UNDERLINE).m_130938_((styleIn) -> {
-                  return styleIn.m_131142_(new ClickEvent(Action.OPEN_FILE, path1.toFile().toString()));
-               });
+               Component component = Component.m_237113_(path.relativize(path1).toString())
+                  .m_130940_(ChatFormatting.UNDERLINE)
+                  .m_130938_(styleIn -> styleIn.m_131142_(new ClickEvent(Action.OPEN_FILE, path1.toFile().toString())));
                this.m_90913_("debug.dump_dynamic_textures", component);
                return true;
             case 84:
@@ -276,14 +299,14 @@ public class KeyboardHandler {
    private void m_90928_(boolean privileged, boolean askServer) {
       HitResult hitresult = this.f_90867_.f_91077_;
       if (hitresult != null) {
-         switch (hitresult.m_6662_()) {
-            case BLOCK:
+         switch (<unrepresentable>.$SwitchMap$net$minecraft$world$phys$HitResult$Type[hitresult.m_6662_().ordinal()]) {
+            case 1:
                BlockPos blockpos = ((BlockHitResult)hitresult).m_82425_();
                Level level = this.f_90867_.f_91074_.m_9236_();
                BlockState blockstate = level.m_8055_(blockpos);
                if (privileged) {
                   if (askServer) {
-                     this.f_90867_.f_91074_.f_108617_.m_105149_().m_90708_(blockpos, (tagIn) -> {
+                     this.f_90867_.f_91074_.f_108617_.m_105149_().m_90708_(blockpos, tagIn -> {
                         this.m_90899_(blockstate, blockpos, tagIn);
                         this.m_90913_("debug.inspect.server.block");
                      });
@@ -294,16 +317,16 @@ public class KeyboardHandler {
                      this.m_90913_("debug.inspect.client.block");
                   }
                } else {
-                  this.m_90899_(blockstate, blockpos, (CompoundTag)null);
+                  this.m_90899_(blockstate, blockpos, null);
                   this.m_90913_("debug.inspect.client.block");
                }
                break;
-            case ENTITY:
+            case 2:
                Entity entity = ((EntityHitResult)hitresult).m_82443_();
                ResourceLocation resourcelocation = BuiltInRegistries.f_256780_.m_7981_(entity.m_6095_());
                if (privileged) {
                   if (askServer) {
-                     this.f_90867_.f_91074_.f_108617_.m_105149_().m_90702_(entity.m_19879_(), (tagIn) -> {
+                     this.f_90867_.f_91074_.f_108617_.m_105149_().m_90702_(entity.m_19879_(), tagIn -> {
                         this.m_90922_(resourcelocation, entity.m_20182_(), tagIn);
                         this.m_90913_("debug.inspect.server.entity");
                      });
@@ -313,12 +336,11 @@ public class KeyboardHandler {
                      this.m_90913_("debug.inspect.client.entity");
                   }
                } else {
-                  this.m_90922_(resourcelocation, entity.m_20182_(), (CompoundTag)null);
+                  this.m_90922_(resourcelocation, entity.m_20182_(), null);
                   this.m_90913_("debug.inspect.client.entity");
                }
          }
       }
-
    }
 
    private void m_90899_(BlockState state, BlockPos pos, @Nullable CompoundTag compound) {
@@ -327,7 +349,7 @@ public class KeyboardHandler {
          stringbuilder.append(compound);
       }
 
-      String s = String.format(Locale.ROOT, "/setblock %d %d %d %s", pos.m_123341_(), pos.m_123342_(), pos.m_123343_(), stringbuilder);
+      String s = String.m_12886_(Locale.ROOT, "/setblock %d %d %d %s", new Object[]{pos.m_123341_(), pos.m_123342_(), pos.m_123343_(), stringbuilder});
       this.m_90911_(s);
    }
 
@@ -338,9 +360,9 @@ public class KeyboardHandler {
          compound.m_128473_("Pos");
          compound.m_128473_("Dimension");
          String s1 = NbtUtils.m_178061_(compound).getString();
-         s = String.format(Locale.ROOT, "/summon %s %.2f %.2f %.2f %s", entityIdIn, pos.f_82479_, pos.f_82480_, pos.f_82481_, s1);
+         s = String.m_12886_(Locale.ROOT, "/summon %s %.2f %.2f %.2f %s", new Object[]{entityIdIn, pos.f_82479_, pos.f_82480_, pos.f_82481_, s1});
       } else {
-         s = String.format(Locale.ROOT, "/summon %s %.2f %.2f %.2f", entityIdIn, pos.f_82479_, pos.f_82480_, pos.f_82481_);
+         s = String.m_12886_(Locale.ROOT, "/summon %s %.2f %.2f %.2f", new Object[]{entityIdIn, pos.f_82479_, pos.f_82480_, pos.f_82481_});
       }
 
       this.m_90911_(s);
@@ -389,25 +411,24 @@ public class KeyboardHandler {
                if (Screen.m_96637_()) {
                }
 
-               Screenshot.m_92289_(this.f_90867_.f_91069_, this.f_90867_.m_91385_(), (componentIn) -> {
-                  this.f_90867_.execute(() -> {
-                     this.f_90867_.f_91065_.m_93076_().m_93785_(componentIn);
-                  });
-               });
+               Screenshot.m_92289_(
+                  this.f_90867_.f_91069_,
+                  this.f_90867_.m_91385_(),
+                  componentIn -> this.f_90867_.m_305380_(() -> this.f_90867_.f_91065_.m_93076_().m_93785_(componentIn))
+               );
                return;
             }
          }
 
-         boolean flag4;
          if (action != 0) {
             boolean flag1 = screen == null || !(screen.m_7222_() instanceof EditBox) || !((EditBox)screen.m_7222_()).m_94204_();
             if (flag1) {
-               if (Screen.m_96637_() && key == 66 && this.f_90867_.m_240477_().m_93316_() && (Boolean)this.f_90867_.f_91066_.m_292959_().m_231551_()) {
-                  flag4 = this.f_90867_.f_91066_.m_231930_().m_231551_() == NarratorStatus.OFF;
-                  this.f_90867_.f_91066_.m_231930_().m_231514_(NarratorStatus.m_91619_(((NarratorStatus)this.f_90867_.f_91066_.m_231930_().m_231551_()).m_91618_() + 1));
+               if (Screen.m_96637_() && key == 66 && this.f_90867_.m_240477_().m_93316_() && this.f_90867_.f_91066_.m_292959_().m_231551_()) {
+                  boolean flag2 = this.f_90867_.f_91066_.m_231930_().m_231551_() == NarratorStatus.OFF;
+                  this.f_90867_.f_91066_.m_231930_().m_231514_(NarratorStatus.m_91619_(this.f_90867_.f_91066_.m_231930_().m_231551_().m_91618_() + 1));
                   this.f_90867_.f_91066_.m_92169_();
                   if (screen != null) {
-                     screen.m_340185_(flag4);
+                     screen.m_340185_(flag2);
                   }
                }
 
@@ -446,35 +467,18 @@ public class KeyboardHandler {
                      aboolean[0] = Reflector.callBoolean(Reflector.ForgeHooksClient_onScreenKeyPressedPost, screen, key, scanCode, modifiers);
                   }
                }
-
             }, "keyPressed event handler", screen.getClass().getCanonicalName());
             if (aboolean[0]) {
                return;
             }
          }
 
+         Key inputconstants$key = InputConstants.m_84827_(key, scanCode);
+         boolean flag4 = this.f_90867_.f_91080_ == null;
          boolean flag6;
-         InputConstants.Key inputconstants$key;
-         label144: {
-            label143: {
-               inputconstants$key = InputConstants.m_84827_(key, scanCode);
-               flag4 = this.f_90867_.f_91080_ == null;
-               if (!flag4) {
-                  Screen var13 = this.f_90867_.f_91080_;
-                  if (!(var13 instanceof PauseScreen)) {
-                     break label143;
-                  }
-
-                  PauseScreen pausescreen = (PauseScreen)var13;
-                  if (pausescreen.m_294488_()) {
-                     break label143;
-                  }
-               }
-
-               flag6 = true;
-               break label144;
-            }
-
+         if (flag4 || this.f_90867_.f_91080_ instanceof PauseScreen pausescreen && !pausescreen.m_294488_()) {
+            flag6 = true;
+         } else {
             flag6 = false;
          }
 
@@ -520,9 +524,8 @@ public class KeyboardHandler {
             }
          }
 
-         Reflector.ForgeHooksClient_onKeyInput.call(key, scanCode, action, modifiers);
+         Reflector.ForgeHooksClient_onKeyInput.m_46374_(key, scanCode, action, modifiers);
       }
-
    }
 
    private void m_90889_(long windowPointer, int codePoint, int modifiers) {
@@ -530,47 +533,46 @@ public class KeyboardHandler {
          Screen guieventlistener = this.f_90867_.f_91080_;
          if (guieventlistener != null && this.f_90867_.m_91265_() == null) {
             if (Character.charCount(codePoint) == 1) {
-               Screen.m_96579_(() -> {
-                  if (!Reflector.ForgeHooksClient_onScreenCharTypedPre.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_onScreenCharTypedPre, guieventlistener, (char)codePoint, modifiers)) {
-                     boolean consumed = guieventlistener.m_5534_((char)codePoint, modifiers);
-                     if (Reflector.ForgeHooksClient_onScreenCharTypedPost.exists() && !consumed) {
-                        Reflector.call(Reflector.ForgeHooksClient_onScreenCharTypedPost, guieventlistener, (char)codePoint, modifiers);
-                     }
-
-                  }
-               }, "charTyped event handler", guieventlistener.getClass().getCanonicalName());
-            } else {
-               char[] var6 = Character.toChars(codePoint);
-               int var7 = var6.length;
-
-               for(int var8 = 0; var8 < var7; ++var8) {
-                  char c0 = var6[var8];
-                  Screen.m_96579_(() -> {
-                     if (!Reflector.ForgeHooksClient_onScreenCharTypedPre.exists() || !Reflector.callBoolean(Reflector.ForgeHooksClient_onScreenCharTypedPre, guieventlistener, c0, modifiers)) {
-                        boolean consumed = guieventlistener.m_5534_(c0, modifiers);
+               Screen.m_96579_(
+                  () -> {
+                     if (!Reflector.ForgeHooksClient_onScreenCharTypedPre.exists()
+                        || !Reflector.callBoolean(Reflector.ForgeHooksClient_onScreenCharTypedPre, guieventlistener, (char)codePoint, modifiers)) {
+                        boolean consumed = guieventlistener.m_5534_((char)codePoint, modifiers);
                         if (Reflector.ForgeHooksClient_onScreenCharTypedPost.exists() && !consumed) {
-                           Reflector.call(Reflector.ForgeHooksClient_onScreenCharTypedPost, guieventlistener, c0, modifiers);
+                           Reflector.m_46374_(Reflector.ForgeHooksClient_onScreenCharTypedPost, guieventlistener, (char)codePoint, modifiers);
                         }
-
                      }
-                  }, "charTyped event handler", guieventlistener.getClass().getCanonicalName());
+                  },
+                  "charTyped event handler",
+                  guieventlistener.getClass().getCanonicalName()
+               );
+            } else {
+               for (char c0 : Character.toChars(codePoint)) {
+                  Screen.m_96579_(
+                     () -> {
+                        if (!Reflector.ForgeHooksClient_onScreenCharTypedPre.exists()
+                           || !Reflector.callBoolean(Reflector.ForgeHooksClient_onScreenCharTypedPre, guieventlistener, c0, modifiers)) {
+                           boolean consumed = guieventlistener.m_5534_(c0, modifiers);
+                           if (Reflector.ForgeHooksClient_onScreenCharTypedPost.exists() && !consumed) {
+                              Reflector.m_46374_(Reflector.ForgeHooksClient_onScreenCharTypedPost, guieventlistener, c0, modifiers);
+                           }
+                        }
+                     },
+                     "charTyped event handler",
+                     guieventlistener.getClass().getCanonicalName()
+                  );
                }
             }
          }
       }
-
    }
 
    public void m_90887_(long window) {
-      InputConstants.m_84844_(window, (windowPointer, key, scanCode, action, modifiers) -> {
-         this.f_90867_.execute(() -> {
-            this.m_90893_(windowPointer, key, scanCode, action, modifiers);
-         });
-      }, (windowPointer, codePoint, modifiers) -> {
-         this.f_90867_.execute(() -> {
-            this.m_90889_(windowPointer, codePoint, modifiers);
-         });
-      });
+      InputConstants.m_84844_(
+         window,
+         (windowPointer, key, scanCode, action, modifiers) -> this.f_90867_.m_305380_(() -> this.m_90893_(windowPointer, key, scanCode, action, modifiers)),
+         (windowPointer, codePoint, modifiers) -> this.f_90867_.m_305380_(() -> this.m_90889_(windowPointer, codePoint, modifiers))
+      );
    }
 
    public String m_90876_() {
@@ -578,7 +580,6 @@ public class KeyboardHandler {
          if (errorIn != 65545) {
             this.f_90867_.m_91268_().m_85382_(errorIn, descriptionIn);
          }
-
       });
    }
 
@@ -586,7 +587,6 @@ public class KeyboardHandler {
       if (!string.isEmpty()) {
          this.f_90869_.m_83988_(this.f_90867_.m_91268_().m_85439_(), string);
       }
-
    }
 
    public void m_90931_() {
@@ -614,9 +614,8 @@ public class KeyboardHandler {
             }
 
             this.f_90871_ = i;
-            ++this.f_90872_;
+            this.f_90872_++;
          }
       }
-
    }
 }

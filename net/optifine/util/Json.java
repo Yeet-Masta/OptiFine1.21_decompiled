@@ -17,7 +17,7 @@ public class Json {
    }
 
    public static String getString(JsonObject jsonObj, String field) {
-      return getString(jsonObj, field, (String)null);
+      return getString(jsonObj, field, null);
    }
 
    public static String getString(JsonObject jsonObj, String field, String def) {
@@ -26,7 +26,7 @@ public class Json {
    }
 
    public static float[] parseFloatArray(JsonElement jsonElement, int len) {
-      return parseFloatArray(jsonElement, len, (float[])null);
+      return parseFloatArray(jsonElement, len, null);
    }
 
    public static float[] parseFloatArray(JsonElement jsonElement, int len, float[] def) {
@@ -35,11 +35,11 @@ public class Json {
       } else {
          JsonArray arr = jsonElement.getAsJsonArray();
          if (arr.size() != len) {
-            throw new JsonParseException("Wrong array length: " + arr.size() + ", should be: " + len + ", array: " + String.valueOf(arr));
+            throw new JsonParseException("Wrong array length: " + arr.size() + ", should be: " + len + ", array: " + arr);
          } else {
             float[] floatArr = new float[arr.size()];
 
-            for(int i = 0; i < floatArr.length; ++i) {
+            for (int i = 0; i < floatArr.length; i++) {
                floatArr[i] = arr.get(i).getAsFloat();
             }
 
@@ -49,7 +49,7 @@ public class Json {
    }
 
    public static int[] parseIntArray(JsonElement jsonElement, int len) {
-      return parseIntArray(jsonElement, len, (int[])null);
+      return parseIntArray(jsonElement, len, null);
    }
 
    public static int[] parseIntArray(JsonElement jsonElement, int len, int[] def) {
@@ -58,11 +58,11 @@ public class Json {
       } else {
          JsonArray arr = jsonElement.getAsJsonArray();
          if (arr.size() != len) {
-            throw new JsonParseException("Wrong array length: " + arr.size() + ", should be: " + len + ", array: " + String.valueOf(arr));
+            throw new JsonParseException("Wrong array length: " + arr.size() + ", should be: " + len + ", array: " + arr);
          } else {
             int[] intArr = new int[arr.size()];
 
-            for(int i = 0; i < intArr.length; ++i) {
+            for (int i = 0; i < intArr.length; i++) {
                intArr[i] = arr.get(i).getAsInt();
             }
 

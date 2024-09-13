@@ -25,7 +25,7 @@ public class CustomSky {
       worldSkyLayers = null;
    }
 
-   public static void update() {
+   public static void m_252999_() {
       reset();
       if (Config.isCustomSky()) {
          worldSkyLayers = readCustomSkies();
@@ -37,12 +37,11 @@ public class CustomSky {
       String prefix = "optifine/sky/world";
       int lastWorldId = -1;
 
-      int w;
-      for(w = 0; w < wsls.length; ++w) {
+      for (int w = 0; w < wsls.length; w++) {
          String worldPrefix = prefix + w;
          List listSkyLayers = new ArrayList();
 
-         for(int i = 0; i < 1000; ++i) {
+         for (int i = 0; i < 1000; i++) {
             String path = worldPrefix + "/sky" + i + ".properties";
             int countMissing = 0;
 
@@ -50,8 +49,7 @@ public class CustomSky {
                ResourceLocation locPath = new ResourceLocation(path);
                InputStream in = Config.getResourceStream(locPath);
                if (in == null) {
-                  ++countMissing;
-                  if (countMissing > 10) {
+                  if (++countMissing > 10) {
                      break;
                   }
                }
@@ -60,14 +58,14 @@ public class CustomSky {
                props.load(in);
                in.close();
                Config.dbg("CustomSky properties: " + path);
-               String defSource = "" + i + ".png";
+               String defSource = i + ".png";
                CustomSkyLayer sl = new CustomSkyLayer(props, defSource);
                if (sl.isValid(path)) {
                   String srcPath = StrUtils.addSuffixCheck(sl.source, ".png");
                   ResourceLocation locSource = new ResourceLocation(srcPath);
                   AbstractTexture tex = TextureUtils.getTexture(locSource);
                   if (tex == null) {
-                     Config.log("CustomSky: Texture not found: " + String.valueOf(locSource));
+                     Config.m_260877_("CustomSky: Texture not found: " + locSource);
                   } else {
                      sl.textureId = tex.m_117963_();
                      listSkyLayers.add(sl);
@@ -75,8 +73,7 @@ public class CustomSky {
                   }
                }
             } catch (FileNotFoundException var17) {
-               ++countMissing;
-               if (countMissing > 10) {
+               if (++countMissing > 10) {
                   break;
                }
             } catch (IOException var18) {
@@ -94,10 +91,10 @@ public class CustomSky {
       if (lastWorldId < 0) {
          return null;
       } else {
-         w = lastWorldId + 1;
-         CustomSkyLayer[][] wslsTrim = new CustomSkyLayer[w][0];
+         int worldCount = lastWorldId + 1;
+         CustomSkyLayer[][] wslsTrim = new CustomSkyLayer[worldCount][0];
 
-         for(int i = 0; i < wslsTrim.length; ++i) {
+         for (int i = 0; i < wslsTrim.length; i++) {
             wslsTrim[i] = wsls[i];
          }
 
@@ -124,10 +121,10 @@ public class CustomSky {
                   thunderStrength /= rainStrength;
                }
 
-               for(int i = 0; i < sls.length; ++i) {
+               for (int i = 0; i < sls.length; i++) {
                   CustomSkyLayer sl = sls[i];
                   if (sl.isActive(world, timeOfDay)) {
-                     sl.render(world, matrixStackIn, timeOfDay, celestialAngle, rainStrength, thunderStrength);
+                     sl.m_324219_(world, matrixStackIn, timeOfDay, celestialAngle, rainStrength, thunderStrength);
                   }
                }
 
@@ -145,11 +142,7 @@ public class CustomSky {
          int dimId = WorldUtils.getDimensionId(world);
          if (dimId >= 0 && dimId < worldSkyLayers.length) {
             CustomSkyLayer[] sls = worldSkyLayers[dimId];
-            if (sls == null) {
-               return false;
-            } else {
-               return sls.length > 0;
-            }
+            return sls == null ? false : sls.length > 0;
          } else {
             return false;
          }

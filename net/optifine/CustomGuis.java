@@ -35,8 +35,7 @@ import net.optifine.util.PropertiesOrdered;
 import net.optifine.util.ResUtils;
 
 public class CustomGuis {
-   // $FF: renamed from: mc net.minecraft.client.Minecraft
-   private static Minecraft field_15 = Config.getMinecraft();
+   private static Minecraft f_303183_ = Config.getMinecraft();
    private static PlayerControllerOF playerControllerOF = null;
    private static CustomGuiProperties[][] guiProperties = null;
    public static boolean isChristmas = isChristmas();
@@ -45,90 +44,90 @@ public class CustomGuis {
       if (guiProperties == null) {
          return loc;
       } else {
-         Screen screen = field_15.f_91080_;
+         Screen screen = f_303183_.f_91080_;
          if (!(screen instanceof AbstractContainerScreen)) {
             return loc;
-         } else if (loc.m_135827_().equals("minecraft") && loc.m_135815_().startsWith("textures/gui/")) {
-            if (playerControllerOF == null) {
-               return loc;
-            } else {
-               LevelReader world = field_15.f_91073_;
-               if (world == null) {
-                  return loc;
-               } else if (screen instanceof CreativeModeInventoryScreen) {
-                  return getTexturePos(CustomGuiProperties.EnumContainer.CREATIVE, field_15.f_91074_.m_20183_(), world, loc, screen);
-               } else if (screen instanceof InventoryScreen) {
-                  return getTexturePos(CustomGuiProperties.EnumContainer.INVENTORY, field_15.f_91074_.m_20183_(), world, loc, screen);
-               } else {
-                  BlockPos pos = playerControllerOF.getLastClickBlockPos();
-                  if (pos != null) {
-                     if (screen instanceof AnvilScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.ANVIL, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof BeaconScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.BEACON, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof BrewingStandScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.BREWING_STAND, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof ContainerScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.CHEST, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof CraftingScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.CRAFTING, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof DispenserScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.DISPENSER, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof EnchantmentScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.ENCHANTMENT, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof FurnaceScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.FURNACE, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof HopperScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.HOPPER, pos, world, loc, screen);
-                     }
-
-                     if (screen instanceof ShulkerBoxScreen) {
-                        return getTexturePos(CustomGuiProperties.EnumContainer.SHULKER_BOX, pos, world, loc, screen);
-                     }
-                  }
-
-                  Entity entity = playerControllerOF.getLastClickEntity();
-                  if (entity != null) {
-                     if (screen instanceof HorseInventoryScreen) {
-                        return getTextureEntity(CustomGuiProperties.EnumContainer.HORSE, entity, world, loc);
-                     }
-
-                     if (screen instanceof MerchantScreen) {
-                        return getTextureEntity(CustomGuiProperties.EnumContainer.VILLAGER, entity, world, loc);
-                     }
-                  }
-
-                  return loc;
-               }
-            }
-         } else {
+         } else if (!loc.m_135827_().equals("minecraft") || !loc.m_135815_().startsWith("textures/gui/")) {
             return loc;
+         } else if (playerControllerOF == null) {
+            return loc;
+         } else {
+            LevelReader world = f_303183_.f_91073_;
+            if (world == null) {
+               return loc;
+            } else if (screen instanceof CreativeModeInventoryScreen) {
+               return getTexturePos(CustomGuiProperties.EnumContainer.CREATIVE, f_303183_.f_91074_.m_20183_(), world, loc, screen);
+            } else if (screen instanceof InventoryScreen) {
+               return getTexturePos(CustomGuiProperties.EnumContainer.INVENTORY, f_303183_.f_91074_.m_20183_(), world, loc, screen);
+            } else {
+               BlockPos pos = playerControllerOF.getLastClickBlockPos();
+               if (pos != null) {
+                  if (screen instanceof AnvilScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.ANVIL, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof BeaconScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.BEACON, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof BrewingStandScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.BREWING_STAND, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof ContainerScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.CHEST, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof CraftingScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.CRAFTING, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof DispenserScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.DISPENSER, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof EnchantmentScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.ENCHANTMENT, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof FurnaceScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.FURNACE, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof HopperScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.HOPPER, pos, world, loc, screen);
+                  }
+
+                  if (screen instanceof ShulkerBoxScreen) {
+                     return getTexturePos(CustomGuiProperties.EnumContainer.SHULKER_BOX, pos, world, loc, screen);
+                  }
+               }
+
+               Entity entity = playerControllerOF.getLastClickEntity();
+               if (entity != null) {
+                  if (screen instanceof HorseInventoryScreen) {
+                     return getTextureEntity(CustomGuiProperties.EnumContainer.HORSE, entity, world, loc);
+                  }
+
+                  if (screen instanceof MerchantScreen) {
+                     return getTextureEntity(CustomGuiProperties.EnumContainer.VILLAGER, entity, world, loc);
+                  }
+               }
+
+               return loc;
+            }
          }
       }
    }
 
-   private static ResourceLocation getTexturePos(CustomGuiProperties.EnumContainer container, BlockPos pos, LevelReader blockAccess, ResourceLocation loc, Screen screen) {
+   private static ResourceLocation getTexturePos(
+      CustomGuiProperties.EnumContainer container, BlockPos pos, LevelReader blockAccess, ResourceLocation loc, Screen screen
+   ) {
       CustomGuiProperties[] props = guiProperties[container.ordinal()];
       if (props == null) {
          return loc;
       } else {
-         for(int i = 0; i < props.length; ++i) {
+         for (int i = 0; i < props.length; i++) {
             CustomGuiProperties prop = props[i];
             if (prop.matchesPos(container, pos, blockAccess, screen)) {
                return prop.getTextureLocation(loc);
@@ -144,7 +143,7 @@ public class CustomGuis {
       if (props == null) {
          return loc;
       } else {
-         for(int i = 0; i < props.length; ++i) {
+         for (int i = 0; i < props.length; i++) {
             CustomGuiProperties prop = props[i];
             if (prop.matchesEntity(container, entity, blockAccess)) {
                return prop.getTextureLocation(loc);
@@ -155,30 +154,30 @@ public class CustomGuis {
       }
    }
 
-   public static void update() {
+   public static void m_252999_() {
       guiProperties = null;
       if (Config.isCustomGuis()) {
-         List listProps = new ArrayList();
+         List<List<CustomGuiProperties>> listProps = new ArrayList();
          PackResources[] rps = Config.getResourcePacks();
 
-         for(int i = rps.length - 1; i >= 0; --i) {
+         for (int i = rps.length - 1; i >= 0; i--) {
             PackResources rp = rps[i];
-            update(rp, listProps);
+            m_252999_(rp, listProps);
          }
 
          guiProperties = propertyListToArray(listProps);
       }
    }
 
-   private static CustomGuiProperties[][] propertyListToArray(List listProps) {
+   private static CustomGuiProperties[][] propertyListToArray(List<List<CustomGuiProperties>> listProps) {
       if (listProps.isEmpty()) {
          return null;
       } else {
          CustomGuiProperties[][] cgps = new CustomGuiProperties[CustomGuiProperties.EnumContainer.values().length][];
 
-         for(int i = 0; i < cgps.length; ++i) {
+         for (int i = 0; i < cgps.length; i++) {
             if (listProps.size() > i) {
-               List subList = (List)listProps.get(i);
+               List<CustomGuiProperties> subList = (List<CustomGuiProperties>)listProps.get(i);
                if (subList != null) {
                   CustomGuiProperties[] subArr = (CustomGuiProperties[])subList.toArray(new CustomGuiProperties[subList.size()]);
                   cgps[i] = subArr;
@@ -190,11 +189,11 @@ public class CustomGuis {
       }
    }
 
-   private static void update(PackResources rp, List listProps) {
-      String[] paths = ResUtils.collectFiles(rp, (String)"optifine/gui/container/", (String)".properties", (String[])null);
-      Arrays.sort(paths);
+   private static void m_252999_(PackResources rp, List<List<CustomGuiProperties>> listProps) {
+      String[] paths = ResUtils.collectFiles(rp, "optifine/gui/container/", ".properties", null);
+      Arrays.m_277065_(paths);
 
-      for(int i = 0; i < paths.length; ++i) {
+      for (int i = 0; i < paths.length; i++) {
          String name = paths[i];
          Config.dbg("CustomGuis: " + name);
 
@@ -218,26 +217,25 @@ public class CustomGuis {
             var10.printStackTrace();
          }
       }
-
    }
 
-   private static void addToList(CustomGuiProperties cgp, List listProps) {
+   private static void addToList(CustomGuiProperties cgp, List<List<CustomGuiProperties>> listProps) {
       if (cgp.getContainer() == null) {
-         warn("Invalid container: " + String.valueOf(cgp.getContainer()));
+         warn("Invalid container: " + cgp.getContainer());
       } else {
          int indexContainer = cgp.getContainer().ordinal();
 
-         while(listProps.size() <= indexContainer) {
-            listProps.add((Object)null);
+         while (listProps.size() <= indexContainer) {
+            listProps.add(null);
          }
 
-         List subList = (List)listProps.get(indexContainer);
+         List<CustomGuiProperties> subList = (List<CustomGuiProperties>)listProps.get(indexContainer);
          if (subList == null) {
             subList = new ArrayList();
             listProps.set(indexContainer, subList);
          }
 
-         ((List)subList).add(cgp);
+         subList.add(cgp);
       }
    }
 

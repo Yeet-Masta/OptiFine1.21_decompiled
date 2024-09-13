@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TimedEvent {
-   private static Map mapEventTimes = new HashMap();
+   private static Map<String, Long> mapEventTimes = new HashMap();
 
    public static boolean isActive(String name, long timeIntervalMs) {
-      synchronized(mapEventTimes) {
+      synchronized (mapEventTimes) {
          long timeNowMs = System.currentTimeMillis();
          Long timeLastMsObj = (Long)mapEventTimes.get(name);
          if (timeLastMsObj == null) {

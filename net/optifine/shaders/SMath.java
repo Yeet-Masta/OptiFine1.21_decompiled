@@ -5,12 +5,14 @@ import java.util.Arrays;
 
 public class SMath {
    static void multiplyMat4xMat4(float[] matOut, float[] matA, float[] matB) {
-      for(int co = 0; co < 4; ++co) {
-         for(int ro = 0; ro < 4; ++ro) {
-            matOut[4 * co + ro] = matA[4 * co + 0] * matB[0 + ro] + matA[4 * co + 1] * matB[4 + ro] + matA[4 * co + 2] * matB[8 + ro] + matA[4 * co + 3] * matB[12 + ro];
+      for (int co = 0; co < 4; co++) {
+         for (int ro = 0; ro < 4; ro++) {
+            matOut[4 * co + ro] = matA[4 * co + 0] * matB[0 + ro]
+               + matA[4 * co + 1] * matB[4 + ro]
+               + matA[4 * co + 2] * matB[8 + ro]
+               + matA[4 * co + 3] * matB[12 + ro];
          }
       }
-
    }
 
    static void multiplyMat4xVec4(float[] vecOut, float[] matA, float[] vecB) {
@@ -39,13 +41,12 @@ public class SMath {
       matOut[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
       float det = m[0] * matOut[0] + m[1] * matOut[4] + m[2] * matOut[8] + m[3] * matOut[12];
       if ((double)det != 0.0) {
-         for(int i = 0; i < 16; ++i) {
+         for (int i = 0; i < 16; i++) {
             matOut[i] /= det;
          }
       } else {
          Arrays.fill(matOut, 0.0F);
       }
-
    }
 
    static void invertMat4FBFA(FloatBuffer fbInvOut, FloatBuffer fbMatIn, float[] faInv, float[] faMat) {

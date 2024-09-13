@@ -5,7 +5,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -41,8 +40,8 @@ public class DebugUtils {
    private static float[] transposeMat4(float[] arr) {
       float[] arrT = new float[16];
 
-      for(int x = 0; x < 4; ++x) {
-         for(int y = 0; y < 4; ++y) {
+      for (int x = 0; x < 4; x++) {
+         for (int y = 0; y < 4; y++) {
             arrT[x * 4 + y] = arr[y * 4 + x];
          }
       }
@@ -58,8 +57,8 @@ public class DebugUtils {
    private static String getMatrix4(float[] fs) {
       StringBuffer sb = new StringBuffer();
 
-      for(int i = 0; i < fs.length; ++i) {
-         String str = String.format("%.2f", fs[i]);
+      for (int i = 0; i < fs.length; i++) {
+         String str = String.m_12886_("%.2f", new Object[]{fs[i]});
          if (i > 0) {
             if (i % 4 == 0) {
                sb.append("\n");
@@ -82,33 +81,29 @@ public class DebugUtils {
          int countVbos = 0;
          int countLayers = 0;
 
-         for(int i = 0; i < renderChunks.length; ++i) {
+         for (int i = 0; i < renderChunks.length; i++) {
             SectionRenderDispatcher.RenderSection renderChunk = renderChunks[i];
             int sumPre = sum;
-            RenderType[] var8 = SectionRenderDispatcher.BLOCK_RENDER_LAYERS;
-            int var9 = var8.length;
 
-            for(int var10 = 0; var10 < var9; ++var10) {
-               RenderType rt = var8[var10];
+            for (RenderType rt : SectionRenderDispatcher.BLOCK_RENDER_LAYERS) {
                VertexBuffer vb = renderChunk.m_294581_(rt);
                if (vb.getIndexCount() > 0) {
                   sum += vb.getIndexCount() * vb.m_166892_().m_86020_();
-                  ++countVbos;
+                  countVbos++;
                }
 
                if (renderChunk.m_293175_().isLayerUsed(rt)) {
-                  ++countLayers;
+                  countLayers++;
                }
             }
 
             if (sum > sumPre) {
-               ++countChunks;
+               countChunks++;
             }
          }
 
          Config.dbg("VRAM: " + sum / 1048576 + " MB, vbos: " + countVbos + ", layers: " + countLayers + ", chunks: " + countChunks);
-         long var10000 = GpuMemory.getBufferAllocated();
-         Config.dbg("VBOs: " + var10000 / 1048576L + " MB");
+         Config.dbg("VBOs: " + GpuMemory.getBufferAllocated() / 1048576L + " MB");
       }
    }
 
@@ -116,21 +111,19 @@ public class DebugUtils {
       Config.dbg(" *** TEXTURES ***");
       TextureManager textureManager = Minecraft.m_91087_().m_91097_();
       long sum = 0L;
-      Collection locations = textureManager.getTextureLocations();
-      List list = new ArrayList(locations);
-      Collections.sort(list);
+      Collection<ResourceLocation> locations = textureManager.getTextureLocations();
+      List<ResourceLocation> list = new ArrayList(locations);
+      Collections.m_277065_(list);
 
-      long size;
-      for(Iterator var5 = list.iterator(); var5.hasNext(); sum += size) {
-         ResourceLocation loc = (ResourceLocation)var5.next();
+      for (ResourceLocation loc : list) {
          AbstractTexture texture = textureManager.m_118506_(loc);
-         size = GpuMemory.getTextureSize(texture);
+         long size = GpuMemory.getTextureSize(texture);
          if (Config.isShaders()) {
             size *= 3L;
          }
 
-         String var10000 = String.valueOf(loc);
-         Config.dbg(var10000 + " = " + size);
+         Config.dbg(loc + " = " + size);
+         sum += size;
       }
 
       Config.dbg("All: " + sum);

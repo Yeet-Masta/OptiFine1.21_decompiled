@@ -12,16 +12,18 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterCamel extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterCamel() {
       super(EntityType.f_243976_, "camel", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new CamelModel(bakeModelLayer(ModelLayers.f_244030_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof CamelModel modelCamel)) {
          return null;
@@ -35,13 +37,13 @@ public class ModelAdapterCamel extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "body");
       map.put("hump", "hump");
       map.put("tail", "tail");
@@ -59,6 +61,7 @@ public class ModelAdapterCamel extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       CamelRenderer render = new CamelRenderer(renderManager.getContext(), ModelLayers.f_244030_);

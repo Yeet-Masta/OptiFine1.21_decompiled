@@ -5,24 +5,22 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.Proxy;
 import java.net.URL;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.optifine.Config;
 
 public class HttpPipeline {
    private static Map mapConnections = new HashMap();
-   public static final String HEADER_USER_AGENT = "User-Agent";
-   public static final String HEADER_HOST = "Host";
-   public static final String HEADER_ACCEPT = "Accept";
-   public static final String HEADER_LOCATION = "Location";
-   public static final String HEADER_KEEP_ALIVE = "Keep-Alive";
-   public static final String HEADER_CONNECTION = "Connection";
-   public static final String HEADER_VALUE_KEEP_ALIVE = "keep-alive";
-   public static final String HEADER_TRANSFER_ENCODING = "Transfer-Encoding";
-   public static final String HEADER_VALUE_CHUNKED = "chunked";
+   public static String HEADER_USER_AGENT;
+   public static String HEADER_HOST;
+   public static String HEADER_ACCEPT;
+   public static String HEADER_LOCATION;
+   public static String HEADER_KEEP_ALIVE;
+   public static String HEADER_CONNECTION;
+   public static String HEADER_VALUE_KEEP_ALIVE;
+   public static String HEADER_TRANSFER_ENCODING;
+   public static String HEADER_VALUE_CHUNKED;
 
    private HttpPipeline() {
    }
@@ -40,7 +38,7 @@ public class HttpPipeline {
    public static HttpRequest makeRequest(String urlStr, Proxy proxy) throws IOException {
       URL url = new URL(urlStr);
       if (!url.getProtocol().equals("http")) {
-         throw new IOException("Only protocol http is supported: " + String.valueOf(url));
+         throw new IOException("Only protocol http is supported: " + url);
       } else {
          String file = url.getFile();
          String host = url.getHost();
@@ -51,24 +49,25 @@ public class HttpPipeline {
 
          String method = "GET";
          String http = "HTTP/1.1";
-         Map headers = new LinkedHashMap();
+         Map<String, String> headers = new LinkedHashMap();
          headers.put("User-Agent", "Java/" + System.getProperty("java.version"));
          headers.put("Host", host);
          headers.put("Accept", "text/html, image/gif, image/png");
          headers.put("Connection", "keep-alive");
          byte[] body = new byte[0];
-         HttpRequest req = new HttpRequest(host, port, proxy, method, file, http, headers, body);
-         return req;
+         return new HttpRequest(host, port, proxy, method, file, http, headers, body);
       }
    }
 
    public static void addRequest(HttpPipelineRequest pr) {
       HttpRequest hr = pr.getHttpRequest();
 
-      for(HttpPipelineConnection conn = getConnection(hr.getHost(), hr.getPort(), hr.getProxy()); !conn.addRequest(pr); conn = getConnection(hr.getHost(), hr.getPort(), hr.getProxy())) {
+      for (HttpPipelineConnection conn = getConnection(hr.getHost(), hr.getPort(), hr.getProxy());
+         !conn.addRequest(pr);
+         conn = getConnection(hr.getHost(), hr.getPort(), hr.getProxy())
+      ) {
          removeConnection(hr.getHost(), hr.getPort(), hr.getProxy(), conn);
       }
-
    }
 
    private static synchronized HttpPipelineConnection getConnection(String host, int port, Proxy proxy) {
@@ -88,12 +87,10 @@ public class HttpPipeline {
       if (conn == hpc) {
          mapConnections.remove(key);
       }
-
    }
 
    private static String makeConnectionKey(String host, int port, Proxy proxy) {
-      String hostPort = host + ":" + port + "-" + String.valueOf(proxy);
-      return hostPort;
+      return host + ":" + port + "-" + proxy;
    }
 
    public static byte[] get(String urlStr) throws IOException {
@@ -104,8 +101,7 @@ public class HttpPipeline {
       if (urlStr.startsWith("file:")) {
          URL urlFile = new URL(urlStr);
          InputStream in = urlFile.openStream();
-         byte[] bytes = Config.readAll(in);
-         return bytes;
+         return Config.readAll(in);
       } else {
          HttpRequest req = makeRequest(urlStr, proxy);
          HttpResponse resp = executeRequest(req);
@@ -118,25 +114,27 @@ public class HttpPipeline {
    }
 
    public static HttpResponse executeRequest(HttpRequest req) throws IOException {
-      final Map map = new HashMap();
+      final Map<String, Object> map = new HashMap();
       String KEY_RESPONSE = "Response";
       String KEY_EXCEPTION = "Exception";
       HttpListener l = new HttpListener() {
+         @Override
          public void finished(HttpRequest req, HttpResponse resp) {
-            synchronized(map) {
+            synchronized (map) {
                map.put("Response", resp);
                map.notifyAll();
             }
          }
 
+         @Override
          public void failed(HttpRequest req, Exception e) {
-            synchronized(map) {
+            synchronized (map) {
                map.put("Exception", e);
                map.notifyAll();
             }
          }
       };
-      synchronized(map) {
+      synchronized (map) {
          HttpPipelineRequest hpr = new HttpPipelineRequest(req, l);
          addRequest(hpr);
 
@@ -167,18 +165,12 @@ public class HttpPipeline {
    }
 
    public static boolean hasActiveRequests() {
-      Collection conns = mapConnections.values();
-      Iterator it = conns.iterator();
-
-      HttpPipelineConnection conn;
-      do {
-         if (!it.hasNext()) {
-            return false;
+      for (HttpPipelineConnection conn : mapConnections.values()) {
+         if (conn.hasActiveRequests()) {
+            return true;
          }
+      }
 
-         conn = (HttpPipelineConnection)it.next();
-      } while(!conn.hasActiveRequests());
-
-      return true;
+      return false;
    }
 }

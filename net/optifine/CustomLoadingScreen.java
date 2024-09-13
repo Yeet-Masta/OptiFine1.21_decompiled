@@ -15,10 +15,10 @@ public class CustomLoadingScreen {
    private int scaleMode = 0;
    private int scale = 2;
    private boolean center;
-   private static final int SCALE_DEFAULT = 2;
-   private static final int SCALE_MODE_FIXED = 0;
-   private static final int SCALE_MODE_FULL = 1;
-   private static final int SCALE_MODE_STRETCH = 2;
+   private static int SCALE_DEFAULT;
+   private static int SCALE_MODE_FIXED;
+   private static int SCALE_MODE_FULL;
+   private static int SCALE_MODE_STRETCH;
 
    public CustomLoadingScreen(ResourceLocation locationTexture, int scaleMode, int scale, boolean center) {
       this.locationTexture = locationTexture;
@@ -33,8 +33,7 @@ public class CustomLoadingScreen {
       int scaleDef = scaleMode == 0 ? 2 : 1;
       int scale = parseScale(getProperty("scale", dimId, props), scaleDef);
       boolean center = Config.parseBoolean(getProperty("center", dimId, props), false);
-      CustomLoadingScreen scr = new CustomLoadingScreen(loc, scaleMode, scale, center);
-      return scr;
+      return new CustomLoadingScreen(loc, scaleMode, scale, center);
    }
 
    private static String getProperty(String key, int dim, Properties props) {
@@ -42,12 +41,7 @@ public class CustomLoadingScreen {
          return null;
       } else {
          String val = props.getProperty("dim" + dim + "." + key);
-         if (val != null) {
-            return val;
-         } else {
-            val = props.getProperty(key);
-            return val;
-         }
+         return val != null ? val : props.getProperty(key);
       }
    }
 

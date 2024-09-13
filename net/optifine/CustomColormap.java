@@ -36,20 +36,20 @@ public class CustomColormap implements CustomColors.IColorizer {
    private int height = 0;
    private int[] colors = null;
    private float[][] colorsRgb = null;
-   private static final int FORMAT_UNKNOWN = -1;
-   private static final int FORMAT_VANILLA = 0;
-   private static final int FORMAT_GRID = 1;
-   private static final int FORMAT_FIXED = 2;
-   public static final String FORMAT_VANILLA_STRING = "vanilla";
-   public static final String FORMAT_GRID_STRING = "grid";
-   public static final String FORMAT_FIXED_STRING = "fixed";
-   public static final String[] FORMAT_STRINGS = new String[]{"vanilla", "grid", "fixed"};
-   public static final String KEY_FORMAT = "format";
-   public static final String KEY_BLOCKS = "blocks";
-   public static final String KEY_SOURCE = "source";
-   public static final String KEY_COLOR = "color";
-   public static final String KEY_Y_VARIANCE = "yVariance";
-   public static final String KEY_Y_OFFSET = "yOffset";
+   private static int FORMAT_UNKNOWN;
+   private static int FORMAT_VANILLA;
+   private static int FORMAT_GRID;
+   private static int FORMAT_FIXED;
+   public static String FORMAT_VANILLA_STRING;
+   public static String FORMAT_GRID_STRING;
+   public static String FORMAT_FIXED_STRING;
+   public static String[] FORMAT_STRINGS = new String[]{"vanilla", "grid", "fixed"};
+   public static String KEY_FORMAT;
+   public static String KEY_BLOCKS;
+   public static String KEY_SOURCE;
+   public static String KEY_COLOR;
+   public static String KEY_Y_VARIANCE;
+   public static String KEY_Y_OFFSET;
 
    public CustomColormap(Properties props, String path, int width, int height, String formatDefault) {
       ConnectedParser cp = new ConnectedParser("Colormap");
@@ -105,7 +105,7 @@ public class CustomColormap implements CustomColors.IColorizer {
 
          if (this.color < 0) {
             if (this.format == 0) {
-               this.color = this.getColor(127, 127);
+               this.color = this.m_130045_(127, 127);
             }
 
             if (this.format == 1) {
@@ -135,7 +135,7 @@ public class CustomColormap implements CustomColors.IColorizer {
          Block block = (Block)BuiltInRegistries.f_256975_.m_7745_(loc);
          return new MatchBlock[]{new MatchBlock(BlockUtils.getBlockId(block))};
       } else {
-         Pattern p = Pattern.compile("^block([0-9]+).*$");
+         Pattern p = Pattern.m_289905_("^block([0-9]+).*$");
          Matcher m = p.matcher(this.name);
          if (m.matches()) {
             String idStr = m.group(1);
@@ -170,7 +170,7 @@ public class CustomColormap implements CustomColors.IColorizer {
             return;
          }
 
-         int imgWidth = img.getWidth();
+         int imgWidth = img.m_92515_();
          int imgHeight = img.getHeight();
          boolean widthOk = this.width < 0 || this.width == imgWidth;
          boolean heightOk = this.height < 0 || this.height == imgHeight;
@@ -190,7 +190,6 @@ public class CustomColormap implements CustomColors.IColorizer {
       } catch (IOException var9) {
          var9.printStackTrace();
       }
-
    }
 
    private static void dbg(String str) {
@@ -202,18 +201,16 @@ public class CustomColormap implements CustomColors.IColorizer {
    }
 
    private static String parseTexture(String texStr, String path, String basePath) {
-      String str;
       if (texStr != null) {
          texStr = texStr.trim();
-         str = ".png";
-         if (texStr.endsWith(str)) {
-            texStr = texStr.substring(0, texStr.length() - str.length());
+         String png = ".png";
+         if (texStr.endsWith(png)) {
+            texStr = texStr.substring(0, texStr.length() - png.length());
          }
 
-         texStr = fixTextureName(texStr, basePath);
-         return texStr;
+         return fixTextureName(texStr, basePath);
       } else {
-         str = path;
+         String str = path;
          int pos = path.lastIndexOf(47);
          if (pos >= 0) {
             str = path.substring(pos + 1);
@@ -224,8 +221,7 @@ public class CustomColormap implements CustomColors.IColorizer {
             str = str.substring(0, pos2);
          }
 
-         str = fixTextureName(str, basePath);
-         return str;
+         return fixTextureName(str, basePath);
       }
    }
 
@@ -264,12 +260,12 @@ public class CustomColormap implements CustomColors.IColorizer {
       }
    }
 
-   public int getColor(int index) {
+   public int m_130045_(int index) {
       index = Config.limit(index, 0, this.colors.length - 1);
       return this.colors[index] & 16777215;
    }
 
-   public int getColor(int cx, int cy) {
+   public int m_130045_(int cx, int cy) {
       cx = Config.limit(cx, 0, this.width - 1);
       cy = Config.limit(cy, 0, this.height - 1);
       return this.colors[cy * this.width + cx] & 16777215;
@@ -283,20 +279,22 @@ public class CustomColormap implements CustomColors.IColorizer {
       return this.colorsRgb;
    }
 
-   public int getColor(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
-      return this.getColor(blockAccess, blockPos);
+   @Override
+   public int m_130045_(BlockState blockState, BlockAndTintGetter blockAccess, BlockPos blockPos) {
+      return this.m_130045_(blockAccess, blockPos);
    }
 
-   public int getColor(BlockAndTintGetter blockAccess, BlockPos blockPos) {
+   public int m_130045_(BlockAndTintGetter blockAccess, BlockPos blockPos) {
       Biome biome = CustomColors.getColorBiome(blockAccess, blockPos);
-      return this.getColor(biome, blockPos);
+      return this.m_130045_(biome, blockPos);
    }
 
+   @Override
    public boolean isColorConstant() {
       return this.format == 2;
    }
 
-   public int getColor(Biome biome, BlockPos blockPos) {
+   public int m_130045_(Biome biome, BlockPos blockPos) {
       if (this.format == 0) {
          return this.getColorVanilla(biome, blockPos);
       } else {
@@ -317,24 +315,21 @@ public class CustomColormap implements CustomColors.IColorizer {
          int count = 0;
          BlockPosM blockPosM = new BlockPosM(0, 0, 0);
 
-         int ix;
-         int iz;
-         int col;
-         for(ix = x0 - radius; ix <= x0 + radius; ++ix) {
-            for(iz = z0 - radius; iz <= z0 + radius; ++iz) {
+         for (int ix = x0 - radius; ix <= x0 + radius; ix++) {
+            for (int iz = z0 - radius; iz <= z0 + radius; iz++) {
                blockPosM.setXyz(ix, y0, iz);
-               col = this.getColor((BlockAndTintGetter)blockAccess, blockPosM);
-               sumRed += col >> 16 & 255;
-               sumGreen += col >> 8 & 255;
-               sumBlue += col & 255;
-               ++count;
+               int col = this.m_130045_(blockAccess, blockPosM);
+               sumRed += col >> 16 & 0xFF;
+               sumGreen += col >> 8 & 0xFF;
+               sumBlue += col & 0xFF;
+               count++;
             }
          }
 
-         ix = sumRed / count;
-         iz = sumGreen / count;
-         col = sumBlue / count;
-         return ix << 16 | iz << 8 | col;
+         int r = sumRed / count;
+         int g = sumGreen / count;
+         int b = sumBlue / count;
+         return r << 16 | g << 8 | b;
       }
    }
 
@@ -344,7 +339,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       rainfall *= temperature;
       int cx = (int)((1.0 - temperature) * (double)(this.width - 1));
       int cy = (int)((1.0 - rainfall) * (double)(this.height - 1));
-      return this.getColor(cx, cy);
+      return this.m_130045_(cx, cy);
    }
 
    private int getColorGrid(Biome biome, BlockPos blockPos) {
@@ -354,18 +349,18 @@ public class CustomColormap implements CustomColors.IColorizer {
          int seed = blockPos.m_123341_() << 16 + blockPos.m_123343_();
          int rand = Config.intHash(seed);
          int range = this.yVariance * 2 + 1;
-         int diff = (rand & 255) % range - this.yVariance;
+         int diff = (rand & 0xFF) % range - this.yVariance;
          cy += diff;
       }
 
-      return this.getColor(biomeId, cy);
+      return this.m_130045_(biomeId, cy);
    }
 
    public int getLength() {
       return this.format == 2 ? 1 : this.colors.length;
    }
 
-   public int getWidth() {
+   public int m_92515_() {
       return this.width;
    }
 
@@ -376,11 +371,11 @@ public class CustomColormap implements CustomColors.IColorizer {
    private static float[][] toRgb(int[] cols) {
       float[][] colsRgb = new float[cols.length][3];
 
-      for(int i = 0; i < cols.length; ++i) {
+      for (int i = 0; i < cols.length; i++) {
          int col = cols[i];
-         float rf = (float)(col >> 16 & 255) / 255.0F;
-         float gf = (float)(col >> 8 & 255) / 255.0F;
-         float bf = (float)(col & 255) / 255.0F;
+         float rf = (float)(col >> 16 & 0xFF) / 255.0F;
+         float gf = (float)(col >> 8 & 0xFF) / 255.0F;
+         float bf = (float)(col & 0xFF) / 255.0F;
          float[] colRgb = colsRgb[i];
          colRgb[0] = rf;
          colRgb[1] = gf;
@@ -404,7 +399,6 @@ public class CustomColormap implements CustomColors.IColorizer {
          if (metadata >= 0) {
             mb.addMetadata(metadata);
          }
-
       } else {
          this.addMatchBlock(new MatchBlock(blockId, metadata));
       }
@@ -414,7 +408,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       if (this.matchBlocks == null) {
          return null;
       } else {
-         for(int i = 0; i < this.matchBlocks.length; ++i) {
+         for (int i = 0; i < this.matchBlocks.length; i++) {
             MatchBlock mb = this.matchBlocks[i];
             if (mb.getBlockId() == blockId) {
                return mb;
@@ -431,7 +425,7 @@ public class CustomColormap implements CustomColors.IColorizer {
       } else {
          Set setIds = new HashSet();
 
-         for(int i = 0; i < this.matchBlocks.length; ++i) {
+         for (int i = 0; i < this.matchBlocks.length; i++) {
             MatchBlock mb = this.matchBlocks[i];
             if (mb.getBlockId() >= 0) {
                setIds.add(mb.getBlockId());
@@ -441,8 +435,8 @@ public class CustomColormap implements CustomColors.IColorizer {
          Integer[] ints = (Integer[])setIds.toArray(new Integer[setIds.size()]);
          int[] ids = new int[ints.length];
 
-         for(int i = 0; i < ints.length; ++i) {
-            ids[i] = ints[i];
+         for (int ix = 0; ix < ints.length; ix++) {
+            ids[ix] = ints[ix];
          }
 
          return ids;
@@ -450,7 +444,6 @@ public class CustomColormap implements CustomColors.IColorizer {
    }
 
    public String toString() {
-      String var10000 = this.basePath;
-      return var10000 + "/" + this.name + ", blocks: " + Config.arrayToString((Object[])this.matchBlocks) + ", source: " + this.source;
+      return this.basePath + "/" + this.name + ", blocks: " + Config.arrayToString((Object[])this.matchBlocks) + ", source: " + this.source;
    }
 }

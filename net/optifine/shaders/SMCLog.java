@@ -4,8 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public abstract class SMCLog {
-   private static final Logger LOGGER = LogManager.getLogger();
-   private static final String PREFIX = "[Shaders] ";
+   private static Logger LOGGER = LogManager.getLogger();
+   private static String PREFIX;
 
    public static void severe(String message) {
       LOGGER.error("[Shaders] " + message);
@@ -24,22 +24,22 @@ public abstract class SMCLog {
    }
 
    public static void severe(String format, Object... args) {
-      String message = String.format(format, args);
+      String message = String.m_12886_(format, args);
       LOGGER.error("[Shaders] " + message);
    }
 
    public static void warning(String format, Object... args) {
-      String message = String.format(format, args);
+      String message = String.m_12886_(format, args);
       LOGGER.warn("[Shaders] " + message);
    }
 
    public static void info(String format, Object... args) {
-      String message = String.format(format, args);
+      String message = String.m_12886_(format, args);
       LOGGER.info("[Shaders] " + message);
    }
 
    public static void fine(String format, Object... args) {
-      String message = String.format(format, args);
+      String message = String.m_12886_(format, args);
       LOGGER.debug("[Shaders] " + message);
    }
 }

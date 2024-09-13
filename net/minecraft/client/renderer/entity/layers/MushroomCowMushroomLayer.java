@@ -22,29 +22,40 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 
-public class MushroomCowMushroomLayer extends RenderLayer {
+public class MushroomCowMushroomLayer<T extends MushroomCow> extends RenderLayer<T, CowModel<T>> {
    private ModelPart modelRendererMushroom;
-   private static final ResourceLocation LOCATION_MUSHROOM_RED = new ResourceLocation("textures/entity/cow/red_mushroom.png");
-   private static final ResourceLocation LOCATION_MUSHROOM_BROWN = new ResourceLocation("textures/entity/cow/brown_mushroom.png");
+   private static ResourceLocation LOCATION_MUSHROOM_RED = new ResourceLocation("textures/entity/cow/red_mushroom.png");
+   private static ResourceLocation LOCATION_MUSHROOM_BROWN = new ResourceLocation("textures/entity/cow/brown_mushroom.png");
    private static boolean hasTextureMushroomRed = false;
    private static boolean hasTextureMushroomBrown = false;
-   private final BlockRenderDispatcher f_234848_;
+   private BlockRenderDispatcher f_234848_;
 
-   public MushroomCowMushroomLayer(RenderLayerParent p_i234849_1_, BlockRenderDispatcher p_i234849_2_) {
+   public MushroomCowMushroomLayer(RenderLayerParent<T, CowModel<T>> p_i234849_1_, BlockRenderDispatcher p_i234849_2_) {
       super(p_i234849_1_);
       this.f_234848_ = p_i234849_2_;
       this.modelRendererMushroom = new ModelPart(new ArrayList(), new HashMap());
       this.modelRendererMushroom.setTextureSize(16, 16);
       this.modelRendererMushroom.f_104200_ = 8.0F;
       this.modelRendererMushroom.f_104202_ = 8.0F;
-      this.modelRendererMushroom.f_104204_ = 0.7853982F;
+      this.modelRendererMushroom.f_104204_ = (float) (Math.PI / 4);
       float[][] faceUvs = new float[][]{null, null, {16.0F, 16.0F, 0.0F, 0.0F}, {16.0F, 16.0F, 0.0F, 0.0F}, null, null};
       this.modelRendererMushroom.addBox(faceUvs, -10.0F, 0.0F, 0.0F, 20.0F, 16.0F, 0.0F, 0.0F);
       float[][] faceUvs2 = new float[][]{null, null, null, null, {16.0F, 16.0F, 0.0F, 0.0F}, {16.0F, 16.0F, 0.0F, 0.0F}};
       this.modelRendererMushroom.addBox(faceUvs2, 0.0F, 0.0F, -10.0F, 0.0F, 16.0F, 20.0F, 0.0F);
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, MushroomCow entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      T entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       if (!entitylivingbaseIn.m_6162_()) {
          Minecraft minecraft = Minecraft.m_91087_();
          boolean flag = minecraft.m_91314_(entitylivingbaseIn) && entitylivingbaseIn.m_20145_();
@@ -85,7 +96,7 @@ public class MushroomCowMushroomLayer extends RenderLayer {
 
             matrixStackIn.m_85849_();
             matrixStackIn.m_85836_();
-            ((CowModel)this.m_117386_()).m_102450_().m_104299_(matrixStackIn);
+            this.m_117386_().m_102450_().m_104299_(matrixStackIn);
             matrixStackIn.m_252880_(0.0F, -0.7F, -0.2F);
             matrixStackIn.m_252781_(Axis.f_252436_.m_252977_(-78.0F));
             matrixStackIn.m_85841_(-1.0F, -1.0F, 1.0F);
@@ -99,16 +110,34 @@ public class MushroomCowMushroomLayer extends RenderLayer {
             matrixStackIn.m_85849_();
          }
       }
-
    }
 
-   private void m_234852_(PoseStack matrixStackIn, MultiBufferSource renderTypeBuffer, int packedLightIn, boolean renderBrightness, BlockState blockStateIn, int packedOverlayIn, BakedModel modelIn) {
+   private void m_234852_(
+      PoseStack matrixStackIn,
+      MultiBufferSource renderTypeBuffer,
+      int packedLightIn,
+      boolean renderBrightness,
+      BlockState blockStateIn,
+      int packedOverlayIn,
+      BakedModel modelIn
+   ) {
       if (renderBrightness) {
-         this.f_234848_.m_110937_().m_111067_(matrixStackIn.m_85850_(), renderTypeBuffer.m_6299_(RenderType.m_110491_(TextureAtlas.f_118259_)), blockStateIn, modelIn, 0.0F, 0.0F, 0.0F, packedLightIn, packedOverlayIn);
+         this.f_234848_
+            .m_110937_()
+            .m_111067_(
+               matrixStackIn.m_85850_(),
+               renderTypeBuffer.m_6299_(RenderType.m_110491_(TextureAtlas.f_118259_)),
+               blockStateIn,
+               modelIn,
+               0.0F,
+               0.0F,
+               0.0F,
+               packedLightIn,
+               packedOverlayIn
+            );
       } else {
          this.f_234848_.m_110912_(blockStateIn, matrixStackIn, renderTypeBuffer, packedLightIn, packedOverlayIn);
       }
-
    }
 
    private ResourceLocation getCustomMushroom(BlockState iblockstate) {
@@ -120,7 +149,7 @@ public class MushroomCowMushroomLayer extends RenderLayer {
       }
    }
 
-   public static void update() {
+   public static void m_252999_() {
       hasTextureMushroomRed = Config.hasResource(LOCATION_MUSHROOM_RED);
       hasTextureMushroomBrown = Config.hasResource(LOCATION_MUSHROOM_BROWN);
    }

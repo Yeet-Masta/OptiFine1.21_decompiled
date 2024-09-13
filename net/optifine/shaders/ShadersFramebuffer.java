@@ -7,7 +7,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import net.optifine.util.ArrayUtils;
 import net.optifine.util.CompoundIntKey;
@@ -36,14 +35,30 @@ public class ShadersFramebuffer {
    private int glFramebuffer;
    private FlipTextures colorTexturesFlip;
    private IntBuffer depthTextures;
-   private final DrawBuffers drawBuffers;
+   private DrawBuffers drawBuffers;
    private DrawBuffers activeDrawBuffers;
    private int[] drawColorTextures;
    private int[] drawColorTexturesMap;
    private boolean[] dirtyColorTextures;
-   private Map fixedFramebuffers = new HashMap();
+   private Map<CompoundKey, FixedFramebuffer> fixedFramebuffers = new HashMap();
 
-   public ShadersFramebuffer(String name, int width, int height, int usedColorBuffers, int usedDepthBuffers, int maxDrawBuffers, boolean[] depthFilterNearest, boolean[] depthFilterHardware, boolean[] colorFilterNearest, DynamicDimension[] colorBufferSizes, int[] buffersFormat, int[] colorTextureUnits, int[] depthTextureUnits, int[] colorImageUnits, DrawBuffers drawBuffers) {
+   public ShadersFramebuffer(
+      String name,
+      int width,
+      int height,
+      int usedColorBuffers,
+      int usedDepthBuffers,
+      int maxDrawBuffers,
+      boolean[] depthFilterNearest,
+      boolean[] depthFilterHardware,
+      boolean[] colorFilterNearest,
+      DynamicDimension[] colorBufferSizes,
+      int[] buffersFormat,
+      int[] colorTextureUnits,
+      int[] depthTextureUnits,
+      int[] colorImageUnits,
+      DrawBuffers drawBuffers
+   ) {
       this.name = name;
       this.width = width;
       this.height = height;
@@ -75,9 +90,8 @@ public class ShadersFramebuffer {
       Arrays.fill(this.drawColorTexturesMap, -1);
       Arrays.fill(this.dirtyColorTextures, false);
 
-      int status;
-      for(status = 0; status < this.drawBuffers.limit(); ++status) {
-         this.drawBuffers.put(status, '賠' + status);
+      for (int i = 0; i < this.drawBuffers.limit(); i++) {
+         this.drawBuffers.put(i, 36064 + i);
       }
 
       this.glFramebuffer = GL30.glGenFramebuffers();
@@ -89,15 +103,14 @@ public class ShadersFramebuffer {
       this.depthTextures.position(0);
       this.colorTexturesFlip.position(0);
 
-      int filter;
-      for(status = 0; status < this.usedDepthBuffers; ++status) {
-         GlStateManager._bindTexture(this.depthTextures.get(status));
+      for (int i = 0; i < this.usedDepthBuffers; i++) {
+         GlStateManager._bindTexture(this.depthTextures.get(i));
          GL30.glTexParameteri(3553, 10242, 33071);
          GL30.glTexParameteri(3553, 10243, 33071);
-         filter = this.depthFilterNearest[status] ? 9728 : 9729;
+         int filter = this.depthFilterNearest[i] ? 9728 : 9729;
          GL30.glTexParameteri(3553, 10241, filter);
          GL30.glTexParameteri(3553, 10240, filter);
-         if (this.depthFilterHardware[status]) {
+         if (this.depthFilterHardware[i]) {
             GL30.glTexParameteri(3553, 34892, 34894);
          }
 
@@ -107,29 +120,32 @@ public class ShadersFramebuffer {
       this.setFramebufferTexture2D(36160, 36096, 3553, this.depthTextures.get(0), 0);
       Shaders.checkGLError("FBS " + this.name + " depth");
 
-      Dimension dim;
-      for(status = 0; status < this.usedColorBuffers; ++status) {
-         GlStateManager._bindTexture(this.colorTexturesFlip.getA(status));
+      for (int i = 0; i < this.usedColorBuffers; i++) {
+         GlStateManager._bindTexture(this.colorTexturesFlip.getA(i));
          GL30.glTexParameteri(3553, 10242, 33071);
          GL30.glTexParameteri(3553, 10243, 33071);
-         filter = this.colorFilterNearest[status] ? 9728 : 9729;
+         int filter = this.colorFilterNearest[i] ? 9728 : 9729;
          GL30.glTexParameteri(3553, 10241, filter);
          GL30.glTexParameteri(3553, 10240, filter);
-         dim = this.colorBufferSizes[status] != null ? this.colorBufferSizes[status].getDimension(this.width, this.height) : new Dimension(this.width, this.height);
-         GL30.glTexImage2D(3553, 0, this.buffersFormat[status], dim.width, dim.height, 0, Shaders.getPixelFormat(this.buffersFormat[status]), 33639, (ByteBuffer)null);
-         this.setFramebufferTexture2D(36160, '賠' + status, 3553, this.colorTexturesFlip.getA(status), 0);
+         Dimension dim = this.colorBufferSizes[i] != null
+            ? this.colorBufferSizes[i].getDimension(this.width, this.height)
+            : new Dimension(this.width, this.height);
+         GL30.glTexImage2D(3553, 0, this.buffersFormat[i], dim.width, dim.height, 0, Shaders.getPixelFormat(this.buffersFormat[i]), 33639, (ByteBuffer)null);
+         this.setFramebufferTexture2D(36160, 36064 + i, 3553, this.colorTexturesFlip.getA(i), 0);
          Shaders.checkGLError("FBS " + this.name + " colorA");
       }
 
-      for(status = 0; status < this.usedColorBuffers; ++status) {
-         GlStateManager._bindTexture(this.colorTexturesFlip.getB(status));
+      for (int i = 0; i < this.usedColorBuffers; i++) {
+         GlStateManager._bindTexture(this.colorTexturesFlip.getB(i));
          GL30.glTexParameteri(3553, 10242, 33071);
          GL30.glTexParameteri(3553, 10243, 33071);
-         filter = this.colorFilterNearest[status] ? 9728 : 9729;
+         int filter = this.colorFilterNearest[i] ? 9728 : 9729;
          GL30.glTexParameteri(3553, 10241, filter);
          GL30.glTexParameteri(3553, 10240, filter);
-         dim = this.colorBufferSizes[status] != null ? this.colorBufferSizes[status].getDimension(this.width, this.height) : new Dimension(this.width, this.height);
-         GL30.glTexImage2D(3553, 0, this.buffersFormat[status], dim.width, dim.height, 0, Shaders.getPixelFormat(this.buffersFormat[status]), 33639, (ByteBuffer)null);
+         Dimension dim = this.colorBufferSizes[i] != null
+            ? this.colorBufferSizes[i].getDimension(this.width, this.height)
+            : new Dimension(this.width, this.height);
+         GL30.glTexImage2D(3553, 0, this.buffersFormat[i], dim.width, dim.height, 0, Shaders.getPixelFormat(this.buffersFormat[i]), 33639, (ByteBuffer)null);
          Shaders.checkGLError("FBS " + this.name + " colorB");
       }
 
@@ -139,7 +155,7 @@ public class ShadersFramebuffer {
          GL30.glReadBuffer(0);
       }
 
-      status = GL30.glCheckFramebufferStatus(36160);
+      int status = GL30.glCheckFramebufferStatus(36160);
       if (status != 36053) {
          Shaders.printChatAndLogError("[Shaders] Error creating framebuffer: " + this.name + ", status: " + status);
       } else {
@@ -164,10 +180,8 @@ public class ShadersFramebuffer {
       }
 
       this.drawBuffers.position(0).fill(0);
-      Iterator var1 = this.fixedFramebuffers.values().iterator();
 
-      while(var1.hasNext()) {
-         FixedFramebuffer ff = (FixedFramebuffer)var1.next();
+      for (FixedFramebuffer ff : this.fixedFramebuffers.values()) {
          ff.delete();
       }
 
@@ -178,7 +192,7 @@ public class ShadersFramebuffer {
       return this.name;
    }
 
-   public int getWidth() {
+   public int m_92515_() {
       return this.width;
    }
 
@@ -199,10 +213,9 @@ public class ShadersFramebuffer {
    }
 
    public void setColorTextures(boolean main) {
-      for(int i = 0; i < this.usedColorBuffers; ++i) {
-         this.setFramebufferTexture2D(36160, '賠' + i, 3553, this.colorTexturesFlip.get(main, i), 0);
+      for (int i = 0; i < this.usedColorBuffers; i++) {
+         this.setFramebufferTexture2D(36160, 36064 + i, 3553, this.colorTexturesFlip.get(main, i), 0);
       }
-
    }
 
    public void setDepthTexture() {
@@ -212,7 +225,7 @@ public class ShadersFramebuffer {
    public void setColorBuffersFiltering(int minFilter, int magFilter) {
       GlStateManager._activeTexture(33984);
 
-      for(int i = 0; i < this.usedColorBuffers; ++i) {
+      for (int i = 0; i < this.usedColorBuffers; i++) {
          GlStateManager._bindTexture(this.colorTexturesFlip.getA(i));
          GL11.glTexParameteri(3553, 10241, minFilter);
          GL11.glTexParameteri(3553, 10240, magFilter);
@@ -225,7 +238,7 @@ public class ShadersFramebuffer {
    }
 
    public void setFramebufferTexture2D(int target, int attachment, int texTarget, int texture, int level) {
-      int colorIndex = attachment - '賠';
+      int colorIndex = attachment - 36064;
       if (this.isColorBufferIndex(colorIndex)) {
          if (this.colorBufferSizes[colorIndex] != null) {
             if (this.isColorExtendedIndex(colorIndex)) {
@@ -242,7 +255,7 @@ public class ShadersFramebuffer {
                return;
             }
 
-            attachment = '賠' + indexMapped;
+            attachment = 36064 + indexMapped;
          }
       }
 
@@ -265,27 +278,24 @@ public class ShadersFramebuffer {
    private void setDrawColorTexturesMap(int[] newColorTexturesMap) {
       this.bindFramebuffer();
 
-      int i;
-      int ai;
-      for(i = 0; i < this.maxDrawBuffers; ++i) {
+      for (int i = 0; i < this.maxDrawBuffers; i++) {
          if (this.dirtyColorTextures[i]) {
-            ai = this.drawColorTextures[i];
-            GL30.glFramebufferTexture2D(36160, '賠' + i, 3553, ai, 0);
+            int texture = this.drawColorTextures[i];
+            GL30.glFramebufferTexture2D(36160, 36064 + i, 3553, texture, 0);
             this.dirtyColorTextures[i] = false;
          }
       }
 
       this.drawColorTexturesMap = newColorTexturesMap;
 
-      for(i = this.maxDrawBuffers; i < this.drawColorTexturesMap.length; ++i) {
-         ai = this.drawColorTexturesMap[i];
+      for (int ix = this.maxDrawBuffers; ix < this.drawColorTexturesMap.length; ix++) {
+         int ai = this.drawColorTexturesMap[ix];
          if (ai >= 0) {
-            int texture = this.drawColorTextures[i];
-            GL30.glFramebufferTexture2D(36160, '賠' + ai, 3553, texture, 0);
+            int texture = this.drawColorTextures[ix];
+            GL30.glFramebufferTexture2D(36160, 36064 + ai, 3553, texture, 0);
             this.dirtyColorTextures[ai] = true;
          }
       }
-
    }
 
    public void setDrawBuffers(DrawBuffers drawBuffersIn) {
@@ -309,8 +319,8 @@ public class ShadersFramebuffer {
    }
 
    public void bindDepthTextures(int[] depthTextureImageUnits) {
-      for(int i = 0; i < this.usedDepthBuffers; ++i) {
-         GlStateManager._activeTexture('蓀' + depthTextureImageUnits[i]);
+      for (int i = 0; i < this.usedDepthBuffers; i++) {
+         GlStateManager._activeTexture(33984 + depthTextureImageUnits[i]);
          GlStateManager._bindTexture(this.depthTextures.get(i));
       }
 
@@ -318,20 +328,18 @@ public class ShadersFramebuffer {
    }
 
    public void bindColorTextures(int startColorBuffer) {
-      for(int i = startColorBuffer; i < this.usedColorBuffers; ++i) {
-         GlStateManager._activeTexture('蓀' + this.colorTextureUnits[i]);
+      for (int i = startColorBuffer; i < this.usedColorBuffers; i++) {
+         GlStateManager._activeTexture(33984 + this.colorTextureUnits[i]);
          GlStateManager._bindTexture(this.colorTexturesFlip.getA(i));
          this.bindColorImage(i, true);
       }
-
    }
 
    public void bindColorImages(boolean main) {
       if (this.colorImageUnits != null) {
-         for(int i = 0; i < this.usedColorBuffers; ++i) {
+         for (int i = 0; i < this.usedColorBuffers; i++) {
             this.bindColorImage(i, main);
          }
-
       }
    }
 
@@ -347,9 +355,9 @@ public class ShadersFramebuffer {
    }
 
    public void generateDepthMipmaps(boolean[] depthMipmapEnabled) {
-      for(int i = 0; i < this.usedDepthBuffers; ++i) {
+      for (int i = 0; i < this.usedDepthBuffers; i++) {
          if (depthMipmapEnabled[i]) {
-            GlStateManager._activeTexture('蓀' + this.depthTextureUnits[i]);
+            GlStateManager._activeTexture(33984 + this.depthTextureUnits[i]);
             GlStateManager._bindTexture(this.depthTextures.get(i));
             GL30.glGenerateMipmap(3553);
             GL30.glTexParameteri(3553, 10241, this.depthFilterNearest[i] ? 9984 : 9987);
@@ -360,9 +368,9 @@ public class ShadersFramebuffer {
    }
 
    public void generateColorMipmaps(boolean main, boolean[] colorMipmapEnabled) {
-      for(int i = 0; i < this.usedColorBuffers; ++i) {
+      for (int i = 0; i < this.usedColorBuffers; i++) {
          if (colorMipmapEnabled[i]) {
-            GlStateManager._activeTexture('蓀' + this.colorTextureUnits[i]);
+            GlStateManager._activeTexture(33984 + this.colorTextureUnits[i]);
             GlStateManager._bindTexture(this.colorTexturesFlip.get(main, i));
             GL30.glGenerateMipmap(3553);
             GL30.glTexParameteri(3553, 10241, this.colorFilterNearest[i] ? 9984 : 9987);
@@ -374,9 +382,9 @@ public class ShadersFramebuffer {
 
    public void genCompositeMipmap(int compositeMipmapSetting) {
       if (Shaders.hasGlGenMipmap) {
-         for(int i = 0; i < this.usedColorBuffers; ++i) {
+         for (int i = 0; i < this.usedColorBuffers; i++) {
             if ((compositeMipmapSetting & 1 << i) != 0) {
-               GlStateManager._activeTexture('蓀' + this.colorTextureUnits[i]);
+               GlStateManager._activeTexture(33984 + this.colorTextureUnits[i]);
                GL30.glTexParameteri(3553, 10241, 9987);
                GL30.glGenerateMipmap(3553);
             }
@@ -384,33 +392,31 @@ public class ShadersFramebuffer {
 
          GlStateManager._activeTexture(33984);
       }
-
    }
 
    public void flipColorTextures(boolean[] toggleColorTextures) {
-      for(int i = 0; i < this.colorTexturesFlip.limit(); ++i) {
+      for (int i = 0; i < this.colorTexturesFlip.limit(); i++) {
          if (toggleColorTextures[i]) {
             this.flipColorTexture(i);
          }
       }
-
    }
 
    public void flipColorTexture(int index) {
       this.colorTexturesFlip.flip(index);
-      GlStateManager._activeTexture('蓀' + this.colorTextureUnits[index]);
+      GlStateManager._activeTexture(33984 + this.colorTextureUnits[index]);
       GlStateManager._bindTexture(this.colorTexturesFlip.getA(index));
       this.bindColorImage(index, true);
-      this.setFramebufferTexture2D(36160, '賠' + index, 3553, this.colorTexturesFlip.getB(index), 0);
+      this.setFramebufferTexture2D(36160, 36064 + index, 3553, this.colorTexturesFlip.getB(index), 0);
       GlStateManager._activeTexture(33984);
    }
 
    public void clearColorBuffers(boolean[] buffersClear, Vector4f[] clearColors) {
-      for(int i = 0; i < this.usedColorBuffers; ++i) {
+      for (int i = 0; i < this.usedColorBuffers; i++) {
          if (buffersClear[i]) {
             Vector4f col = clearColors[i];
             if (col != null) {
-               GL30.glClearColor(col.x(), col.y(), col.z(), col.w());
+               GL30.glClearColor(col.m_305649_(), col.m_306225_(), col.m_240700_(), col.m_245239_());
             }
 
             if (this.colorBufferSizes[i] != null) {
@@ -421,10 +427,10 @@ public class ShadersFramebuffer {
                this.clearColorBufferFixedSize(i, true);
             } else {
                if (this.colorTexturesFlip.isChanged(i)) {
-                  this.setFramebufferTexture2D(36160, '賠' + i, 3553, this.colorTexturesFlip.getB(i), 0);
+                  this.setFramebufferTexture2D(36160, 36064 + i, 3553, this.colorTexturesFlip.getB(i), 0);
                   this.setDrawBuffers(Shaders.drawBuffersColorAtt[i]);
                   GL30.glClear(16384);
-                  this.setFramebufferTexture2D(36160, '賠' + i, 3553, this.colorTexturesFlip.getA(i), 0);
+                  this.setFramebufferTexture2D(36160, 36064 + i, 3553, this.colorTexturesFlip.getA(i), 0);
                }
 
                this.setDrawBuffers(Shaders.drawBuffersColorAtt[i]);
@@ -432,7 +438,6 @@ public class ShadersFramebuffer {
             }
          }
       }
-
    }
 
    private void clearColorBufferFixedSize(int i, boolean main) {
@@ -446,12 +451,22 @@ public class ShadersFramebuffer {
 
    public void clearDepthBuffer(Vector4f col) {
       this.setFramebufferTexture2D(36160, 36096, 3553, this.depthTextures.get(0), 0);
-      GL30.glClearColor(col.x(), col.y(), col.z(), col.w());
+      GL30.glClearColor(col.m_305649_(), col.m_306225_(), col.m_240700_(), col.m_245239_());
       GL30.glClear(256);
    }
 
    public String toString() {
-      return this.name + ", width: " + this.width + ", height: " + this.height + ", usedColorBuffers: " + this.usedColorBuffers + ", usedDepthBuffers: " + this.usedDepthBuffers + ", maxDrawBuffers: " + this.maxDrawBuffers;
+      return this.name
+         + ", width: "
+         + this.width
+         + ", height: "
+         + this.height
+         + ", usedColorBuffers: "
+         + this.usedColorBuffers
+         + ", usedDepthBuffers: "
+         + this.usedDepthBuffers
+         + ", maxDrawBuffers: "
+         + this.maxDrawBuffers;
    }
 
    public FixedFramebuffer getFixedFramebuffer(int width, int height, DrawBuffers dbs, boolean main) {
@@ -460,9 +475,9 @@ public class ShadersFramebuffer {
       int[] glTexs = new int[dbsLen];
       int[] glAtts = new int[dbsLen];
 
-      for(int i = 0; i < glTexs.length; ++i) {
+      for (int i = 0; i < glTexs.length; i++) {
          int att = dbs.get(i);
-         int ix = att - '賠';
+         int ix = att - 36064;
          if (this.isColorBufferIndex(ix)) {
             glTexs[i] = this.colorTexturesFlip.get(main, ix);
             glAtts[i] = glDbs.get(i);
@@ -472,8 +487,7 @@ public class ShadersFramebuffer {
       CompoundKey key = new CompoundKey(new CompoundIntKey(glTexs), new CompoundIntKey(glAtts));
       FixedFramebuffer ff = (FixedFramebuffer)this.fixedFramebuffers.get(key);
       if (ff == null) {
-         String var10000 = this.name;
-         String fixedName = var10000 + ", [" + ArrayUtils.arrayToString(glTexs) + "], [" + ArrayUtils.arrayToString(glAtts) + "]";
+         String fixedName = this.name + ", [" + ArrayUtils.arrayToString(glTexs) + "], [" + ArrayUtils.arrayToString(glAtts) + "]";
          ff = new FixedFramebuffer(fixedName, width, height, glTexs, glAtts, this.depthFilterNearest[0], this.depthFilterHardware[0]);
          ff.setup();
          this.fixedFramebuffers.put(key, ff);

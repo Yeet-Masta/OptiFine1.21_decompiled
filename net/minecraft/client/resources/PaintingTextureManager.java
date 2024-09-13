@@ -7,7 +7,7 @@ import net.minecraft.world.entity.decoration.PaintingVariant;
 import net.optifine.util.TextureUtils;
 
 public class PaintingTextureManager extends TextureAtlasHolder {
-   private static final ResourceLocation f_118799_ = ResourceLocation.m_340282_("back");
+   private static ResourceLocation f_118799_ = ResourceLocation.m_340282_("back");
 
    public PaintingTextureManager(TextureManager textureManagerIn) {
       super(textureManagerIn, ResourceLocation.m_340282_("textures/atlas/paintings.png"), ResourceLocation.m_340282_("paintings"));
@@ -15,8 +15,7 @@ public class PaintingTextureManager extends TextureAtlasHolder {
 
    public TextureAtlasSprite m_235033_(PaintingVariant variantIn) {
       TextureAtlasSprite sprite = this.m_118901_(variantIn.f_337196_());
-      sprite = TextureUtils.getCustomSprite(sprite);
-      return sprite;
+      return TextureUtils.getCustomSprite(sprite);
    }
 
    public TextureAtlasSprite m_118806_() {

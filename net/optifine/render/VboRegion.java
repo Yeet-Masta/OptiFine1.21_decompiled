@@ -19,20 +19,15 @@ public class VboRegion {
    private int capacity = 4096;
    private int positionTop = 0;
    private int sizeUsed;
-   private LinkedList rangeList = new LinkedList();
+   private LinkedList<VboRange> rangeList = new LinkedList<>();
    private VboRange compactRangeLast = null;
-   private PointerBuffer bufferIndexVertex;
-   private IntBuffer bufferCountVertex;
-   private final int vertexBytes;
-   private VertexFormat.Mode drawMode;
-   private boolean isShaders;
+   private PointerBuffer bufferIndexVertex = Config.createDirectPointerBuffer(this.capacity);
+   private IntBuffer bufferCountVertex = Config.createDirectIntBuffer(this.capacity);
+   private int vertexBytes = DefaultVertexFormat.f_85811_.m_86020_();
+   private VertexFormat.Mode drawMode = VertexFormat.Mode.QUADS;
+   private boolean isShaders = Config.isShaders();
 
    public VboRegion(RenderType layer) {
-      this.bufferIndexVertex = Config.createDirectPointerBuffer(this.capacity);
-      this.bufferCountVertex = Config.createDirectIntBuffer(this.capacity);
-      this.vertexBytes = DefaultVertexFormat.f_85811_.m_86020_();
-      this.drawMode = VertexFormat.Mode.QUADS;
-      this.isShaders = Config.isShaders();
       this.layer = layer;
       this.bindBuffer();
       long capacityBytes = this.toBytes(this.capacity);
@@ -52,7 +47,6 @@ public class VboRegion {
                this.rangeList.remove(range.getNode());
                this.sizeUsed -= sizeOld;
             }
-
          } else {
             if (sizeNew > sizeOld) {
                range.setPosition(this.positionTop);
@@ -77,7 +71,6 @@ public class VboRegion {
             if (this.positionTop > this.sizeUsed * 11 / 10) {
                this.compactRanges(1);
             }
-
          }
       }
    }
@@ -85,8 +78,8 @@ public class VboRegion {
    private void compactRanges(int countMax) {
       if (!this.rangeList.isEmpty()) {
          VboRange range = this.compactRangeLast;
-         if (range == null || !this.rangeList.contains(range.getNode())) {
-            range = (VboRange)this.rangeList.getFirst().getItem();
+         if (range == null || !this.rangeList.m_274455_(range.getNode())) {
+            range = this.rangeList.getFirst().getItem();
          }
 
          int posCompact = range.getPosition();
@@ -99,8 +92,8 @@ public class VboRegion {
 
          int count = 0;
 
-         while(range != null && count < countMax) {
-            ++count;
+         while (range != null && count < countMax) {
+            count++;
             if (range.getPosition() == posCompact) {
                posCompact += range.getSize();
                range = range.getNext();
@@ -115,7 +108,7 @@ public class VboRegion {
                   this.checkVboSize(this.positionTop + range.getSize());
                   this.copyVboData(range.getPosition(), this.positionTop, range.getSize());
                   range.setPosition(this.positionTop);
-                  this.positionTop += range.getSize();
+                  this.positionTop = this.positionTop + range.getSize();
                   VboRange rangeNext = range.getNext();
                   this.rangeList.remove(range.getNode());
                   this.rangeList.addLast(range.getNode());
@@ -125,7 +118,7 @@ public class VboRegion {
          }
 
          if (range == null) {
-            this.positionTop = ((VboRange)this.rangeList.getLast().getItem()).getPositionNext();
+            this.positionTop = this.rangeList.getLast().getItem().getPositionNext();
          }
 
          this.compactRangeLast = range;
@@ -136,21 +129,21 @@ public class VboRegion {
       int count = 0;
       int size = 0;
 
-      for(VboRange range = (VboRange)this.rangeList.getFirst().getItem(); range != null; range = range.getNext()) {
-         ++count;
+      for (VboRange range = this.rangeList.getFirst().getItem(); range != null; range = range.getNext()) {
+         count++;
          size += range.getSize();
          if (range.getPosition() < 0 || range.getSize() <= 0 || range.getPositionNext() > this.positionTop) {
-            throw new RuntimeException("Invalid range: " + String.valueOf(range));
+            throw new RuntimeException("Invalid range: " + range);
          }
 
          VboRange rangePrev = range.getPrev();
          if (rangePrev != null && range.getPosition() < rangePrev.getPositionNext()) {
-            throw new RuntimeException("Invalid range: " + String.valueOf(range));
+            throw new RuntimeException("Invalid range: " + range);
          }
 
          VboRange rangeNext = range.getNext();
          if (rangeNext != null && range.getPositionNext() > rangeNext.getPosition()) {
-            throw new RuntimeException("Invalid range: " + String.valueOf(range));
+            throw new RuntimeException("Invalid range: " + range);
          }
       }
 
@@ -165,7 +158,6 @@ public class VboRegion {
       if (this.capacity < sizeMin) {
          this.expandVbo(sizeMin);
       }
-
    }
 
    private void copyVboData(int posFrom, int posTo, int size) {
@@ -181,8 +173,10 @@ public class VboRegion {
    }
 
    private void expandVbo(int sizeMin) {
-      int capacityNew;
-      for(capacityNew = this.capacity * 6 / 4; capacityNew < sizeMin; capacityNew = capacityNew * 6 / 4) {
+      int capacityNew = this.capacity * 6 / 4;
+
+      while (capacityNew < sizeMin) {
+         capacityNew = capacityNew * 6 / 4;
       }
 
       long capacityBytes = this.toBytes(this.capacity);
@@ -216,8 +210,7 @@ public class VboRegion {
    public void drawArrays(VertexFormat.Mode drawMode, VboRange range) {
       if (this.drawMode != drawMode) {
          if (this.bufferIndexVertex.position() > 0) {
-            String var10002 = String.valueOf(this.drawMode);
-            throw new IllegalArgumentException("Mixed region draw modes: " + var10002 + " != " + String.valueOf(drawMode));
+            throw new IllegalArgumentException("Mixed region draw modes: " + this.drawMode + " != " + drawMode);
          }
 
          this.drawMode = drawMode;
@@ -250,7 +243,6 @@ public class VboRegion {
       if (this.positionTop > this.sizeUsed * 11 / 10) {
          this.compactRanges(1);
       }
-
    }
 
    public void unbindBuffer() {
@@ -271,7 +263,6 @@ public class VboRegion {
          GlStateManager._glDeleteBuffers(this.glBufferId);
          this.glBufferId = -1;
       }
-
    }
 
    private long toBytes(int vertex) {

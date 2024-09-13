@@ -8,10 +8,15 @@ import net.minecraft.network.chat.Component;
 
 public class IteratableOptionOF extends OptionInstance {
    public IteratableOptionOF(String nameIn) {
-      super(nameIn, OptionInstance.m_231498_(), (labelIn, valueIn) -> {
-         return (Boolean)valueIn ? CommonComponents.f_130653_ : CommonComponents.f_130654_;
-      }, OptionInstance.f_231471_, false, (valueIn) -> {
-      });
+      super(
+         nameIn,
+         OptionInstance.m_231498_(),
+         (labelIn, valueIn) -> (Boolean)valueIn ? CommonComponents.f_130653_ : CommonComponents.f_130654_,
+         OptionInstance.f_231471_,
+         false,
+         valueIn -> {
+         }
+      );
    }
 
    public void nextOptionValue(int dirIn) {

@@ -19,10 +19,12 @@ public class ModelAdapterSpider extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new SpiderModel(bakeModelLayer(ModelLayers.f_171245_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SpiderModel modelSpider)) {
          return null;
@@ -53,10 +55,12 @@ public class ModelAdapterSpider extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "neck", "body", "leg1", "leg2", "leg3", "leg4", "leg5", "leg6", "leg7", "leg8", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SpiderRenderer render = new SpiderRenderer(renderManager.getContext());

@@ -20,6 +20,6 @@ public class PacketRunnable implements Runnable {
    }
 
    public String toString() {
-      return "PacketRunnable: " + String.valueOf(this.packet);
+      return "PacketRunnable: " + this.packet;
    }
 }

@@ -14,10 +14,12 @@ public class ModelAdapterDolphin extends ModelAdapter {
       super(EntityType.f_20559_, "dolphin", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new DolphinModel(bakeModelLayer(ModelLayers.f_171131_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof DolphinModel modelDolphin)) {
          return null;
@@ -45,10 +47,12 @@ public class ModelAdapterDolphin extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "back_fin", "left_fin", "right_fin", "tail", "tail_fin", "head", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       DolphinRenderer render = new DolphinRenderer(renderManager.getContext());

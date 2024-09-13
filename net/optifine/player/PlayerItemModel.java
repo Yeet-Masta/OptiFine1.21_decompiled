@@ -21,13 +21,13 @@ public class PlayerItemModel {
    private NativeImage textureImage = null;
    private DynamicTexture texture = null;
    private ResourceLocation locationMissing = new ResourceLocation("textures/block/red_wool.png");
-   public static final int ATTACH_BODY = 0;
-   public static final int ATTACH_HEAD = 1;
-   public static final int ATTACH_LEFT_ARM = 2;
-   public static final int ATTACH_RIGHT_ARM = 3;
-   public static final int ATTACH_LEFT_LEG = 4;
-   public static final int ATTACH_RIGHT_LEG = 5;
-   public static final int ATTACH_CAPE = 6;
+   public static int ATTACH_BODY;
+   public static int ATTACH_HEAD;
+   public static int ATTACH_LEFT_ARM;
+   public static int ATTACH_RIGHT_ARM;
+   public static int ATTACH_LEFT_LEG;
+   public static int ATTACH_RIGHT_LEG;
+   public static int ATTACH_CAPE;
 
    public PlayerItemModel(Dimension textureSize, boolean usePlayerTexture, PlayerItemRenderer[] modelRenderers) {
       this.textureSize = textureSize;
@@ -35,7 +35,9 @@ public class PlayerItemModel {
       this.modelRenderers = modelRenderers;
    }
 
-   public void render(HumanoidModel modelBiped, AbstractClientPlayer player, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn) {
+   public void m_324219_(
+      HumanoidModel modelBiped, AbstractClientPlayer player, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, int packedOverlayIn
+   ) {
       ResourceLocation locTex = this.locationMissing;
       if (this.usePlayerTexture) {
          locTex = player.getSkinTextureLocation();
@@ -50,15 +52,14 @@ public class PlayerItemModel {
          locTex = this.locationMissing;
       }
 
-      for(int i = 0; i < this.modelRenderers.length; ++i) {
+      for (int i = 0; i < this.modelRenderers.length; i++) {
          PlayerItemRenderer pir = this.modelRenderers[i];
          matrixStackIn.m_85836_();
          RenderType renderType = RenderType.m_110458_(locTex);
          VertexConsumer buffer = bufferIn.m_6299_(renderType);
-         pir.render(modelBiped, matrixStackIn, buffer, packedLightIn, packedOverlayIn);
+         pir.m_324219_(modelBiped, matrixStackIn, buffer, packedLightIn, packedOverlayIn);
          matrixStackIn.m_85849_();
       }
-
    }
 
    public static ModelPart getAttachModel(HumanoidModel modelBiped, int attachTo) {

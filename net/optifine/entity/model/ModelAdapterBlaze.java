@@ -16,10 +16,12 @@ public class ModelAdapterBlaze extends ModelAdapter {
       super(EntityType.f_20551_, "blaze", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new BlazeModel(bakeModelLayer(ModelLayers.f_171270_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BlazeModel modelBlaze)) {
          return null;
@@ -38,10 +40,14 @@ public class ModelAdapterBlaze extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      return new String[]{"head", "stick1", "stick2", "stick3", "stick4", "stick5", "stick6", "stick7", "stick8", "stick9", "stick10", "stick11", "stick12", "root"};
+      return new String[]{
+         "head", "stick1", "stick2", "stick3", "stick4", "stick5", "stick6", "stick7", "stick8", "stick9", "stick10", "stick11", "stick12", "root"
+      };
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       BlazeRenderer render = new BlazeRenderer(renderManager.getContext());

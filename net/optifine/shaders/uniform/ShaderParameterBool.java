@@ -2,7 +2,6 @@ package net.optifine.shaders.uniform;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.optifine.expr.IExpressionBool;
 
@@ -24,7 +23,7 @@ public enum ShaderParameterBool implements IExpressionBool {
 
    private String name;
    private EntityRenderDispatcher renderManager;
-   private static final ShaderParameterBool[] VALUES = values();
+   private static ShaderParameterBool[] VALUES = values();
 
    private ShaderParameterBool(String name) {
       this.name = name;
@@ -35,38 +34,37 @@ public enum ShaderParameterBool implements IExpressionBool {
       return this.name;
    }
 
+   @Override
    public boolean eval() {
-      Entity entityGeneral = Minecraft.m_91087_().m_91288_();
-      if (entityGeneral instanceof LivingEntity) {
-         LivingEntity entity = (LivingEntity)entityGeneral;
-         switch (this.ordinal()) {
-            case 0:
+      if (Minecraft.m_91087_().m_91288_() instanceof LivingEntity entity) {
+         switch (this) {
+            case IS_ALIVE:
                return entity.m_6084_();
-            case 1:
+            case IS_BURNING:
                return entity.m_6060_();
-            case 2:
+            case IS_CHILD:
                return entity.m_6162_();
-            case 3:
+            case IS_GLOWING:
                return entity.m_142038_();
-            case 4:
+            case IS_HURT:
                return entity.f_20916_ > 0;
-            case 5:
+            case IS_IN_LAVA:
                return entity.m_20077_();
-            case 6:
+            case IS_IN_WATER:
                return entity.m_20069_();
-            case 7:
+            case IS_INVISIBLE:
                return entity.m_20145_();
-            case 8:
+            case IS_ON_GROUND:
                return entity.m_20096_();
-            case 9:
+            case IS_RIDDEN:
                return entity.m_20160_();
-            case 10:
+            case IS_RIDING:
                return entity.m_20159_();
-            case 11:
+            case IS_SNEAKING:
                return entity.m_6047_();
-            case 12:
+            case IS_SPRINTING:
                return entity.m_20142_();
-            case 13:
+            case IS_WET:
                return entity.m_20070_();
          }
       }
@@ -74,11 +72,11 @@ public enum ShaderParameterBool implements IExpressionBool {
       return false;
    }
 
-   public static ShaderParameterBool parse(String str) {
+   public static ShaderParameterBool m_82160_(String str) {
       if (str == null) {
          return null;
       } else {
-         for(int i = 0; i < VALUES.length; ++i) {
+         for (int i = 0; i < VALUES.length; i++) {
             ShaderParameterBool type = VALUES[i];
             if (type.getName().equals(str)) {
                return type;
@@ -87,10 +85,5 @@ public enum ShaderParameterBool implements IExpressionBool {
 
          return null;
       }
-   }
-
-   // $FF: synthetic method
-   private static ShaderParameterBool[] $values() {
-      return new ShaderParameterBool[]{IS_ALIVE, IS_BURNING, IS_CHILD, IS_GLOWING, IS_HURT, IS_IN_LAVA, IS_IN_WATER, IS_INVISIBLE, IS_ON_GROUND, IS_RIDDEN, IS_RIDING, IS_SNEAKING, IS_SPRINTING, IS_WET};
    }
 }

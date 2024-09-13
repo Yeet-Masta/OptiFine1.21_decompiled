@@ -13,49 +13,32 @@ import java.util.regex.Pattern;
 import net.optifine.Config;
 
 public class HttpPipelineConnection {
-   private String host;
-   private int port;
-   private Proxy proxy;
-   private List listRequests;
-   private List listRequestsSend;
-   private Socket socket;
-   private InputStream inputStream;
-   private OutputStream outputStream;
-   private HttpPipelineSender httpPipelineSender;
-   private HttpPipelineReceiver httpPipelineReceiver;
-   private int countRequests;
-   private boolean responseReceived;
-   private long keepaliveTimeoutMs;
-   private int keepaliveMaxCount;
-   private long timeLastActivityMs;
-   private boolean terminated;
-   // $FF: renamed from: LF java.lang.String
-   private static final String field_41 = "\n";
-   public static final int TIMEOUT_CONNECT_MS = 5000;
-   public static final int TIMEOUT_READ_MS = 5000;
-   private static final Pattern patternFullUrl = Pattern.compile("^[a-zA-Z]+://.*");
+   private String host = null;
+   private int port = 0;
+   private Proxy proxy = Proxy.NO_PROXY;
+   private List<HttpPipelineRequest> listRequests = new LinkedList();
+   private List<HttpPipelineRequest> listRequestsSend = new LinkedList();
+   private Socket socket = null;
+   private InputStream inputStream = null;
+   private OutputStream outputStream = null;
+   private HttpPipelineSender httpPipelineSender = null;
+   private HttpPipelineReceiver httpPipelineReceiver = null;
+   private int countRequests = 0;
+   private boolean responseReceived = false;
+   private long keepaliveTimeoutMs = 5000L;
+   private int keepaliveMaxCount = 1000;
+   private long timeLastActivityMs = System.currentTimeMillis();
+   private boolean terminated = false;
+   private static String LF;
+   public static int TIMEOUT_CONNECT_MS;
+   public static int TIMEOUT_READ_MS;
+   private static Pattern patternFullUrl = Pattern.m_289905_("^[a-zA-Z]+://.*");
 
    public HttpPipelineConnection(String host, int port) {
       this(host, port, Proxy.NO_PROXY);
    }
 
    public HttpPipelineConnection(String host, int port, Proxy proxy) {
-      this.host = null;
-      this.port = 0;
-      this.proxy = Proxy.NO_PROXY;
-      this.listRequests = new LinkedList();
-      this.listRequestsSend = new LinkedList();
-      this.socket = null;
-      this.inputStream = null;
-      this.outputStream = null;
-      this.httpPipelineSender = null;
-      this.httpPipelineReceiver = null;
-      this.countRequests = 0;
-      this.responseReceived = false;
-      this.keepaliveTimeoutMs = 5000L;
-      this.keepaliveMaxCount = 1000;
-      this.timeLastActivityMs = System.currentTimeMillis();
-      this.terminated = false;
       this.host = host;
       this.port = port;
       this.proxy = proxy;
@@ -71,12 +54,12 @@ public class HttpPipelineConnection {
       } else {
          this.addRequest(pr, this.listRequests);
          this.addRequest(pr, this.listRequestsSend);
-         ++this.countRequests;
+         this.countRequests++;
          return true;
       }
    }
 
-   private void addRequest(HttpPipelineRequest pr, List list) {
+   private void addRequest(HttpPipelineRequest pr, List<HttpPipelineRequest> list) {
       list.add(pr);
       this.notifyAll();
    }
@@ -97,7 +80,7 @@ public class HttpPipelineConnection {
    }
 
    public synchronized OutputStream getOutputStream() throws IOException, InterruptedException {
-      while(this.outputStream == null) {
+      while (this.outputStream == null) {
          this.checkTimeout();
          this.wait(1000L);
       }
@@ -106,7 +89,7 @@ public class HttpPipelineConnection {
    }
 
    public synchronized InputStream getInputStream() throws IOException, InterruptedException {
-      while(this.inputStream == null) {
+      while (this.inputStream == null) {
          this.checkTimeout();
          this.wait(1000L);
       }
@@ -126,18 +109,14 @@ public class HttpPipelineConnection {
       return this.getNextRequest(this.listRequests, false);
    }
 
-   private HttpPipelineRequest getNextRequest(List list, boolean remove) throws InterruptedException {
-      while(list.size() <= 0) {
+   private HttpPipelineRequest getNextRequest(List<HttpPipelineRequest> list, boolean remove) throws InterruptedException {
+      while (list.size() <= 0) {
          this.checkTimeout();
          this.wait(1000L);
       }
 
       this.onActivity();
-      if (remove) {
-         return (HttpPipelineRequest)list.remove(0);
-      } else {
-         return (HttpPipelineRequest)list.get(0);
-      }
+      return remove ? (HttpPipelineRequest)list.remove(0) : (HttpPipelineRequest)list.get(0);
    }
 
    private void checkTimeout() {
@@ -151,7 +130,6 @@ public class HttpPipelineConnection {
          if (timeNowMs > this.timeLastActivityMs + timeoutMs) {
             this.terminate(new InterruptedException("Timeout " + timeoutMs));
          }
-
       }
    }
 
@@ -190,7 +168,7 @@ public class HttpPipelineConnection {
 
             this.checkResponseHeader(resp);
          } else {
-            throw new IllegalArgumentException("Response out of order: " + String.valueOf(pr));
+            throw new IllegalArgumentException("Response out of order: " + pr);
          }
       }
    }
@@ -226,20 +204,19 @@ public class HttpPipelineConnection {
       if (keepAliveStr != null) {
          String[] parts = Config.tokenize(keepAliveStr, ",;");
 
-         for(int i = 0; i < parts.length; ++i) {
+         for (int i = 0; i < parts.length; i++) {
             String part = parts[i];
-            String[] tokens = this.split(part, '=');
+            String[] tokens = this.m_269487_(part, '=');
             if (tokens.length >= 2) {
-               int max;
                if (tokens[0].equals("timeout")) {
-                  max = Config.parseInt(tokens[1], -1);
-                  if (max > 0) {
-                     this.keepaliveTimeoutMs = (long)(max * 1000);
+                  int timeout = Config.parseInt(tokens[1], -1);
+                  if (timeout > 0) {
+                     this.keepaliveTimeoutMs = (long)(timeout * 1000);
                   }
                }
 
                if (tokens[0].equals("max")) {
-                  max = Config.parseInt(tokens[1], -1);
+                  int max = Config.parseInt(tokens[1], -1);
                   if (max > 0) {
                      this.keepaliveMaxCount = max;
                   }
@@ -247,10 +224,9 @@ public class HttpPipelineConnection {
             }
          }
       }
-
    }
 
-   private String[] split(String str, char separator) {
+   private String[] m_269487_(String str, char separator) {
       int pos = str.indexOf(separator);
       if (pos < 0) {
          return new String[]{str};
@@ -296,27 +272,21 @@ public class HttpPipelineConnection {
 
    private void terminateRequests(Exception e) {
       if (this.listRequests.size() > 0) {
-         HttpPipelineRequest pr;
          if (!this.responseReceived) {
-            pr = (HttpPipelineRequest)this.listRequests.remove(0);
+            HttpPipelineRequest pr = (HttpPipelineRequest)this.listRequests.remove(0);
             pr.getHttpListener().failed(pr.getHttpRequest(), e);
             pr.setClosed(true);
          }
 
-         while(this.listRequests.size() > 0) {
-            pr = (HttpPipelineRequest)this.listRequests.remove(0);
+         while (this.listRequests.size() > 0) {
+            HttpPipelineRequest pr = (HttpPipelineRequest)this.listRequests.remove(0);
             HttpPipeline.addRequest(pr);
          }
-
       }
    }
 
    public synchronized boolean isClosed() {
-      if (this.terminated) {
-         return true;
-      } else {
-         return this.countRequests >= this.keepaliveMaxCount;
-      }
+      return this.terminated ? true : this.countRequests >= this.keepaliveMaxCount;
    }
 
    public int getCountRequests() {

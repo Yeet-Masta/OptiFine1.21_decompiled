@@ -21,10 +21,12 @@ public class ModelAdapterTropicalFishB extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new TropicalFishModelB(bakeModelLayer(ModelLayers.f_171256_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof TropicalFishModelB modelTropicalFish)) {
          return null;
@@ -45,19 +47,19 @@ public class ModelAdapterTropicalFishB extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tail", "fin_right", "fin_left", "fin_top", "fin_bottom", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TropicalFishRenderer customRenderer = new TropicalFishRenderer(renderManager.getContext());
       customRenderer.f_114477_ = shadowSize;
-      EntityRenderer render = rendererCache.get(EntityType.f_20489_, index, () -> {
-         return customRenderer;
-      });
+      EntityRenderer render = rendererCache.get(EntityType.f_20489_, index, () -> customRenderer);
       if (!(render instanceof TropicalFishRenderer renderFish)) {
-         Config.warn("Not a TropicalFishRenderer: " + String.valueOf(render));
+         Config.warn("Not a TropicalFishRenderer: " + render);
          return null;
       } else if (!Reflector.RenderTropicalFish_modelB.exists()) {
          Config.warn("Model field not found: RenderTropicalFish.modelB");

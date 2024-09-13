@@ -15,7 +15,7 @@ public class TestMath {
       int count = 1;
       dbg("Test math: " + count);
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          testMatrix4f_mulTranslate();
          testMatrix4f_mulScale();
          testMatrix4f_mulQuaternion();
@@ -41,7 +41,6 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
-
    }
 
    private static void testMatrix4f_mulScale() {
@@ -58,7 +57,6 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
-
    }
 
    private static void testMatrix4f_mulQuaternion() {
@@ -73,7 +71,6 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
-
    }
 
    private static void testMatrix3f_mulQuaternion() {
@@ -88,7 +85,6 @@ public class TestMath {
          dbg(m.toString());
          dbg(m2.toString());
       }
-
    }
 
    private static void testVector3f_transform() {
@@ -97,16 +93,15 @@ public class TestMath {
       Matrix3f m = new Matrix3f();
       MathUtils.setRandom(m, random);
       MathUtils.transform(v, m);
-      float x = MathUtils.getTransformX(m, v2.x(), v2.y(), v2.z());
-      float y = MathUtils.getTransformY(m, v2.x(), v2.y(), v2.z());
-      float z = MathUtils.getTransformZ(m, v2.x(), v2.y(), v2.z());
+      float x = MathUtils.getTransformX(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_());
+      float y = MathUtils.getTransformY(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_());
+      float z = MathUtils.getTransformZ(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_());
       v2 = new Vector3f(x, y, z);
       if (!v2.equals(v)) {
          dbg("*** DIFFERENT ***");
          dbg(v.toString());
          dbg(v2.toString());
       }
-
    }
 
    private static void testVector4f_transform() {
@@ -115,17 +110,16 @@ public class TestMath {
       Matrix4f m = new Matrix4f();
       MathUtils.setRandom(m, random);
       MathUtils.transform(v, m);
-      float x = MathUtils.getTransformX(m, v2.x(), v2.y(), v2.z(), v2.w());
-      float y = MathUtils.getTransformY(m, v2.x(), v2.y(), v2.z(), v2.w());
-      float z = MathUtils.getTransformZ(m, v2.x(), v2.y(), v2.z(), v2.w());
-      float w = MathUtils.getTransformW(m, v2.x(), v2.y(), v2.z(), v2.w());
+      float x = MathUtils.getTransformX(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_(), v2.m_245239_());
+      float y = MathUtils.getTransformY(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_(), v2.m_245239_());
+      float z = MathUtils.getTransformZ(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_(), v2.m_245239_());
+      float w = MathUtils.getTransformW(m, v2.m_305649_(), v2.m_306225_(), v2.m_240700_(), v2.m_245239_());
       v2 = new Vector4f(x, y, z, w);
       if (!v2.equals(v)) {
          dbg("*** DIFFERENT ***");
          dbg(v.toString());
          dbg(v2.toString());
       }
-
    }
 
    private static void dbg(String str) {

@@ -6,8 +6,8 @@ import net.optifine.Config;
 import net.optifine.shaders.Shaders;
 
 public class GuiChatOF extends ChatScreen {
-   private static final String CMD_RELOAD_SHADERS = "/reloadShaders";
-   private static final String CMD_RELOAD_CHUNKS = "/reloadChunks";
+   private static String CMD_RELOAD_SHADERS;
+   private static String CMD_RELOAD_CHUNKS;
 
    public GuiChatOF(ChatScreen guiChat) {
       super(LoadingOverlay.getGuiChatText(guiChat));

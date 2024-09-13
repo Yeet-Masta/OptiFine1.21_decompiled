@@ -21,8 +21,7 @@ public class CompareUtils {
       int hash = hash(v1);
       hash = 31 * hash + hash(v2);
       hash = 31 * hash + hash(v3);
-      hash = 31 * hash + hash(v4);
-      return hash;
+      return 31 * hash + hash(v4);
    }
 
    public static int hash(Object v1, boolean v2) {

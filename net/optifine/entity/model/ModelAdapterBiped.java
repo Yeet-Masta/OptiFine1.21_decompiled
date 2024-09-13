@@ -10,6 +10,7 @@ public abstract class ModelAdapterBiped extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof HumanoidModel modelBiped)) {
          return null;
@@ -30,6 +31,7 @@ public abstract class ModelAdapterBiped extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "headwear", "body", "left_arm", "right_arm", "left_leg", "right_leg"};
    }

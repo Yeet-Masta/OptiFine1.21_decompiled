@@ -10,11 +10,11 @@ import net.optifine.Lang;
 public class IterableOptionInt extends IteratableOptionOF implements IPersitentOption {
    private String resourceKey;
    private OptionValueInt[] values;
-   private ToIntFunction getter;
-   private ObjIntConsumer setter;
+   private ToIntFunction<Options> getter;
+   private ObjIntConsumer<Options> setter;
    private String saveKey;
 
-   public IterableOptionInt(String resourceKey, OptionValueInt[] values, ToIntFunction getter, ObjIntConsumer setter, String saveKey) {
+   public IterableOptionInt(String resourceKey, OptionValueInt[] values, ToIntFunction<Options> getter, ObjIntConsumer<Options> setter, String saveKey) {
       super(resourceKey);
       this.resourceKey = resourceKey;
       this.values = values;
@@ -23,6 +23,7 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       this.saveKey = saveKey;
    }
 
+   @Override
    public void nextOptionValue(int dirIn) {
       Options opts = this.getOptions();
       int value = this.getter.applyAsInt(opts);
@@ -33,9 +34,10 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       }
 
       int valueNext = this.values[indexNext].getValue();
-      this.setter.accept(opts, valueNext);
+      this.setter.m_340568_(opts, valueNext);
    }
 
+   @Override
    public Component getOptionText() {
       Options opts = this.getOptions();
       String optionLabel = Lang.get(this.resourceKey) + ": ";
@@ -51,19 +53,22 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
       }
    }
 
+   @Override
    public String getSaveKey() {
       return this.saveKey;
    }
 
+   @Override
    public void loadValue(Options opts, String s) {
       int val = Config.parseInt(s, -1);
       if (this.getOptionValue(val) == null) {
          val = this.values[0].getValue();
       }
 
-      this.setter.accept(opts, val);
+      this.setter.m_340568_(opts, val);
    }
 
+   @Override
    public String getSaveText(Options opts) {
       int value = this.getter.applyAsInt(opts);
       return Integer.toString(value);
@@ -75,7 +80,7 @@ public class IterableOptionInt extends IteratableOptionOF implements IPersitentO
    }
 
    private int getValueIndex(int value) {
-      for(int i = 0; i < this.values.length; ++i) {
+      for (int i = 0; i < this.values.length; i++) {
          OptionValueInt ovi = this.values[i];
          if (ovi.getValue() == value) {
             return i;

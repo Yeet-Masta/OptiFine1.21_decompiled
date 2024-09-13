@@ -5,15 +5,15 @@ import java.util.regex.Pattern;
 import net.optifine.util.StrUtils;
 
 public class ShaderOptionSwitchConst extends ShaderOptionSwitch {
-   private static final Pattern PATTERN_CONST = Pattern.compile("^\\s*const\\s*bool\\s*([A-Za-z0-9_]+)\\s*=\\s*(true|false)\\s*;\\s*(//.*)?$");
+   private static Pattern PATTERN_CONST = Pattern.m_289905_("^\\s*const\\s*bool\\s*([A-Za-z0-9_]+)\\s*=\\s*(true|false)\\s*;\\s*(//.*)?$");
 
    public ShaderOptionSwitchConst(String name, String description, String value, String path) {
       super(name, description, value, path);
    }
 
+   @Override
    public String getSourceLine() {
-      String var10000 = this.getName();
-      return "const bool " + var10000 + " = " + this.getValue() + "; // Shader option " + this.getValue();
+      return "const bool " + this.getName() + " = " + this.getValue() + "; // Shader option " + this.getValue();
    }
 
    public static ShaderOption parseOption(String line, String path) {
@@ -35,6 +35,7 @@ public class ShaderOptionSwitchConst extends ShaderOptionSwitch {
       }
    }
 
+   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_CONST.matcher(line);
       if (!m.matches()) {
@@ -45,6 +46,7 @@ public class ShaderOptionSwitchConst extends ShaderOptionSwitch {
       }
    }
 
+   @Override
    public boolean checkUsed() {
       return false;
    }

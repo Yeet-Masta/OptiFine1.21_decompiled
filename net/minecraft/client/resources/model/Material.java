@@ -15,9 +15,9 @@ import net.optifine.render.RenderUtils;
 import net.optifine.util.TextureUtils;
 
 public class Material {
-   public static final Comparator f_244523_ = Comparator.comparing(Material::m_119193_).thenComparing(Material::m_119203_);
-   private final ResourceLocation f_119187_;
-   private final ResourceLocation f_119188_;
+   public static Comparator<Material> f_244523_ = Comparator.comparing(Material::m_119193_).thenComparing(Material::m_119203_);
+   private ResourceLocation f_119187_;
+   private ResourceLocation f_119188_;
    @Nullable
    private RenderType f_119189_;
 
@@ -36,11 +36,10 @@ public class Material {
 
    public TextureAtlasSprite m_119204_() {
       TextureAtlasSprite sprite = (TextureAtlasSprite)Minecraft.m_91087_().m_91258_(this.m_119193_()).apply(this.m_119203_());
-      sprite = TextureUtils.getCustomSprite(sprite);
-      return sprite;
+      return TextureUtils.getCustomSprite(sprite);
    }
 
-   public RenderType m_119201_(Function renderTypeGetter) {
+   public RenderType m_119201_(Function<ResourceLocation, RenderType> renderTypeGetter) {
       if (this.f_119189_ == null) {
          this.f_119189_ = (RenderType)renderTypeGetter.apply(this.f_119187_);
       }
@@ -48,7 +47,7 @@ public class Material {
       return this.f_119189_;
    }
 
-   public VertexConsumer m_119194_(MultiBufferSource bufferIn, Function renderTypeGetter) {
+   public VertexConsumer m_119194_(MultiBufferSource bufferIn, Function<ResourceLocation, RenderType> renderTypeGetter) {
       TextureAtlasSprite sprite = this.m_119204_();
       RenderType renderType = this.m_119201_(renderTypeGetter);
       if (sprite.isSpriteEmissive && renderType.isEntitySolid()) {
@@ -59,7 +58,7 @@ public class Material {
       return sprite.m_118381_(bufferIn.m_6299_(renderType));
    }
 
-   public VertexConsumer m_119197_(MultiBufferSource bufferIn, Function renderTypeGetter, boolean hasEffectIn) {
+   public VertexConsumer m_119197_(MultiBufferSource bufferIn, Function<ResourceLocation, RenderType> renderTypeGetter, boolean hasEffectIn) {
       return this.m_119204_().m_118381_(ItemRenderer.m_115222_(bufferIn, this.m_119201_(renderTypeGetter), true, hasEffectIn));
    }
 
@@ -79,7 +78,6 @@ public class Material {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.f_119187_);
-      return "Material{atlasLocation=" + var10000 + ", texture=" + String.valueOf(this.f_119188_) + "}";
+      return "Material{atlasLocation=" + this.f_119187_ + ", texture=" + this.f_119188_ + "}";
    }
 }

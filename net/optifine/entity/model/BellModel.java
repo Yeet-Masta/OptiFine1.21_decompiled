@@ -31,6 +31,7 @@ public class BellModel extends Model {
       }
    }
 
+   @Override
    public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 }

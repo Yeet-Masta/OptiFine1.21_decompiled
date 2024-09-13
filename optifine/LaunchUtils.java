@@ -11,8 +11,8 @@ public class LaunchUtils {
          try {
             Class cls = Class.forName("net.minecraft.launchwrapper.Launch");
             Field fieldBlackboard = cls.getField("blackboard");
-            Map blackboard = (Map)fieldBlackboard.get((Object)null);
-            Map launchArgs = (Map)blackboard.get("launchArgs");
+            Map<String, Object> blackboard = (Map<String, Object>)fieldBlackboard.get(null);
+            Map<String, String> launchArgs = (Map<String, String>)blackboard.get("launchArgs");
             String accessToken = (String)launchArgs.get("--accessToken");
             String version = (String)launchArgs.get("--version");
             boolean onServer = accessToken == null && Utils.equals(version, "UnknownFMLProfile");

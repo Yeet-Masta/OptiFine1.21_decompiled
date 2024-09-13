@@ -1,5 +1,5 @@
 package net.optifine.config;
 
 public interface IParserInt {
-   int parse(String var1, int var2);
+   int m_82160_(String var1, int var2);
 }

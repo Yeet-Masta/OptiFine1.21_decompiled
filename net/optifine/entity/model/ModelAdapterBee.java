@@ -13,16 +13,18 @@ import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterBee extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterBee() {
       super(EntityType.f_20550_, "bee", 0.4F);
    }
 
+   @Override
    public Model makeModel() {
       return new BeeModel(bakeModelLayer(ModelLayers.f_171268_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BeeModel modelBee)) {
          return null;
@@ -37,13 +39,13 @@ public class ModelAdapterBee extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "bone");
       map.put("torso", "body");
       map.put("right_wing", "right_wing");
@@ -57,6 +59,7 @@ public class ModelAdapterBee extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       BeeRenderer render = new BeeRenderer(renderManager.getContext());

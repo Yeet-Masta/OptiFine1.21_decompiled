@@ -14,22 +14,21 @@ public class EratosthenesPrimes {
          int sqrt = (int)Math.ceil(Math.sqrt((double)maxNumber));
          lastInit = maxNumber;
          maxNumber >>= 1;
-         ++maxNumber;
+         maxNumber++;
          sqrt >>= 1;
-         ++sqrt;
+         sqrt++;
          sieve = new BitArray(maxNumber + 1);
          sieve.set(0, true);
 
-         for(int i = 1; i <= sqrt; ++i) {
+         for (int i = 1; i <= sqrt; i++) {
             if (!sieve.get(i)) {
                int currentPrime = (i << 1) + 1;
 
-               for(int j = i * ((i << 1) + 2); j <= maxNumber; j += currentPrime) {
+               for (int j = i * ((i << 1) + 2); j <= maxNumber; j += currentPrime) {
                   sieve.set(j, true);
                }
             }
          }
-
       }
    }
 
@@ -46,7 +45,7 @@ public class EratosthenesPrimes {
          int prime = 0;
          primes[prime++] = 2;
 
-         for(int i = 1; i <= maxNumber_2; ++i) {
+         for (int i = 1; i <= maxNumber_2; i++) {
             if (!sieve.get(i)) {
                primes[prime++] = (i << 1) + 1;
             }
@@ -64,9 +63,9 @@ public class EratosthenesPrimes {
          int maxNumber_2 = number - 1 >> 1;
          int primesNo = 1;
 
-         for(int i = 1; i <= maxNumber_2; ++i) {
+         for (int i = 1; i <= maxNumber_2; i++) {
             if (!sieve.get(i)) {
-               ++primesNo;
+               primesNo++;
             }
          }
 
@@ -83,7 +82,7 @@ public class EratosthenesPrimes {
          init(number);
          int maxNumber_2 = number - 1 >> 1;
 
-         for(int i = maxNumber_2; i > 0; --i) {
+         for (int i = maxNumber_2; i > 0; i--) {
             if (!sieve.get(i)) {
                return (i << 1) + 1;
             }

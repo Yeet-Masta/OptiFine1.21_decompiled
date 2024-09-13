@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.optifine.Config;
@@ -27,11 +29,11 @@ import net.optifine.shaders.Shaders;
 import net.optifine.util.Either;
 import org.joml.Matrix4f;
 
-public abstract class EntityRenderer implements IEntityRenderer {
-   protected static final float f_174006_ = 0.025F;
-   public static final int f_336747_ = 24;
-   protected final EntityRenderDispatcher f_114476_;
-   private final Font f_174005_;
+public abstract class EntityRenderer<T extends Entity> implements IEntityRenderer {
+   protected static float f_174006_;
+   public static int f_336747_;
+   protected EntityRenderDispatcher f_114476_;
+   private Font f_174005_;
    public float f_114477_;
    public float f_114478_ = 1.0F;
    private EntityType entityType = null;
@@ -42,25 +44,25 @@ public abstract class EntityRenderer implements IEntityRenderer {
    public float leashOffsetY;
    public float leashOffsetZ;
 
-   protected EntityRenderer(EntityRendererProvider.Context contextIn) {
+   protected EntityRenderer(Context contextIn) {
       this.f_114476_ = contextIn.m_174022_();
       this.f_174005_ = contextIn.m_174028_();
    }
 
-   public final int m_114505_(Entity entityIn, float partialTicks) {
+   public int m_114505_(T entityIn, float partialTicks) {
       BlockPos blockpos = BlockPos.m_274446_(entityIn.m_7371_(partialTicks));
       return LightTexture.m_109885_(this.m_6086_(entityIn, blockpos), this.m_114508_(entityIn, blockpos));
    }
 
-   protected int m_114508_(Entity entityIn, BlockPos blockPosIn) {
+   protected int m_114508_(T entityIn, BlockPos blockPosIn) {
       return entityIn.m_9236_().m_45517_(LightLayer.SKY, blockPosIn);
    }
 
-   protected int m_6086_(Entity entityIn, BlockPos partialTicks) {
+   protected int m_6086_(T entityIn, BlockPos partialTicks) {
       return entityIn.m_6060_() ? 15 : entityIn.m_9236_().m_45517_(LightLayer.BLOCK, partialTicks);
    }
 
-   public boolean m_5523_(Entity livingEntityIn, Frustum camera, double camX, double camY, double camZ) {
+   public boolean m_5523_(T livingEntityIn, Frustum camera, double camX, double camY, double camZ) {
       if (!livingEntityIn.m_6000_(camX, camY, camZ)) {
          return false;
       } else if (livingEntityIn.f_19811_) {
@@ -68,14 +70,20 @@ public abstract class EntityRenderer implements IEntityRenderer {
       } else {
          AABB aabb = livingEntityIn.m_6921_().m_82400_(0.5);
          if (aabb.m_82392_() || aabb.m_82309_() == 0.0) {
-            aabb = new AABB(livingEntityIn.m_20185_() - 2.0, livingEntityIn.m_20186_() - 2.0, livingEntityIn.m_20189_() - 2.0, livingEntityIn.m_20185_() + 2.0, livingEntityIn.m_20186_() + 2.0, livingEntityIn.m_20189_() + 2.0);
+            aabb = new AABB(
+               livingEntityIn.m_20185_() - 2.0,
+               livingEntityIn.m_20186_() - 2.0,
+               livingEntityIn.m_20189_() - 2.0,
+               livingEntityIn.m_20185_() + 2.0,
+               livingEntityIn.m_20186_() + 2.0,
+               livingEntityIn.m_20189_() + 2.0
+            );
          }
 
          if (camera.m_113029_(aabb)) {
             return true;
          } else {
-            if (livingEntityIn instanceof Leashable) {
-               Leashable leashable = (Leashable)livingEntityIn;
+            if (livingEntityIn instanceof Leashable leashable) {
                Entity entity = leashable.m_340614_();
                if (entity != null) {
                   return camera.m_113029_(entity.m_6921_());
@@ -87,11 +95,11 @@ public abstract class EntityRenderer implements IEntityRenderer {
       }
    }
 
-   public Vec3 m_7860_(Entity entityIn, float partialTicks) {
+   public Vec3 m_7860_(T entityIn, float partialTicks) {
       return Vec3.f_82478_;
    }
 
-   public void m_7392_(Entity entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
+   public void m_7392_(T entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
       if (entityIn instanceof Leashable leashable) {
          Entity entity = leashable.m_340614_();
          if (entity != null) {
@@ -103,24 +111,24 @@ public abstract class EntityRenderer implements IEntityRenderer {
          if (this.m_6512_(entityIn)) {
             this.m_7649_(entityIn, entityIn.m_5446_(), matrixStackIn, bufferIn, packedLightIn, partialTicks);
          }
-
       } else {
-         Object renderNameplateEvent = Reflector.newInstance(Reflector.RenderNameTagEvent_Constructor, entityIn, entityIn.m_5446_(), this, matrixStackIn, bufferIn, packedLightIn, partialTicks);
+         Object renderNameplateEvent = Reflector.newInstance(
+            Reflector.RenderNameTagEvent_Constructor, entityIn, entityIn.m_5446_(), this, matrixStackIn, bufferIn, packedLightIn, partialTicks
+         );
          Reflector.postForgeBusEvent(renderNameplateEvent);
-         Object result = Reflector.call(renderNameplateEvent, Reflector.Event_getResult);
+         Object result = Reflector.m_46374_(renderNameplateEvent, Reflector.Event_getResult);
          if (result != ReflectorForge.EVENT_RESULT_DENY && (result == ReflectorForge.EVENT_RESULT_ALLOW || this.m_6512_(entityIn))) {
-            Component content = (Component)Reflector.call(renderNameplateEvent, Reflector.RenderNameTagEvent_getContent);
+            Component content = (Component)Reflector.m_46374_(renderNameplateEvent, Reflector.RenderNameTagEvent_getContent);
             this.m_7649_(entityIn, content, matrixStackIn, bufferIn, packedLightIn, partialTicks);
          }
-
       }
    }
 
-   private void m_340483_(Entity entityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, Entity leashHolderIn) {
+   private <E extends Entity> void m_340483_(T entityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, E leashHolderIn) {
       if (!Config.isShaders() || !Shaders.isShadowPass) {
          matrixStackIn.m_85836_();
          Vec3 vec3 = leashHolderIn.m_7398_(partialTicks);
-         double d0 = (double)(entityIn.m_339180_(partialTicks) * 0.017453292F) + 1.5707963267948966;
+         double d0 = (double)(entityIn.m_339180_(partialTicks) * (float) (Math.PI / 180.0)) + (Math.PI / 2);
          Vec3 vec31 = entityIn.m_245894_(partialTicks);
          if (this.leashOffsetX != 0.0F || this.leashOffsetY != 0.0F || this.leashOffsetZ != 0.0F) {
             vec31 = new Vec3((double)this.leashOffsetX, (double)this.leashOffsetY, (double)this.leashOffsetZ);
@@ -151,12 +159,11 @@ public abstract class EntityRenderer implements IEntityRenderer {
             Shaders.beginLeash();
          }
 
-         int j1;
-         for(j1 = 0; j1 <= 24; ++j1) {
-            m_340096_(vertexconsumer, matrix4f, f, f1, f2, i, j, k, l, 0.025F, 0.025F, f5, f6, j1, false);
+         for (int i1 = 0; i1 <= 24; i1++) {
+            m_340096_(vertexconsumer, matrix4f, f, f1, f2, i, j, k, l, 0.025F, 0.025F, f5, f6, i1, false);
          }
 
-         for(j1 = 24; j1 >= 0; --j1) {
+         for (int j1 = 24; j1 >= 0; j1--) {
             m_340096_(vertexconsumer, matrix4f, f, f1, f2, i, j, k, l, 0.025F, 0.0F, f5, f6, j1, true);
          }
 
@@ -168,7 +175,23 @@ public abstract class EntityRenderer implements IEntityRenderer {
       }
    }
 
-   private static void m_340096_(VertexConsumer bufferIn, Matrix4f matrixIn, float x, float y, float z, int lightEntityIn, int lightHolderIn, int lightSkyEntityIn, int lightSkyHolderIn, float p_340096_9_, float p_340096_10_, float p_340096_11_, float p_340096_12_, int p_340096_13_, boolean p_340096_14_) {
+   private static void m_340096_(
+      VertexConsumer bufferIn,
+      Matrix4f matrixIn,
+      float x,
+      float y,
+      float z,
+      int lightEntityIn,
+      int lightHolderIn,
+      int lightSkyEntityIn,
+      int lightSkyHolderIn,
+      float p_340096_9_,
+      float p_340096_10_,
+      float p_340096_11_,
+      float p_340096_12_,
+      int p_340096_13_,
+      boolean p_340096_14_
+   ) {
       float f = (float)p_340096_13_ / 24.0F;
       int i = (int)Mth.m_14179_(f, (float)lightEntityIn, (float)lightHolderIn);
       int j = (int)Mth.m_14179_(f, (float)lightSkyEntityIn, (float)lightSkyHolderIn);
@@ -184,17 +207,17 @@ public abstract class EntityRenderer implements IEntityRenderer {
       bufferIn.m_339083_(matrixIn, f5 + p_340096_11_, f6 + p_340096_9_ - p_340096_10_, f7 - p_340096_12_).m_340057_(f2, f3, f4, 1.0F).m_338973_(k);
    }
 
-   protected boolean m_6512_(Entity entity) {
+   protected boolean m_6512_(T entity) {
       return entity.m_6052_() || entity.m_8077_() && entity == this.f_114476_.f_114359_;
    }
 
-   public abstract ResourceLocation m_5478_(Entity var1);
+   public abstract ResourceLocation m_5478_(T var1);
 
    public Font m_114481_() {
       return this.f_174005_;
    }
 
-   protected void m_7649_(Entity entityIn, Component displayNameIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, float partialTicks) {
+   protected void m_7649_(T entityIn, Component displayNameIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, float partialTicks) {
       double d0 = this.f_114476_.m_114471_(entityIn);
       boolean isNameplateInRenderDistance = !(d0 > 4096.0);
       if (Reflector.ForgeHooksClient_isNameplateInRenderDistance.exists()) {
@@ -215,7 +238,18 @@ public abstract class EntityRenderer implements IEntityRenderer {
             int j = (int)(f * 255.0F) << 24;
             Font font = this.m_114481_();
             float f1 = (float)(-font.m_92852_(displayNameIn) / 2);
-            font.m_272077_(displayNameIn, f1, (float)i, 553648127, false, matrix4f, bufferIn, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, packedLightIn);
+            font.m_272077_(
+               displayNameIn,
+               f1,
+               (float)i,
+               553648127,
+               false,
+               matrix4f,
+               bufferIn,
+               flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL,
+               j,
+               packedLightIn
+            );
             if (flag) {
                font.m_272077_(displayNameIn, f1, (float)i, -1, false, matrix4f, bufferIn, Font.DisplayMode.NORMAL, 0, packedLightIn);
             }
@@ -223,25 +257,28 @@ public abstract class EntityRenderer implements IEntityRenderer {
             matrixStackIn.m_85849_();
          }
       }
-
    }
 
-   protected float m_318622_(Entity entityIn) {
+   protected float m_318622_(T entityIn) {
       return this.f_114477_;
    }
 
-   public Either getType() {
+   @Override
+   public Either<EntityType, BlockEntityType> getType() {
       return this.entityType == null ? null : Either.makeLeft(this.entityType);
    }
 
-   public void setType(Either type) {
+   @Override
+   public void setType(Either<EntityType, BlockEntityType> type) {
       this.entityType = (EntityType)type.getLeft().get();
    }
 
+   @Override
    public ResourceLocation getLocationTextureCustom() {
       return this.locationTextureCustom;
    }
 
+   @Override
    public void setLocationTextureCustom(ResourceLocation locationTextureCustom) {
       this.locationTextureCustom = locationTextureCustom;
    }

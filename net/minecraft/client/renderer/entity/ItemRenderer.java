@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexMultiConsumer;
 import com.mojang.math.MatrixUtil;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -44,7 +43,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HalfTransparentBlock;
 import net.minecraft.world.level.block.StainedGlassPaneBlock;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.optifine.Config;
 import net.optifine.CustomColors;
@@ -56,28 +54,34 @@ import net.optifine.shaders.Shaders;
 import net.optifine.util.SingleIterable;
 
 public class ItemRenderer implements ResourceManagerReloadListener {
-   public static final ResourceLocation f_273897_ = ResourceLocation.m_340282_("textures/misc/enchanted_glint_entity.png");
-   public static final ResourceLocation f_273833_ = ResourceLocation.m_340282_("textures/misc/enchanted_glint_item.png");
-   private static final Set f_115094_;
-   public static final int f_174221_ = 8;
-   public static final int f_174222_ = 8;
-   public static final int f_174218_ = 200;
-   public static final float f_174219_ = 0.5F;
-   public static final float f_174220_ = 0.75F;
-   public static final float f_256734_ = 0.0078125F;
-   private static final ModelResourceLocation f_244324_;
-   public static final ModelResourceLocation f_244055_;
-   private static final ModelResourceLocation f_244537_;
-   public static final ModelResourceLocation f_243706_;
-   private final Minecraft f_265848_;
-   private final ItemModelShaper f_115095_;
-   private final TextureManager f_115096_;
-   private final ItemColors f_115097_;
-   private final BlockEntityWithoutLevelRenderer f_174223_;
+   public static ResourceLocation f_273897_ = ResourceLocation.m_340282_("textures/misc/enchanted_glint_entity.png");
+   public static ResourceLocation f_273833_ = ResourceLocation.m_340282_("textures/misc/enchanted_glint_item.png");
+   private static Set<Item> f_115094_ = Sets.newHashSet(new Item[]{Items.f_41852_});
+   public static int f_174221_;
+   public static int f_174222_;
+   public static int f_174218_;
+   public static float f_174219_;
+   public static float f_174220_;
+   public static float f_256734_;
+   private static ModelResourceLocation f_244324_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("trident"));
+   public static ModelResourceLocation f_244055_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("trident_in_hand"));
+   private static ModelResourceLocation f_244537_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("spyglass"));
+   public static ModelResourceLocation f_243706_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("spyglass_in_hand"));
+   private Minecraft f_265848_;
+   private ItemModelShaper f_115095_;
+   private TextureManager f_115096_;
+   private ItemColors f_115097_;
+   private BlockEntityWithoutLevelRenderer f_174223_;
    public ModelManager modelManager = null;
-   private static boolean renderItemGui;
+   private static boolean renderItemGui = false;
 
-   public ItemRenderer(Minecraft minecraftIn, TextureManager textureManagerIn, ModelManager modelManagerIn, ItemColors itemColorsIn, BlockEntityWithoutLevelRenderer blockEntityRendererIn) {
+   public ItemRenderer(
+      Minecraft minecraftIn,
+      TextureManager textureManagerIn,
+      ModelManager modelManagerIn,
+      ItemColors itemColorsIn,
+      BlockEntityWithoutLevelRenderer blockEntityRendererIn
+   ) {
       this.f_265848_ = minecraftIn;
       this.f_115096_ = textureManagerIn;
       this.modelManager = modelManagerIn;
@@ -88,11 +92,9 @@ public class ItemRenderer implements ResourceManagerReloadListener {
       }
 
       this.f_174223_ = blockEntityRendererIn;
-      Iterator var6 = BuiltInRegistries.f_257033_.iterator();
 
-      while(var6.hasNext()) {
-         Item item = (Item)var6.next();
-         if (!f_115094_.contains(item)) {
+      for (Item item : BuiltInRegistries.f_257033_) {
+         if (!f_115094_.m_274455_(item)) {
             this.f_115095_.m_109396_(item, ModelResourceLocation.m_340229_(BuiltInRegistries.f_257033_.m_7981_(item)));
          }
       }
@@ -107,23 +109,31 @@ public class ItemRenderer implements ResourceManagerReloadListener {
    public void m_115189_(BakedModel modelIn, ItemStack stack, int combinedLightIn, int combinedOverlayIn, PoseStack matrixStackIn, VertexConsumer bufferIn) {
       RandomSource randomsource = RandomSource.m_216327_();
       long i = 42L;
-      Direction[] var10 = Direction.f_122346_;
-      int var11 = var10.length;
 
-      for(int var12 = 0; var12 < var11; ++var12) {
-         Direction direction = var10[var12];
+      for (Direction direction : Direction.f_122346_) {
          randomsource.m_188584_(42L);
-         this.m_115162_(matrixStackIn, bufferIn, modelIn.m_213637_((BlockState)null, direction, randomsource), stack, combinedLightIn, combinedOverlayIn);
+         this.m_115162_(matrixStackIn, bufferIn, modelIn.m_213637_(null, direction, randomsource), stack, combinedLightIn, combinedOverlayIn);
       }
 
       randomsource.m_188584_(42L);
-      this.m_115162_(matrixStackIn, bufferIn, modelIn.m_213637_((BlockState)null, (Direction)null, randomsource), stack, combinedLightIn, combinedOverlayIn);
+      this.m_115162_(matrixStackIn, bufferIn, modelIn.m_213637_(null, null, randomsource), stack, combinedLightIn, combinedOverlayIn);
    }
 
-   public void m_115143_(ItemStack itemStackIn, ItemDisplayContext transformTypeIn, boolean leftHand, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn, BakedModel modelIn) {
+   public void m_115143_(
+      ItemStack itemStackIn,
+      ItemDisplayContext transformTypeIn,
+      boolean leftHand,
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int combinedLightIn,
+      int combinedOverlayIn,
+      BakedModel modelIn
+   ) {
       if (!itemStackIn.m_41619_()) {
          matrixStackIn.m_85836_();
-         boolean flag = transformTypeIn == ItemDisplayContext.GUI || transformTypeIn == ItemDisplayContext.GROUND || transformTypeIn == ItemDisplayContext.FIXED;
+         boolean flag = transformTypeIn == ItemDisplayContext.GUI
+            || transformTypeIn == ItemDisplayContext.GROUND
+            || transformTypeIn == ItemDisplayContext.FIXED;
          if (flag) {
             if (itemStackIn.m_150930_(Items.f_42713_)) {
                modelIn = this.f_115095_.m_109393_().m_119422_(f_244324_);
@@ -133,46 +143,31 @@ public class ItemRenderer implements ResourceManagerReloadListener {
          }
 
          if (Reflector.ForgeHooksClient_handleCameraTransforms.exists()) {
-            modelIn = (BakedModel)Reflector.ForgeHooksClient_handleCameraTransforms.call(matrixStackIn, modelIn, transformTypeIn, leftHand);
+            modelIn = (BakedModel)Reflector.ForgeHooksClient_handleCameraTransforms.m_46374_(matrixStackIn, modelIn, transformTypeIn, leftHand);
          } else {
             modelIn.m_7442_().m_269404_(transformTypeIn).m_111763_(leftHand, matrixStackIn);
          }
 
          matrixStackIn.m_252880_(-0.5F, -0.5F, -0.5F);
-         if (modelIn.m_7521_() || itemStackIn.m_150930_(Items.f_42713_) && !flag) {
-            if (Reflector.MinecraftForge.exists()) {
-               IClientItemExtensions.of(itemStackIn).getCustomRenderer().m_108829_(itemStackIn, transformTypeIn, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
-            } else {
-               this.f_174223_.m_108829_(itemStackIn, transformTypeIn, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
-            }
-         } else {
+         if (!modelIn.m_7521_() && (!itemStackIn.m_150930_(Items.f_42713_) || flag)) {
             boolean flag1;
-            label114: {
-               if (transformTypeIn != ItemDisplayContext.GUI && !transformTypeIn.m_269069_()) {
-                  Item var12 = itemStackIn.m_41720_();
-                  if (var12 instanceof BlockItem) {
-                     BlockItem blockitem = (BlockItem)var12;
-                     Block block = blockitem.m_40614_();
-                     flag1 = !(block instanceof HalfTransparentBlock) && !(block instanceof StainedGlassPaneBlock);
-                     break label114;
-                  }
-               }
-
+            if (transformTypeIn != ItemDisplayContext.GUI && !transformTypeIn.m_269069_() && itemStackIn.m_41720_() instanceof BlockItem blockitem) {
+               Block block = blockitem.m_40614_();
+               flag1 = !(block instanceof HalfTransparentBlock) && !(block instanceof StainedGlassPaneBlock);
+            } else {
                flag1 = true;
             }
 
             boolean forge = Reflector.ForgeHooksClient.exists();
-            Iterable renderPassModels = forge ? modelIn.getRenderPasses(itemStackIn, flag1) : new SingleIterable(modelIn);
-            Iterable renderTypes = forge ? modelIn.getRenderTypes(itemStackIn, flag1) : new SingleIterable(ItemBlockRenderTypes.m_109279_(itemStackIn, flag1));
-            Iterator var14 = ((Iterable)renderPassModels).iterator();
+            Iterable<BakedModel> renderPassModels = (Iterable<BakedModel>)(forge ? modelIn.getRenderPasses(itemStackIn, flag1) : new SingleIterable<>(modelIn));
+            Iterable<RenderType> renderTypes = (Iterable<RenderType>)(forge
+               ? modelIn.getRenderTypes(itemStackIn, flag1)
+               : new SingleIterable<>(ItemBlockRenderTypes.m_109279_(itemStackIn, flag1)));
 
-            while(var14.hasNext()) {
-               BakedModel modelForge = (BakedModel)var14.next();
+            for (BakedModel modelForge : renderPassModels) {
                modelIn = modelForge;
-               Iterator var16 = ((Iterable)renderTypes).iterator();
 
-               while(var16.hasNext()) {
-                  RenderType rendertype = (RenderType)var16.next();
+               for (RenderType rendertype : renderTypes) {
                   VertexConsumer vertexconsumer;
                   if (m_285827_(itemStackIn) && itemStackIn.m_41790_()) {
                      PoseStack.Pose posestack$pose = matrixStackIn.m_85850_().m_323639_();
@@ -202,7 +197,9 @@ public class ItemRenderer implements ResourceManagerReloadListener {
                   if (EmissiveTextures.isActive()) {
                      if (EmissiveTextures.hasEmissive()) {
                         EmissiveTextures.beginRenderEmissive();
-                        VertexConsumer vertexBuilderEmissive = vertexconsumer instanceof VertexBuilderWrapper ? ((VertexBuilderWrapper)vertexconsumer).getVertexBuilder() : vertexconsumer;
+                        VertexConsumer vertexBuilderEmissive = vertexconsumer instanceof VertexBuilderWrapper
+                           ? ((VertexBuilderWrapper)vertexconsumer).getVertexBuilder()
+                           : vertexconsumer;
                         this.m_115189_(modelIn, itemStackIn, LightTexture.MAX_BRIGHTNESS, combinedOverlayIn, matrixStackIn, vertexBuilderEmissive);
                         EmissiveTextures.endRenderEmissive();
                      }
@@ -211,11 +208,16 @@ public class ItemRenderer implements ResourceManagerReloadListener {
                   }
                }
             }
+         } else if (Reflector.MinecraftForge.exists()) {
+            IClientItemExtensions.m_253057_(itemStackIn)
+               .getCustomRenderer()
+               .m_108829_(itemStackIn, transformTypeIn, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
+         } else {
+            this.f_174223_.m_108829_(itemStackIn, transformTypeIn, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn);
          }
 
          matrixStackIn.m_85849_();
       }
-
    }
 
    private static boolean m_285827_(ItemStack itemStackIn) {
@@ -231,11 +233,15 @@ public class ItemRenderer implements ResourceManagerReloadListener {
          hasEffectIn = false;
       }
 
-      return hasEffectIn ? VertexMultiConsumer.m_86168_(bufferIn.m_6299_(RenderType.m_110484_()), bufferIn.m_6299_(renderTypeIn)) : bufferIn.m_6299_(renderTypeIn);
+      return hasEffectIn
+         ? VertexMultiConsumer.m_86168_(bufferIn.m_6299_(RenderType.m_110484_()), bufferIn.m_6299_(renderTypeIn))
+         : bufferIn.m_6299_(renderTypeIn);
    }
 
    public static VertexConsumer m_115180_(MultiBufferSource bufferIn, RenderType renderTypeIn, PoseStack.Pose entryIn) {
-      return VertexMultiConsumer.m_86168_(new SheetedDecalTextureGenerator(bufferIn.m_6299_(RenderType.m_110490_()), entryIn, 0.0078125F), bufferIn.m_6299_(renderTypeIn));
+      return VertexMultiConsumer.m_86168_(
+         new SheetedDecalTextureGenerator(bufferIn.m_6299_(RenderType.m_110490_()), entryIn, 0.0078125F), bufferIn.m_6299_(renderTypeIn)
+      );
    }
 
    public static VertexConsumer m_115211_(MultiBufferSource bufferIn, RenderType renderTypeIn, boolean isItemIn, boolean glintIn) {
@@ -250,7 +256,9 @@ public class ItemRenderer implements ResourceManagerReloadListener {
       if (!glintIn) {
          return bufferIn.m_6299_(renderTypeIn);
       } else {
-         return Minecraft.m_91085_() && renderTypeIn == Sheets.m_110791_() ? VertexMultiConsumer.m_86168_(bufferIn.m_6299_(RenderType.m_110487_()), bufferIn.m_6299_(renderTypeIn)) : VertexMultiConsumer.m_86168_(bufferIn.m_6299_(isItemIn ? RenderType.m_110490_() : RenderType.m_110496_()), bufferIn.m_6299_(renderTypeIn));
+         return Minecraft.m_91085_() && renderTypeIn == Sheets.m_110791_()
+            ? VertexMultiConsumer.m_86168_(bufferIn.m_6299_(RenderType.m_110487_()), bufferIn.m_6299_(renderTypeIn))
+            : VertexMultiConsumer.m_86168_(bufferIn.m_6299_(isItemIn ? RenderType.m_110490_() : RenderType.m_110496_()), bufferIn.m_6299_(renderTypeIn));
       }
    }
 
@@ -263,17 +271,21 @@ public class ItemRenderer implements ResourceManagerReloadListener {
          hasEffectIn = false;
       }
 
-      return hasEffectIn ? VertexMultiConsumer.m_86168_(bufferIn.m_6299_(isItemIn ? RenderType.m_110490_() : RenderType.m_110499_()), bufferIn.m_6299_(renderTypeIn)) : bufferIn.m_6299_(renderTypeIn);
+      return hasEffectIn
+         ? VertexMultiConsumer.m_86168_(bufferIn.m_6299_(isItemIn ? RenderType.m_110490_() : RenderType.m_110499_()), bufferIn.m_6299_(renderTypeIn))
+         : bufferIn.m_6299_(renderTypeIn);
    }
 
-   private void m_115162_(PoseStack matrixStackIn, VertexConsumer bufferIn, List quadsIn, ItemStack itemStackIn, int combinedLightIn, int combinedOverlayIn) {
+   private void m_115162_(
+      PoseStack matrixStackIn, VertexConsumer bufferIn, List<BakedQuad> quadsIn, ItemStack itemStackIn, int combinedLightIn, int combinedOverlayIn
+   ) {
       boolean flag = !itemStackIn.m_41619_();
       PoseStack.Pose posestack$pose = matrixStackIn.m_85850_();
       boolean emissiveActive = EmissiveTextures.isActive();
       int listSize = quadsIn.size();
       int baseColorMul = listSize > 0 && Config.isCustomColors() ? CustomColors.getColorFromItemStack(itemStackIn, -1, -1) : -1;
 
-      for(int ix = 0; ix < listSize; ++ix) {
+      for (int ix = 0; ix < listSize; ix++) {
          BakedQuad bakedquad = (BakedQuad)quadsIn.get(ix);
          if (emissiveActive) {
             bakedquad = EmissiveTextures.getEmissiveQuad(bakedquad);
@@ -300,7 +312,6 @@ public class ItemRenderer implements ResourceManagerReloadListener {
             bufferIn.m_85995_(posestack$pose, bakedquad, f1, f2, f3, f, combinedLightIn, combinedOverlayIn);
          }
       }
-
    }
 
    public BakedModel m_174264_(ItemStack stack, @Nullable Level worldIn, @Nullable LivingEntity entityIn, int seedIn) {
@@ -323,16 +334,35 @@ public class ItemRenderer implements ResourceManagerReloadListener {
       return bakedmodel1 == null ? this.f_115095_.m_109393_().m_119409_() : bakedmodel1;
    }
 
-   public void m_269128_(ItemStack itemStackIn, ItemDisplayContext contextIn, int combinedLightIn, int combinedOverlayIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, @Nullable Level worldIn, int seedIn) {
-      this.m_269491_((LivingEntity)null, itemStackIn, contextIn, false, matrixStackIn, bufferIn, worldIn, combinedLightIn, combinedOverlayIn, seedIn);
+   public void m_269128_(
+      ItemStack itemStackIn,
+      ItemDisplayContext contextIn,
+      int combinedLightIn,
+      int combinedOverlayIn,
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      @Nullable Level worldIn,
+      int seedIn
+   ) {
+      this.m_269491_(null, itemStackIn, contextIn, false, matrixStackIn, bufferIn, worldIn, combinedLightIn, combinedOverlayIn, seedIn);
    }
 
-   public void m_269491_(@Nullable LivingEntity livingEntityIn, ItemStack itemStackIn, ItemDisplayContext contextIn, boolean leftHand, PoseStack matrixStackIn, MultiBufferSource bufferIn, @Nullable Level worldIn, int combinedLightIn, int combinedOverlayIn, int seedIn) {
+   public void m_269491_(
+      @Nullable LivingEntity livingEntityIn,
+      ItemStack itemStackIn,
+      ItemDisplayContext contextIn,
+      boolean leftHand,
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      @Nullable Level worldIn,
+      int combinedLightIn,
+      int combinedOverlayIn,
+      int seedIn
+   ) {
       if (!itemStackIn.m_41619_()) {
          BakedModel bakedmodel = this.m_174264_(itemStackIn, worldIn, livingEntityIn, seedIn);
          this.m_115143_(itemStackIn, contextIn, leftHand, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn, bakedmodel);
       }
-
    }
 
    public void m_6213_(ResourceManager resourceManager) {
@@ -349,14 +379,5 @@ public class ItemRenderer implements ResourceManagerReloadListener {
 
    public BlockEntityWithoutLevelRenderer getBlockEntityRenderer() {
       return this.f_174223_;
-   }
-
-   static {
-      f_115094_ = Sets.newHashSet(new Item[]{Items.f_41852_});
-      f_244324_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("trident"));
-      f_244055_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("trident_in_hand"));
-      f_244537_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("spyglass"));
-      f_243706_ = ModelResourceLocation.m_340229_(ResourceLocation.m_340282_("spyglass_in_hand"));
-      renderItemGui = false;
    }
 }

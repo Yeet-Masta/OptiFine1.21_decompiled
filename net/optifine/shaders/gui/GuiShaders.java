@@ -1,6 +1,9 @@
 package net.optifine.shaders.gui;
 
-import java.util.Iterator;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,6 +18,7 @@ import net.optifine.gui.GuiScreenOF;
 import net.optifine.gui.TooltipManager;
 import net.optifine.gui.TooltipProviderEnumShaderOptions;
 import net.optifine.shaders.Shaders;
+import net.optifine.shaders.ShadersTex;
 import net.optifine.shaders.config.EnumShaderOption;
 
 public class GuiShaders extends GuiScreenOF {
@@ -23,17 +27,21 @@ public class GuiShaders extends GuiScreenOF {
    private int updateTimer = -1;
    private GuiSlotShaders shaderList;
    private boolean saved = false;
-   private static float[] QUALITY_MULTIPLIERS = new float[]{0.5F, 0.6F, 0.6666667F, 0.75F, 0.8333333F, 0.9F, 1.0F, 1.1666666F, 1.3333334F, 1.5F, 1.6666666F, 1.8F, 2.0F};
-   private static String[] QUALITY_MULTIPLIER_NAMES = new String[]{"0.5x", "0.6x", "0.66x", "0.75x", "0.83x", "0.9x", "1x", "1.16x", "1.33x", "1.5x", "1.66x", "1.8x", "2x"};
+   private static float[] QUALITY_MULTIPLIERS = new float[]{
+      0.5F, 0.6F, 0.6666667F, 0.75F, 0.8333333F, 0.9F, 1.0F, 1.1666666F, 1.3333334F, 1.5F, 1.6666666F, 1.8F, 2.0F
+   };
+   private static String[] QUALITY_MULTIPLIER_NAMES = new String[]{
+      "0.5x", "0.6x", "0.66x", "0.75x", "0.83x", "0.9x", "1x", "1.16x", "1.33x", "1.5x", "1.66x", "1.8x", "2x"
+   };
    private static float QUALITY_MULTIPLIER_DEFAULT = 1.0F;
    private static float[] HAND_DEPTH_VALUES = new float[]{0.0625F, 0.125F, 0.25F};
    private static String[] HAND_DEPTH_NAMES = new String[]{"0.5x", "1x", "2x"};
    private static float HAND_DEPTH_DEFAULT = 0.125F;
-   public static final int EnumOS_UNKNOWN = 0;
-   public static final int EnumOS_WINDOWS = 1;
-   public static final int EnumOS_OSX = 2;
-   public static final int EnumOS_SOLARIS = 3;
-   public static final int EnumOS_LINUX = 4;
+   public static int EnumOS_UNKNOWN;
+   public static int EnumOS_WINDOWS;
+   public static int EnumOS_OSX;
+   public static int EnumOS_SOLARIS;
+   public static int EnumOS_LINUX;
 
    public GuiShaders(Screen par1GuiScreen, Options par2GameSettings) {
       super(Component.m_237113_(I18n.m_118938_("of.options.shadersTitle", new Object[0])));
@@ -66,7 +74,11 @@ public class GuiShaders extends GuiScreenOF {
       int yFolder = this.f_96544_ - 25;
       this.m_142416_(new GuiButtonOF(201, xFolder, yFolder, btnFolderWidth - 22 + 1, btnHeight, Lang.get("of.options.shaders.shadersFolder")));
       this.m_142416_(new GuiButtonDownloadShaders(210, xFolder + btnFolderWidth - 22 - 1, yFolder));
-      this.m_142416_(new GuiButtonOF(202, shaderListWidth / 4 * 3 - btnFolderWidth / 2, this.f_96544_ - 25, btnFolderWidth, btnHeight, I18n.m_118938_("gui.done", new Object[0])));
+      this.m_142416_(
+         new GuiButtonOF(
+            202, shaderListWidth / 4 * 3 - btnFolderWidth / 2, this.f_96544_ - 25, btnFolderWidth, btnHeight, I18n.m_118938_("gui.done", new Object[0])
+         )
+      );
       this.m_142416_(new GuiButtonOF(203, btnX, this.f_96544_ - 25, btnWidth, btnHeight, Lang.get("of.options.shaders.shaderOptions")));
       this.m_7522_(this.shaderList);
       this.updateButtons();
@@ -74,29 +86,188 @@ public class GuiShaders extends GuiScreenOF {
 
    public void updateButtons() {
       boolean shaderActive = Config.isShaders();
-      Iterator it = this.getButtonList().iterator();
 
-      while(it.hasNext()) {
-         AbstractWidget guiElement = (AbstractWidget)it.next();
-         if (guiElement instanceof GuiButtonOF button) {
-            if (button.field_45 != 201 && button.field_45 != 202 && button.field_45 != 210 && button.field_45 != EnumShaderOption.ANTIALIASING.ordinal()) {
+      for (AbstractWidget guiElement : this.getButtonList()) {
+         if (guiElement instanceof GuiButtonOF) {
+            GuiButtonOF button = (GuiButtonOF)guiElement;
+            if (button.f_11893_ != 201 && button.f_11893_ != 202 && button.f_11893_ != 210 && button.f_11893_ != EnumShaderOption.ANTIALIASING.ordinal()) {
                button.f_93623_ = shaderActive;
             }
          }
       }
-
    }
 
+   @Override
    protected void actionPerformed(AbstractWidget button) {
       this.actionPerformed(button, false);
    }
 
+   @Override
    protected void actionPerformedRightClick(AbstractWidget button) {
       this.actionPerformed(button, true);
    }
 
-   private void actionPerformed(AbstractWidget var1, boolean var2) {
-      // $FF: Couldn't be decompiled
+   private void actionPerformed(AbstractWidget guiElement, boolean rightClick) {
+      if (guiElement.f_93623_) {
+         if (guiElement instanceof GuiButtonEnumShaderOption gbeso) {
+            switch (<unrepresentable>.$SwitchMap$net$optifine$shaders$config$EnumShaderOption[gbeso.getEnumShaderOption().ordinal()]) {
+               case 1:
+                  Shaders.nextAntialiasingLevel(!rightClick);
+                  if (m_96638_()) {
+                     Shaders.configAntialiasingLevel = 0;
+                  }
+
+                  Shaders.uninit();
+                  break;
+               case 2:
+                  Shaders.configNormalMap = !Shaders.configNormalMap;
+                  if (m_96638_()) {
+                     Shaders.configNormalMap = true;
+                  }
+
+                  Shaders.uninit();
+                  this.f_96541_.m_91088_();
+                  break;
+               case 3:
+                  Shaders.configSpecularMap = !Shaders.configSpecularMap;
+                  if (m_96638_()) {
+                     Shaders.configSpecularMap = true;
+                  }
+
+                  Shaders.uninit();
+                  this.f_96541_.m_91088_();
+                  break;
+               case 4:
+                  Shaders.configRenderResMul = this.getNextValue(
+                     Shaders.configRenderResMul, QUALITY_MULTIPLIERS, QUALITY_MULTIPLIER_DEFAULT, !rightClick, m_96638_()
+                  );
+                  Shaders.uninit();
+                  Shaders.scheduleResize();
+                  break;
+               case 5:
+                  Shaders.configShadowResMul = this.getNextValue(
+                     Shaders.configShadowResMul, QUALITY_MULTIPLIERS, QUALITY_MULTIPLIER_DEFAULT, !rightClick, m_96638_()
+                  );
+                  Shaders.uninit();
+                  Shaders.scheduleResizeShadow();
+                  break;
+               case 6:
+                  Shaders.configHandDepthMul = this.getNextValue(Shaders.configHandDepthMul, HAND_DEPTH_VALUES, HAND_DEPTH_DEFAULT, !rightClick, m_96638_());
+                  Shaders.uninit();
+                  break;
+               case 7:
+                  Shaders.configOldHandLight.nextValue(!rightClick);
+                  if (m_96638_()) {
+                     Shaders.configOldHandLight.resetValue();
+                  }
+
+                  Shaders.uninit();
+                  break;
+               case 8:
+                  Shaders.configOldLighting.nextValue(!rightClick);
+                  if (m_96638_()) {
+                     Shaders.configOldLighting.resetValue();
+                  }
+
+                  Shaders.updateBlockLightLevel();
+                  Shaders.uninit();
+                  this.f_96541_.m_91088_();
+                  break;
+               case 9:
+                  Shaders.configTweakBlockDamage = !Shaders.configTweakBlockDamage;
+                  break;
+               case 10:
+                  Shaders.configCloudShadow = !Shaders.configCloudShadow;
+                  break;
+               case 11:
+                  Shaders.configTexMinFilB = (Shaders.configTexMinFilB + 1) % 3;
+                  Shaders.configTexMinFilN = Shaders.configTexMinFilS = Shaders.configTexMinFilB;
+                  gbeso.setMessage("Tex Min: " + Shaders.texMinFilDesc[Shaders.configTexMinFilB]);
+                  ShadersTex.updateTextureMinMagFilter();
+                  break;
+               case 12:
+                  Shaders.configTexMagFilN = (Shaders.configTexMagFilN + 1) % 2;
+                  gbeso.setMessage("Tex_n Mag: " + Shaders.texMagFilDesc[Shaders.configTexMagFilN]);
+                  ShadersTex.updateTextureMinMagFilter();
+                  break;
+               case 13:
+                  Shaders.configTexMagFilS = (Shaders.configTexMagFilS + 1) % 2;
+                  gbeso.setMessage("Tex_s Mag: " + Shaders.texMagFilDesc[Shaders.configTexMagFilS]);
+                  ShadersTex.updateTextureMinMagFilter();
+                  break;
+               case 14:
+                  Shaders.configShadowClipFrustrum = !Shaders.configShadowClipFrustrum;
+                  gbeso.setMessage("ShadowClipFrustrum: " + toStringOnOff(Shaders.configShadowClipFrustrum));
+                  ShadersTex.updateTextureMinMagFilter();
+            }
+
+            gbeso.updateButtonText();
+         } else if (!rightClick) {
+            if (guiElement instanceof GuiButtonOF button) {
+               switch (button.f_11893_) {
+                  case 201:
+                     switch (getOSType()) {
+                        case 1:
+                           String var2x = String.m_12886_("cmd.exe /C start \"Open file\" \"%s\"", new Object[]{Shaders.shaderPacksDir.getAbsolutePath()});
+
+                           try {
+                              Runtime.getRuntime().exec(var2x);
+                              return;
+                           } catch (IOException var9) {
+                              var9.printStackTrace();
+                              break;
+                           }
+                        case 2:
+                           try {
+                              Runtime.getRuntime().exec(new String[]{"/usr/bin/open", Shaders.shaderPacksDir.getAbsolutePath()});
+                              return;
+                           } catch (IOException var10) {
+                              var10.printStackTrace();
+                           }
+                     }
+
+                     boolean var8 = false;
+
+                     try {
+                        URI uri = new File(this.f_96541_.f_91069_, "shaderpacks").toURI();
+                        Util.m_137581_().m_137648_(uri);
+                     } catch (Throwable var8x) {
+                        var8x.printStackTrace();
+                        var8 = true;
+                     }
+
+                     if (var8) {
+                        Config.dbg("Opening via system class!");
+                        Util.m_137581_().m_137646_("file://" + Shaders.shaderPacksDir.getAbsolutePath());
+                     }
+                     break;
+                  case 202:
+                     Shaders.storeConfig();
+                     this.saved = true;
+                     this.f_96541_.m_91152_(this.parentGui);
+                     break;
+                  case 203:
+                     GuiShaderOptions gui = new GuiShaderOptions(this, Config.getGameSettings());
+                     Config.getMinecraft().m_91152_(gui);
+                  case 204:
+                  case 205:
+                  case 206:
+                  case 207:
+                  case 208:
+                  case 209:
+                  default:
+                     break;
+                  case 210:
+                     try {
+                        URI uri = new URI("http://optifine.net/shaderPacks");
+                        Util.m_137581_().m_137648_(uri);
+                     } catch (Throwable var7) {
+                        var7.printStackTrace();
+                     }
+               }
+            }
+         }
+      }
    }
 
    public void m_7861_() {
@@ -110,7 +281,7 @@ public class GuiShaders extends GuiScreenOF {
 
    public void m_88315_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
       super.m_280273_(graphicsIn, mouseX, mouseY, partialTicks);
-      this.shaderList.render(graphicsIn, mouseX, mouseY, partialTicks);
+      this.shaderList.m_324219_(graphicsIn, mouseX, mouseY, partialTicks);
       if (this.updateTimer <= 0) {
          this.shaderList.updateList();
          this.updateTimer += 20;
@@ -134,7 +305,7 @@ public class GuiShaders extends GuiScreenOF {
 
    public void m_86600_() {
       super.m_86600_();
-      --this.updateTimer;
+      this.updateTimer--;
    }
 
    public Minecraft getMc() {
@@ -170,15 +341,11 @@ public class GuiShaders extends GuiScreenOF {
       } else {
          int index = getValueIndex(val, values);
          if (forward) {
-            ++index;
-            if (index >= values.length) {
+            if (++index >= values.length) {
                index = 0;
             }
-         } else {
-            --index;
-            if (index < 0) {
-               index = values.length - 1;
-            }
+         } else if (--index < 0) {
+            index = values.length - 1;
          }
 
          return values[index];
@@ -186,7 +353,7 @@ public class GuiShaders extends GuiScreenOF {
    }
 
    public static int getValueIndex(float val, float[] values) {
-      for(int i = 0; i < values.length; ++i) {
+      for (int i = 0; i < values.length; i++) {
          float value = values[i];
          if (value >= val) {
             return i;
@@ -206,18 +373,18 @@ public class GuiShaders extends GuiScreenOF {
 
    public static int getOSType() {
       String osName = System.getProperty("os.name").toLowerCase();
-      if (osName.contains("win")) {
+      if (osName.m_274455_("win")) {
          return 1;
-      } else if (osName.contains("mac")) {
+      } else if (osName.m_274455_("mac")) {
          return 2;
-      } else if (osName.contains("solaris")) {
+      } else if (osName.m_274455_("solaris")) {
          return 3;
-      } else if (osName.contains("sunos")) {
+      } else if (osName.m_274455_("sunos")) {
          return 3;
-      } else if (osName.contains("linux")) {
+      } else if (osName.m_274455_("linux")) {
          return 4;
       } else {
-         return osName.contains("unix") ? 4 : 0;
+         return osName.m_274455_("unix") ? 4 : 0;
       }
    }
 }

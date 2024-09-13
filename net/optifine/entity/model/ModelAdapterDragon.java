@@ -15,10 +15,12 @@ public class ModelAdapterDragon extends ModelAdapter {
       super(EntityType.f_20565_, "dragon", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new EnderDragonRenderer.DragonModel(bakeModelLayer(ModelLayers.f_171144_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof EnderDragonRenderer.DragonModel modelDragon)) {
          return null;
@@ -65,10 +67,33 @@ public class ModelAdapterDragon extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      return new String[]{"head", "spine", "jaw", "body", "left_wing", "left_wing_tip", "front_left_leg", "front_left_shin", "front_left_foot", "back_left_leg", "back_left_shin", "back_left_foot", "right_wing", "right_wing_tip", "front_right_leg", "front_right_shin", "front_right_foot", "back_right_leg", "back_right_shin", "back_right_foot"};
+      return new String[]{
+         "head",
+         "spine",
+         "jaw",
+         "body",
+         "left_wing",
+         "left_wing_tip",
+         "front_left_leg",
+         "front_left_shin",
+         "front_left_foot",
+         "back_left_leg",
+         "back_left_shin",
+         "back_left_foot",
+         "right_wing",
+         "right_wing_tip",
+         "front_right_leg",
+         "front_right_shin",
+         "front_right_foot",
+         "back_right_leg",
+         "back_right_shin",
+         "back_right_foot"
+      };
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       EnderDragonRenderer render = new EnderDragonRenderer(renderManager.getContext());

@@ -12,23 +12,25 @@ import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterPhantom extends ModelAdapter {
-   private static Map mapPartFields = null;
+   private static Map<String, String> mapPartFields = null;
 
    public ModelAdapterPhantom() {
       super(EntityType.f_20509_, "phantom", 0.75F);
    }
 
+   @Override
    public Model makeModel() {
       return new PhantomModel(bakeModelLayer(ModelLayers.f_171204_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PhantomModel modelPhantom)) {
          return null;
       } else if (modelPart.equals("root")) {
          return modelPhantom.m_142109_();
       } else {
-         Map mapParts = getMapPartFields();
+         Map<String, String> mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             String name = (String)mapParts.get(modelPart);
             return modelPhantom.m_142109_().getChildModelDeep(name);
@@ -38,11 +40,12 @@ public class ModelAdapterPhantom extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return (String[])getMapPartFields().keySet().toArray(new String[0]);
    }
 
-   private static Map getMapPartFields() {
+   private static Map<String, String> getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -60,6 +63,7 @@ public class ModelAdapterPhantom extends ModelAdapter {
       }
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PhantomRenderer render = new PhantomRenderer(renderManager.getContext());

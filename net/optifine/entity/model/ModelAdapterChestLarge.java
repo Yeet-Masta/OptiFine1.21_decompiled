@@ -13,10 +13,12 @@ public class ModelAdapterChestLarge extends ModelAdapter {
       super(BlockEntityType.f_58918_, "chest_large", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new ChestLargeModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ChestLargeModel modelChest)) {
          return null;
@@ -35,24 +37,22 @@ public class ModelAdapterChestLarge extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"lid_left", "base_left", "knob_left", "lid_right", "base_right", "knob_right"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58918_, index, () -> {
-         return new ChestRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58918_, index, () -> new ChestRenderer(dispatcher.getContext()));
       if (!(renderer instanceof ChestRenderer)) {
          return null;
-      } else if (!(modelBase instanceof ChestLargeModel)) {
-         Config.warn("Not a large chest model: " + String.valueOf(modelBase));
+      } else if (!(modelBase instanceof ChestLargeModel chestModel)) {
+         Config.warn("Not a large chest model: " + modelBase);
          return null;
       } else {
-         ChestLargeModel chestModel = (ChestLargeModel)modelBase;
-         renderer = chestModel.updateRenderer(renderer);
-         return renderer;
+         return chestModel.updateRenderer(renderer);
       }
    }
 }

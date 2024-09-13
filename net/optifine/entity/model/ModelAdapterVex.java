@@ -12,12 +12,13 @@ import net.minecraft.client.renderer.entity.VexRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterVex extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterVex() {
       super(EntityType.f_20491_, "vex", 0.3F);
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof VexModel modelVex)) {
          return null;
@@ -31,13 +32,13 @@ public class ModelAdapterVex extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "body");
       map.put("head", "head");
       map.put("right_arm", "right_arm");
@@ -48,10 +49,12 @@ public class ModelAdapterVex extends ModelAdapter {
       return map;
    }
 
+   @Override
    public Model makeModel() {
       return new VexModel(bakeModelLayer(ModelLayers.f_171209_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       VexRenderer render = new VexRenderer(renderManager.getContext());

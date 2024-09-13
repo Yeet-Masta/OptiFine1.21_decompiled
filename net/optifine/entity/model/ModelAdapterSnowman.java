@@ -14,10 +14,12 @@ public class ModelAdapterSnowman extends ModelAdapter {
       super(EntityType.f_20528_, "snow_golem", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new SnowGolemModel(bakeModelLayer(ModelLayers.f_171243_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SnowGolemModel modelSnowman)) {
          return null;
@@ -36,10 +38,12 @@ public class ModelAdapterSnowman extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "body_bottom", "head", "right_hand", "left_hand", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SnowGolemRenderer render = new SnowGolemRenderer(renderManager.getContext());

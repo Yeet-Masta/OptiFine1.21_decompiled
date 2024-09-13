@@ -33,9 +33,9 @@ public class BedModel extends Model {
          this.legs[2] = footRoot.m_171324_("left_leg");
          this.legs[3] = footRoot.m_171324_("right_leg");
       }
-
    }
 
+   @Override
    public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
    }
 

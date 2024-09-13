@@ -13,10 +13,12 @@ public class ModelAdapterBanner extends ModelAdapter {
       super(BlockEntityType.f_58935_, "banner", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new BannerModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BannerModel modelBanner)) {
          return null;
@@ -29,24 +31,22 @@ public class ModelAdapterBanner extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"slate", "stand", "top"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model model, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58935_, index, () -> {
-         return new BannerRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58935_, index, () -> new BannerRenderer(dispatcher.getContext()));
       if (!(renderer instanceof BannerRenderer)) {
          return null;
-      } else if (!(model instanceof BannerModel)) {
-         Config.warn("Not a banner model: " + String.valueOf(model));
+      } else if (!(model instanceof BannerModel bannerModel)) {
+         Config.warn("Not a banner model: " + model);
          return null;
       } else {
-         BannerModel bannerModel = (BannerModel)model;
-         renderer = bannerModel.updateRenderer(renderer);
-         return renderer;
+         return bannerModel.updateRenderer(renderer);
       }
    }
 }

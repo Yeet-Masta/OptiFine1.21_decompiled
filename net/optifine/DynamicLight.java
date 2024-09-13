@@ -1,32 +1,32 @@
 package net.optifine;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 public class DynamicLight {
    private Entity entity = null;
    private double offsetY = 0.0;
-   private double lastPosX = -2.147483648E9;
-   private double lastPosY = -2.147483648E9;
-   private double lastPosZ = -2.147483648E9;
+   private double lastPosX = -2.1474836E9F;
+   private double lastPosY = -2.1474836E9F;
+   private double lastPosZ = -2.1474836E9F;
    private int lastLightLevel = 0;
    private long timeCheckMs = 0L;
-   private Set setLitChunkPos = new HashSet();
-   private BlockPos.MutableBlockPos blockPosMutable = new BlockPos.MutableBlockPos();
+   private Set<BlockPos> setLitChunkPos = new HashSet();
+   private MutableBlockPos blockPosMutable = new MutableBlockPos();
 
    public DynamicLight(Entity entity) {
       this.entity = entity;
       this.offsetY = (double)entity.m_20192_();
    }
 
-   public void update(LevelRenderer renderGlobal) {
+   public void m_252999_(LevelRenderer renderGlobal) {
       if (Config.isDynamicLightsFast()) {
          long timeNowMs = System.currentTimeMillis();
          if (timeNowMs < this.timeCheckMs + 500L) {
@@ -49,10 +49,10 @@ public class DynamicLight {
          this.lastPosY = posY;
          this.lastPosZ = posZ;
          this.lastLightLevel = lightLevel;
-         Set setNewPos = new HashSet();
+         Set<BlockPos> setNewPos = new HashSet();
          if (lightLevel > 0) {
             Direction dirX = (Mth.m_14107_(posX) & 15) >= 8 ? Direction.EAST : Direction.WEST;
-            Direction dirY = (Mth.m_14107_(posY) & 15) >= 8 ? Direction.field_61 : Direction.DOWN;
+            Direction dirY = (Mth.m_14107_(posY) & 15) >= 8 ? Direction.UP : Direction.DOWN;
             Direction dirZ = (Mth.m_14107_(posZ) & 15) >= 8 ? Direction.SOUTH : Direction.NORTH;
             BlockPos chunkPos = BlockPos.m_274561_(posX, posY, posZ);
             SectionRenderDispatcher.RenderSection chunk = renderGlobal.getRenderChunk(chunkPos);
@@ -89,7 +89,7 @@ public class DynamicLight {
       return renderChunk != null ? renderChunk.m_292593_(facing) : pos.m_5484_(facing, 16);
    }
 
-   private void updateChunkLight(SectionRenderDispatcher.RenderSection renderChunk, Set setPrevPos, Set setNewPos) {
+   private void updateChunkLight(SectionRenderDispatcher.RenderSection renderChunk, Set<BlockPos> setPrevPos, Set<BlockPos> setNewPos) {
       if (renderChunk != null) {
          SectionRenderDispatcher.CompiledSection compiledChunk = renderChunk.m_293175_();
          if (compiledChunk != null && !compiledChunk.m_295467_()) {
@@ -105,19 +105,14 @@ public class DynamicLight {
          if (setNewPos != null) {
             setNewPos.add(pos);
          }
-
       }
    }
 
    public void updateLitChunks(LevelRenderer renderGlobal) {
-      Iterator it = this.setLitChunkPos.iterator();
-
-      while(it.hasNext()) {
-         BlockPos posOld = (BlockPos)it.next();
+      for (BlockPos posOld : this.setLitChunkPos) {
          SectionRenderDispatcher.RenderSection chunkOld = renderGlobal.getRenderChunk(posOld);
-         this.updateChunkLight(chunkOld, (Set)null, (Set)null);
+         this.updateChunkLight(chunkOld, null, null);
       }
-
    }
 
    public Entity getEntity() {
@@ -145,7 +140,6 @@ public class DynamicLight {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.entity);
-      return "Entity: " + var10000 + ", offsetY: " + this.offsetY;
+      return "Entity: " + this.entity + ", offsetY: " + this.offsetY;
    }
 }

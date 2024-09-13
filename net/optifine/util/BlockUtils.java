@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.PowderSnowBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -21,17 +22,19 @@ import net.optifine.Config;
 import net.optifine.render.RenderEnv;
 
 public class BlockUtils {
-   private static final ThreadLocal threadLocalKey = ThreadLocal.withInitial(() -> {
-      return new RenderSideCacheKey((BlockState)null, (BlockState)null, (Direction)null);
-   });
-   private static final ThreadLocal threadLocalMap = ThreadLocal.withInitial(() -> {
-      Object2ByteLinkedOpenHashMap object2bytelinkedopenhashmap = new Object2ByteLinkedOpenHashMap(200) {
-         protected void rehash(int p_rehash_1_) {
-         }
-      };
-      object2bytelinkedopenhashmap.defaultReturnValue((byte)127);
-      return object2bytelinkedopenhashmap;
-   });
+   private static ThreadLocal<BlockUtils.RenderSideCacheKey> threadLocalKey = ThreadLocal.withInitial(() -> new BlockUtils.RenderSideCacheKey(null, null, null));
+   private static ThreadLocal<Object2ByteLinkedOpenHashMap<BlockUtils.RenderSideCacheKey>> threadLocalMap = ThreadLocal.withInitial(
+      () -> {
+         Object2ByteLinkedOpenHashMap<BlockUtils.RenderSideCacheKey> object2bytelinkedopenhashmap = new Object2ByteLinkedOpenHashMap<BlockUtils.RenderSideCacheKey>(
+            200
+         ) {
+            protected void rehash(int p_rehash_1_) {
+            }
+         };
+         object2bytelinkedopenhashmap.defaultReturnValue((byte)127);
+         return object2bytelinkedopenhashmap;
+      }
+   );
 
    public static boolean shouldSideBeRendered(BlockState blockStateIn, BlockGetter blockReaderIn, BlockPos blockPosIn, Direction facingIn, RenderEnv renderEnv) {
       BlockPos posNeighbour = blockPosIn.m_121945_(facingIn);
@@ -41,11 +44,21 @@ public class BlockUtils {
       } else if (blockStateIn.m_60719_(stateNeighbour, facingIn)) {
          return false;
       } else {
-         return stateNeighbour.m_60815_() ? shouldSideBeRenderedCached(blockStateIn, blockReaderIn, blockPosIn, facingIn, renderEnv, stateNeighbour, posNeighbour) : true;
+         return stateNeighbour.m_60815_()
+            ? shouldSideBeRenderedCached(blockStateIn, blockReaderIn, blockPosIn, facingIn, renderEnv, stateNeighbour, posNeighbour)
+            : true;
       }
    }
 
-   public static boolean shouldSideBeRenderedCached(BlockState blockStateIn, BlockGetter blockReaderIn, BlockPos blockPosIn, Direction facingIn, RenderEnv renderEnv, BlockState stateNeighbourIn, BlockPos posNeighbourIn) {
+   public static boolean shouldSideBeRenderedCached(
+      BlockState blockStateIn,
+      BlockGetter blockReaderIn,
+      BlockPos blockPosIn,
+      Direction facingIn,
+      RenderEnv renderEnv,
+      BlockState stateNeighbourIn,
+      BlockPos posNeighbourIn
+   ) {
       long key = (long)blockStateIn.getBlockStateId() << 36 | (long)stateNeighbourIn.getBlockStateId() << 4 | (long)facingIn.ordinal();
       Long2ByteLinkedOpenHashMap map = renderEnv.getRenderSideMap();
       byte b0 = map.getAndMoveToFirst(key);
@@ -78,32 +91,26 @@ public class BlockUtils {
 
    public static int getMetadata(BlockState blockState) {
       Block block = blockState.m_60734_();
-      StateDefinition stateContainer = block.m_49965_();
-      List validStates = stateContainer.m_61056_();
-      int metadata = validStates.indexOf(blockState);
-      return metadata;
+      StateDefinition<Block, BlockState> stateContainer = block.m_49965_();
+      List<BlockState> validStates = stateContainer.m_61056_();
+      return validStates.indexOf(blockState);
    }
 
    public static int getMetadataCount(Block block) {
-      StateDefinition stateContainer = block.m_49965_();
-      List validStates = stateContainer.m_61056_();
+      StateDefinition<Block, BlockState> stateContainer = block.m_49965_();
+      List<BlockState> validStates = stateContainer.m_61056_();
       return validStates.size();
    }
 
    public static BlockState getBlockState(Block block, int metadata) {
-      StateDefinition stateContainer = block.m_49965_();
-      List validStates = stateContainer.m_61056_();
-      if (metadata >= 0 && metadata < validStates.size()) {
-         BlockState blockState = (BlockState)validStates.get(metadata);
-         return blockState;
-      } else {
-         return null;
-      }
+      StateDefinition<Block, BlockState> stateContainer = block.m_49965_();
+      List<BlockState> validStates = stateContainer.m_61056_();
+      return metadata >= 0 && metadata < validStates.size() ? (BlockState)validStates.get(metadata) : null;
    }
 
-   public static List getBlockStates(Block block) {
-      StateDefinition stateContainer = block.m_49965_();
-      List validStates = stateContainer.m_61056_();
+   public static List<BlockState> getBlockStates(Block block) {
+      StateDefinition<Block, BlockState> stateContainer = block.m_49965_();
+      List<BlockState> validStates = stateContainer.m_61056_();
       return validStates;
    }
 
@@ -111,7 +118,7 @@ public class BlockUtils {
       return stateIn.isCacheOpaqueCollisionShape();
    }
 
-   public static Collection getProperties(BlockState blockState) {
+   public static Collection<Property> getProperties(BlockState blockState) {
       return blockState.m_61147_();
    }
 
@@ -125,7 +132,7 @@ public class BlockUtils {
       return Config.isFalse(value);
    }
 
-   public static final class RenderSideCacheKey {
+   public static class RenderSideCacheKey {
       private BlockState blockState1;
       private BlockState blockState2;
       private Direction facing;
@@ -144,18 +151,19 @@ public class BlockUtils {
          this.hashCode = 0;
       }
 
-      public RenderSideCacheKey duplicate() {
-         return new RenderSideCacheKey(this.blockState1, this.blockState2, this.facing);
+      public BlockUtils.RenderSideCacheKey duplicate() {
+         return new BlockUtils.RenderSideCacheKey(this.blockState1, this.blockState2, this.facing);
       }
 
       public boolean equals(Object p_equals_1_) {
          if (this == p_equals_1_) {
             return true;
-         } else if (!(p_equals_1_ instanceof RenderSideCacheKey)) {
-            return false;
          } else {
-            RenderSideCacheKey block$rendersidecachekey = (RenderSideCacheKey)p_equals_1_;
-            return this.blockState1 == block$rendersidecachekey.blockState1 && this.blockState2 == block$rendersidecachekey.blockState2 && this.facing == block$rendersidecachekey.facing;
+            return !(p_equals_1_ instanceof BlockUtils.RenderSideCacheKey block$rendersidecachekey)
+               ? false
+               : this.blockState1 == block$rendersidecachekey.blockState1
+                  && this.blockState2 == block$rendersidecachekey.blockState2
+                  && this.facing == block$rendersidecachekey.facing;
          }
       }
 

@@ -28,7 +28,7 @@ public class HashUtils {
    public static String toHexString(byte[] data) {
       StringBuffer sb = new StringBuffer();
 
-      for(int i = 0; i < data.length; ++i) {
+      for (int i = 0; i < data.length; i++) {
          sb.append(Integer.toHexString(data[i] & 255 | 256).substring(1, 3));
       }
 
@@ -49,7 +49,6 @@ public class HashUtils {
 
    public static byte[] getHash(byte[] data, String digest) throws NoSuchAlgorithmException {
       MessageDigest md = MessageDigest.getInstance(digest);
-      byte[] array = md.digest(data);
-      return array;
+      return md.digest(data);
    }
 }

@@ -6,50 +6,45 @@ import java.util.Iterator;
 import java.util.List;
 
 public class IteratorCache {
-   private static Deque dequeIterators = new ArrayDeque();
+   private static Deque<IteratorCache.IteratorReusable<Object>> dequeIterators = new ArrayDeque();
 
-   public static Iterator getReadOnly(List list) {
-      synchronized(dequeIterators) {
-         IteratorReusable it = (IteratorReusable)dequeIterators.pollFirst();
+   public static Iterator<Object> getReadOnly(List list) {
+      synchronized (dequeIterators) {
+         IteratorCache.IteratorReusable<Object> it = (IteratorCache.IteratorReusable<Object>)dequeIterators.pollFirst();
          if (it == null) {
-            it = new IteratorReadOnly();
+            it = new IteratorCache.IteratorReadOnly();
          }
 
-         ((IteratorReusable)it).setList(list);
-         return (Iterator)it;
+         it.setList(list);
+         return it;
       }
    }
 
-   private static void finished(IteratorReusable iterator) {
-      synchronized(dequeIterators) {
+   private static void finished(IteratorCache.IteratorReusable<Object> iterator) {
+      synchronized (dequeIterators) {
          if (dequeIterators.size() <= 1000) {
-            iterator.setList((List)null);
+            iterator.setList(null);
             dequeIterators.addLast(iterator);
          }
       }
    }
 
    static {
-      for(int i = 0; i < 1000; ++i) {
-         IteratorReadOnly it = new IteratorReadOnly();
+      for (int i = 0; i < 1000; i++) {
+         IteratorCache.IteratorReadOnly it = new IteratorCache.IteratorReadOnly();
          dequeIterators.add(it);
       }
-
    }
 
-   public interface IteratorReusable extends Iterator {
-      void setList(List var1);
-   }
-
-   public static class IteratorReadOnly implements IteratorReusable {
-      private List list;
+   public static class IteratorReadOnly implements IteratorCache.IteratorReusable<Object> {
+      private List<Object> list;
       private int index;
       private boolean hasNext;
 
-      public void setList(List list) {
+      @Override
+      public void setList(List<Object> list) {
          if (this.hasNext) {
-            String var10002 = String.valueOf(this.list);
-            throw new RuntimeException("Iterator still used, oldList: " + var10002 + ", newList: " + String.valueOf(list));
+            throw new RuntimeException("Iterator still used, oldList: " + this.list + ", newList: " + list);
          } else {
             this.list = list;
             this.index = 0;
@@ -62,7 +57,7 @@ public class IteratorCache {
             return null;
          } else {
             Object obj = this.list.get(this.index);
-            ++this.index;
+            this.index++;
             this.hasNext = this.index < this.list.size();
             return obj;
          }
@@ -76,5 +71,9 @@ public class IteratorCache {
             return this.hasNext;
          }
       }
+   }
+
+   public interface IteratorReusable<E> extends Iterator<E> {
+      void setList(List<E> var1);
    }
 }

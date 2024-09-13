@@ -1,26 +1,18 @@
 package net.minecraft.client.renderer.chunk;
 
-import java.util.Iterator;
 import java.util.Set;
 import net.minecraft.core.Direction;
 
 public class VisibilitySet {
-   private static final int f_112979_ = Direction.values().length;
+   private static int f_112979_ = Direction.values().length;
    private long bits;
 
-   public void m_112990_(Set facing) {
-      Iterator var2 = facing.iterator();
-
-      while(var2.hasNext()) {
-         Direction direction = (Direction)var2.next();
-         Iterator var4 = facing.iterator();
-
-         while(var4.hasNext()) {
-            Direction direction1 = (Direction)var4.next();
+   public void m_112990_(Set<Direction> facing) {
+      for (Direction direction : facing) {
+         for (Direction direction1 : facing) {
             this.m_112986_(direction, direction1, true);
          }
       }
-
    }
 
    public void m_112986_(Direction facing, Direction facing2, boolean value) {
@@ -34,7 +26,6 @@ public class VisibilitySet {
       } else {
          this.bits = 0L;
       }
-
    }
 
    public boolean m_112983_(Direction facing, Direction facing2) {
@@ -44,28 +35,17 @@ public class VisibilitySet {
    public String toString() {
       StringBuilder stringbuilder = new StringBuilder();
       stringbuilder.append(' ');
-      Direction[] var2 = Direction.values();
-      int var3 = var2.length;
 
-      int var4;
-      Direction direction2;
-      for(var4 = 0; var4 < var3; ++var4) {
-         direction2 = var2[var4];
-         stringbuilder.append(' ').append(direction2.toString().toUpperCase().charAt(0));
+      for (Direction direction : Direction.values()) {
+         stringbuilder.append(' ').append(direction.toString().toUpperCase().charAt(0));
       }
 
       stringbuilder.append('\n');
-      var2 = Direction.values();
-      var3 = var2.length;
 
-      for(var4 = 0; var4 < var3; ++var4) {
-         direction2 = var2[var4];
+      for (Direction direction2 : Direction.values()) {
          stringbuilder.append(direction2.toString().toUpperCase().charAt(0));
-         Direction[] var6 = Direction.values();
-         int var7 = var6.length;
 
-         for(int var8 = 0; var8 < var7; ++var8) {
-            Direction direction1 = var6[var8];
+         for (Direction direction1 : Direction.values()) {
             if (direction2 == direction1) {
                stringbuilder.append("  ");
             } else {
@@ -90,7 +70,6 @@ public class VisibilitySet {
       } else {
          this.clearBit(i);
       }
-
    }
 
    private void setBit(int i) {

@@ -91,11 +91,10 @@ public class FlipTextures {
    public void fill(int val) {
       int limit = this.limit();
 
-      for(int i = 0; i < limit; ++i) {
+      for (int i = 0; i < limit; i++) {
          this.texturesA.put(i, val);
          this.texturesB.put(i, val);
       }
-
    }
 
    public FlipTextures clear() {
@@ -105,7 +104,15 @@ public class FlipTextures {
    }
 
    public String toString() {
-      String var10000 = this.name;
-      return var10000 + ", A: " + BufferUtil.getBufferString(this.texturesA) + ", B: " + BufferUtil.getBufferString(this.texturesB) + ", flips: [" + ArrayUtils.arrayToString(this.flips, this.limit()) + "], changed: [" + ArrayUtils.arrayToString(this.changed, this.limit()) + "]";
+      return this.name
+         + ", A: "
+         + BufferUtil.getBufferString(this.texturesA)
+         + ", B: "
+         + BufferUtil.getBufferString(this.texturesB)
+         + ", flips: ["
+         + ArrayUtils.arrayToString(this.flips, this.limit())
+         + "], changed: ["
+         + ArrayUtils.arrayToString(this.changed, this.limit())
+         + "]";
    }
 }

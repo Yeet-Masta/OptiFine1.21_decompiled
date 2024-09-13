@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -40,43 +39,45 @@ import org.lwjgl.system.MemoryUtil;
 
 @DontObfuscate
 public class GlStateManager {
-   private static final boolean ON_LINUX;
-   public static final int TEXTURE_COUNT = 12;
-   private static final BlendState BLEND;
-   private static final DepthState DEPTH;
-   private static final CullState CULL;
-   private static final PolygonOffsetState POLY_OFFSET;
-   private static final ColorLogicState COLOR_LOGIC;
-   private static final StencilState STENCIL;
-   private static final ScissorState SCISSOR;
+   private static boolean ON_LINUX = Util.m_137581_() == Util.OS.LINUX;
+   public static int TEXTURE_COUNT;
+   private static GlStateManager.BlendState BLEND = new GlStateManager.BlendState();
+   private static GlStateManager.DepthState DEPTH = new GlStateManager.DepthState();
+   private static GlStateManager.CullState CULL = new GlStateManager.CullState();
+   private static GlStateManager.PolygonOffsetState POLY_OFFSET = new GlStateManager.PolygonOffsetState();
+   private static GlStateManager.ColorLogicState COLOR_LOGIC = new GlStateManager.ColorLogicState();
+   private static GlStateManager.StencilState STENCIL = new GlStateManager.StencilState();
+   private static GlStateManager.ScissorState SCISSOR = new GlStateManager.ScissorState();
    private static int activeTexture;
-   private static final TextureState[] TEXTURES;
-   private static final ColorMask COLOR_MASK;
-   private static boolean alphaTest;
-   private static int alphaTestFunc;
-   private static float alphaTestRef;
-   private static LockCounter alphaLock;
-   private static GlAlphaState alphaLockState;
-   private static LockCounter blendLock;
-   private static GlBlendState blendLockState;
-   private static LockCounter cullLock;
-   private static GlCullState cullLockState;
+   private static GlStateManager.TextureState[] TEXTURES = (GlStateManager.TextureState[])IntStream.range(0, 32)
+      .mapToObj(indexIn -> new GlStateManager.TextureState())
+      .toArray(GlStateManager.TextureState[]::new);
+   private static GlStateManager.ColorMask COLOR_MASK = new GlStateManager.ColorMask();
+   private static boolean alphaTest = false;
+   private static int alphaTestFunc = 519;
+   private static float alphaTestRef = 0.0F;
+   private static LockCounter alphaLock = new LockCounter();
+   private static GlAlphaState alphaLockState = new GlAlphaState();
+   private static LockCounter blendLock = new LockCounter();
+   private static GlBlendState blendLockState = new GlBlendState();
+   private static LockCounter cullLock = new LockCounter();
+   private static GlCullState cullLockState = new GlCullState();
    public static boolean vboRegions;
    public static int GL_COPY_READ_BUFFER;
    public static int GL_COPY_WRITE_BUFFER;
    public static int GL_ARRAY_BUFFER;
    public static int GL_STATIC_DRAW;
-   public static final int GL_QUADS = 7;
-   public static final int GL_TRIANGLES = 4;
-   public static final int GL_TEXTURE0 = 33984;
-   public static final int GL_TEXTURE1 = 33985;
-   public static final int GL_TEXTURE2 = 33986;
+   public static int GL_QUADS;
+   public static int GL_TRIANGLES;
+   public static int GL_TEXTURE0;
+   public static int GL_TEXTURE1;
+   public static int GL_TEXTURE2;
    private static int framebufferRead;
    private static int framebufferDraw;
-   private static final int[] IMAGE_TEXTURES;
-   private static int glProgram;
-   public static float lastBrightnessX;
-   public static float lastBrightnessY;
+   private static int[] IMAGE_TEXTURES = new int[8];
+   private static int glProgram = 0;
+   public static float lastBrightnessX = 0.0F;
+   public static float lastBrightnessY = 0.0F;
 
    public static void disableAlphaTest() {
       if (alphaLock.isLocked()) {
@@ -114,7 +115,6 @@ public class GlStateManager {
             Shaders.uniform_alphaTestRef.setValue(0.0F);
          }
       }
-
    }
 
    public static void _disableScissorTest() {
@@ -148,7 +148,6 @@ public class GlStateManager {
          DEPTH.f_84628_ = depthFunc;
          GL11.glDepthFunc(depthFunc);
       }
-
    }
 
    public static void _depthMask(boolean flagIn) {
@@ -157,7 +156,6 @@ public class GlStateManager {
          DEPTH.f_84627_ = flagIn;
          GL11.glDepthMask(flagIn);
       }
-
    }
 
    public static void _disableBlend() {
@@ -194,7 +192,6 @@ public class GlStateManager {
 
             GL11.glBlendFunc(srcFactor, dstFactor);
          }
-
       }
    }
 
@@ -214,7 +211,6 @@ public class GlStateManager {
 
             glBlendFuncSeparate(srcFactor, dstFactor, srcFactorAlpha, dstFactorAlpha);
          }
-
       }
    }
 
@@ -234,7 +230,7 @@ public class GlStateManager {
       boolean multiDrawArrays = true;
       vboRegions = copyBuffer && multiDrawArrays;
       if (!vboRegions) {
-         List list = new ArrayList();
+         List<String> list = new ArrayList();
          if (!copyBuffer) {
             list.add("OpenGL 1.3, ARB_copy_buffer");
          }
@@ -246,7 +242,6 @@ public class GlStateManager {
          String vboRegionWarn = "VboRegions not supported, missing: " + Config.listToString(list);
          Config.dbg(vboRegionWarn);
       }
-
    }
 
    public static int glGetProgrami(int program, int pname) {
@@ -269,13 +264,11 @@ public class GlStateManager {
       return GL20.glCreateShader(type);
    }
 
-   public static void glShaderSource(int shaderIn, List source) {
+   public static void glShaderSource(int shaderIn, List<String> source) {
       RenderSystem.assertOnRenderThread();
       StringBuilder stringbuilder = new StringBuilder();
-      Iterator var3 = source.iterator();
 
-      while(var3.hasNext()) {
-         String s = (String)var3.next();
+      for (String s : source) {
          stringbuilder.append(s);
       }
 
@@ -310,7 +303,6 @@ public class GlStateManager {
       } finally {
          MemoryUtil.memFree(bytebuffer);
       }
-
    }
 
    public static void glCompileShader(int shaderIn) {
@@ -593,13 +585,16 @@ public class GlStateManager {
 
    public static void setupGuiFlatDiffuseLighting(Vector3f vec1, Vector3f vec2) {
       RenderSystem.assertOnRenderThread();
-      Matrix4f matrix4f = (new Matrix4f()).rotationY(-0.3926991F).rotateX(2.3561945F);
+      Matrix4f matrix4f = new Matrix4f().rotationY((float) (-Math.PI / 8)).rotateX((float) (Math.PI * 3.0 / 4.0));
       setupLevelDiffuseLighting(vec1, vec2, matrix4f);
    }
 
    public static void setupGui3DDiffuseLighting(Vector3f vec1, Vector3f vec2) {
       RenderSystem.assertOnRenderThread();
-      Matrix4f matrix4f = (new Matrix4f()).scaling(1.0F, -1.0F, 1.0F).rotateYXZ(1.0821041F, 3.2375858F, 0.0F).rotateYXZ(-0.3926991F, 2.3561945F, 0.0F);
+      Matrix4f matrix4f = new Matrix4f()
+         .scaling(1.0F, -1.0F, 1.0F)
+         .rotateYXZ(1.0821041F, 3.2375858F, 0.0F)
+         .rotateYXZ((float) (-Math.PI / 8), (float) (Math.PI * 3.0 / 4.0), 0.0F);
       setupLevelDiffuseLighting(vec1, vec2, matrix4f);
    }
 
@@ -643,7 +638,6 @@ public class GlStateManager {
          POLY_OFFSET.f_84728_ = units;
          GL11.glPolygonOffset(factor, units);
       }
-
    }
 
    public static void _enableColorLogicOp() {
@@ -662,16 +656,14 @@ public class GlStateManager {
          COLOR_LOGIC.f_84604_ = logicOperation;
          GL11.glLogicOp(logicOperation);
       }
-
    }
 
    public static void _activeTexture(int textureIn) {
       RenderSystem.assertOnRenderThread();
-      if (activeTexture != textureIn - '蓀') {
-         activeTexture = textureIn - '蓀';
+      if (activeTexture != textureIn - 33984) {
+         activeTexture = textureIn - 33984;
          glActiveTexture(textureIn);
       }
-
    }
 
    public static void enableTexture() {
@@ -711,38 +703,27 @@ public class GlStateManager {
    public static void _deleteTexture(int textureIn) {
       RenderSystem.assertOnRenderThreadOrInit();
       if (textureIn != 0) {
-         for(int i = 0; i < IMAGE_TEXTURES.length; ++i) {
+         for (int i = 0; i < IMAGE_TEXTURES.length; i++) {
             if (IMAGE_TEXTURES[i] == textureIn) {
                IMAGE_TEXTURES[i] = 0;
             }
          }
 
          GL11.glDeleteTextures(textureIn);
-         TextureState[] var5 = TEXTURES;
-         int var2 = var5.length;
 
-         for(int var3 = 0; var3 < var2; ++var3) {
-            TextureState glstatemanager$texturestate = var5[var3];
+         for (GlStateManager.TextureState glstatemanager$texturestate : TEXTURES) {
             if (glstatemanager$texturestate.f_84801_ == textureIn) {
                glstatemanager$texturestate.f_84801_ = 0;
             }
          }
-
       }
    }
 
    public static void _deleteTextures(int[] texturesIn) {
       RenderSystem.assertOnRenderThreadOrInit();
-      TextureState[] var1 = TEXTURES;
-      int var2 = var1.length;
 
-      for(int var3 = 0; var3 < var2; ++var3) {
-         TextureState glstatemanager$texturestate = var1[var3];
-         int[] var5 = texturesIn;
-         int var6 = texturesIn.length;
-
-         for(int var7 = 0; var7 < var6; ++var7) {
-            int i = var5[var7];
+      for (GlStateManager.TextureState glstatemanager$texturestate : TEXTURES) {
+         for (int i : texturesIn) {
             if (glstatemanager$texturestate.f_84801_ == i) {
                glstatemanager$texturestate.f_84801_ = -1;
             }
@@ -761,14 +742,15 @@ public class GlStateManager {
             SmartAnimations.textureRendered(textureIn);
          }
       }
-
    }
 
    public static int _getActiveTexture() {
-      return activeTexture + '蓀';
+      return activeTexture + 33984;
    }
 
-   public static void _texImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, @Nullable IntBuffer pixels) {
+   public static void _texImage2D(
+      int target, int level, int internalFormat, int width, int height, int border, int format, int type, @Nullable IntBuffer pixels
+   ) {
       RenderSystem.assertOnRenderThreadOrInit();
       GL11.glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
    }
@@ -778,18 +760,19 @@ public class GlStateManager {
       GL11.glTexSubImage2D(target, level, xOffset, yOffset, width, height, format, type, pixels);
    }
 
-   public static void upload(int level, int xOffset, int yOffset, int width, int height, NativeImage.Format imageFormat, IntBuffer pixels, Consumer bufferConsumer) {
+   public static void upload(
+      int level, int xOffset, int yOffset, int width, int height, NativeImage.Format imageFormat, IntBuffer pixels, Consumer<IntBuffer> bufferConsumer
+   ) {
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> {
-            _upload(level, xOffset, yOffset, width, height, imageFormat, pixels, bufferConsumer);
-         });
+         RenderSystem.recordRenderCall(() -> _upload(level, xOffset, yOffset, width, height, imageFormat, pixels, bufferConsumer));
       } else {
          _upload(level, xOffset, yOffset, width, height, imageFormat, pixels, bufferConsumer);
       }
-
    }
 
-   private static void _upload(int level, int xOffset, int yOffset, int width, int height, NativeImage.Format imageFormat, IntBuffer pixels, Consumer bufferConsumer) {
+   private static void _upload(
+      int level, int xOffset, int yOffset, int width, int height, NativeImage.Format imageFormat, IntBuffer pixels, Consumer<IntBuffer> bufferConsumer
+   ) {
       try {
          RenderSystem.assertOnRenderThreadOrInit();
          _pixelStore(3314, width);
@@ -798,9 +781,8 @@ public class GlStateManager {
          imageFormat.m_85169_();
          GL11.glTexSubImage2D(3553, level, xOffset, yOffset, width, height, imageFormat.m_85170_(), 5121, pixels);
       } finally {
-         bufferConsumer.accept(pixels);
+         bufferConsumer.m_340568_(pixels);
       }
-
    }
 
    public static void _getTexImage(int tex, int level, int format, int type, long pixels) {
@@ -826,7 +808,6 @@ public class GlStateManager {
          COLOR_MASK.f_84611_ = alpha;
          GL11.glColorMask(red, green, blue, alpha);
       }
-
    }
 
    public static void _stencilFunc(int func, int ref, int mask) {
@@ -837,7 +818,6 @@ public class GlStateManager {
          STENCIL.f_84767_.f_84763_ = mask;
          GL11.glStencilFunc(func, ref, mask);
       }
-
    }
 
    public static void _stencilMask(int mask) {
@@ -846,7 +826,6 @@ public class GlStateManager {
          STENCIL.f_84768_ = mask;
          GL11.glStencilMask(mask);
       }
-
    }
 
    public static void _stencilOp(int sfail, int dpfail, int dppass) {
@@ -857,7 +836,6 @@ public class GlStateManager {
          STENCIL.f_84771_ = dppass;
          GL11.glStencilOp(sfail, dpfail, dppass);
       }
-
    }
 
    public static void _clearDepth(double depth) {
@@ -881,7 +859,6 @@ public class GlStateManager {
       if (checkError) {
          _getError();
       }
-
    }
 
    public static void _glDrawPixels(int width, int height, int format, int type, long pixels) {
@@ -915,7 +892,7 @@ public class GlStateManager {
       if (Config.isShaders() && Shaders.isRenderingWorld) {
          int countInstances = Shaders.activeProgram.getCountInstances();
          if (countInstances > 1) {
-            for(int i = 1; i < countInstances; ++i) {
+            for (int i = 1; i < countInstances; i++) {
                Shaders.uniform_instanceId.setValue(i);
                GL11.glDrawElements(modeIn, countIn, typeIn, indicesIn);
             }
@@ -923,7 +900,6 @@ public class GlStateManager {
             Shaders.uniform_instanceId.setValue(0);
          }
       }
-
    }
 
    public static void drawArrays(int mode, int first, int count) {
@@ -932,7 +908,7 @@ public class GlStateManager {
       if (Config.isShaders() && Shaders.isRenderingWorld) {
          int countInstances = Shaders.activeProgram.getCountInstances();
          if (countInstances > 1) {
-            for(int i = 1; i < countInstances; ++i) {
+            for (int i = 1; i < countInstances; i++) {
                Shaders.uniform_instanceId.setValue(i);
                GL11.glDrawArrays(mode, first, count);
             }
@@ -940,7 +916,6 @@ public class GlStateManager {
             Shaders.uniform_instanceId.setValue(0);
          }
       }
-
    }
 
    public static void _pixelStore(int pname, int param) {
@@ -978,7 +953,7 @@ public class GlStateManager {
    }
 
    public static int getActiveTextureUnit() {
-      return '蓀' + activeTexture;
+      return 33984 + activeTexture;
    }
 
    public static void bindCurrentTexture() {
@@ -1003,7 +978,6 @@ public class GlStateManager {
             if (glAct != act || glTex != tex) {
                Config.dbg("checkTexture: act: " + act + ", glAct: " + glAct + ", tex: " + tex + ", glTex: " + glTex);
             }
-
          }
       }
    }
@@ -1015,7 +989,7 @@ public class GlStateManager {
    public static void deleteTextures(IntBuffer buf) {
       buf.rewind();
 
-      while(buf.position() < buf.limit()) {
+      while (buf.position() < buf.limit()) {
          int texId = buf.get();
          _deleteTexture(texId);
       }
@@ -1086,7 +1060,6 @@ public class GlStateManager {
          } else {
             _blendFuncSeparate(gbs.getSrcFactor(), gbs.getDstFactor(), gbs.getSrcFactorAlpha(), gbs.getDstFactorAlpha());
          }
-
       }
    }
 
@@ -1126,7 +1099,7 @@ public class GlStateManager {
       if (Config.isShaders()) {
          int countInstances = Shaders.activeProgram.getCountInstances();
          if (countInstances > 1) {
-            for(int i = 1; i < countInstances; ++i) {
+            for (int i = 1; i < countInstances; i++) {
                Shaders.uniform_instanceId.setValue(i);
                GL14.glMultiDrawArrays(mode, bFirst, bCount);
             }
@@ -1134,7 +1107,6 @@ public class GlStateManager {
             Shaders.uniform_instanceId.setValue(0);
          }
       }
-
    }
 
    public static void glMultiDrawElements(int modeIn, IntBuffer countsIn, int typeIn, PointerBuffer indicesIn) {
@@ -1143,7 +1115,7 @@ public class GlStateManager {
       if (Config.isShaders() && Shaders.isRenderingWorld) {
          int countInstances = Shaders.activeProgram.getCountInstances();
          if (countInstances > 1) {
-            for(int i = 1; i < countInstances; ++i) {
+            for (int i = 1; i < countInstances; i++) {
                Shaders.uniform_instanceId.setValue(i);
                GL14.glMultiDrawElements(modeIn, countsIn, typeIn, indicesIn);
             }
@@ -1151,7 +1123,6 @@ public class GlStateManager {
             Shaders.uniform_instanceId.setValue(0);
          }
       }
-
    }
 
    public static void clear(int mask) {
@@ -1190,7 +1161,7 @@ public class GlStateManager {
 
    public static void setBlendsIndexed(GlBlendState[] blends) {
       if (blends != null) {
-         for(int i = 0; i < blends.length; ++i) {
+         for (int i = 0; i < blends.length; i++) {
             GlBlendState bs = blends[i];
             if (bs != null) {
                if (bs.isEnabled()) {
@@ -1202,7 +1173,6 @@ public class GlStateManager {
                ARBDrawBuffersBlend.glBlendFuncSeparateiARB(i, bs.getSrcFactor(), bs.getDstFactor(), bs.getSrcFactorAlpha(), bs.getDstFactorAlpha());
             }
          }
-
       }
    }
 
@@ -1222,42 +1192,16 @@ public class GlStateManager {
       return glProgram;
    }
 
-   static {
-      ON_LINUX = Util.m_137581_() == Util.class_0.LINUX;
-      BLEND = new BlendState();
-      DEPTH = new DepthState();
-      CULL = new CullState();
-      POLY_OFFSET = new PolygonOffsetState();
-      COLOR_LOGIC = new ColorLogicState();
-      STENCIL = new StencilState();
-      SCISSOR = new ScissorState();
-      TEXTURES = (TextureState[])IntStream.range(0, 32).mapToObj((indexIn) -> {
-         return new TextureState();
-      }).toArray((x$0) -> {
-         return new TextureState[x$0];
-      });
-      COLOR_MASK = new ColorMask();
-      alphaTest = false;
-      alphaTestFunc = 519;
-      alphaTestRef = 0.0F;
-      alphaLock = new LockCounter();
-      alphaLockState = new GlAlphaState();
-      blendLock = new LockCounter();
-      blendLockState = new GlBlendState();
-      cullLock = new LockCounter();
-      cullLockState = new GlCullState();
-      IMAGE_TEXTURES = new int[8];
-      glProgram = 0;
-      lastBrightnessX = 0.0F;
-      lastBrightnessY = 0.0F;
-   }
-
-   static class ScissorState {
-      public final BooleanState f_84732_ = new BooleanState(3089);
+   static class BlendState {
+      public GlStateManager.BooleanState f_84577_ = new GlStateManager.BooleanState(3042);
+      public int f_84578_ = 1;
+      public int f_84579_ = 0;
+      public int f_84580_ = 1;
+      public int f_84581_ = 0;
    }
 
    static class BooleanState {
-      private final int f_84585_;
+      private int f_84585_;
       private boolean f_84586_;
 
       public BooleanState(int capabilityIn) {
@@ -1282,39 +1226,129 @@ public class GlStateManager {
                GL11.glDisable(this.f_84585_);
             }
          }
-
       }
    }
 
+   static class ColorLogicState {
+      public GlStateManager.BooleanState f_84603_ = new GlStateManager.BooleanState(3058);
+      public int f_84604_ = 5379;
+   }
+
+   static class ColorMask {
+      public boolean f_84608_ = true;
+      public boolean f_84609_ = true;
+      public boolean f_84610_ = true;
+      public boolean f_84611_ = true;
+   }
+
+   static class CullState {
+      public GlStateManager.BooleanState f_84621_ = new GlStateManager.BooleanState(2884);
+      public int f_84622_ = 1029;
+   }
+
    static class DepthState {
-      public final BooleanState f_84626_ = new BooleanState(2929);
+      public GlStateManager.BooleanState f_84626_ = new GlStateManager.BooleanState(2929);
       public boolean f_84627_ = true;
       public int f_84628_ = 513;
    }
 
-   static class BlendState {
-      public final BooleanState f_84577_ = new BooleanState(3042);
-      public int f_84578_ = 1;
-      public int f_84579_ = 0;
-      public int f_84580_ = 1;
-      public int f_84581_ = 0;
+   @DontObfuscate
+   public static enum DestFactor {
+      CONSTANT_ALPHA(32771),
+      CONSTANT_COLOR(32769),
+      DST_ALPHA(772),
+      DST_COLOR(774),
+      ONE(1),
+      ONE_MINUS_CONSTANT_ALPHA(32772),
+      ONE_MINUS_CONSTANT_COLOR(32770),
+      ONE_MINUS_DST_ALPHA(773),
+      ONE_MINUS_DST_COLOR(775),
+      ONE_MINUS_SRC_ALPHA(771),
+      ONE_MINUS_SRC_COLOR(769),
+      SRC_ALPHA(770),
+      SRC_COLOR(768),
+      ZERO(0);
+
+      public int value;
+
+      private DestFactor(final int valueIn) {
+         this.value = valueIn;
+      }
    }
 
-   static class CullState {
-      public final BooleanState f_84621_ = new BooleanState(2884);
-      public int f_84622_ = 1029;
+   public static enum LogicOp {
+      AND(5377),
+      AND_INVERTED(5380),
+      AND_REVERSE(5378),
+      CLEAR(5376),
+      COPY(5379),
+      COPY_INVERTED(5388),
+      EQUIV(5385),
+      INVERT(5386),
+      NAND(5390),
+      NOOP(5381),
+      NOR(5384),
+      OR(5383),
+      OR_INVERTED(5389),
+      OR_REVERSE(5387),
+      SET(5391),
+      XOR(5382);
+
+      public int f_84715_;
+
+      private LogicOp(final int opcodeIn) {
+         this.f_84715_ = opcodeIn;
+      }
    }
 
    static class PolygonOffsetState {
-      public final BooleanState f_84725_ = new BooleanState(32823);
-      public final BooleanState f_84726_ = new BooleanState(10754);
+      public GlStateManager.BooleanState f_84725_ = new GlStateManager.BooleanState(32823);
+      public GlStateManager.BooleanState f_84726_ = new GlStateManager.BooleanState(10754);
       public float f_84727_;
       public float f_84728_;
    }
 
-   static class ColorLogicState {
-      public final BooleanState f_84603_ = new BooleanState(3058);
-      public int f_84604_ = 5379;
+   static class ScissorState {
+      public GlStateManager.BooleanState f_84732_ = new GlStateManager.BooleanState(3089);
+   }
+
+   @DontObfuscate
+   public static enum SourceFactor {
+      CONSTANT_ALPHA(32771),
+      CONSTANT_COLOR(32769),
+      DST_ALPHA(772),
+      DST_COLOR(774),
+      ONE(1),
+      ONE_MINUS_CONSTANT_ALPHA(32772),
+      ONE_MINUS_CONSTANT_COLOR(32770),
+      ONE_MINUS_DST_ALPHA(773),
+      ONE_MINUS_DST_COLOR(775),
+      ONE_MINUS_SRC_ALPHA(771),
+      ONE_MINUS_SRC_COLOR(769),
+      SRC_ALPHA(770),
+      SRC_ALPHA_SATURATE(776),
+      SRC_COLOR(768),
+      ZERO(0);
+
+      public int value;
+
+      private SourceFactor(final int valueIn) {
+         this.value = valueIn;
+      }
+   }
+
+   static class StencilFunc {
+      public int f_84761_ = 519;
+      public int f_84762_;
+      public int f_84763_ = -1;
+   }
+
+   static class StencilState {
+      public GlStateManager.StencilFunc f_84767_ = new GlStateManager.StencilFunc();
+      public int f_84768_ = -1;
+      public int f_84769_ = 7680;
+      public int f_84770_ = 7680;
+      public int f_84771_ = 7680;
    }
 
    static class TextureState {
@@ -1344,122 +1378,6 @@ public class GlStateManager {
 
       public static int m_157129_() {
          return INSTANCE.f_84809_;
-      }
-
-      // $FF: synthetic method
-      private static Viewport[] $values() {
-         return new Viewport[]{INSTANCE};
-      }
-   }
-
-   static class ColorMask {
-      public boolean f_84608_ = true;
-      public boolean f_84609_ = true;
-      public boolean f_84610_ = true;
-      public boolean f_84611_ = true;
-   }
-
-   static class StencilState {
-      public final StencilFunc f_84767_ = new StencilFunc();
-      public int f_84768_ = -1;
-      public int f_84769_ = 7680;
-      public int f_84770_ = 7680;
-      public int f_84771_ = 7680;
-   }
-
-   static class StencilFunc {
-      public int f_84761_ = 519;
-      public int f_84762_;
-      public int f_84763_ = -1;
-   }
-
-   @DontObfuscate
-   public static enum SourceFactor {
-      CONSTANT_ALPHA(32771),
-      CONSTANT_COLOR(32769),
-      DST_ALPHA(772),
-      DST_COLOR(774),
-      ONE(1),
-      ONE_MINUS_CONSTANT_ALPHA(32772),
-      ONE_MINUS_CONSTANT_COLOR(32770),
-      ONE_MINUS_DST_ALPHA(773),
-      ONE_MINUS_DST_COLOR(775),
-      ONE_MINUS_SRC_ALPHA(771),
-      ONE_MINUS_SRC_COLOR(769),
-      SRC_ALPHA(770),
-      SRC_ALPHA_SATURATE(776),
-      SRC_COLOR(768),
-      ZERO(0);
-
-      public final int value;
-
-      private SourceFactor(final int valueIn) {
-         this.value = valueIn;
-      }
-
-      // $FF: synthetic method
-      private static SourceFactor[] $values() {
-         return new SourceFactor[]{CONSTANT_ALPHA, CONSTANT_COLOR, DST_ALPHA, DST_COLOR, ONE, ONE_MINUS_CONSTANT_ALPHA, ONE_MINUS_CONSTANT_COLOR, ONE_MINUS_DST_ALPHA, ONE_MINUS_DST_COLOR, ONE_MINUS_SRC_ALPHA, ONE_MINUS_SRC_COLOR, SRC_ALPHA, SRC_ALPHA_SATURATE, SRC_COLOR, ZERO};
-      }
-   }
-
-   public static enum LogicOp {
-      AND(5377),
-      AND_INVERTED(5380),
-      AND_REVERSE(5378),
-      CLEAR(5376),
-      COPY(5379),
-      COPY_INVERTED(5388),
-      EQUIV(5385),
-      INVERT(5386),
-      NAND(5390),
-      NOOP(5381),
-      NOR(5384),
-      // $FF: renamed from: OR com.mojang.blaze3d.platform.GlStateManager$LogicOp
-      field_68(5383),
-      OR_INVERTED(5389),
-      OR_REVERSE(5387),
-      SET(5391),
-      XOR(5382);
-
-      public final int f_84715_;
-
-      private LogicOp(final int opcodeIn) {
-         this.f_84715_ = opcodeIn;
-      }
-
-      // $FF: synthetic method
-      private static LogicOp[] $values() {
-         return new LogicOp[]{AND, AND_INVERTED, AND_REVERSE, CLEAR, COPY, COPY_INVERTED, EQUIV, INVERT, NAND, NOOP, NOR, field_68, OR_INVERTED, OR_REVERSE, SET, XOR};
-      }
-   }
-
-   @DontObfuscate
-   public static enum DestFactor {
-      CONSTANT_ALPHA(32771),
-      CONSTANT_COLOR(32769),
-      DST_ALPHA(772),
-      DST_COLOR(774),
-      ONE(1),
-      ONE_MINUS_CONSTANT_ALPHA(32772),
-      ONE_MINUS_CONSTANT_COLOR(32770),
-      ONE_MINUS_DST_ALPHA(773),
-      ONE_MINUS_DST_COLOR(775),
-      ONE_MINUS_SRC_ALPHA(771),
-      ONE_MINUS_SRC_COLOR(769),
-      SRC_ALPHA(770),
-      SRC_COLOR(768),
-      ZERO(0);
-
-      public final int value;
-
-      private DestFactor(final int valueIn) {
-         this.value = valueIn;
-      }
-
-      // $FF: synthetic method
-      private static DestFactor[] $values() {
-         return new DestFactor[]{CONSTANT_ALPHA, CONSTANT_COLOR, DST_ALPHA, DST_COLOR, ONE, ONE_MINUS_CONSTANT_ALPHA, ONE_MINUS_CONSTANT_COLOR, ONE_MINUS_DST_ALPHA, ONE_MINUS_DST_COLOR, ONE_MINUS_SRC_ALPHA, ONE_MINUS_SRC_COLOR, SRC_ALPHA, SRC_COLOR, ZERO};
       }
    }
 }

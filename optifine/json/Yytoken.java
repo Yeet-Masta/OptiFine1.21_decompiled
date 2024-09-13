@@ -1,14 +1,14 @@
 package optifine.json;
 
 public class Yytoken {
-   public static final int TYPE_VALUE = 0;
-   public static final int TYPE_LEFT_BRACE = 1;
-   public static final int TYPE_RIGHT_BRACE = 2;
-   public static final int TYPE_LEFT_SQUARE = 3;
-   public static final int TYPE_RIGHT_SQUARE = 4;
-   public static final int TYPE_COMMA = 5;
-   public static final int TYPE_COLON = 6;
-   public static final int TYPE_EOF = -1;
+   public static int TYPE_VALUE;
+   public static int TYPE_LEFT_BRACE;
+   public static int TYPE_RIGHT_BRACE;
+   public static int TYPE_LEFT_SQUARE;
+   public static int TYPE_RIGHT_SQUARE;
+   public static int TYPE_COMMA;
+   public static int TYPE_COLON;
+   public static int TYPE_EOF;
    public int type = 0;
    public Object value = null;
 

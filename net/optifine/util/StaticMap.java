@@ -6,13 +6,13 @@ import java.util.Map;
 import net.optifine.Config;
 
 public class StaticMap {
-   private static final Map MAP = Collections.synchronizedMap(new HashMap());
+   private static Map<String, Object> MAP = Collections.synchronizedMap(new HashMap());
 
-   public static boolean contains(String key) {
+   public static boolean m_274455_(String key) {
       return MAP.containsKey(key);
    }
 
-   public static boolean contains(String key, Object value) {
+   public static boolean m_274455_(String key, Object value) {
       if (!MAP.containsKey(key)) {
          return false;
       } else {
@@ -34,12 +34,7 @@ public class StaticMap {
    }
 
    public static int getInt(String key, int def) {
-      Object val = MAP.get(key);
-      if (!(val instanceof Integer valInt)) {
-         return def;
-      } else {
-         return valInt;
-      }
+      return !(MAP.get(key) instanceof Integer valInt) ? def : valInt;
    }
 
    public static int putInt(String key, int val) {
@@ -50,12 +45,7 @@ public class StaticMap {
    }
 
    public static long getLong(String key, long def) {
-      Object val = MAP.get(key);
-      if (!(val instanceof Long valLong)) {
-         return def;
-      } else {
-         return valLong;
-      }
+      return !(MAP.get(key) instanceof Long valLong) ? def : valLong;
    }
 
    public static void putLong(String key, long val) {

@@ -19,26 +19,28 @@ public class ModelAdapterChestRaft extends ModelAdapterRaft {
       super(EntityType.f_217016_, "chest_raft", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new ChestRaftModel(bakeModelLayer(ModelLayers.m_233550_(Type.BAMBOO)));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ChestRaftModel modelChestRaft)) {
          return null;
       } else {
-         ImmutableList parts = modelChestRaft.m_6195_();
+         ImmutableList<ModelPart> parts = modelChestRaft.m_6195_();
          if (parts != null) {
             if (modelPart.equals("chest_base")) {
-               return ModelRendererUtils.getModelRenderer((ImmutableList)parts, 3);
+               return ModelRendererUtils.getModelRenderer(parts, 3);
             }
 
             if (modelPart.equals("chest_lid")) {
-               return ModelRendererUtils.getModelRenderer((ImmutableList)parts, 4);
+               return ModelRendererUtils.getModelRenderer(parts, 4);
             }
 
             if (modelPart.equals("chest_knob")) {
-               return ModelRendererUtils.getModelRenderer((ImmutableList)parts, 5);
+               return ModelRendererUtils.getModelRenderer(parts, 5);
             }
          }
 
@@ -46,20 +48,19 @@ public class ModelAdapterChestRaft extends ModelAdapterRaft {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       String[] names = super.getModelRendererNames();
-      names = (String[])ArrayUtils.addObjectsToArray(names, new String[]{"chest_base", "chest_lid", "chest_knob"});
-      return names;
+      return (String[])ArrayUtils.addObjectsToArray(names, new String[]{"chest_base", "chest_lid", "chest_knob"});
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       BoatRenderer customRenderer = new BoatRenderer(renderManager.getContext(), true);
-      EntityRenderer rendererCached = rendererCache.get(EntityType.f_217016_, index, () -> {
-         return customRenderer;
-      });
+      EntityRenderer rendererCached = rendererCache.get(EntityType.f_217016_, index, () -> customRenderer);
       if (!(rendererCached instanceof BoatRenderer renderer)) {
-         Config.warn("Not a BoatRender: " + String.valueOf(rendererCached));
+         Config.warn("Not a BoatRender: " + rendererCached);
          return null;
       } else {
          return ModelAdapterBoat.makeEntityRender(modelBase, shadowSize, renderer);

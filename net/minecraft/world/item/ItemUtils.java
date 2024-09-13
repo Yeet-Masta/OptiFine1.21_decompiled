@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 public class ItemUtils {
-   public static InteractionResultHolder m_150959_(Level p_150959_0_, Player p_150959_1_, InteractionHand p_150959_2_) {
+   public static InteractionResultHolder<ItemStack> m_150959_(Level p_150959_0_, Player p_150959_1_, InteractionHand p_150959_2_) {
       p_150959_1_.m_6672_(p_150959_2_);
       return InteractionResultHolder.m_19096_(p_150959_1_.m_21120_(p_150959_2_));
    }
@@ -38,13 +38,12 @@ public class ItemUtils {
       return m_41817_(p_41813_0_, p_41813_1_, p_41813_2_, true);
    }
 
-   public static void m_150952_(ItemEntity p_150952_0_, Iterable p_150952_1_) {
+   public static void m_150952_(ItemEntity p_150952_0_, Iterable<ItemStack> p_150952_1_) {
       Level level = p_150952_0_.m_9236_();
       if (!level.f_46443_) {
-         p_150952_1_.forEach((p_338184_2_) -> {
-            level.m_7967_(new ItemEntity(level, p_150952_0_.m_20185_(), p_150952_0_.m_20186_(), p_150952_0_.m_20189_(), p_338184_2_));
-         });
+         p_150952_1_.forEach(
+            p_338184_2_ -> level.m_7967_(new ItemEntity(level, p_150952_0_.m_20185_(), p_150952_0_.m_20186_(), p_150952_0_.m_20189_(), p_338184_2_))
+         );
       }
-
    }
 }

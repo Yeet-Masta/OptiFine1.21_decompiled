@@ -6,10 +6,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 
 public class FrameEvent {
-   private static Map mapEventFrames = new HashMap();
+   private static Map<String, Integer> mapEventFrames = new HashMap();
 
    public static boolean isActive(String name, int frameInterval) {
-      synchronized(mapEventFrames) {
+      synchronized (mapEventFrames) {
          LevelRenderer worldRenderer = Minecraft.m_91087_().f_91060_;
          if (worldRenderer == null) {
             return false;

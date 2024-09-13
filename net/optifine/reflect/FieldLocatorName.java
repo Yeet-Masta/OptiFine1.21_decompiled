@@ -12,6 +12,7 @@ public class FieldLocatorName implements IFieldLocator {
       this.targetFieldName = targetFieldName;
    }
 
+   @Override
    public Field getField() {
       Class cls = this.reflectorClass.getTargetClass();
       if (cls == null) {
@@ -22,8 +23,7 @@ public class FieldLocatorName implements IFieldLocator {
             targetField.setAccessible(true);
             return targetField;
          } catch (NoSuchFieldException var3) {
-            String var10000 = cls.getName();
-            Log.log("(Reflector) Field not present: " + var10000 + "." + this.targetFieldName);
+            Log.m_260877_("(Reflector) Field not present: " + cls.getName() + "." + this.targetFieldName);
             return null;
          } catch (SecurityException var4) {
             var4.printStackTrace();
@@ -38,7 +38,7 @@ public class FieldLocatorName implements IFieldLocator {
    private Field getDeclaredField(Class cls, String name) throws NoSuchFieldException {
       Field[] fields = cls.getDeclaredFields();
 
-      for(int i = 0; i < fields.length; ++i) {
+      for (int i = 0; i < fields.length; i++) {
          Field field = fields[i];
          if (field.getName().equals(name)) {
             return field;

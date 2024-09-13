@@ -4,10 +4,9 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.world.phys.Vec2;
 
 public class ComputeProgram {
-   private final String name;
-   private final ProgramStage programStage;
-   // $FF: renamed from: id int
-   private int field_47;
+   private String name;
+   private ProgramStage programStage;
+   private int f_11893_;
    private int ref;
    private Vec3i localSize;
    private Vec3i workGroups;
@@ -23,7 +22,7 @@ public class ComputeProgram {
    }
 
    public void resetId() {
-      this.field_47 = 0;
+      this.f_11893_ = 0;
       this.ref = 0;
    }
 
@@ -42,11 +41,11 @@ public class ComputeProgram {
    }
 
    public int getId() {
-      return this.field_47;
+      return this.f_11893_;
    }
 
    public void setId(int id) {
-      this.field_47 = id;
+      this.f_11893_ = id;
    }
 
    public int getRef() {
@@ -94,6 +93,6 @@ public class ComputeProgram {
    }
 
    public String toString() {
-      return "name: " + this.name + ", id: " + this.field_47;
+      return "name: " + this.name + ", id: " + this.f_11893_;
    }
 }

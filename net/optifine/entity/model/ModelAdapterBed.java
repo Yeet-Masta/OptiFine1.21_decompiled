@@ -13,10 +13,12 @@ public class ModelAdapterBed extends ModelAdapter {
       super(BlockEntityType.f_58940_, "bed", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new BedModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BedModel modelBed)) {
          return null;
@@ -48,24 +50,22 @@ public class ModelAdapterBed extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "foot", "leg1", "leg2", "leg3", "leg4"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58940_, index, () -> {
-         return new BedRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58940_, index, () -> new BedRenderer(dispatcher.getContext()));
       if (!(renderer instanceof BedRenderer)) {
          return null;
-      } else if (!(modelBase instanceof BedModel)) {
-         Config.warn("Not a BedModel: " + String.valueOf(modelBase));
+      } else if (!(modelBase instanceof BedModel bedModel)) {
+         Config.warn("Not a BedModel: " + modelBase);
          return null;
       } else {
-         BedModel bedModel = (BedModel)modelBase;
-         renderer = bedModel.updateRenderer(renderer);
-         return renderer;
+         return bedModel.updateRenderer(renderer);
       }
    }
 }

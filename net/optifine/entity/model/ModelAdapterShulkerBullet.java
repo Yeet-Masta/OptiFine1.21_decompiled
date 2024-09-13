@@ -16,10 +16,12 @@ public class ModelAdapterShulkerBullet extends ModelAdapter {
       super(EntityType.f_20522_, "shulker_bullet", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new ShulkerBulletModel(bakeModelLayer(ModelLayers.f_171181_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ShulkerBulletModel modelShulkerBullet)) {
          return null;
@@ -30,10 +32,12 @@ public class ModelAdapterShulkerBullet extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"bullet", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ShulkerBulletRenderer render = new ShulkerBulletRenderer(renderManager.getContext());

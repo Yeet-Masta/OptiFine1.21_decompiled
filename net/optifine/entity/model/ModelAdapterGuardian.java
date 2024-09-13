@@ -20,10 +20,12 @@ public class ModelAdapterGuardian extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new GuardianModel(bakeModelLayer(ModelLayers.f_171183_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof GuardianModel modelGuardian)) {
          return null;
@@ -33,18 +35,16 @@ public class ModelAdapterGuardian extends ModelAdapter {
          return modelGuardian.m_142109_().getChildModelDeep("eye");
       } else {
          String PREFIX_SPINE = "spine";
-         String PREFIX_TAIL;
-         int index;
          if (modelPart.startsWith(PREFIX_SPINE)) {
-            PREFIX_TAIL = StrUtils.removePrefix(modelPart, PREFIX_SPINE);
-            int index = Config.parseInt(PREFIX_TAIL, -1);
-            index = index - 1;
-            return modelGuardian.m_142109_().getChildModelDeep("spike" + index);
+            String numStr = StrUtils.removePrefix(modelPart, PREFIX_SPINE);
+            int index = Config.parseInt(numStr, -1);
+            int indexPart = index - 1;
+            return modelGuardian.m_142109_().getChildModelDeep("spike" + indexPart);
          } else {
-            PREFIX_TAIL = "tail";
+            String PREFIX_TAIL = "tail";
             if (modelPart.startsWith(PREFIX_TAIL)) {
                String numStr = StrUtils.removePrefix(modelPart, PREFIX_TAIL);
-               index = Config.parseInt(numStr, -1);
+               int index = Config.parseInt(numStr, -1);
                int indexPart = index - 1;
                return modelGuardian.m_142109_().getChildModelDeep("tail" + indexPart);
             } else {
@@ -54,10 +54,31 @@ public class ModelAdapterGuardian extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      return new String[]{"body", "eye", "spine1", "spine2", "spine3", "spine4", "spine5", "spine6", "spine7", "spine8", "spine9", "spine10", "spine11", "spine12", "tail1", "tail2", "tail3", "root"};
+      return new String[]{
+         "body",
+         "eye",
+         "spine1",
+         "spine2",
+         "spine3",
+         "spine4",
+         "spine5",
+         "spine6",
+         "spine7",
+         "spine8",
+         "spine9",
+         "spine10",
+         "spine11",
+         "spine12",
+         "tail1",
+         "tail2",
+         "tail3",
+         "root"
+      };
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       GuardianRenderer render = new GuardianRenderer(renderManager.getContext());

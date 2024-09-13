@@ -11,9 +11,9 @@ public class CustomTextureLocation implements ICustomTexture {
    private ResourceLocation location;
    private int variant = 0;
    private AbstractTexture texture;
-   public static final int VARIANT_BASE = 0;
-   public static final int VARIANT_NORMAL = 1;
-   public static final int VARIANT_SPECULAR = 2;
+   public static int VARIANT_BASE;
+   public static int VARIANT_NORMAL;
+   public static int VARIANT_SPECULAR;
 
    public CustomTextureLocation(int textureUnit, ResourceLocation location, int variant) {
       this.textureUnit = textureUnit;
@@ -39,6 +39,7 @@ public class CustomTextureLocation implements ICustomTexture {
       this.texture = null;
    }
 
+   @Override
    public int getTextureId() {
       AbstractTexture tex = this.getTexture();
       if (this.variant != 0 && tex instanceof AbstractTexture) {
@@ -57,15 +58,16 @@ public class CustomTextureLocation implements ICustomTexture {
       return tex.m_117963_();
    }
 
+   @Override
    public int getTextureUnit() {
       return this.textureUnit;
    }
 
+   @Override
    public void deleteTexture() {
    }
 
    public String toString() {
-      int var10000 = this.textureUnit;
-      return "textureUnit: " + var10000 + ", location: " + String.valueOf(this.location) + ", glTextureId: " + String.valueOf(this.texture != null ? this.texture.m_117963_() : "");
+      return "textureUnit: " + this.textureUnit + ", location: " + this.location + ", glTextureId: " + (this.texture != null ? this.texture.m_117963_() : "");
    }
 }

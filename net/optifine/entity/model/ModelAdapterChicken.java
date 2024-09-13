@@ -15,10 +15,12 @@ public class ModelAdapterChicken extends ModelAdapter {
       super(EntityType.f_20555_, "chicken", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new ChickenModel(bakeModelLayer(ModelLayers.f_171277_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ChickenModel modelChicken)) {
          return null;
@@ -41,10 +43,12 @@ public class ModelAdapterChicken extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "right_leg", "left_leg", "right_wing", "left_wing", "bill", "chin"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ChickenRenderer render = new ChickenRenderer(renderManager.getContext());

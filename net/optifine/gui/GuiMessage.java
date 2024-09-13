@@ -1,9 +1,7 @@
 package net.optifine.gui;
 
 import com.google.common.collect.Lists;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -17,7 +15,7 @@ public class GuiMessage extends GuiScreenOF {
    private Screen parentScreen;
    private Component messageLine1;
    private Component messageLine2;
-   private final List listLines2 = Lists.newArrayList();
+   private List<FormattedCharSequence> listLines2 = Lists.newArrayList();
    protected String confirmButtonText;
    private int ticksUntilEnable;
 
@@ -35,6 +33,7 @@ public class GuiMessage extends GuiScreenOF {
       this.listLines2.addAll(this.f_96541_.f_91062_.m_92923_(this.messageLine2, this.f_96543_ - 50));
    }
 
+   @Override
    protected void actionPerformed(AbstractWidget button) {
       Config.getMinecraft().m_91152_(this.parentScreen);
    }
@@ -42,34 +41,28 @@ public class GuiMessage extends GuiScreenOF {
    public void m_88315_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
       super.m_88315_(graphicsIn, mouseX, mouseY, partialTicks);
       drawCenteredString(graphicsIn, this.fontRenderer, this.messageLine1, this.f_96543_ / 2, 70, 16777215);
-      int var4 = 90;
+      int var4x = 90;
 
-      for(Iterator var5 = this.listLines2.iterator(); var5.hasNext(); var4 += 9) {
-         FormattedCharSequence line = (FormattedCharSequence)var5.next();
-         drawCenteredString(graphicsIn, this.fontRenderer, line, this.f_96543_ / 2, var4, 16777215);
-         Objects.requireNonNull(this.fontRenderer);
+      for (FormattedCharSequence line : this.listLines2) {
+         drawCenteredString(graphicsIn, this.fontRenderer, line, this.f_96543_ / 2, var4x, 16777215);
+         var4x += 9;
       }
-
    }
 
    public void setButtonDelay(int ticksUntilEnable) {
       this.ticksUntilEnable = ticksUntilEnable;
 
-      Button var3;
-      for(Iterator var2 = this.getButtonList().iterator(); var2.hasNext(); var3.f_93623_ = false) {
-         var3 = (Button)var2.next();
+      for (Button var3 : this.getButtonList()) {
+         var3.f_93623_ = false;
       }
-
    }
 
    public void m_86600_() {
       super.m_86600_();
-      Button var2;
       if (--this.ticksUntilEnable == 0) {
-         for(Iterator var1 = this.getButtonList().iterator(); var1.hasNext(); var2.f_93623_ = true) {
-            var2 = (Button)var1.next();
+         for (Button var2 : this.getButtonList()) {
+            var2.f_93623_ = true;
          }
       }
-
    }
 }

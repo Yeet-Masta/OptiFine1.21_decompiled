@@ -71,17 +71,21 @@ public class LightMapPack {
             float[] brs = new float[3];
             if (clearBrightness > delta && this.lightMap.updateLightmap(world, torchFlickerX, colors[count], nightvision, darkLight)) {
                brs[count] = clearBrightness;
-               ++count;
+               count++;
             }
 
-            if (rainBrightness > delta && this.lightMapRain != null && this.lightMapRain.updateLightmap(world, torchFlickerX, colors[count], nightvision, darkLight)) {
+            if (rainBrightness > delta
+               && this.lightMapRain != null
+               && this.lightMapRain.updateLightmap(world, torchFlickerX, colors[count], nightvision, darkLight)) {
                brs[count] = rainBrightness;
-               ++count;
+               count++;
             }
 
-            if (thunderStrength > delta && this.lightMapThunder != null && this.lightMapThunder.updateLightmap(world, torchFlickerX, colors[count], nightvision, darkLight)) {
+            if (thunderStrength > delta
+               && this.lightMapThunder != null
+               && this.lightMapThunder.updateLightmap(world, torchFlickerX, colors[count], nightvision, darkLight)) {
                brs[count] = thunderStrength;
-               ++count;
+               count++;
             }
 
             if (count == 2) {
@@ -99,19 +103,19 @@ public class LightMapPack {
       if (cols1.length != cols0.length) {
          return false;
       } else {
-         for(int i = 0; i < cols0.length; ++i) {
+         for (int i = 0; i < cols0.length; i++) {
             int col0 = cols0[i];
-            int red0 = col0 >> 16 & 255;
-            int green0 = col0 >> 8 & 255;
-            int blue0 = col0 & 255;
+            int red0 = col0 >> 16 & 0xFF;
+            int green0 = col0 >> 8 & 0xFF;
+            int blue0 = col0 & 0xFF;
             int col1 = cols1[i];
-            int red1 = col1 >> 16 & 255;
-            int green1 = col1 >> 8 & 255;
-            int blue1 = col1 & 255;
+            int red1 = col1 >> 16 & 0xFF;
+            int green1 = col1 >> 8 & 0xFF;
+            int blue1 = col1 & 0xFF;
             int red = (int)((float)red0 * br0 + (float)red1 * br1);
             int green = (int)((float)green0 * br0 + (float)green1 * br1);
             int blue = (int)((float)blue0 * br0 + (float)blue1 * br1);
-            cols0[i] = -16777216 | red << 16 | green << 8 | blue;
+            cols0[i] = 0xFF000000 | red << 16 | green << 8 | blue;
          }
 
          return true;
@@ -120,23 +124,23 @@ public class LightMapPack {
 
    private boolean blend(int[] cols0, float br0, int[] cols1, float br1, int[] cols2, float br2) {
       if (cols1.length == cols0.length && cols2.length == cols0.length) {
-         for(int i = 0; i < cols0.length; ++i) {
+         for (int i = 0; i < cols0.length; i++) {
             int col0 = cols0[i];
-            int red0 = col0 >> 16 & 255;
-            int green0 = col0 >> 8 & 255;
-            int blue0 = col0 & 255;
+            int red0 = col0 >> 16 & 0xFF;
+            int green0 = col0 >> 8 & 0xFF;
+            int blue0 = col0 & 0xFF;
             int col1 = cols1[i];
-            int red1 = col1 >> 16 & 255;
-            int green1 = col1 >> 8 & 255;
-            int blue1 = col1 & 255;
+            int red1 = col1 >> 16 & 0xFF;
+            int green1 = col1 >> 8 & 0xFF;
+            int blue1 = col1 & 0xFF;
             int col2 = cols2[i];
-            int red2 = col2 >> 16 & 255;
-            int green2 = col2 >> 8 & 255;
-            int blue2 = col2 & 255;
+            int red2 = col2 >> 16 & 0xFF;
+            int green2 = col2 >> 8 & 0xFF;
+            int blue2 = col2 & 0xFF;
             int red = (int)((float)red0 * br0 + (float)red1 * br1 + (float)red2 * br2);
             int green = (int)((float)green0 * br0 + (float)green1 * br1 + (float)green2 * br2);
             int blue = (int)((float)blue0 * br0 + (float)blue1 * br1 + (float)blue2 * br2);
-            cols0[i] = -16777216 | red << 16 | green << 8 | blue;
+            cols0[i] = 0xFF000000 | red << 16 | green << 8 | blue;
          }
 
          return true;

@@ -16,27 +16,27 @@ public class ModelAdapterSilverfish extends ModelAdapter {
       super(EntityType.f_20523_, "silverfish", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new SilverfishModel(bakeModelLayer(ModelLayers.f_171235_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SilverfishModel modelSilverfish)) {
          return null;
       } else {
          String PREFIX_BODY = "body";
-         String PREFIX_WINGS;
-         int index;
          if (modelPart.startsWith(PREFIX_BODY)) {
-            PREFIX_WINGS = StrUtils.removePrefix(modelPart, PREFIX_BODY);
-            int index = Config.parseInt(PREFIX_WINGS, -1);
-            index = index - 1;
-            return modelSilverfish.m_142109_().getChildModelDeep("segment" + index);
+            String numStr = StrUtils.removePrefix(modelPart, PREFIX_BODY);
+            int index = Config.parseInt(numStr, -1);
+            int indexPart = index - 1;
+            return modelSilverfish.m_142109_().getChildModelDeep("segment" + indexPart);
          } else {
-            PREFIX_WINGS = "wing";
+            String PREFIX_WINGS = "wing";
             if (modelPart.startsWith(PREFIX_WINGS)) {
                String numStr = StrUtils.removePrefix(modelPart, PREFIX_WINGS);
-               index = Config.parseInt(numStr, -1);
+               int index = Config.parseInt(numStr, -1);
                int indexPart = index - 1;
                return modelSilverfish.m_142109_().getChildModelDeep("layer" + indexPart);
             } else {
@@ -46,10 +46,12 @@ public class ModelAdapterSilverfish extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body1", "body2", "body3", "body4", "body5", "body6", "body7", "wing1", "wing2", "wing3", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SilverfishRenderer render = new SilverfishRenderer(renderManager.getContext());

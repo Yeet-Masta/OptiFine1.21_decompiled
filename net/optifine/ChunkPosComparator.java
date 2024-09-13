@@ -4,7 +4,7 @@ import java.util.Comparator;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 
-public class ChunkPosComparator implements Comparator {
+public class ChunkPosComparator implements Comparator<ChunkPos> {
    private int chunkPosX;
    private int chunkPosZ;
    private double yawRad;
@@ -14,7 +14,7 @@ public class ChunkPosComparator implements Comparator {
       this.chunkPosX = chunkPosX;
       this.chunkPosZ = chunkPosZ;
       this.yawRad = yawRad;
-      this.pitchNorm = 1.0 - Mth.m_14008_(Math.abs(pitchRad) / 1.5707963267948966, 0.0, 1.0);
+      this.pitchNorm = 1.0 - Mth.m_14008_(Math.abs(pitchRad) / (Math.PI / 2), 0.0, 1.0);
    }
 
    public int compare(ChunkPos cp1, ChunkPos cp2) {
@@ -30,10 +30,9 @@ public class ChunkPosComparator implements Comparator {
       double yaw = Mth.m_14136_((double)dz, (double)dx);
       double dYaw = Math.abs(yaw - this.yawRad);
       if (dYaw > Math.PI) {
-         dYaw = 6.283185307179586 - dYaw;
+         dYaw = (Math.PI * 2) - dYaw;
       }
 
-      distSq = (int)((double)distSq * 1000.0 * this.pitchNorm * dYaw * dYaw);
-      return distSq;
+      return (int)((double)distSq * 1000.0 * this.pitchNorm * dYaw * dYaw);
    }
 }

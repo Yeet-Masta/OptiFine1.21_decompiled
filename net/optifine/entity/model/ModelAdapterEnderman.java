@@ -13,10 +13,12 @@ public class ModelAdapterEnderman extends ModelAdapterBiped {
       super(EntityType.f_20566_, "enderman", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new EndermanModel(bakeModelLayer(ModelLayers.f_171142_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       EndermanRenderer render = new EndermanRenderer(renderManager.getContext());

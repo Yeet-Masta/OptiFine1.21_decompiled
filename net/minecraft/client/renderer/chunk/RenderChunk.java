@@ -19,11 +19,11 @@ import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.levelgen.DebugLevelSource;
 
 class RenderChunk {
-   private final Map f_200441_;
+   private Map<BlockPos, BlockEntity> f_200441_;
    @Nullable
-   private final List f_200442_;
-   private final boolean f_200443_;
-   private final LevelChunk f_200444_;
+   private List<PalettedContainer<BlockState>> f_200442_;
+   private boolean f_200443_;
+   private LevelChunk f_200444_;
 
    RenderChunk(LevelChunk chunkIn) {
       this.f_200444_ = chunkIn;
@@ -34,15 +34,11 @@ class RenderChunk {
       } else {
          LevelChunkSection[] alevelchunksection = chunkIn.m_7103_();
          this.f_200442_ = new ArrayList(alevelchunksection.length);
-         LevelChunkSection[] var3 = alevelchunksection;
-         int var4 = alevelchunksection.length;
 
-         for(int var5 = 0; var5 < var4; ++var5) {
-            LevelChunkSection levelchunksection = var3[var5];
+         for (LevelChunkSection levelchunksection : alevelchunksection) {
             this.f_200442_.add(levelchunksection.m_188008_() ? null : levelchunksection.m_63019_().m_199931_());
          }
       }
-
    }
 
    @Nullable
@@ -71,9 +67,9 @@ class RenderChunk {
          try {
             int l = this.f_200444_.m_151564_(j);
             if (l >= 0 && l < this.f_200442_.size()) {
-               PalettedContainer palettedcontainer = (PalettedContainer)this.f_200442_.get(l);
+               PalettedContainer<BlockState> palettedcontainer = (PalettedContainer<BlockState>)this.f_200442_.get(l);
                if (palettedcontainer != null) {
-                  return (BlockState)palettedcontainer.m_63087_(i & 15, j & 15, k & 15);
+                  return palettedcontainer.m_63087_(i & 15, j & 15, k & 15);
                }
             }
 
@@ -81,9 +77,7 @@ class RenderChunk {
          } catch (Throwable var8) {
             CrashReport crashreport = CrashReport.m_127521_(var8, "Getting block state");
             CrashReportCategory crashreportcategory = crashreport.m_127514_("Block being got");
-            crashreportcategory.m_128165_("Location", () -> {
-               return CrashReportCategory.m_178942_(this.f_200444_, i, j, k);
-            });
+            crashreportcategory.m_128165_("Location", () -> CrashReportCategory.m_178942_(this.f_200444_, i, j, k));
             throw new ReportedException(crashreport);
          }
       }
@@ -93,15 +87,14 @@ class RenderChunk {
       return this.f_200444_;
    }
 
-   public void finish() {
+   public void m_185413_() {
       if (this.f_200442_ != null) {
-         for(int i = 0; i < this.f_200442_.size(); ++i) {
-            PalettedContainer section = (PalettedContainer)this.f_200442_.get(i);
+         for (int i = 0; i < this.f_200442_.size(); i++) {
+            PalettedContainer<BlockState> section = (PalettedContainer<BlockState>)this.f_200442_.get(i);
             if (section != null) {
-               section.finish();
+               section.m_185413_();
             }
          }
-
       }
    }
 }

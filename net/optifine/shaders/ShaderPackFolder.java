@@ -13,9 +13,11 @@ public class ShaderPackFolder implements IShaderPack {
       this.packFile = file;
    }
 
+   @Override
    public void close() {
    }
 
+   @Override
    public InputStream getResourceAsStream(String resName) {
       try {
          String name = StrUtils.removePrefixSuffix(resName, "/", "/");
@@ -26,15 +28,13 @@ public class ShaderPackFolder implements IShaderPack {
       }
    }
 
+   @Override
    public boolean hasDirectory(String name) {
       File resFile = new File(this.packFile, name.substring(1));
-      if (!resFile.exists()) {
-         return false;
-      } else {
-         return resFile.isDirectory();
-      }
+      return !resFile.exists() ? false : resFile.isDirectory();
    }
 
+   @Override
    public String getName() {
       return this.packFile.getName();
    }

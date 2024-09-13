@@ -29,10 +29,10 @@ public class CustomBlockLayers {
       }
    }
 
-   public static void update() {
+   public static void m_252999_() {
       renderLayers = null;
       active = false;
-      List list = new ArrayList();
+      List<RenderType> list = new ArrayList();
       String pathProps = "optifine/block.properties";
       Properties props = ResUtils.readProperties(pathProps, "CustomBlockLayers");
       if (props != null) {
@@ -53,7 +53,7 @@ public class CustomBlockLayers {
       }
    }
 
-   private static void readLayers(String pathProps, Properties props, List list) {
+   private static void readLayers(String pathProps, Properties props, List<RenderType> list) {
       Config.dbg("CustomBlockLayers: " + pathProps);
       readLayer("solid", RenderTypes.SOLID, props, list);
       readLayer("cutout", RenderTypes.CUTOUT, props, list);
@@ -61,19 +61,19 @@ public class CustomBlockLayers {
       readLayer("translucent", RenderTypes.TRANSLUCENT, props, list);
    }
 
-   private static void readLayer(String name, RenderType layer, Properties props, List listLayers) {
+   private static void readLayer(String name, RenderType layer, Properties props, List<RenderType> listLayers) {
       String key = "layer." + name;
       String val = props.getProperty(key);
       if (val != null) {
          ConnectedParser cp = new ConnectedParser("CustomBlockLayers");
          MatchBlock[] mbs = cp.parseMatchBlocks(val);
          if (mbs != null) {
-            for(int i = 0; i < mbs.length; ++i) {
+            for (int i = 0; i < mbs.length; i++) {
                MatchBlock mb = mbs[i];
                int blockId = mb.getBlockId();
                if (blockId > 0) {
-                  while(listLayers.size() < blockId + 1) {
-                     listLayers.add((Object)null);
+                  while (listLayers.size() < blockId + 1) {
+                     listLayers.add(null);
                   }
 
                   if (listLayers.get(blockId) != null) {
@@ -83,7 +83,6 @@ public class CustomBlockLayers {
                   listLayers.set(blockId, layer);
                }
             }
-
          }
       }
    }

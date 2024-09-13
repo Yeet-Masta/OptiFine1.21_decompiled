@@ -17,10 +17,12 @@ public class ModelAdapterArmorStand extends ModelAdapterBiped {
       super(EntityType.f_20529_, "armor_stand", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new ArmorStandModel(bakeModelLayer(ModelLayers.f_171155_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ArmorStandModel modelArmorStand)) {
          return null;
@@ -31,16 +33,19 @@ public class ModelAdapterArmorStand extends ModelAdapterBiped {
       } else if (modelPart.equals("waist")) {
          return (ModelPart)Reflector.getFieldValue(modelArmorStand, Reflector.ModelArmorStand_ModelRenderers, 2);
       } else {
-         return modelPart.equals("base") ? (ModelPart)Reflector.getFieldValue(modelArmorStand, Reflector.ModelArmorStand_ModelRenderers, 3) : super.getModelRenderer(modelArmorStand, modelPart);
+         return modelPart.equals("base")
+            ? (ModelPart)Reflector.getFieldValue(modelArmorStand, Reflector.ModelArmorStand_ModelRenderers, 3)
+            : super.getModelRenderer(modelArmorStand, modelPart);
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       String[] names = super.getModelRendererNames();
-      names = (String[])Config.addObjectsToArray(names, new String[]{"right", "left", "waist", "base"});
-      return names;
+      return (String[])Config.addObjectsToArray(names, new String[]{"right", "left", "waist", "base"});
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ArmorStandRenderer render = new ArmorStandRenderer(renderManager.getContext());

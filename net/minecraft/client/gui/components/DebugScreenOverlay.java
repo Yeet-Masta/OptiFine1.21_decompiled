@@ -11,12 +11,12 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -59,15 +59,15 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.NaturalSpawner.SpawnState;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.Climate;
+import net.minecraft.world.level.biome.Climate.Sampler;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.Heightmap.Types;
 import net.minecraft.world.level.material.FluidState;
@@ -85,11 +85,11 @@ import net.optifine.util.MemoryMonitor;
 import net.optifine.util.NativeMemory;
 
 public class DebugScreenOverlay {
-   private static final int f_168988_ = 14737632;
-   private static final int f_168989_ = 2;
-   private static final int f_168990_ = 2;
-   private static final int f_168991_ = 2;
-   private static final Map f_94029_ = (Map)Util.m_137469_(new EnumMap(Heightmap.Types.class), (mapIn) -> {
+   private static int f_168988_;
+   private static int f_168989_;
+   private static int f_168990_;
+   private static int f_168991_;
+   private static Map<Types, String> f_94029_ = Util.m_137469_(new EnumMap(Types.class), mapIn -> {
       mapIn.put(Types.WORLD_SURFACE_WG, "SW");
       mapIn.put(Types.WORLD_SURFACE, "S");
       mapIn.put(Types.OCEAN_FLOOR_WG, "OW");
@@ -97,9 +97,9 @@ public class DebugScreenOverlay {
       mapIn.put(Types.MOTION_BLOCKING, "M");
       mapIn.put(Types.MOTION_BLOCKING_NO_LEAVES, "ML");
    });
-   private final Minecraft f_94030_;
-   private final AllocationRateCalculator f_232506_;
-   private final Font f_94031_;
+   private Minecraft f_94030_;
+   private DebugScreenOverlay.AllocationRateCalculator f_232506_;
+   private Font f_94031_;
    private HitResult f_94032_;
    private HitResult f_94033_;
    @Nullable
@@ -107,35 +107,30 @@ public class DebugScreenOverlay {
    @Nullable
    private LevelChunk f_94035_;
    @Nullable
-   private CompletableFuture f_94036_;
+   private CompletableFuture<LevelChunk> f_94036_;
    public boolean f_291101_;
    public boolean f_291871_;
    public boolean f_290551_;
    public boolean f_291005_;
-   private final LocalSampleLogger f_291039_ = new LocalSampleLogger(1);
-   private final LocalSampleLogger f_291524_ = new LocalSampleLogger(TpsDebugDimensions.values().length);
-   private final LocalSampleLogger f_290653_ = new LocalSampleLogger(1);
-   private final LocalSampleLogger f_290862_ = new LocalSampleLogger(1);
-   private final Map f_314774_;
-   private final FpsDebugChart f_291857_;
-   private final TpsDebugChart f_291179_;
-   private final PingDebugChart f_291349_;
-   private final BandwidthDebugChart f_291508_;
-   private String debugOF;
-   private static final Pattern PATTERN_DEBUG_SPACING = Pattern.compile("(\\d|f|c)(fa)");
-   private RenderCache renderCache;
+   private LocalSampleLogger f_291039_ = new LocalSampleLogger(1);
+   private LocalSampleLogger f_291524_ = new LocalSampleLogger(TpsDebugDimensions.values().length);
+   private LocalSampleLogger f_290653_ = new LocalSampleLogger(1);
+   private LocalSampleLogger f_290862_ = new LocalSampleLogger(1);
+   private Map<RemoteDebugSampleType, LocalSampleLogger> f_314774_ = Map.m_253057_(RemoteDebugSampleType.TICK_TIME, this.f_291524_);
+   private FpsDebugChart f_291857_;
+   private TpsDebugChart f_291179_;
+   private PingDebugChart f_291349_;
+   private BandwidthDebugChart f_291508_;
+   private String debugOF = null;
+   private static Pattern PATTERN_DEBUG_SPACING = Pattern.m_289905_("(\\d|f|c)(fa)");
+   private RenderCache renderCache = new RenderCache(100L);
 
    public DebugScreenOverlay(Minecraft mc) {
-      this.f_314774_ = Map.of(RemoteDebugSampleType.TICK_TIME, this.f_291524_);
-      this.debugOF = null;
-      this.renderCache = new RenderCache(100L);
       this.f_94030_ = mc;
-      this.f_232506_ = new AllocationRateCalculator();
+      this.f_232506_ = new DebugScreenOverlay.AllocationRateCalculator();
       this.f_94031_ = mc.f_91062_;
       this.f_291857_ = new FpsDebugChart(this.f_94031_, this.f_291039_);
-      this.f_291179_ = new TpsDebugChart(this.f_94031_, this.f_291524_, () -> {
-         return mc.f_91073_.m_304826_().m_305111_();
-      });
+      this.f_291179_ = new TpsDebugChart(this.f_94031_, this.f_291524_, () -> mc.f_91073_.m_304826_().m_305111_());
       this.f_291349_ = new PingDebugChart(this.f_94031_, this.f_290653_);
       this.f_291508_ = new BandwidthDebugChart(this.f_94031_, this.f_290862_);
    }
@@ -147,7 +142,7 @@ public class DebugScreenOverlay {
 
    public void m_94056_(GuiGraphics graphicsIn) {
       this.f_94030_.m_91307_().m_6180_("debug");
-      this.update();
+      this.m_252999_();
       graphicsIn.m_286007_(() -> {
          this.drawText(graphicsIn);
          this.drawFPSCharts(graphicsIn);
@@ -156,7 +151,7 @@ public class DebugScreenOverlay {
       this.f_94030_.m_91307_().m_7238_();
    }
 
-   protected void update() {
+   protected void m_252999_() {
       Entity entity = this.f_94030_.m_91288_();
       this.f_94032_ = entity.m_19907_(20.0, 0.0F, false);
       this.f_94033_ = entity.m_19907_(20.0, 0.0F, true);
@@ -169,7 +164,6 @@ public class DebugScreenOverlay {
          this.m_280532_(graphicsIn);
          this.renderCache.stopRender(graphicsIn);
       }
-
    }
 
    protected void drawFPSCharts(GuiGraphics graphicsIn) {
@@ -186,7 +180,6 @@ public class DebugScreenOverlay {
 
          graphicsIn.m_280168_().m_85849_();
       }
-
    }
 
    protected void drawNetworkCharts(GuiGraphics graphicsIn) {
@@ -203,21 +196,28 @@ public class DebugScreenOverlay {
          this.f_291349_.m_293623_(graphicsIn, l - j1, j1);
          graphicsIn.m_280168_().m_85849_();
       }
-
    }
 
    protected void m_280186_(GuiGraphics graphicsIn) {
-      List list = this.m_94075_();
+      List<String> list = this.m_94075_();
       list.addAll(this.getOverlayHelp());
       this.m_286013_(graphicsIn, list, true);
    }
 
-   protected List getOverlayHelp() {
-      List list = Lists.newArrayList();
+   protected List<String> getOverlayHelp() {
+      List<String> list = Lists.newArrayList();
       list.add("");
       boolean flag = this.f_94030_.m_91092_() != null;
-      String var10001 = this.f_291871_ ? "visible" : "hidden";
-      list.add("Debug charts: [F3+1] Profiler " + var10001 + "; [F3+2] " + (flag ? "FPS + TPS " : "FPS ") + (this.f_290551_ ? "visible" : "hidden") + "; [F3+3] " + (!this.f_94030_.m_91090_() ? "Bandwidth + Ping" : "Ping") + (this.f_291005_ ? " visible" : " hidden"));
+      list.add(
+         "Debug charts: [F3+1] Profiler "
+            + (this.f_291871_ ? "visible" : "hidden")
+            + "; [F3+2] "
+            + (flag ? "FPS + TPS " : "FPS ")
+            + (this.f_290551_ ? "visible" : "hidden")
+            + "; [F3+3] "
+            + (!this.f_94030_.m_91090_() ? "Bandwidth + Ping" : "Ping")
+            + (this.f_291005_ ? " visible" : " hidden")
+      );
       list.add("For help: press F3 + Q");
       return list;
    }
@@ -225,43 +225,36 @@ public class DebugScreenOverlay {
    protected void m_280532_(GuiGraphics graphicsIn) {
       graphicsIn.m_280168_().m_85836_();
       graphicsIn.m_280168_().m_252880_(0.0F, 0.0F, -10.0F);
-      List list = this.m_94078_();
+      List<String> list = this.m_94078_();
       this.m_286013_(graphicsIn, list, false);
       graphicsIn.m_280168_().m_85849_();
    }
 
-   private void m_286013_(GuiGraphics graphicsIn, List linesIn, boolean leftIn) {
+   private void m_286013_(GuiGraphics graphicsIn, List<String> linesIn, boolean leftIn) {
       int i = 9;
 
-      int j1;
-      String s1;
-      int k1;
-      int l1;
-      int i2;
-      for(j1 = 0; j1 < linesIn.size(); ++j1) {
-         s1 = (String)linesIn.get(j1);
-         if (!Strings.isNullOrEmpty(s1)) {
-            k1 = this.f_94031_.m_92895_(s1);
-            l1 = leftIn ? 2 : graphicsIn.m_280182_() - 2 - k1;
-            i2 = 2 + i * j1;
-            graphicsIn.m_280509_(l1 - 1, i2 - 1, l1 + k1 + 1, i2 + i - 1, -1873784752);
+      for (int j = 0; j < linesIn.size(); j++) {
+         String s = (String)linesIn.get(j);
+         if (!Strings.isNullOrEmpty(s)) {
+            int k = this.f_94031_.m_92895_(s);
+            int l = leftIn ? 2 : graphicsIn.m_280182_() - 2 - k;
+            int i1 = 2 + i * j;
+            graphicsIn.m_280509_(l - 1, i1 - 1, l + k + 1, i1 + i - 1, -1873784752);
          }
       }
 
-      for(j1 = 0; j1 < linesIn.size(); ++j1) {
-         s1 = (String)linesIn.get(j1);
+      for (int j1 = 0; j1 < linesIn.size(); j1++) {
+         String s1 = (String)linesIn.get(j1);
          if (!Strings.isNullOrEmpty(s1)) {
-            k1 = this.f_94031_.m_92895_(s1);
-            l1 = leftIn ? 2 : graphicsIn.m_280182_() - 2 - k1;
-            i2 = 2 + i * j1;
+            int k1 = this.f_94031_.m_92895_(s1);
+            int l1 = leftIn ? 2 : graphicsIn.m_280182_() - 2 - k1;
+            int i2 = 2 + i * j1;
             graphicsIn.m_280056_(this.f_94031_, s1, l1, i2, 14737632, false);
          }
       }
-
    }
 
-   protected List m_94075_() {
-      int i;
+   protected List<String> m_94075_() {
       if (this.f_94030_.f_90977_ != this.debugOF) {
          StringBuffer sb = new StringBuffer(this.f_94030_.f_90977_);
          Matcher m = PATTERN_DEBUG_SPACING.matcher(this.f_94030_.f_90977_);
@@ -276,12 +269,12 @@ public class DebugScreenOverlay {
          }
 
          int fpsMin = Config.getFpsMin();
-         i = this.f_94030_.f_90977_.indexOf(" fps ");
-         if (i >= 0) {
-            sb.replace(0, i + 4, Config.getFpsString());
+         int posFps = this.f_94030_.f_90977_.indexOf(" fps ");
+         if (posFps >= 0) {
+            sb.replace(0, posFps + 4, Config.getFpsString());
          }
 
-         sb.append("§r");
+         sb.append("\u00a7r");
          if (Config.isSmoothFps()) {
             sb.append(" sf");
          }
@@ -310,26 +303,26 @@ public class DebugScreenOverlay {
          this.debugOF = this.f_94030_.f_90977_;
       }
 
-      List list = this.getInfoLeft();
-      StringBuilder sb = new StringBuilder();
+      List<String> list = this.getInfoLeft();
+      StringBuilder sbx = new StringBuilder();
       TextureAtlas tm = Config.getTextureMap();
-      sb.append(", A: ");
+      sbx.append(", A: ");
       if (SmartAnimations.isActive()) {
-         sb.append(tm.getCountAnimationsActive() + TextureAnimations.getCountAnimationsActive());
-         sb.append("/");
+         sbx.append(tm.getCountAnimationsActive() + TextureAnimations.getCountAnimationsActive());
+         sbx.append("/");
       }
 
-      sb.append(tm.getCountAnimations() + TextureAnimations.getCountAnimations());
-      String ofInfo = sb.toString();
+      sbx.append(tm.getCountAnimations() + TextureAnimations.getCountAnimations());
+      String ofInfo = sbx.toString();
       String ofInfoShadow = null;
       if (Config.isShadersShadows()) {
-         i = this.f_94030_.f_91060_.getRenderedChunksShadow();
+         int renderersShadow = this.f_94030_.f_91060_.getRenderedChunksShadow();
          int entitiesShadow = this.f_94030_.f_91060_.getCountEntitiesRenderedShadow();
          int tileEntitiesShadow = this.f_94030_.f_91060_.getCountTileEntitiesRenderedShadow();
-         ofInfoShadow = "Shadow C: " + i + ", E: " + entitiesShadow + "+" + tileEntitiesShadow;
+         ofInfoShadow = "Shadow C: " + renderersShadow + ", E: " + entitiesShadow + "+" + tileEntitiesShadow;
       }
 
-      for(i = 0; i < list.size(); ++i) {
+      for (int i = 0; i < list.size(); i++) {
          String line = (String)list.get(i);
          if (line != null && line.startsWith("P: ")) {
             line = line + ofInfo;
@@ -344,7 +337,7 @@ public class DebugScreenOverlay {
       return list;
    }
 
-   protected List getInfoLeft() {
+   protected List<String> getInfoLeft() {
       IntegratedServer integratedserver = this.f_94030_.m_91092_();
       ClientPacketListener clientpacketlistener = this.f_94030_.m_91403_();
       Connection connection = clientpacketlistener.m_104910_();
@@ -368,51 +361,40 @@ public class DebugScreenOverlay {
             s1 = " (sprinting)";
          }
 
-         String s2 = flag ? "-" : String.format(Locale.ROOT, "%.1f", tickratemanager.m_305111_());
-         s = String.format(Locale.ROOT, "Integrated server @ %.1f/%s ms%s, %.0f tx, %.0f rx", integratedserver.m_304767_(), s2, s1, f, f1);
+         String s2 = flag ? "-" : String.m_12886_(Locale.ROOT, "%.1f", new Object[]{tickratemanager.m_305111_()});
+         s = String.m_12886_(Locale.ROOT, "Integrated server @ %.1f/%s ms%s, %.0f tx, %.0f rx", new Object[]{integratedserver.m_304767_(), s2, s1, f, f1});
       } else {
-         s = String.format(Locale.ROOT, "\"%s\" server%s, %.0f tx, %.0f rx", clientpacketlistener.m_295034_(), s1, f, f1);
+         s = String.m_12886_(Locale.ROOT, "\"%s\" server%s, %.0f tx, %.0f rx", new Object[]{clientpacketlistener.m_295034_(), s1, f, f1});
       }
 
       BlockPos blockpos = this.f_94030_.m_91288_().m_20183_();
-      String var10003;
-      String[] var32;
       if (this.f_94030_.m_91299_()) {
-         var32 = new String[9];
-         var10003 = SharedConstants.m_183709_().m_132493_();
-         var32[0] = "Minecraft " + var10003 + " (" + this.f_94030_.m_91388_() + "/" + ClientBrandRetriever.getClientModName() + ")";
-         var32[1] = this.f_94030_.f_90977_;
-         var32[2] = s;
-         var32[3] = this.f_94030_.f_91060_.m_109820_();
-         var32[4] = this.f_94030_.f_91060_.m_109822_();
-         var10003 = this.f_94030_.f_91061_.m_107403_();
-         var32[5] = "P: " + var10003 + ". T: " + this.f_94030_.f_91073_.m_104813_();
-         var32[6] = this.f_94030_.f_91073_.m_46464_();
-         var32[7] = "";
-         var32[8] = String.format(Locale.ROOT, "Chunk-relative: %d %d %d", blockpos.m_123341_() & 15, blockpos.m_123342_() & 15, blockpos.m_123343_() & 15);
-         return Lists.newArrayList(var32);
+         return Lists.newArrayList(
+            new String[]{
+               "Minecraft " + SharedConstants.m_183709_().m_132493_() + " (" + this.f_94030_.m_91388_() + "/" + ClientBrandRetriever.getClientModName() + ")",
+               this.f_94030_.f_90977_,
+               s,
+               this.f_94030_.f_91060_.m_109820_(),
+               this.f_94030_.f_91060_.m_109822_(),
+               "P: " + this.f_94030_.f_91061_.m_107403_() + ". T: " + this.f_94030_.f_91073_.m_104813_(),
+               this.f_94030_.f_91073_.m_46464_(),
+               "",
+               String.m_12886_(
+                  Locale.ROOT, "Chunk-relative: %d %d %d", new Object[]{blockpos.m_123341_() & 15, blockpos.m_123342_() & 15, blockpos.m_123343_() & 15}
+               )
+            }
+         );
       } else {
          Entity entity = this.f_94030_.m_91288_();
          Direction direction = entity.m_6350_();
-         String var10000;
-         switch (direction) {
-            case NORTH:
-               var10000 = "Towards negative Z";
-               break;
-            case SOUTH:
-               var10000 = "Towards positive Z";
-               break;
-            case WEST:
-               var10000 = "Towards negative X";
-               break;
-            case EAST:
-               var10000 = "Towards positive X";
-               break;
-            default:
-               var10000 = "Invalid";
-         }
 
-         String $$21 = var10000;
+         String $$21 = switch (<unrepresentable>.$SwitchMap$net$minecraft$core$Direction[direction.ordinal()]) {
+            case 1 -> "Towards negative Z";
+            case 2 -> "Towards positive Z";
+            case 3 -> "Towards negative X";
+            case 4 -> "Towards positive X";
+            default -> "Invalid";
+         };
          ChunkPos chunkpos = new ChunkPos(blockpos);
          if (!Objects.equals(this.f_94034_, chunkpos)) {
             this.f_94034_ = chunkpos;
@@ -420,30 +402,73 @@ public class DebugScreenOverlay {
          }
 
          Level level = this.m_94083_();
-         LongSet longset = level instanceof ServerLevel ? ((ServerLevel)level).m_8902_() : LongSets.EMPTY_SET;
-         var32 = new String[7];
-         var10003 = SharedConstants.m_183709_().m_132493_();
-         var32[0] = "Minecraft " + var10003 + " (" + this.f_94030_.m_91388_() + "/" + ClientBrandRetriever.getClientModName() + ("release".equalsIgnoreCase(this.f_94030_.m_91389_()) ? "" : "/" + this.f_94030_.m_91389_()) + ")";
-         var32[1] = this.f_94030_.f_90977_;
-         var32[2] = s;
-         var32[3] = this.f_94030_.f_91060_.m_109820_();
-         var32[4] = this.f_94030_.f_91060_.m_109822_();
-         var10003 = this.f_94030_.f_91061_.m_107403_();
-         var32[5] = "P: " + var10003 + ". T: " + this.f_94030_.f_91073_.m_104813_();
-         var32[6] = this.f_94030_.f_91073_.m_46464_();
-         List list = Lists.newArrayList(var32);
+         LongSet longset = (LongSet)(level instanceof ServerLevel ? ((ServerLevel)level).m_8902_() : LongSets.EMPTY_SET);
+         List<String> list = Lists.newArrayList(
+            new String[]{
+               "Minecraft "
+                  + SharedConstants.m_183709_().m_132493_()
+                  + " ("
+                  + this.f_94030_.m_91388_()
+                  + "/"
+                  + ClientBrandRetriever.getClientModName()
+                  + ("release".equalsIgnoreCase(this.f_94030_.m_91389_()) ? "" : "/" + this.f_94030_.m_91389_())
+                  + ")",
+               this.f_94030_.f_90977_,
+               s,
+               this.f_94030_.f_91060_.m_109820_(),
+               this.f_94030_.f_91060_.m_109822_(),
+               "P: " + this.f_94030_.f_91061_.m_107403_() + ". T: " + this.f_94030_.f_91073_.m_104813_(),
+               this.f_94030_.f_91073_.m_46464_()
+            }
+         );
          String s4 = this.m_94082_();
          if (s4 != null) {
             list.add(s4);
          }
 
-         String var10001 = String.valueOf(this.f_94030_.f_91073_.m_46472_().m_135782_());
-         list.add(var10001 + " FC: " + ((LongSet)longset).size());
+         list.add(this.f_94030_.f_91073_.m_46472_().m_135782_() + " FC: " + longset.size());
          list.add("");
-         list.add(String.format(Locale.ROOT, "XYZ: %.3f / %.5f / %.3f", this.f_94030_.m_91288_().m_20185_(), this.f_94030_.m_91288_().m_20186_(), this.f_94030_.m_91288_().m_20189_()));
-         list.add(String.format(Locale.ROOT, "Block: %d %d %d [%d %d %d]", blockpos.m_123341_(), blockpos.m_123342_(), blockpos.m_123343_(), blockpos.m_123341_() & 15, blockpos.m_123342_() & 15, blockpos.m_123343_() & 15));
-         list.add(String.format(Locale.ROOT, "Chunk: %d %d %d [%d %d in r.%d.%d.mca]", chunkpos.f_45578_, SectionPos.m_123171_(blockpos.m_123342_()), chunkpos.f_45579_, chunkpos.m_45613_(), chunkpos.m_45614_(), chunkpos.m_45610_(), chunkpos.m_45612_()));
-         list.add(String.format(Locale.ROOT, "Facing: %s (%s) (%.1f / %.1f)", direction, $$21, Mth.m_14177_(entity.m_146908_()), Mth.m_14177_(entity.m_146909_())));
+         list.add(
+            String.m_12886_(
+               Locale.ROOT,
+               "XYZ: %.3f / %.5f / %.3f",
+               new Object[]{this.f_94030_.m_91288_().m_20185_(), this.f_94030_.m_91288_().m_20186_(), this.f_94030_.m_91288_().m_20189_()}
+            )
+         );
+         list.add(
+            String.m_12886_(
+               Locale.ROOT,
+               "Block: %d %d %d [%d %d %d]",
+               new Object[]{
+                  blockpos.m_123341_(),
+                  blockpos.m_123342_(),
+                  blockpos.m_123343_(),
+                  blockpos.m_123341_() & 15,
+                  blockpos.m_123342_() & 15,
+                  blockpos.m_123343_() & 15
+               }
+            )
+         );
+         list.add(
+            String.m_12886_(
+               Locale.ROOT,
+               "Chunk: %d %d %d [%d %d in r.%d.%d.mca]",
+               new Object[]{
+                  chunkpos.f_45578_,
+                  SectionPos.m_123171_(blockpos.m_123342_()),
+                  chunkpos.f_45579_,
+                  chunkpos.m_45613_(),
+                  chunkpos.m_45614_(),
+                  chunkpos.m_45610_(),
+                  chunkpos.m_45612_()
+               }
+            )
+         );
+         list.add(
+            String.m_12886_(
+               Locale.ROOT, "Facing: %s (%s) (%.1f / %.1f)", new Object[]{direction, $$21, Mth.m_14177_(entity.m_146908_()), Mth.m_14177_(entity.m_146909_())}
+            )
+         );
          LevelChunk levelchunk = this.m_94085_();
          if (levelchunk.m_6430_()) {
             list.add("Waiting for chunk...");
@@ -454,26 +479,21 @@ public class DebugScreenOverlay {
             list.add("Client Light: " + i + " (" + j + " sky, " + k + " block)");
             LevelChunk levelchunk1 = this.m_94084_();
             StringBuilder stringbuilder = new StringBuilder("CH");
-            Heightmap.Types[] var24 = Types.values();
-            int var25 = var24.length;
 
-            int var26;
-            Heightmap.Types heightmap$types1;
-            for(var26 = 0; var26 < var25; ++var26) {
-               heightmap$types1 = var24[var26];
-               if (heightmap$types1.m_64297_()) {
-                  stringbuilder.append(" ").append((String)f_94029_.get(heightmap$types1)).append(": ").append(levelchunk.m_5885_(heightmap$types1, blockpos.m_123341_(), blockpos.m_123343_()));
+            for (Types heightmap$types : Types.values()) {
+               if (heightmap$types.m_64297_()) {
+                  stringbuilder.append(" ")
+                     .append((String)f_94029_.get(heightmap$types))
+                     .append(": ")
+                     .append(levelchunk.m_5885_(heightmap$types, blockpos.m_123341_(), blockpos.m_123343_()));
                }
             }
 
             list.add(stringbuilder.toString());
             stringbuilder.setLength(0);
             stringbuilder.append("SH");
-            var24 = Types.values();
-            var25 = var24.length;
 
-            for(var26 = 0; var26 < var25; ++var26) {
-               heightmap$types1 = var24[var26];
+            for (Types heightmap$types1 : Types.values()) {
                if (heightmap$types1.m_64298_()) {
                   stringbuilder.append(" ").append((String)f_94029_.get(heightmap$types1)).append(": ");
                   if (levelchunk1 != null) {
@@ -486,13 +506,18 @@ public class DebugScreenOverlay {
 
             list.add(stringbuilder.toString());
             if (blockpos.m_123342_() >= this.f_94030_.f_91073_.m_141937_() && blockpos.m_123342_() < this.f_94030_.f_91073_.m_151558_()) {
-               Holder var31 = this.f_94030_.f_91073_.m_204166_(blockpos);
-               list.add("Biome: " + m_205374_(var31));
+               list.add("Biome: " + m_205374_(this.f_94030_.f_91073_.m_204166_(blockpos)));
                if (levelchunk1 != null) {
                   float f2 = level.m_46940_();
                   long l = levelchunk1.m_6319_();
                   DifficultyInstance difficultyinstance = new DifficultyInstance(level.m_46791_(), level.m_46468_(), l, f2);
-                  list.add(String.format(Locale.ROOT, "Local Difficulty: %.2f // %.2f (Day %d)", difficultyinstance.m_19056_(), difficultyinstance.m_19057_(), this.f_94030_.f_91073_.m_46468_() / 24000L));
+                  list.add(
+                     String.m_12886_(
+                        Locale.ROOT,
+                        "Local Difficulty: %.2f // %.2f (Day %d)",
+                        new Object[]{difficultyinstance.m_19056_(), difficultyinstance.m_19057_(), this.f_94030_.f_91073_.m_46468_() / 24000L}
+                     )
+                  );
                } else {
                   list.add("Local Difficulty: ??");
                }
@@ -509,17 +534,21 @@ public class DebugScreenOverlay {
             ChunkGenerator chunkgenerator = serverchunkcache.m_8481_();
             RandomState randomstate = serverchunkcache.m_214994_();
             chunkgenerator.m_213600_(list, randomstate, blockpos);
-            Climate.Sampler climate$sampler = randomstate.m_224579_();
+            Sampler climate$sampler = randomstate.m_224579_();
             BiomeSource biomesource = chunkgenerator.m_62218_();
             biomesource.m_207301_(list, blockpos, climate$sampler);
-            NaturalSpawner.SpawnState naturalspawner$spawnstate = serverchunkcache.m_8485_();
+            SpawnState naturalspawner$spawnstate = serverchunkcache.m_8485_();
             if (naturalspawner$spawnstate != null) {
-               Object2IntMap object2intmap = naturalspawner$spawnstate.m_47148_();
+               Object2IntMap<MobCategory> object2intmap = naturalspawner$spawnstate.m_47148_();
                int i1 = naturalspawner$spawnstate.m_47126_();
-               list.add("SC: " + i1 + ", " + (String)Stream.of(MobCategory.values()).map((categoryIn) -> {
-                  char var10000 = Character.toUpperCase(categoryIn.m_21607_().charAt(0));
-                  return "" + var10000 + ": " + object2intmap.getInt(categoryIn);
-               }).collect(Collectors.joining(", ")));
+               list.add(
+                  "SC: "
+                     + i1
+                     + ", "
+                     + (String)Stream.m_253057_(MobCategory.values())
+                        .map(categoryIn -> Character.toUpperCase(categoryIn.m_21607_().charAt(0)) + ": " + object2intmap.getInt(categoryIn))
+                        .collect(Collectors.joining(", "))
+               );
             } else {
                list.add("SC: N/A");
             }
@@ -530,18 +559,16 @@ public class DebugScreenOverlay {
             list.add("Shader: " + postchain.m_110022_());
          }
 
-         var10001 = this.f_94030_.m_91106_().m_120408_();
-         list.add(var10001 + String.format(Locale.ROOT, " (Mood %d%%)", Math.round(this.f_94030_.f_91074_.m_108762_() * 100.0F)));
+         list.add(
+            this.f_94030_.m_91106_().m_120408_()
+               + String.m_12886_(Locale.ROOT, " (Mood %d%%)", new Object[]{Math.round(this.f_94030_.f_91074_.m_108762_() * 100.0F)})
+         );
          return list;
       }
    }
 
-   private static String m_205374_(Holder biomeHolderIn) {
-      return (String)biomeHolderIn.m_203439_().map((keyIn) -> {
-         return keyIn.m_135782_().toString();
-      }, (p_317322_0_) -> {
-         return "[unregistered " + String.valueOf(p_317322_0_) + "]";
-      });
+   private static String m_205374_(Holder<Biome> biomeHolderIn) {
+      return (String)biomeHolderIn.m_203439_().map(keyIn -> keyIn.m_135782_().toString(), p_317322_0_ -> "[unregistered " + p_317322_0_ + "]");
    }
 
    @Nullable
@@ -557,9 +584,10 @@ public class DebugScreenOverlay {
    }
 
    private Level m_94083_() {
-      return (Level)DataFixUtils.orElse(Optional.ofNullable(this.f_94030_.m_91092_()).flatMap((serverIn) -> {
-         return Optional.ofNullable(serverIn.m_129880_(this.f_94030_.f_91073_.m_46472_()));
-      }), this.f_94030_.f_91073_);
+      return (Level)DataFixUtils.orElse(
+         Optional.ofNullable(this.f_94030_.m_91092_()).flatMap(serverIn -> Optional.ofNullable(serverIn.m_129880_(this.f_94030_.f_91073_.m_46472_()))),
+         this.f_94030_.f_91073_
+      );
    }
 
    @Nullable
@@ -570,12 +598,12 @@ public class DebugScreenOverlay {
             return null;
          }
 
-         this.f_94036_ = serverlevel.m_7726_().m_8431_(this.f_94034_.f_45578_, this.f_94034_.f_45579_, ChunkStatus.f_315432_, false).thenApply((chunkIn) -> {
-            return (LevelChunk)chunkIn.m_318814_((Object)null);
-         });
+         this.f_94036_ = serverlevel.m_7726_()
+            .m_8431_(this.f_94034_.f_45578_, this.f_94034_.f_45579_, ChunkStatus.f_315432_, false)
+            .thenApply(chunkIn -> (LevelChunk)chunkIn.m_318814_(null));
       }
 
-      return (LevelChunk)this.f_94036_.getNow((Object)null);
+      return (LevelChunk)this.f_94036_.getNow(null);
    }
 
    private LevelChunk m_94085_() {
@@ -586,29 +614,41 @@ public class DebugScreenOverlay {
       return this.f_94035_;
    }
 
-   protected List m_94078_() {
+   protected List<String> m_94078_() {
       long i = Runtime.getRuntime().maxMemory();
       long j = Runtime.getRuntime().totalMemory();
       long k = Runtime.getRuntime().freeMemory();
       long l = j - k;
-      List list = Lists.newArrayList(new String[]{String.format(Locale.ROOT, "Java: %s", System.getProperty("java.version")), String.format(Locale.ROOT, "Mem: %2d%% %03d/%03dMB", l * 100L / i, m_94050_(l), m_94050_(i)), String.format(Locale.ROOT, "Allocation rate: %dMB/s", MemoryMonitor.getAllocationRateAvgMb()), String.format(Locale.ROOT, "Allocated: %2d%% %03dMB", j * 100L / i, m_94050_(j)), "", String.format(Locale.ROOT, "CPU: %s", GlUtil.m_84819_()), "", String.format(Locale.ROOT, "Display: %dx%d (%s)", Minecraft.m_91087_().m_91268_().m_85441_(), Minecraft.m_91087_().m_91268_().m_85442_(), GlUtil.m_84818_()), GlUtil.m_84820_(), GlUtil.m_84821_()});
+      List<String> list = Lists.newArrayList(
+         new String[]{
+            String.m_12886_(Locale.ROOT, "Java: %s", new Object[]{System.getProperty("java.version")}),
+            String.m_12886_(Locale.ROOT, "Mem: %2d%% %03d/%03dMB", new Object[]{l * 100L / i, m_94050_(l), m_94050_(i)}),
+            String.m_12886_(Locale.ROOT, "Allocation rate: %dMB/s", new Object[]{MemoryMonitor.getAllocationRateAvgMb()}),
+            String.m_12886_(Locale.ROOT, "Allocated: %2d%% %03dMB", new Object[]{j * 100L / i, m_94050_(j)}),
+            "",
+            String.m_12886_(Locale.ROOT, "CPU: %s", new Object[]{GlUtil.m_84819_()}),
+            "",
+            String.m_12886_(
+               Locale.ROOT,
+               "Display: %dx%d (%s)",
+               new Object[]{Minecraft.m_91087_().m_91268_().m_85441_(), Minecraft.m_91087_().m_91268_().m_85442_(), GlUtil.m_84818_()}
+            ),
+            GlUtil.m_84820_(),
+            GlUtil.m_84821_()
+         }
+      );
       long bufferAllocated = NativeMemory.getBufferAllocated();
       long bufferMaximum = NativeMemory.getBufferMaximum();
       long imageAllocated = NativeMemory.getImageAllocated();
-      long var10000 = m_94050_(bufferAllocated);
-      String strNative = "Native: " + var10000 + "/" + m_94050_(bufferMaximum) + "+" + m_94050_(imageAllocated) + "MB";
+      String strNative = "Native: " + m_94050_(bufferAllocated) + "/" + m_94050_(bufferMaximum) + "+" + m_94050_(imageAllocated) + "MB";
       list.add(3, strNative);
       long gpuBufferAllocated = GpuMemory.getBufferAllocated();
       long gpuTextureAllocated = GpuMemory.getTextureAllocated();
-      long var10002 = m_94050_(gpuBufferAllocated);
-      list.set(4, "GPU: " + var10002 + "+" + m_94050_(gpuTextureAllocated) + "MB");
+      list.set(4, "GPU: " + m_94050_(gpuBufferAllocated) + "+" + m_94050_(gpuTextureAllocated) + "MB");
       if (Reflector.BrandingControl_getBrandings.exists()) {
          list.add("");
-         Collection brandings = (Collection)Reflector.call(Reflector.BrandingControl_getBrandings, true, false);
-         Iterator var22 = brandings.iterator();
 
-         while(var22.hasNext()) {
-            String line = (String)var22.next();
+         for (String line : (Collection)Reflector.m_46374_(Reflector.BrandingControl_getBrandings, true, false)) {
             if (!line.startsWith("Minecraft ")) {
                list.add(line);
             }
@@ -618,82 +658,57 @@ public class DebugScreenOverlay {
       if (this.f_94030_.m_91299_()) {
          return list;
       } else {
-         String var10001;
-         Map.Entry entry1;
-         BlockPos blockpos1;
-         Iterator var29;
-         Stream var30;
          if (this.f_94032_.m_6662_() == Type.BLOCK) {
-            blockpos1 = ((BlockHitResult)this.f_94032_).m_82425_();
-            BlockState blockstate = this.f_94030_.f_91073_.m_8055_(blockpos1);
+            BlockPos blockpos = ((BlockHitResult)this.f_94032_).m_82425_();
+            BlockState blockstate = this.f_94030_.f_91073_.m_8055_(blockpos);
             list.add("");
-            var10001 = String.valueOf(ChatFormatting.UNDERLINE);
-            list.add(var10001 + "Targeted Block: " + blockpos1.m_123341_() + ", " + blockpos1.m_123342_() + ", " + blockpos1.m_123343_());
+            list.add(ChatFormatting.UNDERLINE + "Targeted Block: " + blockpos.m_123341_() + ", " + blockpos.m_123342_() + ", " + blockpos.m_123343_());
             list.add(String.valueOf(BuiltInRegistries.f_256975_.m_7981_(blockstate.m_60734_())));
-            var29 = blockstate.m_61148_().entrySet().iterator();
 
-            while(var29.hasNext()) {
-               entry1 = (Map.Entry)var29.next();
-               list.add(this.m_94071_(entry1));
+            for (Entry<Property<?>, Comparable<?>> entry : blockstate.m_61148_().entrySet()) {
+               list.add(this.m_94071_(entry));
             }
 
-            var30 = blockstate.m_204343_().map((keyIn) -> {
-               return "#" + String.valueOf(keyIn.f_203868_());
-            });
-            Objects.requireNonNull(list);
-            var30.forEach(list::add);
+            blockstate.m_204343_().map(keyIn -> "#" + keyIn.f_203868_()).forEach(list::add);
          }
 
          if (this.f_94033_.m_6662_() == Type.BLOCK) {
-            blockpos1 = ((BlockHitResult)this.f_94033_).m_82425_();
+            BlockPos blockpos1 = ((BlockHitResult)this.f_94033_).m_82425_();
             FluidState fluidstate = this.f_94030_.f_91073_.m_6425_(blockpos1);
             list.add("");
-            var10001 = String.valueOf(ChatFormatting.UNDERLINE);
-            list.add(var10001 + "Targeted Fluid: " + blockpos1.m_123341_() + ", " + blockpos1.m_123342_() + ", " + blockpos1.m_123343_());
+            list.add(ChatFormatting.UNDERLINE + "Targeted Fluid: " + blockpos1.m_123341_() + ", " + blockpos1.m_123342_() + ", " + blockpos1.m_123343_());
             list.add(String.valueOf(BuiltInRegistries.f_257020_.m_7981_(fluidstate.m_76152_())));
-            var29 = fluidstate.m_61148_().entrySet().iterator();
 
-            while(var29.hasNext()) {
-               entry1 = (Map.Entry)var29.next();
+            for (Entry<Property<?>, Comparable<?>> entry1 : fluidstate.m_61148_().entrySet()) {
                list.add(this.m_94071_(entry1));
             }
 
-            var30 = fluidstate.m_205075_().map((keyIn) -> {
-               return "#" + String.valueOf(keyIn.f_203868_());
-            });
-            Objects.requireNonNull(list);
-            var30.forEach(list::add);
+            fluidstate.m_205075_().map(keyIn -> "#" + keyIn.f_203868_()).forEach(list::add);
          }
 
          Entity entity = this.f_94030_.f_91076_;
          if (entity != null) {
             list.add("");
-            list.add(String.valueOf(ChatFormatting.UNDERLINE) + "Targeted Entity");
+            list.add(ChatFormatting.UNDERLINE + "Targeted Entity");
             list.add(String.valueOf(BuiltInRegistries.f_256780_.m_7981_(entity.m_6095_())));
-            entity.m_6095_().m_204041_().m_203616_().forEach((t) -> {
-               list.add("#" + String.valueOf(t.f_203868_()));
-            });
+            entity.m_6095_().m_204041_().m_203616_().forEach(t -> list.add("#" + t.f_203868_()));
          }
 
          return list;
       }
    }
 
-   private String m_94071_(Map.Entry entryIn) {
-      Property property = (Property)entryIn.getKey();
-      Comparable comparable = (Comparable)entryIn.getValue();
+   private String m_94071_(Entry<Property<?>, Comparable<?>> entryIn) {
+      Property<?> property = (Property<?>)entryIn.getKey();
+      Comparable<?> comparable = (Comparable<?>)entryIn.getValue();
       String s = Util.m_137453_(property, comparable);
-      String var10000;
       if (Boolean.TRUE.equals(comparable)) {
-         var10000 = String.valueOf(ChatFormatting.GREEN);
-         s = var10000 + s;
+         s = ChatFormatting.GREEN + s;
       } else if (Boolean.FALSE.equals(comparable)) {
-         var10000 = String.valueOf(ChatFormatting.RED);
-         s = var10000 + s;
+         s = ChatFormatting.RED + s;
       }
 
-      var10000 = property.m_61708_();
-      return var10000 + ": " + s;
+      return property.m_61708_() + ": " + s;
    }
 
    private static long m_94050_(long bytes) {
@@ -725,7 +740,6 @@ public class DebugScreenOverlay {
       if (this.f_291101_ && !this.f_291871_ && this.f_94030_.f_91066_.ofProfiler) {
          this.m_293481_();
       }
-
    }
 
    public void m_295292_() {
@@ -734,7 +748,6 @@ public class DebugScreenOverlay {
          this.f_291101_ = true;
          this.f_290551_ = false;
       }
-
    }
 
    public void m_294611_() {
@@ -743,7 +756,6 @@ public class DebugScreenOverlay {
          this.f_291101_ = true;
          this.f_291005_ = false;
       }
-
    }
 
    public void m_293481_() {
@@ -751,7 +763,6 @@ public class DebugScreenOverlay {
       if (this.f_291871_) {
          this.f_291101_ = true;
       }
-
    }
 
    public void m_294107_(long timeIn) {
@@ -775,7 +786,6 @@ public class DebugScreenOverlay {
       if (localsamplelogger != null) {
          localsamplelogger.m_320889_(sampleIn);
       }
-
    }
 
    public void m_294940_() {
@@ -790,8 +800,8 @@ public class DebugScreenOverlay {
    }
 
    static class AllocationRateCalculator {
-      private static final int f_232507_ = 500;
-      private static final List f_232508_ = ManagementFactory.getGarbageCollectorMXBeans();
+      private static int f_232507_;
+      private static List<GarbageCollectorMXBean> f_232508_ = ManagementFactory.getGarbageCollectorMXBeans();
       private long f_232509_ = 0L;
       private long f_232510_ = -1L;
       private long f_232511_ = -1L;
@@ -819,9 +829,8 @@ public class DebugScreenOverlay {
       private static long m_232515_() {
          long i = 0L;
 
-         GarbageCollectorMXBean garbagecollectormxbean;
-         for(Iterator var2 = f_232508_.iterator(); var2.hasNext(); i += garbagecollectormxbean.getCollectionCount()) {
-            garbagecollectormxbean = (GarbageCollectorMXBean)var2.next();
+         for (GarbageCollectorMXBean garbagecollectormxbean : f_232508_) {
+            i += garbagecollectormxbean.getCollectionCount();
          }
 
          return i;

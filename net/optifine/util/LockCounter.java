@@ -4,7 +4,7 @@ public class LockCounter {
    private int lockCount;
 
    public boolean lock() {
-      ++this.lockCount;
+      this.lockCount++;
       return this.lockCount == 1;
    }
 
@@ -12,7 +12,7 @@ public class LockCounter {
       if (this.lockCount <= 0) {
          return false;
       } else {
-         --this.lockCount;
+         this.lockCount--;
          return this.lockCount == 0;
       }
    }

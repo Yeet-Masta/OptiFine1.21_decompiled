@@ -1,12 +1,11 @@
 package net.optifine.shaders;
 
-import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import net.minecraft.core.BlockPos;
 import net.optifine.BlockPosM;
 
-public class IteratorAxis implements Iterator {
+public class IteratorAxis implements Iterator<BlockPos> {
    private double yDelta;
    private double zDelta;
    private int xStart;
@@ -52,19 +51,19 @@ public class IteratorAxis implements Iterator {
    }
 
    private void nextPos() {
-      ++this.zNext;
+      this.zNext++;
       if (!(this.zNext < this.zEnd)) {
          this.zNext = this.zStart;
-         ++this.yNext;
+         this.yNext++;
          if (!(this.yNext < this.yEnd)) {
             this.yNext = this.yStart;
-            this.yStart += this.yDelta;
-            this.yEnd += this.yDelta;
+            this.yStart = this.yStart + this.yDelta;
+            this.yEnd = this.yEnd + this.yDelta;
             this.yNext = this.yStart;
-            this.zStart += this.zDelta;
-            this.zEnd += this.zDelta;
+            this.zStart = this.zStart + this.zDelta;
+            this.zEnd = this.zEnd + this.zDelta;
             this.zNext = this.zStart;
-            ++this.xNext;
+            this.xNext++;
             if (this.xNext >= this.xEnd) {
                ;
             }
@@ -82,14 +81,11 @@ public class IteratorAxis implements Iterator {
       double yDelta = -0.5;
       double zDelta = 0.5;
       IteratorAxis it = new IteratorAxis(posStart, posEnd, yDelta, zDelta);
-      PrintStream var10000 = System.out;
-      String var10001 = String.valueOf(posStart);
-      var10000.println("Start: " + var10001 + ", end: " + String.valueOf(posEnd) + ", yDelta: " + yDelta + ", zDelta: " + zDelta);
+      System.out.println("Start: " + posStart + ", end: " + posEnd + ", yDelta: " + yDelta + ", zDelta: " + zDelta);
 
-      while(it.hasNext()) {
+      while (it.hasNext()) {
          BlockPos blockPos = it.next();
-         System.out.println("" + String.valueOf(blockPos));
+         System.out.println(blockPos + "");
       }
-
    }
 }

@@ -25,6 +25,7 @@ public class ShaderPackZip implements IShaderPack {
       this.baseFolder = "";
    }
 
+   @Override
    public void close() {
       if (this.packZipFile != null) {
          try {
@@ -36,6 +37,7 @@ public class ShaderPackZip implements IShaderPack {
       }
    }
 
+   @Override
    public InputStream getResourceAsStream(String resName) {
       try {
          if (this.packZipFile == null) {
@@ -44,7 +46,7 @@ public class ShaderPackZip implements IShaderPack {
          }
 
          String name = StrUtils.removePrefix(resName, "/");
-         if (name.contains("..")) {
+         if (name.m_274455_("..")) {
             name = this.resolveRelative(name);
          }
 
@@ -56,10 +58,10 @@ public class ShaderPackZip implements IShaderPack {
    }
 
    private String resolveRelative(String name) {
-      Deque stack = new ArrayDeque();
+      Deque<String> stack = new ArrayDeque();
       String[] parts = Config.tokenize(name, "/");
 
-      for(int i = 0; i < parts.length; ++i) {
+      for (int i = 0; i < parts.length; i++) {
          String part = parts[i];
          if (part.equals("..")) {
             if (stack.isEmpty()) {
@@ -72,8 +74,7 @@ public class ShaderPackZip implements IShaderPack {
          }
       }
 
-      String path = Joiner.on('/').join(stack);
-      return path;
+      return Joiner.on('/').join(stack);
    }
 
    private String detectBaseFolder(ZipFile zip) {
@@ -81,10 +82,10 @@ public class ShaderPackZip implements IShaderPack {
       if (entryShaders != null && entryShaders.isDirectory()) {
          return "";
       } else {
-         Pattern patternFolderShaders = Pattern.compile("([^/]+/)shaders/");
-         Enumeration entries = zip.entries();
+         Pattern patternFolderShaders = Pattern.m_289905_("([^/]+/)shaders/");
+         Enumeration<? extends ZipEntry> entries = zip.entries();
 
-         while(entries.hasMoreElements()) {
+         while (entries.hasMoreElements()) {
             ZipEntry entry = (ZipEntry)entries.nextElement();
             String name = entry.getName();
             Matcher matcher = patternFolderShaders.matcher(name);
@@ -104,6 +105,7 @@ public class ShaderPackZip implements IShaderPack {
       }
    }
 
+   @Override
    public boolean hasDirectory(String resName) {
       try {
          if (this.packZipFile == null) {
@@ -119,6 +121,7 @@ public class ShaderPackZip implements IShaderPack {
       }
    }
 
+   @Override
    public String getName() {
       return this.packFile.getName();
    }

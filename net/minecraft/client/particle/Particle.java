@@ -7,6 +7,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleGroup;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -18,9 +19,9 @@ import net.optifine.Config;
 import net.optifine.CustomColors;
 
 public abstract class Particle {
-   private static final AABB f_107206_ = new AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-   private static final double f_197408_ = Mth.m_144952_(100.0);
-   protected final ClientLevel f_107208_;
+   private static AABB f_107206_ = new AABB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+   private static double f_197408_ = Mth.m_144952_(100.0);
+   protected ClientLevel f_107208_;
    protected double f_107209_;
    protected double f_107210_;
    protected double f_107211_;
@@ -30,40 +31,28 @@ public abstract class Particle {
    protected double f_107215_;
    protected double f_107216_;
    protected double f_107217_;
-   private AABB f_107207_;
+   private AABB f_107207_ = f_107206_;
    protected boolean f_107218_;
-   protected boolean f_107219_;
+   protected boolean f_107219_ = true;
    private boolean f_107205_;
    protected boolean f_107220_;
-   protected float f_107221_;
-   protected float f_107222_;
-   protected final RandomSource f_107223_;
+   protected float f_107221_ = 0.6F;
+   protected float f_107222_ = 1.8F;
+   protected RandomSource f_107223_ = RandomSource.m_216327_();
    protected int f_107224_;
    protected int f_107225_;
    protected float f_107226_;
-   protected float f_107227_;
-   protected float f_107228_;
-   protected float f_107229_;
-   protected float f_107230_;
+   protected float f_107227_ = 1.0F;
+   protected float f_107228_ = 1.0F;
+   protected float f_107229_ = 1.0F;
+   protected float f_107230_ = 1.0F;
    protected float f_107231_;
    protected float f_107204_;
-   protected float f_172258_;
-   protected boolean f_172259_;
-   private BlockPosM blockPosM;
+   protected float f_172258_ = 0.98F;
+   protected boolean f_172259_ = false;
+   private BlockPosM blockPosM = new BlockPosM();
 
    protected Particle(ClientLevel worldIn, double posXIn, double posYIn, double posZIn) {
-      this.f_107207_ = f_107206_;
-      this.f_107219_ = true;
-      this.f_107221_ = 0.6F;
-      this.f_107222_ = 1.8F;
-      this.f_107223_ = RandomSource.m_216327_();
-      this.f_107227_ = 1.0F;
-      this.f_107228_ = 1.0F;
-      this.f_107229_ = 1.0F;
-      this.f_107230_ = 1.0F;
-      this.f_172258_ = 0.98F;
-      this.f_172259_ = false;
-      this.blockPosM = new BlockPosM();
       this.f_107208_ = worldIn;
       this.m_107250_(0.2F, 0.2F);
       this.m_107264_(posXIn, posYIn, posZIn);
@@ -75,19 +64,19 @@ public abstract class Particle {
 
    public Particle(ClientLevel worldIn, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn, double ySpeedIn, double zSpeedIn) {
       this(worldIn, xCoordIn, yCoordIn, zCoordIn);
-      this.f_107215_ = xSpeedIn + (Math.random() * 2.0 - 1.0) * 0.4000000059604645;
-      this.f_107216_ = ySpeedIn + (Math.random() * 2.0 - 1.0) * 0.4000000059604645;
-      this.f_107217_ = zSpeedIn + (Math.random() * 2.0 - 1.0) * 0.4000000059604645;
-      double d0 = (Math.random() + Math.random() + 1.0) * 0.15000000596046448;
+      this.f_107215_ = xSpeedIn + (Math.random() * 2.0 - 1.0) * 0.4F;
+      this.f_107216_ = ySpeedIn + (Math.random() * 2.0 - 1.0) * 0.4F;
+      this.f_107217_ = zSpeedIn + (Math.random() * 2.0 - 1.0) * 0.4F;
+      double d0 = (Math.random() + Math.random() + 1.0) * 0.15F;
       double d1 = Math.sqrt(this.f_107215_ * this.f_107215_ + this.f_107216_ * this.f_107216_ + this.f_107217_ * this.f_107217_);
-      this.f_107215_ = this.f_107215_ / d1 * d0 * 0.4000000059604645;
-      this.f_107216_ = this.f_107216_ / d1 * d0 * 0.4000000059604645 + 0.10000000149011612;
-      this.f_107217_ = this.f_107217_ / d1 * d0 * 0.4000000059604645;
+      this.f_107215_ = this.f_107215_ / d1 * d0 * 0.4F;
+      this.f_107216_ = this.f_107216_ / d1 * d0 * 0.4F + 0.1F;
+      this.f_107217_ = this.f_107217_ / d1 * d0 * 0.4F;
    }
 
    public Particle m_107268_(float multiplier) {
       this.f_107215_ *= (double)multiplier;
-      this.f_107216_ = (this.f_107216_ - 0.10000000149011612) * (double)multiplier + 0.10000000149011612;
+      this.f_107216_ = (this.f_107216_ - 0.1F) * (double)multiplier + 0.1F;
       this.f_107217_ *= (double)multiplier;
       return this;
    }
@@ -128,26 +117,25 @@ public abstract class Particle {
       if (this.f_107224_++ >= this.f_107225_) {
          this.m_107274_();
       } else {
-         this.f_107216_ -= 0.04 * (double)this.f_107226_;
+         this.f_107216_ = this.f_107216_ - 0.04 * (double)this.f_107226_;
          this.m_6257_(this.f_107215_, this.f_107216_, this.f_107217_);
          if (this.f_172259_ && this.f_107213_ == this.f_107210_) {
             this.f_107215_ *= 1.1;
             this.f_107217_ *= 1.1;
          }
 
-         this.f_107215_ *= (double)this.f_172258_;
-         this.f_107216_ *= (double)this.f_172258_;
-         this.f_107217_ *= (double)this.f_172258_;
+         this.f_107215_ = this.f_107215_ * (double)this.f_172258_;
+         this.f_107216_ = this.f_107216_ * (double)this.f_172258_;
+         this.f_107217_ = this.f_107217_ * (double)this.f_172258_;
          if (this.f_107218_) {
-            this.f_107215_ *= 0.699999988079071;
-            this.f_107217_ *= 0.699999988079071;
+            this.f_107215_ *= 0.7F;
+            this.f_107217_ *= 0.7F;
          }
       }
 
       if (Config.isCustomColors() && this instanceof LavaParticle) {
          CustomColors.updateLavaFX(this);
       }
-
    }
 
    public abstract void m_5744_(VertexConsumer var1, Camera var2, float var3);
@@ -155,8 +143,23 @@ public abstract class Particle {
    public abstract ParticleRenderType m_7556_();
 
    public String toString() {
-      String var10000 = this.getClass().getSimpleName();
-      return var10000 + ", Pos (" + this.f_107212_ + "," + this.f_107213_ + "," + this.f_107214_ + "), RGBA (" + this.f_107227_ + "," + this.f_107228_ + "," + this.f_107229_ + "," + this.f_107230_ + "), Age " + this.f_107224_;
+      return this.getClass().getSimpleName()
+         + ", Pos ("
+         + this.f_107212_
+         + ","
+         + this.f_107213_
+         + ","
+         + this.f_107214_
+         + "), RGBA ("
+         + this.f_107227_
+         + ","
+         + this.f_107228_
+         + ","
+         + this.f_107229_
+         + ","
+         + this.f_107230_
+         + "), Age "
+         + this.f_107224_;
    }
 
    public void m_107274_() {
@@ -172,7 +175,6 @@ public abstract class Particle {
          double d1 = (aabb.f_82290_ + aabb.f_82293_ - (double)particleWidth) / 2.0;
          this.m_107259_(new AABB(d0, aabb.f_82289_, d1, d0 + (double)this.f_107221_, aabb.f_82289_ + (double)this.f_107222_, d1 + (double)this.f_107221_));
       }
-
    }
 
    public void m_107264_(double x, double y, double z) {
@@ -188,8 +190,9 @@ public abstract class Particle {
       if (!this.f_107205_) {
          double d0 = x;
          double d1 = y;
+         double d2 = z;
          if (this.f_107219_ && (x != 0.0 || y != 0.0 || z != 0.0) && x * x + y * y + z * z < f_197408_ && this.hasNearBlocks(x, y, z)) {
-            Vec3 vec3 = Entity.m_198894_((Entity)null, new Vec3(x, y, z), this.m_107277_(), this.f_107208_, List.of());
+            Vec3 vec3 = Entity.m_198894_(null, new Vec3(x, y, z), this.m_107277_(), this.f_107208_, List.m_253057_());
             x = vec3.f_82479_;
             y = vec3.f_82480_;
             z = vec3.f_82481_;
@@ -200,20 +203,19 @@ public abstract class Particle {
             this.m_107275_();
          }
 
-         if (Math.abs(y) >= 9.999999747378752E-6 && Math.abs(y) < 9.999999747378752E-6) {
+         if (Math.abs(d1) >= 1.0E-5F && Math.abs(y) < 1.0E-5F) {
             this.f_107205_ = true;
          }
 
-         this.f_107218_ = y != y && d1 < 0.0;
+         this.f_107218_ = d1 != y && d1 < 0.0;
          if (d0 != x) {
             this.f_107215_ = 0.0;
          }
 
-         if (z != z) {
+         if (d2 != z) {
             this.f_107217_ = 0.0;
          }
       }
-
    }
 
    protected void m_107275_() {
@@ -240,8 +242,8 @@ public abstract class Particle {
       this.f_107207_ = bb;
    }
 
-   public Optional m_142654_() {
-      return Optional.empty();
+   public Optional<ParticleGroup> m_142654_() {
+      return Optional.m_274566_();
    }
 
    private boolean hasNearBlocks(double dx, double dy, double dz) {
@@ -280,26 +282,15 @@ public abstract class Particle {
    }
 
    public boolean shouldCull() {
-      if (this instanceof MobAppearanceParticle) {
-         return false;
-      } else {
-         return !(this instanceof VibrationSignalParticle);
-      }
+      return this instanceof MobAppearanceParticle ? false : !(this instanceof VibrationSignalParticle);
    }
 
-   public Vec3 getPos() {
+   public Vec3 m_234964_() {
       return new Vec3(this.f_107212_, this.f_107213_, this.f_107214_);
    }
 
    public static record LifetimeAlpha(float f_315806_, float f_316797_, float f_315332_, float f_315978_) {
-      public static final LifetimeAlpha f_314120_ = new LifetimeAlpha(1.0F, 1.0F, 0.0F, 1.0F);
-
-      public LifetimeAlpha(float startAlpha, float endAlpha, float startAtNormalizedAge, float endAtNormalizedAge) {
-         this.f_315806_ = startAlpha;
-         this.f_316797_ = endAlpha;
-         this.f_315332_ = startAtNormalizedAge;
-         this.f_315978_ = endAtNormalizedAge;
-      }
+      public static Particle.LifetimeAlpha f_314120_ = new Particle.LifetimeAlpha(1.0F, 1.0F, 0.0F, 1.0F);
 
       public boolean m_320160_() {
          return this.f_315806_ >= 1.0F && this.f_316797_ >= 1.0F;
@@ -312,22 +303,6 @@ public abstract class Particle {
             float f = Mth.m_184655_(((float)ageIn + partialTicks) / (float)maxAgeIn, this.f_315332_, this.f_315978_);
             return Mth.m_144920_(this.f_315806_, this.f_316797_, f);
          }
-      }
-
-      public float f_315806_() {
-         return this.f_315806_;
-      }
-
-      public float f_316797_() {
-         return this.f_316797_;
-      }
-
-      public float f_315332_() {
-         return this.f_315332_;
-      }
-
-      public float f_315978_() {
-         return this.f_315978_;
       }
    }
 }

@@ -15,7 +15,7 @@ import net.optifine.util.TextureUtils;
 public class NaturalTextures {
    private static NaturalProperties[] propertiesByIndex = new NaturalProperties[0];
 
-   public static void update() {
+   public static void m_252999_() {
       propertiesByIndex = new NaturalProperties[0];
       if (Config.isNaturalTextures()) {
          String fileName = "optifine/natural.properties";
@@ -43,7 +43,7 @@ public class NaturalTextures {
             int countTextures = 0;
             TextureAtlas textureMapBlocks = TextureUtils.getTextureMapBlocks();
 
-            for(int i = 0; i < configLines.length; ++i) {
+            for (int i = 0; i < configLines.length; i++) {
                String line = configLines[i].trim();
                if (!line.startsWith("#")) {
                   String[] strs = Config.tokenize(line, "=");
@@ -66,12 +66,12 @@ public class NaturalTextures {
 
                            NaturalProperties props = new NaturalProperties(type);
                            if (props.isValid()) {
-                              while(list.size() <= tileNum) {
-                                 list.add((Object)null);
+                              while (list.size() <= tileNum) {
+                                 list.add(null);
                               }
 
                               list.set(tileNum, props);
-                              ++countTextures;
+                              countTextures++;
                            }
                         }
                      }
@@ -89,7 +89,6 @@ public class NaturalTextures {
          } catch (Exception var19) {
             var19.printStackTrace();
          }
-
       }
    }
 
@@ -132,12 +131,7 @@ public class NaturalTextures {
          return null;
       } else {
          int tileNum = icon.getIndexInMap();
-         if (tileNum >= 0 && tileNum < propertiesByIndex.length) {
-            NaturalProperties props = propertiesByIndex[tileNum];
-            return props;
-         } else {
-            return null;
-         }
+         return tileNum >= 0 && tileNum < propertiesByIndex.length ? propertiesByIndex[tileNum] : null;
       }
    }
 }

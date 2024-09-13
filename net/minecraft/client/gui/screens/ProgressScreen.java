@@ -15,7 +15,7 @@ public class ProgressScreen extends Screen implements ProgressListener {
    private Component f_96507_;
    private int f_96508_;
    private boolean f_96509_;
-   private final boolean f_169362_;
+   private boolean f_169362_;
    private CustomLoadingScreen customLoadingScreen;
 
    public ProgressScreen(boolean clearIn) {
@@ -57,7 +57,7 @@ public class ProgressScreen extends Screen implements ProgressListener {
    public void m_88315_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
       if (this.f_96509_) {
          if (this.f_169362_) {
-            this.f_96541_.m_91152_((Screen)null);
+            this.f_96541_.m_91152_(null);
          }
       } else {
          super.m_88315_(graphicsIn, mouseX, mouseY, partialTicks);
@@ -67,11 +67,12 @@ public class ProgressScreen extends Screen implements ProgressListener {
             }
 
             if (this.f_96507_ != null && this.f_96508_ != 0) {
-               graphicsIn.m_280653_(this.f_96547_, Component.m_237119_().m_7220_(this.f_96507_).m_130946_(" " + this.f_96508_ + "%"), this.f_96543_ / 2, 90, 16777215);
+               graphicsIn.m_280653_(
+                  this.f_96547_, Component.m_237119_().m_7220_(this.f_96507_).m_130946_(" " + this.f_96508_ + "%"), this.f_96543_ / 2, 90, 16777215
+               );
             }
          }
       }
-
    }
 
    public void m_280273_(GuiGraphics graphicsIn, int mouseX, int mouseY, float partialTicks) {
@@ -80,6 +81,5 @@ public class ProgressScreen extends Screen implements ProgressListener {
       } else {
          super.m_280273_(graphicsIn, mouseX, mouseY, partialTicks);
       }
-
    }
 }

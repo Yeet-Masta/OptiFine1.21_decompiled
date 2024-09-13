@@ -18,8 +18,8 @@ import net.optifine.shaders.ShadersTex;
 import org.slf4j.Logger;
 
 public class SimpleTexture extends AbstractTexture {
-   static final Logger f_118130_ = LogUtils.getLogger();
-   protected final ResourceLocation f_118129_;
+   static Logger f_118130_ = LogUtils.getLogger();
+   protected ResourceLocation f_118129_;
    private ResourceManager resourceManager;
    public ResourceLocation locationEmissive;
    public boolean isEmissive;
@@ -29,9 +29,10 @@ public class SimpleTexture extends AbstractTexture {
       this.f_118129_ = textureResourceLocation;
    }
 
+   @Override
    public void m_6704_(ResourceManager manager) throws IOException {
       this.resourceManager = manager;
-      TextureImage simpletexture$textureimage = this.m_6335_(manager);
+      SimpleTexture.TextureImage simpletexture$textureimage = this.m_6335_(manager);
       simpletexture$textureimage.m_118159_();
       TextureMetadataSection texturemetadatasection = simpletexture$textureimage.m_118154_();
       boolean flag;
@@ -46,13 +47,10 @@ public class SimpleTexture extends AbstractTexture {
 
       NativeImage nativeimage = simpletexture$textureimage.m_118158_();
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> {
-            this.m_118136_(nativeimage, flag, flag1);
-         });
+         RenderSystem.recordRenderCall(() -> this.m_118136_(nativeimage, flag, flag1));
       } else {
          this.m_118136_(nativeimage, flag, flag1);
       }
-
    }
 
    private void m_118136_(NativeImage imageIn, boolean blurIn, boolean clampIn) {
@@ -69,17 +67,17 @@ public class SimpleTexture extends AbstractTexture {
       this.size = imageIn.getSize();
    }
 
-   protected TextureImage m_6335_(ResourceManager resourceManager) {
+   protected SimpleTexture.TextureImage m_6335_(ResourceManager resourceManager) {
       return SimpleTexture.TextureImage.m_118155_(resourceManager, this.f_118129_);
    }
 
    protected static class TextureImage implements Closeable {
       @Nullable
-      private final TextureMetadataSection f_118146_;
+      private TextureMetadataSection f_118146_;
       @Nullable
-      private final NativeImage f_118147_;
+      private NativeImage f_118147_;
       @Nullable
-      private final IOException f_118148_;
+      private IOException f_118148_;
 
       public TextureImage(IOException exceptionIn) {
          this.f_118148_ = exceptionIn;
@@ -93,7 +91,7 @@ public class SimpleTexture extends AbstractTexture {
          this.f_118147_ = imageIn;
       }
 
-      public static TextureImage m_118155_(ResourceManager resourceManagerIn, ResourceLocation locationIn) {
+      public static SimpleTexture.TextureImage m_118155_(ResourceManager resourceManagerIn, ResourceLocation locationIn) {
          try {
             Resource resource = resourceManagerIn.m_215593_(locationIn);
             InputStream inputstream = resource.m_215507_();
@@ -120,14 +118,14 @@ public class SimpleTexture extends AbstractTexture {
             TextureMetadataSection texturemetadatasection = null;
 
             try {
-               texturemetadatasection = (TextureMetadataSection)resource.m_215509_().m_214059_(TextureMetadataSection.f_119108_).orElse((Object)null);
+               texturemetadatasection = (TextureMetadataSection)resource.m_215509_().m_214059_(TextureMetadataSection.f_119108_).orElse(null);
             } catch (RuntimeException var8) {
                SimpleTexture.f_118130_.warn("Failed reading metadata of: {}", locationIn, var8);
             }
 
-            return new TextureImage(texturemetadatasection, nativeimage);
+            return new SimpleTexture.TextureImage(texturemetadatasection, nativeimage);
          } catch (IOException var10) {
-            return new TextureImage(var10);
+            return new SimpleTexture.TextureImage(var10);
          }
       }
 
@@ -148,7 +146,6 @@ public class SimpleTexture extends AbstractTexture {
          if (this.f_118147_ != null) {
             this.f_118147_.close();
          }
-
       }
 
       public void m_118159_() throws IOException {

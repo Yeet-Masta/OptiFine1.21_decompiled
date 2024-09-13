@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterBreeze extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterBreeze() {
       super(EntityType.f_302782_, "breeze", 0.8F);
@@ -22,10 +22,12 @@ public class ModelAdapterBreeze extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new BreezeModel(bakeModelLayer(ModelLayers.f_303100_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BreezeModel modelBreeze)) {
          return null;
@@ -39,13 +41,13 @@ public class ModelAdapterBreeze extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "body");
       map.put("rods", "rods");
       map.put("head", "head");
@@ -57,6 +59,7 @@ public class ModelAdapterBreeze extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       BreezeRenderer render = new BreezeRenderer(renderManager.getContext());

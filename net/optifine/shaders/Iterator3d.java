@@ -5,19 +5,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.optifine.BlockPosM;
 
-public class Iterator3d implements Iterator {
+public class Iterator3d implements Iterator<BlockPos> {
    private IteratorAxis iteratorAxis;
    private BlockPosM blockPos = new BlockPosM(0, 0, 0);
    private int axis = 0;
-   // $FF: renamed from: kX int
-   private int field_56;
-   // $FF: renamed from: kY int
-   private int field_57;
-   // $FF: renamed from: kZ int
-   private int field_58;
-   private static final int AXIS_X = 0;
-   private static final int AXIS_Y = 1;
-   private static final int AXIS_Z = 2;
+   private int f_144146_;
+   private int f_144147_;
+   private int f_144148_;
+   private static int AXIS_X;
+   private static int AXIS_Y;
+   private static int AXIS_Z;
 
    public Iterator3d(BlockPos posStart, BlockPos posEnd, int width, int height) {
       boolean revX = posStart.m_123341_() > posEnd.m_123341_();
@@ -25,10 +22,14 @@ public class Iterator3d implements Iterator {
       boolean revZ = posStart.m_123343_() > posEnd.m_123343_();
       posStart = this.reverseCoord(posStart, revX, revY, revZ);
       posEnd = this.reverseCoord(posEnd, revX, revY, revZ);
-      this.field_56 = revX ? -1 : 1;
-      this.field_57 = revY ? -1 : 1;
-      this.field_58 = revZ ? -1 : 1;
-      Vec3 vec = new Vec3((double)(posEnd.m_123341_() - posStart.m_123341_()), (double)(posEnd.m_123342_() - posStart.m_123342_()), (double)(posEnd.m_123343_() - posStart.m_123343_()));
+      this.f_144146_ = revX ? -1 : 1;
+      this.f_144147_ = revY ? -1 : 1;
+      this.f_144148_ = revZ ? -1 : 1;
+      Vec3 vec = new Vec3(
+         (double)(posEnd.m_123341_() - posStart.m_123341_()),
+         (double)(posEnd.m_123342_() - posStart.m_123342_()),
+         (double)(posEnd.m_123343_() - posStart.m_123343_())
+      );
       Vec3 vecN = vec.m_82541_();
       Vec3 vecX = new Vec3(1.0, 0.0, 0.0);
       double dotX = vecN.m_82526_(vecX);
@@ -39,37 +40,31 @@ public class Iterator3d implements Iterator {
       Vec3 vecZ = new Vec3(0.0, 0.0, 1.0);
       double dotZ = vecN.m_82526_(vecZ);
       double dotZabs = Math.abs(dotZ);
-      BlockPos pos1;
-      BlockPos pos2;
-      int countX;
-      double deltaY;
-      double deltaZ;
       if (dotZabs >= dotYabs && dotZabs >= dotXabs) {
          this.axis = 2;
-         pos1 = new BlockPos(posStart.m_123343_(), posStart.m_123342_() - width, posStart.m_123341_() - height);
-         pos2 = new BlockPos(posEnd.m_123343_(), posStart.m_123342_() + width + 1, posStart.m_123341_() + height + 1);
-         countX = posEnd.m_123343_() - posStart.m_123343_();
-         deltaY = (double)(posEnd.m_123342_() - posStart.m_123342_()) / (1.0 * (double)countX);
-         deltaZ = (double)(posEnd.m_123341_() - posStart.m_123341_()) / (1.0 * (double)countX);
+         BlockPos pos1 = new BlockPos(posStart.m_123343_(), posStart.m_123342_() - width, posStart.m_123341_() - height);
+         BlockPos pos2 = new BlockPos(posEnd.m_123343_(), posStart.m_123342_() + width + 1, posStart.m_123341_() + height + 1);
+         int countX = posEnd.m_123343_() - posStart.m_123343_();
+         double deltaY = (double)(posEnd.m_123342_() - posStart.m_123342_()) / (1.0 * (double)countX);
+         double deltaZ = (double)(posEnd.m_123341_() - posStart.m_123341_()) / (1.0 * (double)countX);
          this.iteratorAxis = new IteratorAxis(pos1, pos2, deltaY, deltaZ);
       } else if (dotYabs >= dotXabs && dotYabs >= dotZabs) {
          this.axis = 1;
-         pos1 = new BlockPos(posStart.m_123342_(), posStart.m_123341_() - width, posStart.m_123343_() - height);
-         pos2 = new BlockPos(posEnd.m_123342_(), posStart.m_123341_() + width + 1, posStart.m_123343_() + height + 1);
-         countX = posEnd.m_123342_() - posStart.m_123342_();
-         deltaY = (double)(posEnd.m_123341_() - posStart.m_123341_()) / (1.0 * (double)countX);
-         deltaZ = (double)(posEnd.m_123343_() - posStart.m_123343_()) / (1.0 * (double)countX);
+         BlockPos pos1 = new BlockPos(posStart.m_123342_(), posStart.m_123341_() - width, posStart.m_123343_() - height);
+         BlockPos pos2 = new BlockPos(posEnd.m_123342_(), posStart.m_123341_() + width + 1, posStart.m_123343_() + height + 1);
+         int countX = posEnd.m_123342_() - posStart.m_123342_();
+         double deltaY = (double)(posEnd.m_123341_() - posStart.m_123341_()) / (1.0 * (double)countX);
+         double deltaZ = (double)(posEnd.m_123343_() - posStart.m_123343_()) / (1.0 * (double)countX);
          this.iteratorAxis = new IteratorAxis(pos1, pos2, deltaY, deltaZ);
       } else {
          this.axis = 0;
-         pos1 = new BlockPos(posStart.m_123341_(), posStart.m_123342_() - width, posStart.m_123343_() - height);
-         pos2 = new BlockPos(posEnd.m_123341_(), posStart.m_123342_() + width + 1, posStart.m_123343_() + height + 1);
-         countX = posEnd.m_123341_() - posStart.m_123341_();
-         deltaY = (double)(posEnd.m_123342_() - posStart.m_123342_()) / (1.0 * (double)countX);
-         deltaZ = (double)(posEnd.m_123343_() - posStart.m_123343_()) / (1.0 * (double)countX);
+         BlockPos pos1 = new BlockPos(posStart.m_123341_(), posStart.m_123342_() - width, posStart.m_123343_() - height);
+         BlockPos pos2 = new BlockPos(posEnd.m_123341_(), posStart.m_123342_() + width + 1, posStart.m_123343_() + height + 1);
+         int countX = posEnd.m_123341_() - posStart.m_123341_();
+         double deltaY = (double)(posEnd.m_123342_() - posStart.m_123342_()) / (1.0 * (double)countX);
+         double deltaZ = (double)(posEnd.m_123343_() - posStart.m_123343_()) / (1.0 * (double)countX);
          this.iteratorAxis = new IteratorAxis(pos1, pos2, deltaY, deltaZ);
       }
-
    }
 
    private BlockPos reverseCoord(BlockPos pos, boolean revX, boolean revY, boolean revZ) {
@@ -96,16 +91,16 @@ public class Iterator3d implements Iterator {
       BlockPos pos = this.iteratorAxis.next();
       switch (this.axis) {
          case 0:
-            this.blockPos.setXyz(pos.m_123341_() * this.field_56, pos.m_123342_() * this.field_57, pos.m_123343_() * this.field_58);
+            this.blockPos.setXyz(pos.m_123341_() * this.f_144146_, pos.m_123342_() * this.f_144147_, pos.m_123343_() * this.f_144148_);
             return this.blockPos;
          case 1:
-            this.blockPos.setXyz(pos.m_123342_() * this.field_56, pos.m_123341_() * this.field_57, pos.m_123343_() * this.field_58);
+            this.blockPos.setXyz(pos.m_123342_() * this.f_144146_, pos.m_123341_() * this.f_144147_, pos.m_123343_() * this.f_144148_);
             return this.blockPos;
          case 2:
-            this.blockPos.setXyz(pos.m_123343_() * this.field_56, pos.m_123342_() * this.field_57, pos.m_123341_() * this.field_58);
+            this.blockPos.setXyz(pos.m_123343_() * this.f_144146_, pos.m_123342_() * this.f_144147_, pos.m_123341_() * this.f_144148_);
             return this.blockPos;
          default:
-            this.blockPos.setXyz(pos.m_123341_() * this.field_56, pos.m_123342_() * this.field_57, pos.m_123343_() * this.field_58);
+            this.blockPos.setXyz(pos.m_123341_() * this.f_144146_, pos.m_123342_() * this.f_144147_, pos.m_123343_() * this.f_144148_);
             return this.blockPos;
       }
    }
@@ -119,10 +114,9 @@ public class Iterator3d implements Iterator {
       BlockPos posEnd = new BlockPos(30, 40, 20);
       Iterator3d it = new Iterator3d(posStart, posEnd, 1, 1);
 
-      while(it.hasNext()) {
+      while (it.hasNext()) {
          BlockPos blockPos = it.next();
-         System.out.println("" + String.valueOf(blockPos));
+         System.out.println(blockPos + "");
       }
-
    }
 }

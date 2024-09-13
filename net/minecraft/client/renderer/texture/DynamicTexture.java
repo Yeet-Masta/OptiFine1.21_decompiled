@@ -14,7 +14,7 @@ import net.optifine.shaders.ShadersTex;
 import org.slf4j.Logger;
 
 public class DynamicTexture extends AbstractTexture implements Dumpable {
-   private static final Logger f_117976_ = LogUtils.getLogger();
+   private static Logger f_117976_ = LogUtils.getLogger();
    @Nullable
    private NativeImage f_117977_;
 
@@ -27,7 +27,6 @@ public class DynamicTexture extends AbstractTexture implements Dumpable {
             if (Config.isShaders()) {
                ShadersTex.initDynamicTextureNS(this);
             }
-
          });
       } else {
          TextureUtil.prepareImage(this.m_117963_(), this.f_117977_.m_84982_(), this.f_117977_.m_85084_());
@@ -36,7 +35,6 @@ public class DynamicTexture extends AbstractTexture implements Dumpable {
             ShadersTex.initDynamicTextureNS(this);
          }
       }
-
    }
 
    public DynamicTexture(int widthIn, int heightIn, boolean clearIn) {
@@ -45,9 +43,9 @@ public class DynamicTexture extends AbstractTexture implements Dumpable {
       if (Config.isShaders()) {
          ShadersTex.initDynamicTextureNS(this);
       }
-
    }
 
+   @Override
    public void m_6704_(ResourceManager manager) {
    }
 
@@ -58,7 +56,6 @@ public class DynamicTexture extends AbstractTexture implements Dumpable {
       } else {
          f_117976_.warn("Trying to upload disposed texture {}", this.m_117963_());
       }
-
    }
 
    @Nullable
@@ -74,13 +71,13 @@ public class DynamicTexture extends AbstractTexture implements Dumpable {
       this.f_117977_ = nativeImageIn;
    }
 
+   @Override
    public void close() {
       if (this.f_117977_ != null) {
          this.f_117977_.close();
          this.m_117964_();
          this.f_117977_ = null;
       }
-
    }
 
    public void m_276079_(ResourceLocation locIn, Path pathIn) throws IOException {
@@ -89,6 +86,5 @@ public class DynamicTexture extends AbstractTexture implements Dumpable {
          Path path = pathIn.resolve(s);
          this.f_117977_.m_85066_(path);
       }
-
    }
 }

@@ -7,17 +7,19 @@ import net.optifine.Lang;
 import net.optifine.util.StrUtils;
 
 public class ShaderOptionSwitch extends ShaderOption {
-   private static final Pattern PATTERN_DEFINE = Pattern.compile("^\\s*(//)?\\s*#define\\s+([A-Za-z0-9_]+)\\s*(//.*)?$");
-   private static final Pattern PATTERN_IFDEF = Pattern.compile("^\\s*#if(n)?def\\s+([A-Za-z0-9_]+)(\\s*)?$");
+   private static Pattern PATTERN_DEFINE = Pattern.m_289905_("^\\s*(//)?\\s*#define\\s+([A-Za-z0-9_]+)\\s*(//.*)?$");
+   private static Pattern PATTERN_IFDEF = Pattern.m_289905_("^\\s*#if(n)?def\\s+([A-Za-z0-9_]+)(\\s*)?$");
 
    public ShaderOptionSwitch(String name, String description, String value, String path) {
       super(name, description, value, new String[]{"false", "true"}, value, path);
    }
 
+   @Override
    public String getSourceLine() {
       return isTrue(this.getValue()) ? "#define " + this.getName() + " // Shader option ON" : "//#define " + this.getName() + " // Shader option OFF";
    }
 
+   @Override
    public String getValueText(String val) {
       String valTextRes = super.getValueText(val);
       if (valTextRes != val) {
@@ -27,8 +29,9 @@ public class ShaderOptionSwitch extends ShaderOption {
       }
    }
 
+   @Override
    public String getValueColor(String val) {
-      return isTrue(val) ? "§a" : "§c";
+      return isTrue(val) ? "\u00a7a" : "\u00a7c";
    }
 
    public static ShaderOption parseOption(String line, String path) {
@@ -51,6 +54,7 @@ public class ShaderOptionSwitch extends ShaderOption {
       }
    }
 
+   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_DEFINE.matcher(line);
       if (!m.matches()) {
@@ -61,10 +65,12 @@ public class ShaderOptionSwitch extends ShaderOption {
       }
    }
 
+   @Override
    public boolean checkUsed() {
       return true;
    }
 
+   @Override
    public boolean isUsedInLine(String line) {
       Matcher mif = PATTERN_IFDEF.matcher(line);
       if (mif.matches()) {

@@ -12,16 +12,18 @@ import net.minecraft.client.renderer.entity.FrogRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterFrog extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterFrog() {
       super(EntityType.f_217012_, "frog", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new FrogModel(bakeModelLayer(ModelLayers.f_233546_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof FrogModel modelFrog)) {
          return null;
@@ -35,13 +37,13 @@ public class ModelAdapterFrog extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "body");
       map.put("head", "head");
       map.put("eyes", "eyes");
@@ -55,6 +57,7 @@ public class ModelAdapterFrog extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       FrogRenderer render = new FrogRenderer(renderManager.getContext());

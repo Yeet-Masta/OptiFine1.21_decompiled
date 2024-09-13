@@ -15,7 +15,7 @@ public class MultiTextureBuilder {
    private TextureAtlasSprite[] quadSprites;
    private boolean reorderingAllowed;
    private boolean[] drawnIcons = new boolean[256];
-   private List spriteRenderDatas = new ArrayList();
+   private List<SpriteRenderData> spriteRenderDatas = new ArrayList();
    private IntArray vertexPositions = new IntArray(16);
    private IntArray vertexCounts = new IntArray(16);
 
@@ -58,7 +58,7 @@ public class MultiTextureBuilder {
          int grassOverlayIndex = -1;
          int countQuads = this.vertexCount / 4;
 
-         for(int i = 0; i < countQuads; ++i) {
+         for (int i = 0; i < countQuads; i++) {
             int is = quadOrderingIn != null ? quadOrderingIn[i] : i;
             TextureAtlasSprite icon = this.quadSprites[is];
             if (icon != null) {
@@ -74,7 +74,7 @@ public class MultiTextureBuilder {
                      }
                   } else {
                      i = this.drawForIcon(icon, i, quadOrderingIn) - 1;
-                     ++texSwitch;
+                     texSwitch++;
                      if (this.reorderingAllowed) {
                         this.drawnIcons[iconIndex] = true;
                      }
@@ -85,11 +85,10 @@ public class MultiTextureBuilder {
 
          if (grassOverlayIndex >= 0) {
             this.drawForIcon(TextureUtils.iconGrassSideOverlay, grassOverlayIndex, quadOrderingIn);
-            ++texSwitch;
+            texSwitch++;
          }
 
-         SpriteRenderData[] srds = (SpriteRenderData[])this.spriteRenderDatas.toArray(new SpriteRenderData[this.spriteRenderDatas.size()]);
-         return srds;
+         return (SpriteRenderData[])this.spriteRenderDatas.toArray(new SpriteRenderData[this.spriteRenderDatas.size()]);
       }
    }
 
@@ -100,7 +99,7 @@ public class MultiTextureBuilder {
       int lastPos = -1;
       int countQuads = this.vertexCount / 4;
 
-      for(int i = startQuadPos; i < countQuads; ++i) {
+      for (int i = startQuadPos; i < countQuads; i++) {
          int is = quadOrderingIn != null ? quadOrderingIn[i] : i;
          TextureAtlasSprite ts = this.quadSprites[is];
          if (ts == sprite) {

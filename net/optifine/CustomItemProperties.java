@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.datafixers.util.Either;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockElement;
@@ -32,8 +32,7 @@ import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.client.resources.model.SimpleBakedModel;
-import net.minecraft.client.resources.model.UnbakedModel;
+import net.minecraft.client.resources.model.SimpleBakedModel.Builder;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -58,9 +57,9 @@ public class CustomItemProperties {
    public int type = 1;
    public int[] items = null;
    public String texture = null;
-   public Map mapTextures = null;
+   public Map<String, String> mapTextures = null;
    public String model = null;
-   public Map mapModels = null;
+   public Map<String, String> mapModels = null;
    public RangeListInt damage = null;
    public boolean damagePercent = false;
    public int damageMask = 0;
@@ -80,21 +79,21 @@ public class CustomItemProperties {
    public TextureAtlasSprite sprite = null;
    public Map mapSprites = null;
    public BakedModel bakedModelTexture = null;
-   public Map mapBakedModelsTexture = null;
+   public Map<String, BakedModel> mapBakedModelsTexture = null;
    public BakedModel bakedModelFull = null;
-   public Map mapBakedModelsFull = null;
-   public Set modelSpriteLocations = null;
+   public Map<String, BakedModel> mapBakedModelsFull = null;
+   public Set<ResourceLocation> modelSpriteLocations = null;
    private int textureWidth = 0;
    private int textureHeight = 0;
-   public static final int TYPE_UNKNOWN = 0;
-   public static final int TYPE_ITEM = 1;
-   public static final int TYPE_ENCHANTMENT = 2;
-   public static final int TYPE_ARMOR = 3;
-   public static final int TYPE_ELYTRA = 4;
-   public static final int HAND_ANY = 0;
-   public static final int HAND_MAIN = 1;
-   public static final int HAND_OFF = 2;
-   public static final String INVENTORY = "inventory";
+   public static int TYPE_UNKNOWN;
+   public static int TYPE_ITEM;
+   public static int TYPE_ENCHANTMENT;
+   public static int TYPE_ARMOR;
+   public static int TYPE_ELYTRA;
+   public static int HAND_ANY;
+   public static int HAND_MAIN;
+   public static int HAND_OFF;
+   public static String INVENTORY;
 
    public CustomItemProperties(Properties props, String path) {
       this.name = parseName(path);
@@ -105,10 +104,19 @@ public class CustomItemProperties {
       this.model = parseModel(props.getProperty("model"), path, this.basePath, this.type, this.mapModels);
       this.mapTextures = parseTextures(props, this.basePath);
       boolean textureFromPath = this.mapModels == null && this.model == null;
-      this.texture = parseTexture(props.getProperty("texture"), props.getProperty("tile"), props.getProperty("source"), path, this.basePath, this.type, this.mapTextures, textureFromPath);
+      this.texture = parseTexture(
+         props.getProperty("texture"),
+         props.getProperty("tile"),
+         props.getProperty("source"),
+         path,
+         this.basePath,
+         this.type,
+         this.mapTextures,
+         textureFromPath
+      );
       String damageStr = props.getProperty("damage");
       if (damageStr != null) {
-         this.damagePercent = damageStr.contains("%");
+         this.damagePercent = damageStr.m_274455_("%");
          damageStr = damageStr.replace("%", "");
          this.damage = this.parseRangeListInt(damageStr);
          this.damageMask = this.parseInt(props.getProperty("damageMask"), 0);
@@ -128,7 +136,7 @@ public class CustomItemProperties {
    }
 
    private static String getProperty(Properties props, String... names) {
-      for(int i = 0; i < names.length; ++i) {
+      for (int i = 0; i < names.length; i++) {
          String name = names[i];
          String val = props.getProperty(name);
          if (val != null) {
@@ -188,7 +196,7 @@ public class CustomItemProperties {
          Set setItemIds = new TreeSet();
          String[] tokens = Config.tokenize(str, " ");
 
-         for(int i = 0; i < tokens.length; ++i) {
+         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
             Item item = this.getItemByName(token);
             if (item == null) {
@@ -206,8 +214,8 @@ public class CustomItemProperties {
          Integer[] integers = (Integer[])setItemIds.toArray(new Integer[setItemIds.size()]);
          int[] ints = new int[integers.length];
 
-         for(int i = 0; i < ints.length; ++i) {
-            ints[i] = integers[i];
+         for (int ix = 0; ix < ints.length; ix++) {
+            ints[ix] = integers[ix];
          }
 
          return ints;
@@ -216,15 +224,12 @@ public class CustomItemProperties {
 
    private Item getItemByName(String name) {
       ResourceLocation loc = new ResourceLocation(name);
-      if (!BuiltInRegistries.f_257033_.m_7804_(loc)) {
-         return null;
-      } else {
-         Item item = (Item)BuiltInRegistries.f_257033_.m_7745_(loc);
-         return item;
-      }
+      return !BuiltInRegistries.f_257033_.m_7804_(loc) ? null : (Item)BuiltInRegistries.f_257033_.m_7745_(loc);
    }
 
-   private static String parseTexture(String texStr, String texStr2, String texStr3, String path, String basePath, int type, Map mapTexs, boolean textureFromPath) {
+   private static String parseTexture(
+      String texStr, String texStr2, String texStr3, String path, String basePath, int type, Map<String, String> mapTexs, boolean textureFromPath
+   ) {
       if (texStr == null) {
          texStr = texStr2;
       }
@@ -233,29 +238,27 @@ public class CustomItemProperties {
          texStr = texStr3;
       }
 
-      String str;
       if (texStr != null) {
-         str = ".png";
-         if (texStr.endsWith(str)) {
-            texStr = texStr.substring(0, texStr.length() - str.length());
+         String png = ".png";
+         if (texStr.endsWith(png)) {
+            texStr = texStr.substring(0, texStr.length() - png.length());
          }
 
-         texStr = fixTextureName(texStr, basePath);
-         return texStr;
+         return fixTextureName(texStr, basePath);
       } else if (type == 3) {
          return null;
       } else {
          if (mapTexs != null) {
-            str = (String)mapTexs.get("texture.bow_standby");
-            if (str != null) {
-               return str;
+            String bowStandbyTex = (String)mapTexs.get("texture.bow_standby");
+            if (bowStandbyTex != null) {
+               return bowStandbyTex;
             }
          }
 
          if (!textureFromPath) {
             return null;
          } else {
-            str = path;
+            String str = path;
             int pos = path.lastIndexOf(47);
             if (pos >= 0) {
                str = path.substring(pos + 1);
@@ -266,8 +269,7 @@ public class CustomItemProperties {
                str = str.substring(0, pos2);
             }
 
-            str = fixTextureName(str, basePath);
-            return str;
+            return fixTextureName(str, basePath);
          }
       }
    }
@@ -280,10 +282,8 @@ public class CustomItemProperties {
       } else {
          Set keySet = mapProps.keySet();
          Map mapTex = new LinkedHashMap();
-         Iterator it = keySet.iterator();
 
-         while(it.hasNext()) {
-            String key = (String)it.next();
+         for (String key : keySet) {
             String val = (String)mapProps.get(key);
             val = fixTextureName(val, basePath);
             mapTex.put(key, val);
@@ -310,21 +310,19 @@ public class CustomItemProperties {
       return iconName;
    }
 
-   private static String parseModel(String modelStr, String path, String basePath, int type, Map mapModelNames) {
-      String bowStandbyModel;
+   private static String parseModel(String modelStr, String path, String basePath, int type, Map<String, String> mapModelNames) {
       if (modelStr != null) {
-         bowStandbyModel = ".json";
-         if (modelStr.endsWith(bowStandbyModel)) {
-            modelStr = modelStr.substring(0, modelStr.length() - bowStandbyModel.length());
+         String json = ".json";
+         if (modelStr.endsWith(json)) {
+            modelStr = modelStr.substring(0, modelStr.length() - json.length());
          }
 
-         modelStr = fixModelName(modelStr, basePath);
-         return modelStr;
+         return fixModelName(modelStr, basePath);
       } else if (type == 3) {
          return null;
       } else {
          if (mapModelNames != null) {
-            bowStandbyModel = (String)mapModelNames.get("model.bow_standby");
+            String bowStandbyModel = (String)mapModelNames.get("model.bow_standby");
             if (bowStandbyModel != null) {
                return bowStandbyModel;
             }
@@ -342,10 +340,8 @@ public class CustomItemProperties {
       } else {
          Set keySet = mapProps.keySet();
          Map mapTex = new LinkedHashMap();
-         Iterator it = keySet.iterator();
 
-         while(it.hasNext()) {
-            String key = (String)it.next();
+         for (String key : keySet) {
             String val = (String)mapProps.get(key);
             val = fixModelName(val, basePath);
             mapTex.put(key, val);
@@ -409,11 +405,11 @@ public class CustomItemProperties {
          return null;
       } else {
          String[] tokens = Config.tokenize(str, " ");
-         List list = new ArrayList();
+         List<Integer> list = new ArrayList();
 
-         for(int i = 0; i < tokens.length; ++i) {
+         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
-            int val = parser.parse(token, Integer.MIN_VALUE);
+            int val = parser.m_82160_(token, Integer.MIN_VALUE);
             if (val == Integer.MIN_VALUE) {
                Config.warn("Invalid value: " + token);
             } else {
@@ -422,8 +418,7 @@ public class CustomItemProperties {
          }
 
          Integer[] intArr = (Integer[])list.toArray(new Integer[list.size()]);
-         int[] ints = Config.toPrimitive(intArr);
-         return ints;
+         return Config.toPrimitive(intArr);
       }
    }
 
@@ -434,7 +429,7 @@ public class CustomItemProperties {
          String[] tokens = Config.tokenize(str, " ");
          RangeListInt rangeList = new RangeListInt();
 
-         for(int i = 0; i < tokens.length; ++i) {
+         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
             RangeInt range = this.parseRangeInt(token);
             if (range == null) {
@@ -462,31 +457,28 @@ public class CustomItemProperties {
             String[] tokens = Config.tokenize(str, "- ");
             int[] vals = new int[tokens.length];
 
-            int val;
-            for(val = 0; val < tokens.length; ++val) {
-               String token = tokens[val];
+            for (int i = 0; i < tokens.length; i++) {
+               String token = tokens[i];
                int val = Config.parseInt(token, -1);
                if (val < 0) {
                   Config.warn("Invalid range: " + str);
                   return null;
                }
 
-               vals[val] = val;
+               vals[i] = val;
             }
 
             if (vals.length == 1) {
-               val = vals[0];
+               int val = vals[0];
                if (str.startsWith("-")) {
                   return new RangeInt(0, val);
-               } else if (str.endsWith("-")) {
-                  return new RangeInt(val, 65535);
                } else {
-                  return new RangeInt(val, val);
+                  return str.endsWith("-") ? new RangeInt(val, 65535) : new RangeInt(val, val);
                }
             } else if (vals.length == 2) {
-               val = Math.min(vals[0], vals[1]);
+               int min = Math.min(vals[0], vals[1]);
                int max = Math.max(vals[0], vals[1]);
-               return new RangeInt(val, max);
+               return new RangeInt(min, max);
             } else {
                Config.warn("Invalid range: " + str);
                return null;
@@ -498,42 +490,37 @@ public class CustomItemProperties {
    private NbtTagValue[] parseNbtTagValues(Properties props) {
       String PREFIX_NBT = "nbt.";
       String PREFIX_COMPONENTS = "components.";
-      Map mapComponents = getMatchingProperties(props, PREFIX_COMPONENTS);
-      Map mapNbt = getMatchingProperties(props, PREFIX_NBT);
+      Map<String, String> mapComponents = getMatchingProperties(props, PREFIX_COMPONENTS);
+      Map<String, String> mapNbt = getMatchingProperties(props, PREFIX_NBT);
 
-      String key;
-      String key;
-      String val;
-      for(Iterator var6 = mapNbt.entrySet().iterator(); var6.hasNext(); Config.warn("Deprecated NBT check: " + key + "=" + key)) {
-         Map.Entry entry = (Map.Entry)var6.next();
-         key = (String)entry.getKey();
-         key = (String)entry.getValue();
-         val = key.substring(PREFIX_NBT.length());
-         if (val.equals("display.Name")) {
-            mapComponents.putIfAbsent(PREFIX_COMPONENTS + "minecraft:custom_name", key);
-         } else if (val.equals("display.Lore")) {
-            mapComponents.putIfAbsent(PREFIX_COMPONENTS + "minecraft:lore", key);
+      for (Entry<String, String> entry : mapNbt.entrySet()) {
+         String key = (String)entry.getKey();
+         String val = (String)entry.getValue();
+         String id = key.substring(PREFIX_NBT.length());
+         if (id.equals("display.Name")) {
+            mapComponents.putIfAbsent(PREFIX_COMPONENTS + "minecraft:custom_name", val);
+         } else if (id.equals("display.Lore")) {
+            mapComponents.putIfAbsent(PREFIX_COMPONENTS + "minecraft:lore", val);
          }
+
+         Config.warn("Deprecated NBT check: " + key + "=" + val);
       }
 
       if (mapComponents.size() <= 0) {
          return null;
       } else {
-         List listNbts = new ArrayList();
-         Iterator var14 = mapComponents.entrySet().iterator();
+         List<NbtTagValue> listNbts = new ArrayList();
 
-         while(var14.hasNext()) {
-            Map.Entry entry = (Map.Entry)var14.next();
-            key = (String)entry.getKey();
-            val = (String)entry.getValue();
+         for (Entry<String, String> entry : mapComponents.entrySet()) {
+            String key = (String)entry.getKey();
+            String val = (String)entry.getValue();
             String id = key.substring(PREFIX_COMPONENTS.length());
             id = this.fixNamespaces(id);
             NbtTagValue nbt = new NbtTagValue(id, val);
             listNbts.add(nbt);
          }
 
-         NbtTagValue[] nbts = (NbtTagValue[])listNbts.toArray(new NbtTagValue[listNbts.size()]);
-         return nbts;
+         return (NbtTagValue[])listNbts.toArray(new NbtTagValue[listNbts.size()]);
       }
    }
 
@@ -544,17 +531,13 @@ public class CustomItemProperties {
          id = "minecraft:" + id;
       }
 
-      id = id.replace("~", "minecraft:");
-      return id;
+      return id.replace("~", "minecraft:");
    }
 
-   private static Map getMatchingProperties(Properties props, String keyPrefix) {
+   private static Map<String, String> getMatchingProperties(Properties props, String keyPrefix) {
       Map map = new LinkedHashMap();
-      Set keySet = props.keySet();
-      Iterator it = keySet.iterator();
 
-      while(it.hasNext()) {
-         String key = (String)it.next();
+      for (String key : props.keySet()) {
          String val = props.getProperty(key);
          if (key.startsWith(keyPrefix)) {
             map.put(key, val);
@@ -583,42 +566,40 @@ public class CustomItemProperties {
    }
 
    public boolean isValid(String path) {
-      if (this.name != null && this.name.length() > 0) {
-         if (this.basePath == null) {
-            Config.warn("No base path found: " + path);
-            return false;
-         } else if (this.type == 0) {
-            Config.warn("No type defined: " + path);
-            return false;
-         } else {
-            if (this.type == 4 && this.items == null) {
-               this.items = new int[]{Item.m_41393_(Items.f_42741_)};
-            }
-
-            if (this.type == 1 || this.type == 3 || this.type == 4) {
-               if (this.items == null) {
-                  this.items = this.detectItems();
-               }
-
-               if (this.items == null) {
-                  Config.warn("No items defined: " + path);
-                  return false;
-               }
-            }
-
-            if (this.texture == null && this.mapTextures == null && this.model == null && this.mapModels == null) {
-               Config.warn("No texture or model specified: " + path);
-               return false;
-            } else if (this.type == 2 && this.enchantmentIds == null) {
-               Config.warn("No enchantmentIDs specified: " + path);
-               return false;
-            } else {
-               return true;
-            }
-         }
-      } else {
+      if (this.name == null || this.name.length() <= 0) {
          Config.warn("No name found: " + path);
          return false;
+      } else if (this.basePath == null) {
+         Config.warn("No base path found: " + path);
+         return false;
+      } else if (this.type == 0) {
+         Config.warn("No type defined: " + path);
+         return false;
+      } else {
+         if (this.type == 4 && this.items == null) {
+            this.items = new int[]{Item.m_41393_(Items.f_42741_)};
+         }
+
+         if (this.type == 1 || this.type == 3 || this.type == 4) {
+            if (this.items == null) {
+               this.items = this.detectItems();
+            }
+
+            if (this.items == null) {
+               Config.warn("No items defined: " + path);
+               return false;
+            }
+         }
+
+         if (this.texture == null && this.mapTextures == null && this.model == null && this.mapModels == null) {
+            Config.warn("No texture or model specified: " + path);
+            return false;
+         } else if (this.type == 2 && this.enchantmentIds == null) {
+            Config.warn("No enchantmentIDs specified: " + path);
+            return false;
+         } else {
+            return true;
+         }
       }
    }
 
@@ -644,11 +625,8 @@ public class CustomItemProperties {
       if (this.mapTextures != null) {
          this.mapTextureLocations = new HashMap();
          this.mapSprites = new HashMap();
-         Set keySet = this.mapTextures.keySet();
-         Iterator it = keySet.iterator();
 
-         while(it.hasNext()) {
-            String key = (String)it.next();
+         for (String key : this.mapTextures.keySet()) {
             String val = (String)this.mapTextures.get(key);
             ResourceLocation locTex = this.getTextureLocation(val);
             this.mapTextureLocations.put(key, locTex);
@@ -660,13 +638,9 @@ public class CustomItemProperties {
          }
       }
 
-      Iterator var10 = this.modelSpriteLocations.iterator();
-
-      while(var10.hasNext()) {
-         ResourceLocation loc = (ResourceLocation)var10.next();
+      for (ResourceLocation loc : this.modelSpriteLocations) {
          textureMap.registerSprite(loc);
       }
-
    }
 
    public void refreshIcons(TextureAtlas textureMap) {
@@ -675,29 +649,17 @@ public class CustomItemProperties {
       }
 
       if (this.mapSprites != null) {
-         Set keySet = this.mapSprites.keySet();
-         Iterator it = keySet.iterator();
-
-         while(true) {
-            String key;
-            TextureAtlasSprite sprite;
-            do {
-               if (!it.hasNext()) {
-                  return;
+         for (String key : this.mapSprites.keySet()) {
+            TextureAtlasSprite sprite = (TextureAtlasSprite)this.mapSprites.get(key);
+            if (sprite != null) {
+               ResourceLocation loc = sprite.getName();
+               TextureAtlasSprite spriteNew = textureMap.m_118316_(loc);
+               if (spriteNew == null || MissingTextureAtlasSprite.isMisingSprite(spriteNew)) {
+                  Config.warn("Missing CIT sprite: " + loc + ", properties: " + this.basePath);
                }
 
-               key = (String)it.next();
-               sprite = (TextureAtlasSprite)this.mapSprites.get(key);
-            } while(sprite == null);
-
-            ResourceLocation loc = sprite.getName();
-            TextureAtlasSprite spriteNew = textureMap.m_118316_(loc);
-            if (spriteNew == null || MissingTextureAtlasSprite.isMisingSprite(spriteNew)) {
-               String var10000 = String.valueOf(loc);
-               Config.warn("Missing CIT sprite: " + var10000 + ", properties: " + this.basePath);
+               this.mapSprites.put(key, spriteNew);
             }
-
-            this.mapSprites.put(key, spriteNew);
          }
       }
    }
@@ -709,7 +671,7 @@ public class CustomItemProperties {
          ResourceLocation resLoc = new ResourceLocation(texName);
          String domain = resLoc.m_135827_();
          String path = resLoc.m_135815_();
-         if (!path.contains("/")) {
+         if (!path.m_274455_("/")) {
             path = "textures/item/" + path;
          }
 
@@ -728,8 +690,7 @@ public class CustomItemProperties {
       String pathTex = resLoc.m_135815_();
       pathTex = StrUtils.removePrefix(pathTex, "textures/");
       pathTex = StrUtils.removeSuffix(pathTex, ".png");
-      ResourceLocation locTex = new ResourceLocation(resLoc.m_135827_(), pathTex);
-      return locTex;
+      return new ResourceLocation(resLoc.m_135827_(), pathTex);
    }
 
    public void updateModelTexture(TextureAtlas textureMap, ItemModelGenerator itemModelGenerator) {
@@ -738,11 +699,7 @@ public class CustomItemProperties {
          boolean useTint = this.isUseTint();
          this.bakedModelTexture = makeBakedModel(textureMap, itemModelGenerator, textures, useTint);
          if (this.type == 1 && this.mapTextures != null) {
-            Set keySet = this.mapTextures.keySet();
-            Iterator it = keySet.iterator();
-
-            while(it.hasNext()) {
-               String key = (String)it.next();
+            for (String key : this.mapTextures.keySet()) {
                String tex = (String)this.mapTextures.get(key);
                String path = StrUtils.removePrefix(key, "texture.");
                if (this.isSubTexture(path)) {
@@ -757,7 +714,6 @@ public class CustomItemProperties {
                }
             }
          }
-
       }
    }
 
@@ -772,15 +728,14 @@ public class CustomItemProperties {
    private static BakedModel makeBakedModel(TextureAtlas textureMap, ItemModelGenerator itemModelGenerator, String[] textures, boolean useTint) {
       String[] spriteNames = new String[textures.length];
 
-      for(int i = 0; i < spriteNames.length; ++i) {
+      for (int i = 0; i < spriteNames.length; i++) {
          String texture = textures[i];
          spriteNames[i] = StrUtils.removePrefix(texture, "textures/");
       }
 
       BlockModel modelBlockBase = makeModelBlock(spriteNames);
       BlockModel modelBlock = itemModelGenerator.m_111670_(CustomItemProperties::getSprite, modelBlockBase);
-      BakedModel model = bakeModel(textureMap, modelBlock, useTint);
-      return model;
+      return bakeModel(textureMap, modelBlock, useTint);
    }
 
    public static TextureAtlasSprite getSprite(Material material) {
@@ -792,56 +747,52 @@ public class CustomItemProperties {
       if (this.type == 1 && this.items.length == 1) {
          Item item = Item.m_41445_(this.items[0]);
          boolean isPotionItem = item == Items.f_42589_ || item == Items.f_42736_ || item == Items.f_42739_;
-         String key;
          if (isPotionItem && this.damage != null && this.damage.getCountRanges() > 0) {
             RangeInt range = this.damage.getRange(0);
             int valDamage = range.getMin();
             boolean splash = (valDamage & 16384) != 0;
             String texOverlay = this.getMapTexture(this.mapTextures, "texture.potion_overlay", "item/potion_overlay");
-            key = null;
+            String texMain = null;
             if (splash) {
-               key = this.getMapTexture(this.mapTextures, "texture.potion_bottle_splash", "item/potion_bottle_splash");
+               texMain = this.getMapTexture(this.mapTextures, "texture.potion_bottle_splash", "item/potion_bottle_splash");
             } else {
-               key = this.getMapTexture(this.mapTextures, "texture.potion_bottle_drinkable", "item/potion_bottle_drinkable");
+               texMain = this.getMapTexture(this.mapTextures, "texture.potion_bottle_drinkable", "item/potion_bottle_drinkable");
             }
 
-            return new String[]{texOverlay, key};
+            return new String[]{texOverlay, texMain};
          }
 
-         if (item instanceof ArmorItem) {
-            ArmorItem itemArmor = (ArmorItem)item;
-            if (itemArmor.m_40401_() == ArmorMaterials.f_40453_) {
-               String material = "leather";
-               String type = "helmet";
-               EquipmentSlot equipmentSlot = itemArmor.m_40402_();
-               if (equipmentSlot == EquipmentSlot.HEAD) {
-                  type = "helmet";
-               }
-
-               if (equipmentSlot == EquipmentSlot.CHEST) {
-                  type = "chestplate";
-               }
-
-               if (equipmentSlot == EquipmentSlot.LEGS) {
-                  type = "leggings";
-               }
-
-               if (equipmentSlot == EquipmentSlot.FEET) {
-                  type = "boots";
-               }
-
-               key = material + "_" + type;
-               String texMain = this.getMapTexture(this.mapTextures, "texture." + key, "item/" + key);
-               String texOverlay = this.getMapTexture(this.mapTextures, "texture." + key + "_overlay", "item/" + key + "_overlay");
-               return new String[]{texMain, texOverlay};
+         if (item instanceof ArmorItem itemArmor && itemArmor.m_40401_() == ArmorMaterials.f_40453_) {
+            String material = "leather";
+            String type = "helmet";
+            EquipmentSlot equipmentSlot = itemArmor.m_40402_();
+            if (equipmentSlot == EquipmentSlot.HEAD) {
+               type = "helmet";
             }
+
+            if (equipmentSlot == EquipmentSlot.CHEST) {
+               type = "chestplate";
+            }
+
+            if (equipmentSlot == EquipmentSlot.LEGS) {
+               type = "leggings";
+            }
+
+            if (equipmentSlot == EquipmentSlot.FEET) {
+               type = "boots";
+            }
+
+            String key = material + "_" + type;
+            String texMain = this.getMapTexture(this.mapTextures, "texture." + key, "item/" + key);
+            String texOverlay = this.getMapTexture(this.mapTextures, "texture." + key + "_overlay", "item/" + key + "_overlay");
+            return new String[]{texMain, texOverlay};
          }
       }
 
       return new String[]{this.texture};
    }
 
-   private String getMapTexture(Map map, String key, String def) {
+   private String getMapTexture(Map<String, String> map, String key, String def) {
       if (map == null) {
          return def;
       } else {
@@ -854,7 +805,7 @@ public class CustomItemProperties {
       StringBuffer sb = new StringBuffer();
       sb.append("{\"parent\": \"builtin/generated\",\"textures\": {");
 
-      for(int i = 0; i < modelTextures.length; ++i) {
+      for (int i = 0; i < modelTextures.length; i++) {
          String modelTexture = modelTextures[i];
          if (i > 0) {
             sb.append(", ");
@@ -865,23 +816,17 @@ public class CustomItemProperties {
 
       sb.append("}}");
       String modelStr = sb.toString();
-      BlockModel model = BlockModel.m_111463_(modelStr);
-      return model;
+      return BlockModel.m_111463_(modelStr);
    }
 
    private static BakedModel bakeModel(TextureAtlas textureMap, BlockModel modelBlockIn, boolean useTint) {
       BlockModelRotation modelRotationIn = BlockModelRotation.X0_Y0;
       Material materialParticle = modelBlockIn.m_111480_("particle");
       TextureAtlasSprite var4 = materialParticle.m_119204_();
-      SimpleBakedModel.Builder var5 = (new SimpleBakedModel.Builder(modelBlockIn, ItemOverrides.f_111734_, false)).m_119528_(var4);
-      Iterator blockParts = modelBlockIn.m_111436_().iterator();
+      Builder var5 = new Builder(modelBlockIn, ItemOverrides.f_111734_, false).m_119528_(var4);
 
-      while(blockParts.hasNext()) {
-         BlockElement blockPart = (BlockElement)blockParts.next();
-         Iterator directions = blockPart.f_111310_.keySet().iterator();
-
-         while(directions.hasNext()) {
-            Direction direction = (Direction)directions.next();
+      for (BlockElement blockPart : modelBlockIn.m_111436_()) {
+         for (Direction direction : blockPart.f_111310_.keySet()) {
             BlockElementFace blockPartFace = (BlockElementFace)blockPart.f_111310_.get(direction);
             if (!useTint) {
                blockPartFace = new BlockElementFace(blockPartFace.f_111354_(), -1, blockPartFace.f_111356_(), blockPartFace.f_111357_());
@@ -901,14 +846,17 @@ public class CustomItemProperties {
       return var5.m_119533_();
    }
 
-   private static BakedQuad makeBakedQuad(BlockElement blockPart, BlockElementFace blockPartFace, TextureAtlasSprite textureAtlasSprite, Direction enumFacing, BlockModelRotation modelRotation) {
+   private static BakedQuad makeBakedQuad(
+      BlockElement blockPart, BlockElementFace blockPartFace, TextureAtlasSprite textureAtlasSprite, Direction enumFacing, BlockModelRotation modelRotation
+   ) {
       FaceBakery faceBakery = new FaceBakery();
-      return faceBakery.m_111600_(blockPart.f_111308_, blockPart.f_111309_, blockPartFace, textureAtlasSprite, enumFacing, modelRotation, blockPart.f_111311_, blockPart.f_111312_);
+      return faceBakery.m_111600_(
+         blockPart.f_111308_, blockPart.f_111309_, blockPartFace, textureAtlasSprite, enumFacing, modelRotation, blockPart.f_111311_, blockPart.f_111312_
+      );
    }
 
    public String toString() {
-      String var10000 = this.basePath;
-      return var10000 + "/" + this.name + ", type: " + this.type + ", items: [" + Config.arrayToString(this.items) + "], texture: " + this.texture;
+      return this.basePath + "/" + this.name + ", type: " + this.type + ", items: [" + Config.arrayToString(this.items) + "], texture: " + this.texture;
    }
 
    public float getTextureWidth(TextureManager textureManager) {
@@ -951,7 +899,7 @@ public class CustomItemProperties {
 
    public BakedModel getBakedModel(ResourceLocation modelLocation, boolean fullModel) {
       BakedModel bakedModel;
-      Map mapBakedModels;
+      Map<String, BakedModel> mapBakedModels;
       if (fullModel) {
          bakedModel = this.bakedModelFull;
          mapBakedModels = this.mapBakedModelsFull;
@@ -978,11 +926,7 @@ public class CustomItemProperties {
       }
 
       if (this.type == 1 && this.mapModels != null) {
-         Set keySet = this.mapModels.keySet();
-         Iterator it = keySet.iterator();
-
-         while(it.hasNext()) {
-            String key = (String)it.next();
+         for (String key : this.mapModels.keySet()) {
             String mod = (String)this.mapModels.get(key);
             String path = StrUtils.removePrefix(key, "model.");
             if (this.isSubTexture(path)) {
@@ -990,7 +934,6 @@ public class CustomItemProperties {
             }
          }
       }
-
    }
 
    public void updateModelsFull() {
@@ -1007,11 +950,7 @@ public class CustomItemProperties {
       }
 
       if (this.type == 1 && this.mapModels != null) {
-         Set keySet = this.mapModels.keySet();
-         Iterator it = keySet.iterator();
-
-         while(it.hasNext()) {
-            String key = (String)it.next();
+         for (String key : this.mapModels.keySet()) {
             String mod = (String)this.mapModels.get(key);
             String path = StrUtils.removePrefix(key, "model.");
             if (this.isSubTexture(path)) {
@@ -1031,30 +970,22 @@ public class CustomItemProperties {
             }
          }
       }
-
    }
 
    private void loadItemModel(ModelBakery modelBakery, String model) {
       ResourceLocation locModel = getModelLocation(model);
       modelBakery.m_339007_(locModel);
-      UnbakedModel um = modelBakery.m_119341_(locModel);
-      if (um instanceof BlockModel modelBlock) {
-         if (FaceBakery.getTextures(modelBlock) != null) {
-            Iterator it = FaceBakery.getTextures(modelBlock).entrySet().iterator();
-
-            while(it.hasNext()) {
-               Map.Entry entry = (Map.Entry)it.next();
-               Either value = (Either)entry.getValue();
-               Optional optionalMaterial = value.left();
-               if (optionalMaterial.isPresent()) {
-                  Material material = (Material)optionalMaterial.get();
-                  ResourceLocation textureLocation = material.m_119203_();
-                  this.modelSpriteLocations.add(textureLocation);
-               }
+      if (modelBakery.m_119341_(locModel) instanceof BlockModel modelBlock && FaceBakery.getTextures(modelBlock) != null) {
+         for (Entry<String, Either<Material, String>> entry : FaceBakery.getTextures(modelBlock).entrySet()) {
+            Either<Material, String> value = (Either<Material, String>)entry.getValue();
+            Optional<Material> optionalMaterial = value.left();
+            if (optionalMaterial.isPresent()) {
+               Material material = (Material)optionalMaterial.get();
+               ResourceLocation textureLocation = material.m_119203_();
+               this.modelSpriteLocations.add(textureLocation);
             }
          }
       }
-
    }
 
    private static ResourceLocation getModelLocation(String modelName) {

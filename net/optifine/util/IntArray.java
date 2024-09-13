@@ -14,11 +14,10 @@ public class IntArray {
    public void put(int x) {
       this.checkPutIndex(this.position);
       this.array[this.position] = x;
-      ++this.position;
+      this.position++;
       if (this.limit < this.position) {
          this.limit = this.position;
       }
-
    }
 
    public void put(int pos, int x) {
@@ -27,7 +26,6 @@ public class IntArray {
       if (this.limit < pos) {
          this.limit = pos;
       }
-
    }
 
    public void position(int pos) {
@@ -38,15 +36,14 @@ public class IntArray {
       this.checkPutIndex(this.position + ints.length - 1);
       int len = ints.length;
 
-      for(int i = 0; i < len; ++i) {
+      for (int i = 0; i < len; i++) {
          this.array[this.position] = ints[i];
-         ++this.position;
+         this.position++;
       }
 
       if (this.limit < this.position) {
          this.limit = this.position;
       }
-
    }
 
    private void checkPutIndex(int index) {

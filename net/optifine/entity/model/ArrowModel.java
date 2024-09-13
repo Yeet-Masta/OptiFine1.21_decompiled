@@ -14,6 +14,7 @@ public class ArrowModel extends Model {
       this.body = body;
    }
 
+   @Override
    public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
       this.body.m_104306_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn);
    }

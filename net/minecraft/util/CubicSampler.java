@@ -4,14 +4,14 @@ import net.minecraft.world.phys.Vec3;
 import net.optifine.Vec3M;
 
 public class CubicSampler {
-   private static final int f_177979_ = 2;
-   private static final int f_177980_ = 6;
-   private static final double[] f_130036_ = new double[]{0.0, 1.0, 4.0, 6.0, 4.0, 1.0, 0.0};
+   private static int f_177979_;
+   private static int f_177980_;
+   private static double[] f_130036_ = new double[]{0.0, 1.0, 4.0, 6.0, 4.0, 1.0, 0.0};
 
    private CubicSampler() {
    }
 
-   public static Vec3 m_130038_(Vec3 vectorIn, Vec3Fetcher fetcherIn) {
+   public static Vec3 m_130038_(Vec3 vectorIn, CubicSampler.Vec3Fetcher fetcherIn) {
       if (vectorIn instanceof Vec3M vec3m) {
          return sampleM(vec3m, fetcherIn);
       } else {
@@ -24,15 +24,15 @@ public class CubicSampler {
          double d3 = 0.0;
          Vec3 vec3 = Vec3.f_82478_;
 
-         for(int l = 0; l < 6; ++l) {
+         for (int l = 0; l < 6; l++) {
             double d4 = Mth.m_14139_(d0, f_130036_[l + 1], f_130036_[l]);
             int i1 = i - 2 + l;
 
-            for(int j1 = 0; j1 < 6; ++j1) {
+            for (int j1 = 0; j1 < 6; j1++) {
                double d5 = Mth.m_14139_(d1, f_130036_[j1 + 1], f_130036_[j1]);
                int k1 = j - 2 + j1;
 
-               for(int l1 = 0; l1 < 6; ++l1) {
+               for (int l1 = 0; l1 < 6; l1++) {
                   double d6 = Mth.m_14139_(d2, f_130036_[l1 + 1], f_130036_[l1]);
                   int i2 = k - 2 + l1;
                   double d7 = d4 * d5 * d6;
@@ -46,7 +46,7 @@ public class CubicSampler {
       }
    }
 
-   public static Vec3M sampleM(Vec3 vectorIn, Vec3Fetcher fetcherIn) {
+   public static Vec3M sampleM(Vec3 vectorIn, CubicSampler.Vec3Fetcher fetcherIn) {
       int x0 = Mth.m_14107_(vectorIn.m_7096_());
       int y0 = Mth.m_14107_(vectorIn.m_7098_());
       int z0 = Mth.m_14107_(vectorIn.m_7094_());
@@ -56,15 +56,15 @@ public class CubicSampler {
       double stSum = 0.0;
       Vec3M vecSum = new Vec3M(0.0, 0.0, 0.0);
 
-      for(int kx = 0; kx < 6; ++kx) {
+      for (int kx = 0; kx < 6; kx++) {
          double sx = Mth.m_14139_(dx, f_130036_[kx + 1], f_130036_[kx]);
          int x = x0 - 2 + kx;
 
-         for(int ky = 0; ky < 6; ++ky) {
+         for (int ky = 0; ky < 6; ky++) {
             double sy = Mth.m_14139_(dy, f_130036_[ky + 1], f_130036_[ky]);
             int y = y0 - 2 + ky;
 
-            for(int kz = 0; kz < 6; ++kz) {
+            for (int kz = 0; kz < 6; kz++) {
                double sz = Mth.m_14139_(dz, f_130036_[kz + 1], f_130036_[kz]);
                int z = z0 - 2 + kz;
                double st = sx * sy * sz;

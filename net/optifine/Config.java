@@ -19,7 +19,6 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -69,11 +68,11 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLCapabilities;
 
 public class Config {
-   public static final String OF_NAME = "OptiFine";
-   public static final String MC_VERSION = "1.21";
-   public static final String OF_EDITION = "HD_U";
-   public static final String OF_RELEASE = "J1_pre9";
-   public static final String VERSION = "OptiFine_1.21_HD_U_J1_pre9";
+   public static String OF_NAME;
+   public static String MC_VERSION;
+   public static String OF_EDITION;
+   public static String OF_RELEASE;
+   public static String VERSION;
    private static String build = null;
    private static String newRelease = null;
    private static boolean notify64BitJava = false;
@@ -95,9 +94,9 @@ public class Config {
    private static int texturePackClouds = 0;
    private static boolean fullscreenModeChecked = false;
    private static boolean desktopModeChecked = false;
-   public static final Float DEF_ALPHA_FUNC_LEVEL = 0.1F;
-   private static final Logger LOGGER = LogManager.getLogger();
-   public static final boolean logDetail = System.getProperty("log.detail", "false").equals("true");
+   public static Float DEF_ALPHA_FUNC_LEVEL = 0.1F;
+   private static Logger LOGGER = LogManager.getLogger();
+   public static boolean logDetail = System.getProperty("log.detail", "false").equals("true");
    private static String mcDebugLast = null;
    private static int fpsMinLast = 0;
    private static int chunkUpdatesLast = 0;
@@ -111,7 +110,7 @@ public class Config {
    }
 
    public static String getVersion() {
-      return "OptiFine_1.21_HD_U_J1_pre9";
+      return "OptiFine_1.21.1_HD_U_J1_pre9";
    }
 
    public static String getVersionDebug() {
@@ -122,7 +121,7 @@ public class Config {
          sb.append(", ");
       }
 
-      sb.append("OptiFine_1.21_HD_U_J1_pre9");
+      sb.append("OptiFine_1.21.1_HD_U_J1_pre9");
       String shaderPack = Shaders.getShaderPackName();
       if (shaderPack != null) {
          sb.append(", ");
@@ -137,13 +136,13 @@ public class Config {
          gameSettings = settings;
          updateAvailableProcessors();
          ReflectorForge.putLaunchBlackboard("optifine.ForgeSplashCompatible", Boolean.TRUE);
-         String forgeVer = (String)Reflector.ForgeVersion_getVersion.call();
+         String forgeVer = (String)Reflector.ForgeVersion_getVersion.m_46374_();
          if (forgeVer != null) {
             dbg("Forge version: " + forgeVer);
             ComparableVersion cv = new ComparableVersion(forgeVer);
             ComparableVersion cvMax = new ComparableVersion("47.0.3");
             if (cv.compareTo(cvMax) > 1) {
-               dbg("Forge version above " + String.valueOf(cvMax) + ", antialiasing disabled");
+               dbg("Forge version above " + cvMax + ", antialiasing disabled");
                gameSettings.ofAaLevel = 0;
             }
          }
@@ -170,21 +169,18 @@ public class Config {
    }
 
    private static void checkOpenGlCaps() {
-      log("");
-      log(getVersion());
-      log("Build: " + getBuild());
-      String var10000 = System.getProperty("os.name");
-      log("OS: " + var10000 + " (" + System.getProperty("os.arch") + ") version " + System.getProperty("os.version"));
-      var10000 = System.getProperty("java.version");
-      log("Java: " + var10000 + ", " + System.getProperty("java.vendor"));
-      var10000 = System.getProperty("java.vm.name");
-      log("VM: " + var10000 + " (" + System.getProperty("java.vm.info") + "), " + System.getProperty("java.vm.vendor"));
-      log("LWJGL: " + GLFW.glfwGetVersionString());
+      m_260877_("");
+      m_260877_(getVersion());
+      m_260877_("Build: " + getBuild());
+      m_260877_("OS: " + System.getProperty("os.name") + " (" + System.getProperty("os.arch") + ") version " + System.getProperty("os.version"));
+      m_260877_("Java: " + System.getProperty("java.version") + ", " + System.getProperty("java.vendor"));
+      m_260877_("VM: " + System.getProperty("java.vm.name") + " (" + System.getProperty("java.vm.info") + "), " + System.getProperty("java.vm.vendor"));
+      m_260877_("LWJGL: " + GLFW.glfwGetVersionString());
       openGlVersion = GL11.glGetString(7938);
       openGlRenderer = GL11.glGetString(7937);
       openGlVendor = GL11.glGetString(7936);
-      log("OpenGL: " + openGlRenderer + ", version " + openGlVersion + ", " + openGlVendor);
-      log("OpenGL Version: " + getOpenGlVersionString());
+      m_260877_("OpenGL: " + openGlRenderer + ", version " + openGlVersion + ", " + openGlVendor);
+      m_260877_("OpenGL Version: " + getOpenGlVersionString());
       int maxTexSize = TextureUtils.getGLMaximumTextureSize();
       dbg("Maximum texture size: " + maxTexSize + "x" + maxTexSize);
    }
@@ -199,8 +195,7 @@ public class Config {
 
             build = readLines(in)[0];
          } catch (Exception var1) {
-            String var10000 = var1.getClass().getName();
-            warn(var10000 + ": " + var1.getMessage());
+            warn(var1.getClass().getName() + ": " + var1.getMessage());
             build = "";
          }
       }
@@ -215,8 +210,8 @@ public class Config {
 
    public static int getMinecraftVersionInt() {
       if (minecraftVersionInt < 0) {
-         String mcVer = "1.21";
-         if (mcVer.contains("-")) {
+         String mcVer = "1.21.1";
+         if (mcVer.m_274455_("-")) {
             mcVer = tokenize(mcVer, "-")[0];
          }
 
@@ -242,9 +237,7 @@ public class Config {
 
    public static String getOpenGlVersionString() {
       GlVersion ver = getGlVersion();
-      int var10000 = ver.getMajor();
-      String verStr = "" + var10000 + "." + ver.getMinor() + "." + ver.getRelease();
-      return verStr;
+      return ver.getMajor() + "." + ver.getMinor() + "." + ver.getRelease();
    }
 
    private static GlVersion getGlVersionLwjgl() {
@@ -287,7 +280,7 @@ public class Config {
    public static GlVersion getGlVersion() {
       if (glVersion == null) {
          String verStr = GL11.glGetString(7938);
-         glVersion = parseGlVersion(verStr, (GlVersion)null);
+         glVersion = parseGlVersion(verStr, null);
          if (glVersion == null) {
             glVersion = getGlVersionLwjgl();
          }
@@ -303,7 +296,7 @@ public class Config {
    public static GlVersion getGlslVersion() {
       if (glslVersion == null) {
          String verStr = GL11.glGetString(35724);
-         glslVersion = parseGlVersion(verStr, (GlVersion)null);
+         glslVersion = parseGlVersion(verStr, null);
          if (glslVersion == null) {
             glslVersion = new GlVersion(1, 10);
          }
@@ -317,7 +310,7 @@ public class Config {
          if (versionString == null) {
             return def;
          } else {
-            Pattern REGEXP_VERSION = Pattern.compile("([0-9]+)\\.([0-9]+)(\\.([0-9]+))?(.+)?");
+            Pattern REGEXP_VERSION = Pattern.m_289905_("([0-9]+)\\.([0-9]+)(\\.([0-9]+))?(.+)?");
             Matcher matcher = REGEXP_VERSION.matcher(versionString);
             if (!matcher.matches()) {
                return def;
@@ -351,7 +344,7 @@ public class Config {
             if (countExt > 0) {
                String[] exts = new String[countExt];
 
-               for(int i = 0; i < countExt; ++i) {
+               for (int i = 0; i < countExt; i++) {
                   exts[i] = GL30.glGetStringi(7939, i);
                }
 
@@ -364,8 +357,7 @@ public class Config {
 
       try {
          String extStr = GL11.glGetString(7939);
-         String[] exts = extStr.split(" ");
-         return exts;
+         return extStr.m_269487_(" ");
       } catch (Exception var4) {
          error("", var4);
          return new String[0];
@@ -374,7 +366,7 @@ public class Config {
 
    public static void updateThreadPriorities() {
       updateAvailableProcessors();
-      int ELEVATED_PRIORITY = true;
+      int ELEVATED_PRIORITY = 8;
       if (isSingleProcessor()) {
          if (isSmoothWorld()) {
             minecraftThread.setPriority(10);
@@ -387,7 +379,6 @@ public class Config {
          minecraftThread.setPriority(10);
          setThreadPriority("Server thread", 5);
       }
-
    }
 
    private static void setThreadPriority(String prefix, int priority) {
@@ -401,17 +392,15 @@ public class Config {
          Thread[] ts = new Thread[num];
          tg.enumerate(ts, false);
 
-         for(int i = 0; i < ts.length; ++i) {
+         for (int i = 0; i < ts.length; i++) {
             Thread t = ts[i];
             if (t != null && t.getName().startsWith(prefix)) {
                t.setPriority(priority);
             }
          }
       } catch (Throwable var7) {
-         String var10000 = var7.getClass().getName();
-         warn(var10000 + ": " + var7.getMessage());
+         warn(var7.getClass().getName() + ": " + var7.getMessage());
       }
-
    }
 
    public static boolean isMinecraftThread() {
@@ -424,11 +413,11 @@ public class Config {
    }
 
    public static boolean isMipmaps() {
-      return (Integer)gameSettings.m_232119_().m_231551_() > 0;
+      return gameSettings.m_232119_().m_231551_() > 0;
    }
 
    public static int getMipmapLevels() {
-      return (Integer)gameSettings.m_232119_().m_231551_();
+      return gameSettings.m_232119_().m_231551_();
    }
 
    public static int getMipmapType() {
@@ -479,7 +468,6 @@ public class Config {
       if (logDetail) {
          LOGGER.info("[OptiFine] " + s);
       }
-
    }
 
    public static void dbg(String s) {
@@ -502,7 +490,7 @@ public class Config {
       LOGGER.error("[OptiFine] " + s, t);
    }
 
-   public static void log(String s) {
+   public static void m_260877_(String s) {
       dbg(s);
    }
 
@@ -523,11 +511,7 @@ public class Config {
    }
 
    public static boolean isRainFancy() {
-      if (gameSettings.ofRain == 0) {
-         return isGraphicsFancy();
-      } else {
-         return gameSettings.ofRain == 2;
-      }
+      return gameSettings.ofRain == 0 ? isGraphicsFancy() : gameSettings.ofRain == 2;
    }
 
    public static boolean isRainOff() {
@@ -539,10 +523,8 @@ public class Config {
          return gameSettings.ofClouds == 2;
       } else if (isShaders() && !Shaders.shaderPackClouds.isDefault()) {
          return Shaders.shaderPackClouds.isFancy();
-      } else if (texturePackClouds != 0) {
-         return texturePackClouds == 2;
       } else {
-         return isGraphicsFancy();
+         return texturePackClouds != 0 ? texturePackClouds == 2 : isGraphicsFancy();
       }
    }
 
@@ -551,10 +533,8 @@ public class Config {
          return gameSettings.ofClouds == 3;
       } else if (isShaders() && !Shaders.shaderPackClouds.isDefault()) {
          return Shaders.shaderPackClouds.isOff();
-      } else if (texturePackClouds != 0) {
-         return texturePackClouds == 3;
       } else {
-         return false;
+         return texturePackClouds != 0 ? texturePackClouds == 3 : false;
       }
    }
 
@@ -591,7 +571,6 @@ public class Config {
             }
          } catch (Exception var4) {
          }
-
       }
    }
 
@@ -600,11 +579,7 @@ public class Config {
    }
 
    public static boolean isTreesFancy() {
-      if (gameSettings.ofTrees == 0) {
-         return isGraphicsFancy();
-      } else {
-         return gameSettings.ofTrees != 1;
-      }
+      return gameSettings.ofTrees == 0 ? isGraphicsFancy() : gameSettings.ofTrees != 1;
    }
 
    public static boolean isTreesSmart() {
@@ -612,11 +587,7 @@ public class Config {
    }
 
    public static boolean isCullFacesLeaves() {
-      if (gameSettings.ofTrees == 0) {
-         return !isGraphicsFancy();
-      } else {
-         return gameSettings.ofTrees == 4;
-      }
+      return gameSettings.ofTrees == 0 ? !isGraphicsFancy() : gameSettings.ofTrees == 4;
    }
 
    public static int limit(int val, int min, int max) {
@@ -737,7 +708,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(list.size() * 5);
 
-         for(int i = 0; i < list.size(); ++i) {
+         for (int i = 0; i < list.size(); i++) {
             Object obj = list.get(i);
             if (i > 0) {
                buf.append(separator);
@@ -760,7 +731,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for(int i = 0; i < arr.length; ++i) {
+         for (int i = 0; i < arr.length; i++) {
             Object obj = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -783,7 +754,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for(int i = 0; i < arr.length; ++i) {
+         for (int i = 0; i < arr.length; i++) {
             int x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -806,7 +777,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for(int i = 0; i < arr.length; ++i) {
+         for (int i = 0; i < arr.length; i++) {
             float x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -840,7 +811,7 @@ public class Config {
       return res == null ? null : res.m_215507_();
    }
 
-   public static Resource getResource(ResourceLocation location) throws IOException {
+   public static Resource m_213713_(ResourceLocation location) throws IOException {
       return minecraft.m_91098_().m_215593_(location);
    }
 
@@ -864,7 +835,7 @@ public class Config {
 
    public static boolean hasResource(PackResources rp, ResourceLocation loc) {
       if (rp != null && loc != null) {
-         IoSupplier supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
+         IoSupplier<InputStream> supplier = rp.m_214146_(PackType.CLIENT_RESOURCES, loc);
          return supplier != null;
       } else {
          return false;
@@ -873,20 +844,17 @@ public class Config {
 
    public static PackResources[] getResourcePacks() {
       PackRepository rep = minecraft.m_91099_();
-      Collection packInfos = rep.m_10524_();
+      Collection<Pack> packInfos = rep.m_10524_();
       List list = new ArrayList();
-      Iterator it = packInfos.iterator();
 
-      while(it.hasNext()) {
-         Pack rpic = (Pack)it.next();
+      for (Pack rpic : packInfos) {
          PackResources rp = rpic.m_10445_();
          if (rp != getDefaultResourcePack()) {
             list.add(rp);
          }
       }
 
-      PackResources[] rps = (PackResources[])list.toArray(new PackResources[list.size()]);
-      return rps;
+      return (PackResources[])list.toArray(new PackResources[list.size()]);
    }
 
    public static String getResourcePackNames() {
@@ -899,12 +867,11 @@ public class Config {
          } else {
             String[] names = new String[rps.length];
 
-            for(int i = 0; i < rps.length; ++i) {
+            for (int i = 0; i < rps.length; i++) {
                names[i] = rps[i].m_5542_();
             }
 
-            String nameStr = arrayToString((Object[])names);
-            return nameStr;
+            return arrayToString((Object[])names);
          }
       }
    }
@@ -919,10 +886,10 @@ public class Config {
 
    public static PackResources getDefiningResourcePack(ResourceLocation location) {
       PackRepository rep = minecraft.m_91099_();
-      Collection packInfos = rep.m_10524_();
-      List entries = (List)packInfos;
+      Collection<Pack> packInfos = rep.m_10524_();
+      List<Pack> entries = (List<Pack>)packInfos;
 
-      for(int i = entries.size() - 1; i >= 0; --i) {
+      for (int i = entries.size() - 1; i >= 0; i--) {
          Pack entry = (Pack)entries.get(i);
          PackResources rp = entry.m_10445_();
          if (rp.m_214146_(PackType.CLIENT_RESOURCES, location) != null) {
@@ -934,7 +901,7 @@ public class Config {
    }
 
    public static InputStream getResourceStream(PackResources rp, PackType type, ResourceLocation location) throws IOException {
-      IoSupplier supplier = rp.m_214146_(type, location);
+      IoSupplier<InputStream> supplier = rp.m_214146_(type, location);
       return supplier == null ? null : (InputStream)supplier.m_247737_();
    }
 
@@ -975,28 +942,18 @@ public class Config {
    }
 
    public static boolean isSunTexture() {
-      if (!isSunMoonEnabled()) {
-         return false;
-      } else {
-         return !isShaders() || Shaders.isSun();
-      }
+      return !isSunMoonEnabled() ? false : !isShaders() || Shaders.isSun();
    }
 
    public static boolean isMoonTexture() {
-      if (!isSunMoonEnabled()) {
-         return false;
-      } else {
-         return !isShaders() || Shaders.isMoon();
-      }
+      return !isSunMoonEnabled() ? false : !isShaders() || Shaders.isMoon();
    }
 
    public static boolean isVignetteEnabled() {
       if (isShaders() && !Shaders.isVignette()) {
          return false;
-      } else if (gameSettings.ofVignette == 0) {
-         return isGraphicsFancy();
       } else {
-         return gameSettings.ofVignette == 2;
+         return gameSettings.ofVignette == 0 ? isGraphicsFancy() : gameSettings.ofVignette == 2;
       }
    }
 
@@ -1010,7 +967,6 @@ public class Config {
       } catch (InterruptedException var3) {
          error("", var3);
       }
-
    }
 
    public static boolean isTimeDayOnly() {
@@ -1046,11 +1002,7 @@ public class Config {
    }
 
    public static boolean isMultiTexture() {
-      if (getAnisotropicFilterLevel() > 1) {
-         return true;
-      } else {
-         return getAntialiasingLevel() > 0;
-      }
+      return getAnisotropicFilterLevel() > 1 ? true : getAntialiasingLevel() > 0;
    }
 
    public static boolean between(int val, int min, int max) {
@@ -1150,13 +1102,12 @@ public class Config {
       StringTokenizer tok = new StringTokenizer(str, delim);
       List list = new ArrayList();
 
-      while(tok.hasMoreTokens()) {
+      while (tok.hasMoreTokens()) {
          String token = tok.nextToken();
          list.add(token);
       }
 
-      String[] strs = (String[])list.toArray(new String[list.size()]);
-      return strs;
+      return (String[])list.toArray(new String[list.size()]);
    }
 
    public static boolean isAnimatedTerrain() {
@@ -1179,22 +1130,21 @@ public class Config {
       int errorCode = GlStateManager._getError();
       if (errorCode != 0 && GlErrors.isEnabled(errorCode)) {
          String errorText = getGlErrorString(errorCode);
-         String messageLog = String.format("OpenGL error: %s (%s), at: %s", errorCode, errorText, loc);
+         String messageLog = String.m_12886_("OpenGL error: %s (%s), at: %s", new Object[]{errorCode, errorText, loc});
          error(messageLog);
          if (isShowGlErrors() && TimedEvent.isActive("ShowGlError", 10000L)) {
             String message = I18n.m_118938_("of.message.openglError", new Object[]{errorCode, errorText});
             minecraft.f_91065_.m_93076_().m_93785_(Component.m_237113_(message));
          }
       }
-
    }
 
    public static boolean isSmoothBiomes() {
-      return (Integer)gameSettings.m_232121_().m_231551_() > 0;
+      return gameSettings.m_232121_().m_231551_() > 0;
    }
 
    public static int getBiomeBlendRadius() {
-      return (Integer)gameSettings.m_232121_().m_231551_();
+      return gameSettings.m_232121_().m_231551_();
    }
 
    public static boolean isCustomColors() {
@@ -1243,7 +1193,7 @@ public class Config {
 
    public static String[] readLines(File file) throws IOException {
       FileInputStream fis = new FileInputStream(file);
-      return readLines((InputStream)fis);
+      return readLines(fis);
    }
 
    public static String[] readLines(InputStream is) throws IOException {
@@ -1251,11 +1201,10 @@ public class Config {
       InputStreamReader isr = new InputStreamReader(is, "ASCII");
       BufferedReader br = new BufferedReader(isr);
 
-      while(true) {
+      while (true) {
          String line = br.readLine();
          if (line == null) {
-            String[] lines = (String[])list.toArray(new String[list.size()]);
-            return lines;
+            return (String[])list.toArray(new String[list.size()]);
          }
 
          list.add(line);
@@ -1276,7 +1225,7 @@ public class Config {
       BufferedReader br = new BufferedReader(inr);
       StringBuffer sb = new StringBuffer();
 
-      while(true) {
+      while (true) {
          String line = br.readLine();
          if (line == null) {
             in.close();
@@ -1292,12 +1241,11 @@ public class Config {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       byte[] buf = new byte[1024];
 
-      while(true) {
+      while (true) {
          int len = is.read(buf);
          if (len < 0) {
             is.close();
-            byte[] bytes = baos.toByteArray();
-            return bytes;
+            return baos.toByteArray();
          }
 
          baos.write(buf, 0, len);
@@ -1348,7 +1296,7 @@ public class Config {
 
    private static String[] splitRelease(String relStr) {
       if (relStr != null && relStr.length() > 0) {
-         Pattern p = Pattern.compile("([A-Z])([0-9]+)(.*)");
+         Pattern p = Pattern.m_289905_("([A-Z])([0-9]+)(.*)");
          Matcher m = p.matcher(relStr);
          if (!m.matches()) {
             return new String[]{"", "", ""};
@@ -1368,16 +1316,14 @@ public class Config {
       x += x << 3;
       x ^= x >> 4;
       x *= 668265261;
-      x ^= x >> 15;
-      return x;
+      return x ^ x >> 15;
    }
 
    public static int getRandom(BlockPos blockPos, int face) {
       int rand = intHash(face + 37);
       rand = intHash(rand + blockPos.m_123341_());
       rand = intHash(rand + blockPos.m_123343_());
-      rand = intHash(rand + blockPos.m_123342_());
-      return rand;
+      return intHash(rand + blockPos.m_123342_());
    }
 
    public static int getAvailableProcessors() {
@@ -1409,12 +1355,7 @@ public class Config {
    }
 
    public static int getChunkViewDistance() {
-      if (gameSettings == null) {
-         return 10;
-      } else {
-         int chunkDistance = (Integer)gameSettings.m_231984_().m_231551_();
-         return chunkDistance;
-      }
+      return gameSettings == null ? 10 : gameSettings.m_231984_().m_231551_();
    }
 
    public static boolean equals(Object o1, Object o2) {
@@ -1429,7 +1370,7 @@ public class Config {
       if (bs == null) {
          return false;
       } else {
-         for(int i = 0; i < bs.length; ++i) {
+         for (int i = 0; i < bs.length; i++) {
             Object b = bs[i];
             if (equals(a, b)) {
                return true;
@@ -1441,7 +1382,7 @@ public class Config {
    }
 
    public static boolean equalsOne(int val, int[] vals) {
-      for(int i = 0; i < vals.length; ++i) {
+      for (int i = 0; i < vals.length; i++) {
          if (vals[i] == val) {
             return true;
          }
@@ -1454,7 +1395,7 @@ public class Config {
       if (bs == null) {
          return false;
       } else {
-         for(int i = 0; i < bs.length; ++i) {
+         for (int i = 0; i < bs.length; i++) {
             Object b = bs[i];
             if (a == b) {
                return true;
@@ -1471,14 +1412,11 @@ public class Config {
 
    private static ByteBuffer readIconImage(InputStream is) throws IOException {
       BufferedImage var2 = ImageIO.read(is);
-      int[] var3 = var2.getRGB(0, 0, var2.getWidth(), var2.getHeight(), (int[])null, 0, var2.getWidth());
+      int[] var3 = var2.getRGB(0, 0, var2.m_92515_(), var2.getHeight(), (int[])null, 0, var2.m_92515_());
       ByteBuffer var4 = ByteBuffer.allocate(4 * var3.length);
-      int[] var5 = var3;
-      int var6 = var3.length;
 
-      for(int var7 = 0; var7 < var6; ++var7) {
-         int var8 = var5[var7];
-         var4.putInt(var8 << 8 | var8 >> 24 & 255);
+      for (int var8 : var3) {
+         var4.putInt(var8 << 8 | var8 >> 24 & 0xFF);
       }
 
       var4.flip();
@@ -1523,8 +1461,7 @@ public class Config {
    public static Object[] removeObjectFromArray(Object[] arr, Object obj) {
       List list = new ArrayList(Arrays.asList(arr));
       list.remove(obj);
-      Object[] newArr = collectionToArray(list, arr.getClass().getComponentType());
-      return newArr;
+      return collectionToArray(list, arr.getClass().getComponentType());
    }
 
    public static Object[] collectionToArray(Collection coll, Class elementClass) {
@@ -1533,7 +1470,7 @@ public class Config {
       } else if (elementClass == null) {
          return null;
       } else if (elementClass.isPrimitive()) {
-         throw new IllegalArgumentException("Can not make arrays with primitive elements (int, double), element class: " + String.valueOf(elementClass));
+         throw new IllegalArgumentException("Can not make arrays with primitive elements (int, double), element class: " + elementClass);
       } else {
          Object[] array = (Object[])Array.newInstance(elementClass, coll.size());
          return coll.toArray(array);
@@ -1547,15 +1484,12 @@ public class Config {
    public static String getFpsString() {
       int fps = getFpsAverage();
       int fpsMin = getFpsMin();
-      String fpsStr;
       if (showFrameTime) {
-         fpsStr = String.format("%.1f", 1000.0 / (double)limit(fps, 1, Integer.MAX_VALUE));
-         String timeMaxMs = String.format("%.1f", 1000.0 / (double)limit(fpsMin, 1, Integer.MAX_VALUE));
-         String fpsStr = fpsStr + "/" + timeMaxMs + " ms";
-         return fpsStr;
+         String timeMs = String.m_12886_("%.1f", new Object[]{1000.0 / (double)limit(fps, 1, Integer.MAX_VALUE)});
+         String timeMaxMs = String.m_12886_("%.1f", new Object[]{1000.0 / (double)limit(fpsMin, 1, Integer.MAX_VALUE)});
+         return timeMs + "/" + timeMaxMs + " ms";
       } else {
-         fpsStr = "" + fps + "/" + fpsMin + " fps";
-         return fpsStr;
+         return fps + "/" + fpsMin + " fps";
       }
    }
 
@@ -1564,8 +1498,7 @@ public class Config {
    }
 
    public static int getFpsAverage() {
-      int fps = Reflector.getFieldValueInt(Reflector.Minecraft_debugFPS, -1);
-      return fps;
+      return Reflector.getFieldValueInt(Reflector.Minecraft_debugFPS, -1);
    }
 
    public static int getFpsMin() {
@@ -1588,7 +1521,7 @@ public class Config {
          long timeMaxNs = timeAvgNs;
          long timeTotalNs = 0L;
 
-         for(int ix = sl.m_322219_() - 1; ix > 0 && (double)timeTotalNs < 1.0E9; --ix) {
+         for (int ix = sl.m_322219_() - 1; ix > 0 && (double)timeTotalNs < 1.0E9; ix--) {
             long timeNs = sl.m_318870_(ix);
             if (timeNs > timeMaxNs) {
                timeMaxNs = timeNs;
@@ -1615,10 +1548,10 @@ public class Config {
    public static int getBitsJre() {
       String[] propNames = new String[]{"sun.arch.data.model", "com.ibm.vm.bitmode", "os.arch"};
 
-      for(int i = 0; i < propNames.length; ++i) {
+      for (int i = 0; i < propNames.length; i++) {
          String propName = propNames[i];
          String propVal = System.getProperty(propName);
-         if (propVal != null && propVal.contains("64")) {
+         if (propVal != null && propVal.m_274455_("64")) {
             return 64;
          }
       }
@@ -1654,7 +1587,7 @@ public class Config {
          int[] newArray = new int[newLen];
          System.arraycopy(intArray, 0, newArray, 0, arrLen);
 
-         for(int index = 0; index < copyFrom.length; ++index) {
+         for (int index = 0; index < copyFrom.length; index++) {
             newArray[index + arrLen] = copyFrom[index];
          }
 
@@ -1715,7 +1648,7 @@ public class Config {
       } else {
          int[] intArr = new int[arr.length];
 
-         for(int i = 0; i < intArr.length; ++i) {
+         for (int i = 0; i < intArr.length; i++) {
             intArr[i] = arr[i];
          }
 
@@ -1724,11 +1657,7 @@ public class Config {
    }
 
    public static boolean isRenderRegions() {
-      if (isMultiTexture()) {
-         return false;
-      } else {
-         return gameSettings.ofRenderRegions && GlStateManager.vboRegions;
-      }
+      return isMultiTexture() ? false : gameSettings.ofRenderRegions && GlStateManager.vboRegions;
    }
 
    public static boolean isVbo() {
@@ -1740,7 +1669,7 @@ public class Config {
    }
 
    public static boolean openWebLink(URI uri) {
-      Util.setExceptionOpenUrl((Exception)null);
+      Util.setExceptionOpenUrl(null);
       Util.m_137581_().m_137648_(uri);
       Exception error = Util.getExceptionOpenUrl();
       return error == null;
@@ -1756,7 +1685,7 @@ public class Config {
       } else {
          StringBuffer buf = new StringBuffer(arr.length * 5);
 
-         for(int i = 0; i < arr.length; ++i) {
+         for (int i = 0; i < arr.length; i++) {
             boolean x = arr[i];
             if (i > 0) {
                buf.append(separator);
@@ -1770,11 +1699,7 @@ public class Config {
    }
 
    public static boolean isIntegratedServerRunning() {
-      if (minecraft.m_91092_() == null) {
-         return false;
-      } else {
-         return minecraft.m_91090_();
-      }
+      return minecraft.m_91092_() == null ? false : minecraft.m_91090_();
    }
 
    public static IntBuffer createDirectIntBuffer(int capacity) {
@@ -1836,11 +1761,7 @@ public class Config {
    }
 
    public static boolean isQuadsToTriangles() {
-      if (!isShaders()) {
-         return false;
-      } else {
-         return !Shaders.canRenderQuads();
-      }
+      return !isShaders() ? false : !Shaders.canRenderQuads();
    }
 
    public static void frameStart() {
@@ -1856,7 +1777,6 @@ public class Config {
          updateFpsMin();
          updateChunkUpdates();
       }
-
    }
 
    public static long getLastFrameTimeMs() {
@@ -1868,13 +1788,11 @@ public class Config {
    }
 
    public static float getAverageFrameTimeSec() {
-      float frameTimeSec = (float)getAverageFrameTimeMs() / 1000.0F;
-      return frameTimeSec;
+      return (float)getAverageFrameTimeMs() / 1000.0F;
    }
 
    public static long getAverageFrameFps() {
-      long frameFps = 1000L / getAverageFrameTimeMs();
-      return frameFps;
+      return 1000L / getAverageFrameTimeMs();
    }
 
    public static void checkNull(Object obj, String msg) throws NullPointerException {

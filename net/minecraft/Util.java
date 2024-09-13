@@ -6,9 +6,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.mojang.datafixers.DSL;
 import com.mojang.datafixers.DataFixUtils;
 import com.mojang.datafixers.Typed;
+import com.mojang.datafixers.DSL.TypeReference;
 import com.mojang.datafixers.types.Type;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
@@ -43,14 +43,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
@@ -79,44 +80,53 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.SingleKeyCache;
-import net.minecraft.util.TimeSource;
+import net.minecraft.util.TimeSource.NanoTimeSource;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.optifine.SmartExecutorService;
 import org.slf4j.Logger;
 
 public class Util {
-   static final Logger f_137446_ = LogUtils.getLogger();
-   private static final int f_183935_ = 255;
-   private static final int f_303362_ = 10;
-   private static final String f_183936_ = "max.bg.threads";
-   private static final ExecutorService f_137444_ = m_137477_("Main");
-   private static final ExecutorService f_137445_ = m_137586_("IO-Worker-", false);
-   private static final ExecutorService f_302521_ = m_137586_("Download-", true);
-   private static final DateTimeFormatter f_241646_;
-   public static final int f_303450_ = 8;
-   private static final Set f_337259_;
-   public static final long f_291561_ = 1000000L;
-   public static TimeSource.NanoTimeSource f_137440_;
-   public static final Ticker f_211544_;
-   public static final UUID f_137441_;
-   public static final FileSystemProvider f_143778_;
-   private static Consumer f_183937_;
+   static Logger f_137446_ = LogUtils.getLogger();
+   private static int f_183935_;
+   private static int f_303362_;
+   private static String f_183936_;
+   private static ExecutorService f_137444_ = m_137477_("Main");
+   private static ExecutorService f_137445_ = m_137586_("IO-Worker-", false);
+   private static ExecutorService f_302521_ = m_137586_("Download-", true);
+   private static DateTimeFormatter f_241646_ = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss", Locale.ROOT);
+   public static int f_303450_;
+   private static Set<String> f_337259_ = Set.m_253057_("http", "https");
+   public static long f_291561_;
+   public static NanoTimeSource f_137440_ = System::nanoTime;
+   public static Ticker f_211544_ = new Ticker() {
+      public long read() {
+         return Util.f_137440_.getAsLong();
+      }
+   };
+   public static UUID f_137441_ = new UUID(0L, 0L);
+   public static FileSystemProvider f_143778_ = (FileSystemProvider)FileSystemProvider.installedProviders()
+      .stream()
+      .m_138619_(providerIn -> providerIn.getScheme().equalsIgnoreCase("jar"))
+      .findFirst()
+      .orElseThrow(() -> new IllegalStateException("No jar file system provider found"));
+   private static Consumer<String> f_183937_ = nameIn -> {
+   };
    private static Exception exceptionOpenUrl;
-   private static final ExecutorService CAPE_EXECUTOR;
-   private static LongSupplier INNER_CLASS_SHIFT1;
-   private static LongSupplier INNER_CLASS_SHIFT2;
+   private static ExecutorService CAPE_EXECUTOR = m_137477_("Cape");
+   private static LongSupplier INNER_CLASS_SHIFT1 = () -> 0L;
+   private static LongSupplier INNER_CLASS_SHIFT2 = () -> 0L;
 
-   public static Collector m_137448_() {
-      return Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue);
+   public static <K, V> Collector<Entry<? extends K, ? extends V>, ?, Map<K, V>> m_137448_() {
+      return Collectors.toMap(Entry::getKey, Entry::getValue);
    }
 
-   public static Collector m_323807_() {
+   public static <T> Collector<T, ?, List<T>> m_323807_() {
       return Collectors.toCollection(Lists::newArrayList);
    }
 
-   public static String m_137453_(Property property, Object value) {
-      return property.m_6940_((Comparable)value);
+   public static <T extends Comparable<T>> String m_137453_(Property<T> property, Object value) {
+      return property.m_6940_((T)value);
    }
 
    public static String m_137492_(String type, @Nullable ResourceLocation id) {
@@ -136,17 +146,17 @@ public class Util {
    }
 
    public static String m_241986_() {
-      return f_241646_.format(ZonedDateTime.now());
+      return f_241646_.m_12886_(ZonedDateTime.now());
    }
 
    private static ExecutorService m_137477_(String nameIn) {
       int i = Mth.m_14045_(Runtime.getRuntime().availableProcessors() - 1, 1, m_183993_());
-      Object executorservice;
+      ExecutorService executorservice;
       if (i <= 0) {
          executorservice = MoreExecutors.newDirectExecutorService();
       } else {
          AtomicInteger atomicinteger = new AtomicInteger(1);
-         executorservice = new ForkJoinPool(i, (poolIn) -> {
+         executorservice = new ForkJoinPool(i, poolIn -> {
             ForkJoinWorkerThread forkjoinworkerthread = new ForkJoinWorkerThread(poolIn) {
                protected void onTermination(Throwable p_onTermination_1_) {
                   if (p_onTermination_1_ != null) {
@@ -168,10 +178,10 @@ public class Util {
       }
 
       if (nameIn.equals("Bootstrap")) {
-         executorservice = createSmartExecutor((ExecutorService)executorservice);
+         executorservice = createSmartExecutor(executorservice);
       }
 
-      return (ExecutorService)executorservice;
+      return executorservice;
    }
 
    private static ExecutorService createSmartExecutor(ExecutorService executor) {
@@ -233,12 +243,11 @@ public class Util {
       if (!flag) {
          serviceIn.shutdownNow();
       }
-
    }
 
    private static ExecutorService m_137586_(String nameIn, boolean daemonIn) {
       AtomicInteger atomicinteger = new AtomicInteger(1);
-      return Executors.newCachedThreadPool((runnableIn) -> {
+      return Executors.newCachedThreadPool(runnableIn -> {
          Thread thread = new Thread(runnableIn);
          thread.setName(nameIn + atomicinteger.getAndIncrement());
          thread.setDaemon(daemonIn);
@@ -262,17 +271,17 @@ public class Util {
          System.exit(-1);
       }
 
-      f_137446_.error(String.format(Locale.ROOT, "Caught exception in thread %s", threadIn), throwableIn);
+      f_137446_.error(String.m_12886_(Locale.ROOT, "Caught exception in thread %s", new Object[]{threadIn}), throwableIn);
    }
 
    @Nullable
-   public static Type m_137456_(DSL.TypeReference typeIn, String nameIn) {
+   public static Type<?> m_137456_(TypeReference typeIn, String nameIn) {
       return !SharedConstants.f_136182_ ? null : m_137551_(typeIn, nameIn);
    }
 
    @Nullable
-   private static Type m_137551_(DSL.TypeReference typeIn, String nameIn) {
-      Type type = null;
+   private static Type<?> m_137551_(TypeReference typeIn, String nameIn) {
+      Type<?> type = null;
 
       try {
          type = DataFixers.m_14512_().getSchema(DataFixUtils.makeKey(SharedConstants.m_183709_().m_183476_().m_193006_())).getChoiceType(typeIn, nameIn);
@@ -297,11 +306,10 @@ public class Util {
          } finally {
             thread.setName(s);
          }
-
       } : taskIn;
    }
 
-   public static Supplier m_183946_(String nameIn, Supplier taskIn) {
+   public static <V> Supplier<V> m_183946_(String nameIn, Supplier<V> taskIn) {
       return SharedConstants.f_136183_ ? () -> {
          Thread thread = Thread.currentThread();
          String s = thread.getName();
@@ -318,94 +326,62 @@ public class Util {
       } : taskIn;
    }
 
-   public static String m_322642_(Registry registryIn, Object valueIn) {
+   public static <T> String m_322642_(Registry<T> registryIn, T valueIn) {
       ResourceLocation resourcelocation = registryIn.m_7981_(valueIn);
       return resourcelocation == null ? "[unregistered]" : resourcelocation.toString();
    }
 
-   public static Predicate m_322468_(List predicatesIn) {
-      Predicate var10000;
-      switch (predicatesIn.size()) {
-         case 0:
-            var10000 = (objIn) -> {
-               return true;
-            };
-            break;
-         case 1:
-            var10000 = (Predicate)predicatesIn.get(0);
-            break;
-         case 2:
-            var10000 = ((Predicate)predicatesIn.get(0)).and((Predicate)predicatesIn.get(1));
-            break;
-         default:
-            Predicate[] predicate = (Predicate[])predicatesIn.toArray((x$0) -> {
-               return new Predicate[x$0];
-            });
-            var10000 = (valIn) -> {
-               Predicate[] var2 = predicate;
-               int var3 = predicate.length;
-
-               for(int var4 = 0; var4 < var3; ++var4) {
-                  Predicate predicate1 = var2[var4];
-                  if (!predicate1.test(valIn)) {
+   public static <T> Predicate<T> m_322468_(List<? extends Predicate<T>> predicatesIn) {
+      return switch (predicatesIn.size()) {
+         case 0 -> objIn -> true;
+         case 1 -> (Predicate)predicatesIn.get(0);
+         case 2 -> ((Predicate)predicatesIn.get(0)).m_178286_((Predicate)predicatesIn.get(1));
+         default -> {
+            Predicate<T>[] predicate = (Predicate<T>[])predicatesIn.toArray(Predicate[]::new);
+            yield valIn -> {
+               for (Predicate<T> predicate1 : predicate) {
+                  if (!predicate1.m_125854_(valIn)) {
                      return false;
                   }
                }
 
                return true;
             };
-      }
-
-      return var10000;
+         }
+      };
    }
 
-   public static Predicate m_321702_(List predicatesIn) {
-      Predicate var10000;
-      switch (predicatesIn.size()) {
-         case 0:
-            var10000 = (objIn) -> {
-               return false;
-            };
-            break;
-         case 1:
-            var10000 = (Predicate)predicatesIn.get(0);
-            break;
-         case 2:
-            var10000 = ((Predicate)predicatesIn.get(0)).or((Predicate)predicatesIn.get(1));
-            break;
-         default:
-            Predicate[] predicate = (Predicate[])predicatesIn.toArray((x$0) -> {
-               return new Predicate[x$0];
-            });
-            var10000 = (valIn) -> {
-               Predicate[] var2 = predicate;
-               int var3 = predicate.length;
-
-               for(int var4 = 0; var4 < var3; ++var4) {
-                  Predicate predicate1 = var2[var4];
-                  if (predicate1.test(valIn)) {
+   public static <T> Predicate<T> m_321702_(List<? extends Predicate<T>> predicatesIn) {
+      return switch (predicatesIn.size()) {
+         case 0 -> objIn -> false;
+         case 1 -> (Predicate)predicatesIn.get(0);
+         case 2 -> ((Predicate)predicatesIn.get(0)).m_178291_((Predicate)predicatesIn.get(1));
+         default -> {
+            Predicate<T>[] predicate = (Predicate<T>[])predicatesIn.toArray(Predicate[]::new);
+            yield valIn -> {
+               for (Predicate<T> predicate1 : predicate) {
+                  if (predicate1.m_125854_(valIn)) {
                      return true;
                   }
                }
 
                return false;
             };
-      }
-
-      return var10000;
+         }
+      };
    }
 
-   public static boolean m_340468_(int widthIn, int heightIn, List valuesIn) {
+   public static <T> boolean m_340468_(int widthIn, int heightIn, List<T> valuesIn) {
       if (widthIn == 1) {
          return true;
       } else {
          int i = widthIn / 2;
 
-         for(int j = 0; j < heightIn; ++j) {
-            for(int k = 0; k < i; ++k) {
+         for (int j = 0; j < heightIn; j++) {
+            for (int k = 0; k < i; k++) {
                int l = widthIn - 1 - k;
-               Object t = valuesIn.get(k + j * widthIn);
-               Object t1 = valuesIn.get(l + j * widthIn);
+               T t = (T)valuesIn.get(k + j * widthIn);
+               T t1 = (T)valuesIn.get(l + j * widthIn);
                if (!t.equals(t1)) {
                   return false;
                }
@@ -416,20 +392,20 @@ public class Util {
       }
    }
 
-   public static class_0 m_137581_() {
+   public static Util.OS m_137581_() {
       String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-      if (s.contains("win")) {
-         return Util.class_0.WINDOWS;
-      } else if (s.contains("mac")) {
-         return Util.class_0.OSX;
-      } else if (s.contains("solaris")) {
-         return Util.class_0.SOLARIS;
-      } else if (s.contains("sunos")) {
-         return Util.class_0.SOLARIS;
-      } else if (s.contains("linux")) {
-         return Util.class_0.LINUX;
+      if (s.m_274455_("win")) {
+         return Util.OS.WINDOWS;
+      } else if (s.m_274455_("mac")) {
+         return Util.OS.OSX;
+      } else if (s.m_274455_("solaris")) {
+         return Util.OS.SOLARIS;
+      } else if (s.m_274455_("sunos")) {
+         return Util.OS.SOLARIS;
+      } else if (s.m_274455_("linux")) {
+         return Util.OS.LINUX;
       } else {
-         return s.contains("unix") ? Util.class_0.LINUX : Util.class_0.UNKNOWN;
+         return s.m_274455_("unix") ? Util.OS.LINUX : Util.OS.UNKNOWN;
       }
    }
 
@@ -440,7 +416,7 @@ public class Util {
          throw new URISyntaxException(strIn, "Missing protocol in URI: " + strIn);
       } else {
          String s1 = s.toLowerCase(Locale.ROOT);
-         if (!f_337259_.contains(s1)) {
+         if (!f_337259_.m_274455_(s1)) {
             throw new URISyntaxException(strIn, "Unsupported protocol in URI: " + strIn);
          } else {
             return uri;
@@ -448,116 +424,105 @@ public class Util {
       }
    }
 
-   public static Stream m_137582_() {
+   public static Stream<String> m_137582_() {
       RuntimeMXBean runtimemxbean = ManagementFactory.getRuntimeMXBean();
-      return runtimemxbean.getInputArguments().stream().filter((argIn) -> {
-         return argIn.startsWith("-X");
-      });
+      return runtimemxbean.getInputArguments().stream().m_138619_(argIn -> argIn.startsWith("-X"));
    }
 
-   public static Object m_137509_(List listIn) {
-      return listIn.get(listIn.size() - 1);
+   public static <T> T m_137509_(List<T> listIn) {
+      return (T)listIn.get(listIn.size() - 1);
    }
 
-   public static Object m_137466_(Iterable iterable, @Nullable Object element) {
-      Iterator iterator = iterable.iterator();
-      Object t = iterator.next();
+   public static <T> T m_137466_(Iterable<T> iterable, @Nullable T element) {
+      Iterator<T> iterator = iterable.iterator();
+      T t = (T)iterator.next();
       if (element != null) {
-         Object t1 = t;
+         T t1 = t;
 
-         while(t1 != element) {
+         while (t1 != element) {
             if (iterator.hasNext()) {
-               t1 = iterator.next();
+               t1 = (T)iterator.next();
             }
          }
 
          if (iterator.hasNext()) {
-            return iterator.next();
+            return (T)iterator.next();
          }
       }
 
       return t;
    }
 
-   public static Object m_137554_(Iterable iterable, @Nullable Object current) {
-      Iterator iterator = iterable.iterator();
+   public static <T> T m_137554_(Iterable<T> iterable, @Nullable T current) {
+      Iterator<T> iterator = iterable.iterator();
+      T t = null;
 
-      Object t;
-      Object t1;
-      for(t = null; iterator.hasNext(); t = t1) {
-         t1 = iterator.next();
+      while (iterator.hasNext()) {
+         T t1 = (T)iterator.next();
          if (t1 == current) {
             if (t == null) {
-               t = iterator.hasNext() ? Iterators.getLast(iterator) : current;
+               t = (T)(iterator.hasNext() ? Iterators.getLast(iterator) : current);
             }
             break;
          }
+
+         t = t1;
       }
 
       return t;
    }
 
-   public static Object m_137537_(Supplier supplier) {
-      return supplier.get();
+   public static <T> T m_137537_(Supplier<T> supplier) {
+      return (T)supplier.get();
    }
 
-   public static Object m_137469_(Object object, Consumer consumer) {
-      consumer.accept(object);
+   public static <T> T m_137469_(T object, Consumer<? super T> consumer) {
+      consumer.m_340568_(object);
       return object;
    }
 
-   public static CompletableFuture m_137567_(List futuresIn) {
+   public static <V> CompletableFuture<List<V>> m_137567_(List<? extends CompletableFuture<V>> futuresIn) {
       if (futuresIn.isEmpty()) {
-         return CompletableFuture.completedFuture(List.of());
+         return CompletableFuture.completedFuture(List.m_253057_());
       } else if (futuresIn.size() == 1) {
-         return ((CompletableFuture)futuresIn.get(0)).thenApply(List::of);
+         return ((CompletableFuture)futuresIn.get(0)).thenApply(List::m_253057_);
       } else {
-         CompletableFuture completablefuture = CompletableFuture.allOf((CompletableFuture[])futuresIn.toArray(new CompletableFuture[0]));
-         return completablefuture.thenApply((objIn) -> {
-            return futuresIn.stream().map(CompletableFuture::join).toList();
-         });
+         CompletableFuture<Void> completablefuture = CompletableFuture.allOf((CompletableFuture[])futuresIn.toArray(new CompletableFuture[0]));
+         return completablefuture.thenApply(objIn -> futuresIn.stream().map(CompletableFuture::join).toList());
       }
    }
 
-   public static CompletableFuture m_143840_(List listIn) {
-      CompletableFuture completablefuture = new CompletableFuture();
-      Objects.requireNonNull(completablefuture);
+   public static <V> CompletableFuture<List<V>> m_143840_(List<? extends CompletableFuture<? extends V>> listIn) {
+      CompletableFuture<List<V>> completablefuture = new CompletableFuture();
       return m_214631_(listIn, completablefuture::completeExceptionally).applyToEither(completablefuture, Function.identity());
    }
 
-   public static CompletableFuture m_214684_(List listIn) {
-      CompletableFuture completablefuture = new CompletableFuture();
-      return m_214631_(listIn, (throwableIn) -> {
+   public static <V> CompletableFuture<List<V>> m_214684_(List<? extends CompletableFuture<? extends V>> listIn) {
+      CompletableFuture<List<V>> completablefuture = new CompletableFuture();
+      return m_214631_(listIn, throwableIn -> {
          if (completablefuture.completeExceptionally(throwableIn)) {
-            Iterator var3 = listIn.iterator();
-
-            while(var3.hasNext()) {
-               CompletableFuture completablefuture1 = (CompletableFuture)var3.next();
+            for (CompletableFuture<? extends V> completablefuture1 : listIn) {
                completablefuture1.cancel(true);
             }
          }
-
       }).applyToEither(completablefuture, Function.identity());
    }
 
-   private static CompletableFuture m_214631_(List listIn, Consumer handlerIn) {
-      List list = Lists.newArrayListWithCapacity(listIn.size());
-      CompletableFuture[] completablefuture = new CompletableFuture[listIn.size()];
-      listIn.forEach((futureIn) -> {
+   private static <V> CompletableFuture<List<V>> m_214631_(List<? extends CompletableFuture<? extends V>> listIn, Consumer<Throwable> handlerIn) {
+      List<V> list = Lists.newArrayListWithCapacity(listIn.size());
+      CompletableFuture<?>[] completablefuture = new CompletableFuture[listIn.size()];
+      listIn.forEach(futureIn -> {
          int i = list.size();
-         list.add((Object)null);
+         list.add(null);
          completablefuture[i] = futureIn.whenComplete((objIn, throwableIn) -> {
             if (throwableIn != null) {
-               handlerIn.accept(throwableIn);
+               handlerIn.m_340568_(throwableIn);
             } else {
                list.set(i, objIn);
             }
-
          });
       });
-      return CompletableFuture.allOf(completablefuture).thenApply((voidIn) -> {
-         return list;
-      });
+      return CompletableFuture.allOf(completablefuture).thenApply(voidIn -> list);
    }
 
    public static Exception getExceptionOpenUrl() {
@@ -572,9 +537,9 @@ public class Util {
       return CAPE_EXECUTOR;
    }
 
-   public static Optional m_137521_(Optional opt, Consumer consumer, Runnable orElse) {
+   public static <T> Optional<T> m_137521_(Optional<T> opt, Consumer<T> consumer, Runnable orElse) {
       if (opt.isPresent()) {
-         consumer.accept(opt.get());
+         consumer.m_340568_(opt.get());
       } else {
          orElse.run();
       }
@@ -582,11 +547,11 @@ public class Util {
       return opt;
    }
 
-   public static Supplier m_214655_(Supplier objIn, Supplier nameIn) {
+   public static <T> Supplier<T> m_214655_(Supplier<T> objIn, Supplier<String> nameIn) {
       return objIn;
    }
 
-   public static Runnable m_137474_(Runnable runnableIn, Supplier supplierIn) {
+   public static Runnable m_137474_(Runnable runnableIn, Supplier<String> supplierIn) {
       return runnableIn;
    }
 
@@ -595,7 +560,6 @@ public class Util {
       if (SharedConstants.f_136183_) {
          m_183984_(logTextIn);
       }
-
    }
 
    public static void m_200890_(String textIn, Throwable throwableIn) {
@@ -603,10 +567,9 @@ public class Util {
       if (SharedConstants.f_136183_) {
          m_183984_(textIn);
       }
-
    }
 
-   public static Throwable m_137570_(Throwable throwableIn) {
+   public static <T extends Throwable> T m_137570_(T throwableIn) {
       if (SharedConstants.f_136183_) {
          f_137446_.error("Trying to throw a fatal exception, pausing in IDE", throwableIn);
          m_183984_(throwableIn.getMessage());
@@ -615,7 +578,7 @@ public class Util {
       return throwableIn;
    }
 
-   public static void m_183969_(Consumer pauserIn) {
+   public static void m_183969_(Consumer<String> pauserIn) {
       f_183937_ = pauserIn;
    }
 
@@ -624,9 +587,8 @@ public class Util {
       f_137446_.warn("Did you remember to set a breakpoint here?");
       boolean flag = Duration.between(instant, Instant.now()).toMillis() > 500L;
       if (!flag) {
-         f_183937_.accept(nameIn);
+         f_183937_.m_340568_(nameIn);
       }
-
    }
 
    public static String m_137575_(Throwable throwableIn) {
@@ -637,7 +599,7 @@ public class Util {
       }
    }
 
-   public static Object m_214670_(Object[] valuesIn, RandomSource randomIn) {
+   public static <T> T m_214670_(T[] valuesIn, RandomSource randomIn) {
       return valuesIn[randomIn.m_188503_(valuesIn.length)];
    }
 
@@ -645,12 +607,12 @@ public class Util {
       return valuesIn[randomIn.m_188503_(valuesIn.length)];
    }
 
-   public static Object m_214621_(List listIn, RandomSource randomIn) {
-      return listIn.get(randomIn.m_188503_(listIn.size()));
+   public static <T> T m_214621_(List<T> listIn, RandomSource randomIn) {
+      return (T)listIn.get(randomIn.m_188503_(listIn.size()));
    }
 
-   public static Optional m_214676_(List listIn, RandomSource randomIn) {
-      return listIn.isEmpty() ? Optional.empty() : Optional.of(m_214621_(listIn, randomIn));
+   public static <T> Optional<T> m_214676_(List<T> listIn, RandomSource randomIn) {
+      return listIn.isEmpty() ? Optional.m_274566_() : Optional.m_253057_(m_214621_(listIn, randomIn));
    }
 
    private static BooleanSupplier m_137502_(final Path pathFrom, final Path pathTo) {
@@ -666,8 +628,7 @@ public class Util {
          }
 
          public String toString() {
-            String var10000 = String.valueOf(pathFrom);
-            return "rename " + var10000 + " to " + String.valueOf(pathTo);
+            return "rename " + pathFrom + " to " + pathTo;
          }
       };
    }
@@ -685,7 +646,7 @@ public class Util {
          }
 
          public String toString() {
-            return "delete old " + String.valueOf(pathIn);
+            return "delete old " + pathIn;
          }
       };
    }
@@ -697,7 +658,7 @@ public class Util {
          }
 
          public String toString() {
-            return "verify that " + String.valueOf(pathIn) + " is deleted";
+            return "verify that " + pathIn + " is deleted";
          }
       };
    }
@@ -709,17 +670,13 @@ public class Util {
          }
 
          public String toString() {
-            return "verify that " + String.valueOf(pathIn) + " is present";
+            return "verify that " + pathIn + " is present";
          }
       };
    }
 
    private static boolean m_137548_(BooleanSupplier... listIn) {
-      BooleanSupplier[] var1 = listIn;
-      int var2 = listIn.length;
-
-      for(int var3 = 0; var3 < var2; ++var3) {
-         BooleanSupplier booleansupplier = var1[var3];
+      for (BooleanSupplier booleansupplier : listIn) {
          if (!booleansupplier.getAsBoolean()) {
             f_137446_.warn("Failed to execute {}", booleansupplier);
             return false;
@@ -730,7 +687,7 @@ public class Util {
    }
 
    private static boolean m_137449_(int countIn, String nameIn, BooleanSupplier... listIn) {
-      for(int i = 0; i < countIn; ++i) {
+      for (int i = 0; i < countIn; i++) {
          if (m_137548_(listIn)) {
             return true;
          }
@@ -747,12 +704,13 @@ public class Util {
    }
 
    public static boolean m_212224_(Path fileFrom, Path fileTo, Path fileBackup, boolean restoreIn) {
-      if (Files.exists(fileFrom, new LinkOption[0]) && !m_137449_(10, "create backup " + String.valueOf(fileBackup), m_137500_(fileBackup), m_137502_(fileFrom, fileBackup), m_137572_(fileBackup))) {
+      if (Files.exists(fileFrom, new LinkOption[0])
+         && !m_137449_(10, "create backup " + fileBackup, m_137500_(fileBackup), m_137502_(fileFrom, fileBackup), m_137572_(fileBackup))) {
          return false;
-      } else if (!m_137449_(10, "remove old " + String.valueOf(fileFrom), m_137500_(fileFrom), m_137561_(fileFrom))) {
+      } else if (!m_137449_(10, "remove old " + fileFrom, m_137500_(fileFrom), m_137561_(fileFrom))) {
          return false;
-      } else if (!m_137449_(10, "replace " + String.valueOf(fileFrom) + " with " + String.valueOf(fileTo), m_137502_(fileTo, fileFrom), m_137572_(fileFrom)) && !restoreIn) {
-         m_137449_(10, "restore " + String.valueOf(fileFrom) + " from " + String.valueOf(fileBackup), m_137502_(fileBackup, fileFrom), m_137572_(fileFrom));
+      } else if (!m_137449_(10, "replace " + fileFrom + " with " + fileTo, m_137502_(fileTo, fileFrom), m_137572_(fileFrom)) && !restoreIn) {
+         m_137449_(10, "restore " + fileFrom + " from " + fileBackup, m_137502_(fileBackup, fileFrom), m_137572_(fileFrom));
          return false;
       } else {
          return true;
@@ -761,18 +719,17 @@ public class Util {
 
    public static int m_137479_(String textIn, int posIn, int offsetIn) {
       int i = textIn.length();
-      int j;
       if (offsetIn >= 0) {
-         for(j = 0; posIn < i && j < offsetIn; ++j) {
+         for (int j = 0; posIn < i && j < offsetIn; j++) {
             if (Character.isHighSurrogate(textIn.charAt(posIn++)) && posIn < i && Character.isLowSurrogate(textIn.charAt(posIn))) {
-               ++posIn;
+               posIn++;
             }
          }
       } else {
-         for(j = offsetIn; posIn > 0 && j < 0; ++j) {
-            --posIn;
+         for (int k = offsetIn; posIn > 0 && k < 0; k++) {
+            posIn--;
             if (Character.isLowSurrogate(textIn.charAt(posIn)) && posIn > 0 && Character.isHighSurrogate(textIn.charAt(posIn - 1))) {
-               --posIn;
+               posIn--;
             }
          }
       }
@@ -780,41 +737,33 @@ public class Util {
       return posIn;
    }
 
-   public static Consumer m_137489_(String textIn, Consumer consumerIn) {
-      return (strIn) -> {
-         consumerIn.accept(textIn + strIn);
-      };
+   public static Consumer<String> m_137489_(String textIn, Consumer<String> consumerIn) {
+      return strIn -> consumerIn.m_340568_(textIn + strIn);
    }
 
-   public static DataResult m_137539_(IntStream streamIn, int sizeIn) {
+   public static DataResult<int[]> m_137539_(IntStream streamIn, int sizeIn) {
       int[] aint = streamIn.limit((long)(sizeIn + 1)).toArray();
       if (aint.length != sizeIn) {
-         Supplier supplier = () -> {
-            return "Input is not a list of " + sizeIn + " ints";
-         };
+         Supplier<String> supplier = () -> "Input is not a list of " + sizeIn + " ints";
          return aint.length >= sizeIn ? DataResult.error(supplier, Arrays.copyOf(aint, sizeIn)) : DataResult.error(supplier);
       } else {
          return DataResult.success(aint);
       }
    }
 
-   public static DataResult m_287262_(LongStream streamIn, int sizeIn) {
+   public static DataResult<long[]> m_287262_(LongStream streamIn, int sizeIn) {
       long[] along = streamIn.limit((long)(sizeIn + 1)).toArray();
       if (along.length != sizeIn) {
-         Supplier supplier = () -> {
-            return "Input is not a list of " + sizeIn + " longs";
-         };
+         Supplier<String> supplier = () -> "Input is not a list of " + sizeIn + " longs";
          return along.length >= sizeIn ? DataResult.error(supplier, Arrays.copyOf(along, sizeIn)) : DataResult.error(supplier);
       } else {
          return DataResult.success(along);
       }
    }
 
-   public static DataResult m_143795_(List listIn, int sizeIn) {
+   public static <T> DataResult<List<T>> m_143795_(List<T> listIn, int sizeIn) {
       if (listIn.size() != sizeIn) {
-         Supplier supplier = () -> {
-            return "Input is not a list of " + sizeIn + " elements";
-         };
+         Supplier<String> supplier = () -> "Input is not a list of " + sizeIn + " elements";
          return listIn.size() >= sizeIn ? DataResult.error(supplier, listIn.subList(0, sizeIn)) : DataResult.error(supplier);
       } else {
          return DataResult.success(listIn);
@@ -824,7 +773,7 @@ public class Util {
    public static void m_137584_() {
       Thread thread = new Thread("Timer hack thread") {
          public void run() {
-            while(true) {
+            while (true) {
                try {
                   Thread.sleep(2147483647L);
                } catch (InterruptedException var2) {
@@ -846,58 +795,55 @@ public class Util {
    }
 
    public static String m_137483_(String nameIn, CharPredicate checkIn) {
-      return (String)nameIn.toLowerCase(Locale.ROOT).chars().mapToObj((charIn) -> {
-         return checkIn.m_125854_((char)charIn) ? Character.toString((char)charIn) : "_";
-      }).collect(Collectors.joining());
+      return (String)nameIn.toLowerCase(Locale.ROOT)
+         .chars()
+         .mapToObj(charIn -> checkIn.m_125854_((char)charIn) ? Character.toString((char)charIn) : "_")
+         .collect(Collectors.joining());
    }
 
-   public static SingleKeyCache m_269175_(Function mappingIn) {
+   public static <K, V> SingleKeyCache<K, V> m_269175_(Function<K, V> mappingIn) {
       return new SingleKeyCache(mappingIn);
    }
 
-   public static Function m_143827_(final Function functionIn) {
-      return new Function() {
-         private final Map cache = new ConcurrentHashMap();
+   public static <T, R> Function<T, R> m_143827_(final Function<T, R> functionIn) {
+      return new Function<T, R>() {
+         private Map<T, R> cache = new ConcurrentHashMap();
 
-         public Object apply(Object p_apply_1_) {
-            return this.cache.computeIfAbsent(p_apply_1_, functionIn);
+         public R apply(T p_apply_1_) {
+            return (R)this.cache.computeIfAbsent(p_apply_1_, functionIn);
          }
 
          public String toString() {
-            String var10000 = String.valueOf(functionIn);
-            return "memoize/1[function=" + var10000 + ", size=" + this.cache.size() + "]";
+            return "memoize/1[function=" + functionIn + ", size=" + this.cache.size() + "]";
          }
       };
    }
 
-   public static BiFunction m_143821_(final BiFunction functionIn) {
-      return new BiFunction() {
-         private final Map cache = new ConcurrentHashMap();
+   public static <T, U, R> BiFunction<T, U, R> m_143821_(final BiFunction<T, U, R> functionIn) {
+      return new BiFunction<T, U, R>() {
+         private Map<Pair<T, U>, R> cache = new ConcurrentHashMap();
 
-         public Object apply(Object p_apply_1_, Object p_apply_2_) {
-            return this.cache.computeIfAbsent(Pair.of(p_apply_1_, p_apply_2_), (pairIn) -> {
-               return functionIn.apply(pairIn.getFirst(), pairIn.getSecond());
-            });
+         public R apply(T p_apply_1_, U p_apply_2_) {
+            return (R)this.cache.computeIfAbsent(Pair.m_253057_(p_apply_1_, p_apply_2_), pairIn -> functionIn.apply(pairIn.getFirst(), pairIn.getSecond()));
          }
 
          public String toString() {
-            String var10000 = String.valueOf(functionIn);
-            return "memoize/2[function=" + var10000 + ", size=" + this.cache.size() + "]";
+            return "memoize/2[function=" + functionIn + ", size=" + this.cache.size() + "]";
          }
       };
    }
 
-   public static List m_214661_(Stream streamIn, RandomSource randomIn) {
-      ObjectArrayList objectarraylist = (ObjectArrayList)streamIn.collect(ObjectArrayList.toList());
+   public static <T> List<T> m_214661_(Stream<T> streamIn, RandomSource randomIn) {
+      ObjectArrayList<T> objectarraylist = (ObjectArrayList<T>)streamIn.collect(ObjectArrayList.toList());
       m_214673_(objectarraylist, randomIn);
       return objectarraylist;
    }
 
    public static IntArrayList m_214658_(IntStream streamIn, RandomSource randomIn) {
-      IntArrayList intarraylist = IntArrayList.wrap(streamIn.toArray());
+      IntArrayList intarraylist = IntArrayList.m_63770_(streamIn.toArray());
       int i = intarraylist.size();
 
-      for(int j = i; j > 1; --j) {
+      for (int j = i; j > 1; j--) {
          int k = randomIn.m_188503_(j);
          intarraylist.set(j - 1, intarraylist.set(k, intarraylist.getInt(j - 1)));
       }
@@ -905,38 +851,36 @@ public class Util {
       return intarraylist;
    }
 
-   public static List m_214681_(Object[] valuesIn, RandomSource randomIn) {
-      ObjectArrayList objectarraylist = new ObjectArrayList(valuesIn);
+   public static <T> List<T> m_214681_(T[] valuesIn, RandomSource randomIn) {
+      ObjectArrayList<T> objectarraylist = new ObjectArrayList(valuesIn);
       m_214673_(objectarraylist, randomIn);
       return objectarraylist;
    }
 
-   public static List m_214611_(ObjectArrayList listIn, RandomSource randomIn) {
-      ObjectArrayList objectarraylist = new ObjectArrayList(listIn);
+   public static <T> List<T> m_214611_(ObjectArrayList<T> listIn, RandomSource randomIn) {
+      ObjectArrayList<T> objectarraylist = new ObjectArrayList(listIn);
       m_214673_(objectarraylist, randomIn);
       return objectarraylist;
    }
 
-   public static void m_214673_(List listIn, RandomSource randomIn) {
+   public static <T> void m_214673_(List<T> listIn, RandomSource randomIn) {
       int i = listIn.size();
 
-      for(int j = i; j > 1; --j) {
+      for (int j = i; j > 1; j--) {
          int k = randomIn.m_188503_(j);
          listIn.set(j - 1, listIn.set(k, listIn.get(j - 1)));
       }
-
    }
 
-   public static CompletableFuture m_214679_(Function funcIn) {
-      return (CompletableFuture)m_214652_(funcIn, CompletableFuture::isDone);
+   public static <T> CompletableFuture<T> m_214679_(Function<Executor, CompletableFuture<T>> funcIn) {
+      return m_214652_(funcIn, CompletableFuture::isDone);
    }
 
-   public static Object m_214652_(Function funcIn, Predicate checkIn) {
-      BlockingQueue blockingqueue = new LinkedBlockingQueue();
-      Objects.requireNonNull(blockingqueue);
-      Object t = funcIn.apply(blockingqueue::add);
+   public static <T> T m_214652_(Function<Executor, T> funcIn, Predicate<T> checkIn) {
+      BlockingQueue<Runnable> blockingqueue = new LinkedBlockingQueue();
+      T t = (T)funcIn.apply(blockingqueue::add);
 
-      while(!checkIn.test(t)) {
+      while (!checkIn.m_125854_(t)) {
          try {
             Runnable runnable = (Runnable)blockingqueue.poll(100L, TimeUnit.MILLISECONDS);
             if (runnable != null) {
@@ -956,16 +900,15 @@ public class Util {
       return t;
    }
 
-   public static ToIntFunction m_214686_(List listIn) {
+   public static <T> ToIntFunction<T> m_214686_(List<T> listIn) {
       int i = listIn.size();
       if (i < 8) {
-         Objects.requireNonNull(listIn);
          return listIn::indexOf;
       } else {
-         Object2IntMap object2intmap = new Object2IntOpenHashMap(i);
+         Object2IntMap<T> object2intmap = new Object2IntOpenHashMap(i);
          object2intmap.defaultReturnValue(-1);
 
-         for(int j = 0; j < i; ++j) {
+         for (int j = 0; j < i; j++) {
             object2intmap.put(listIn.get(j), j);
          }
 
@@ -973,17 +916,16 @@ public class Util {
       }
    }
 
-   public static ToIntFunction m_307438_(List listIn) {
+   public static <T> ToIntFunction<T> m_307438_(List<T> listIn) {
       int i = listIn.size();
       if (i < 8) {
-         ReferenceList referencelist = new ReferenceImmutableList(listIn);
-         Objects.requireNonNull(referencelist);
+         ReferenceList<T> referencelist = new ReferenceImmutableList(listIn);
          return referencelist::indexOf;
       } else {
-         Reference2IntMap reference2intmap = new Reference2IntOpenHashMap(i);
+         Reference2IntMap<T> reference2intmap = new Reference2IntOpenHashMap(i);
          reference2intmap.defaultReturnValue(-1);
 
-         for(int j = 0; j < i; ++j) {
+         for (int j = 0; j < i; j++) {
             reference2intmap.put(listIn.get(j), j);
          }
 
@@ -991,17 +933,17 @@ public class Util {
       }
    }
 
-   public static Typed m_306942_(Typed typedAIn, Type typedBIn, UnaryOperator operIn) {
-      Dynamic dynamic = (Dynamic)typedAIn.write().getOrThrow();
-      return m_306397_(typedBIn, (Dynamic)operIn.apply(dynamic), true);
+   public static <A, B> Typed<B> m_306942_(Typed<A> typedAIn, Type<B> typedBIn, UnaryOperator<Dynamic<?>> operIn) {
+      Dynamic<?> dynamic = (Dynamic<?>)typedAIn.write().getOrThrow();
+      return m_306397_(typedBIn, (Dynamic<?>)operIn.apply(dynamic), true);
    }
 
-   public static Typed m_305473_(Type typeIn, Dynamic dynamicIn) {
+   public static <T> Typed<T> m_305473_(Type<T> typeIn, Dynamic<?> dynamicIn) {
       return m_306397_(typeIn, dynamicIn, false);
    }
 
-   public static Typed m_306397_(Type typeIn, Dynamic dynamicIn, boolean partialIn) {
-      DataResult dataresult = typeIn.readTyped(dynamicIn).map(Pair::getFirst);
+   public static <T> Typed<T> m_306397_(Type<T> typeIn, Dynamic<?> dynamicIn, boolean partialIn) {
+      DataResult<Typed<T>> dataresult = typeIn.readTyped(dynamicIn).map(Pair::getFirst);
 
       try {
          return partialIn ? (Typed)dataresult.getPartialOrThrow(IllegalStateException::new) : (Typed)dataresult.getOrThrow(IllegalStateException::new);
@@ -1014,70 +956,44 @@ public class Util {
       }
    }
 
-   public static List m_324319_(List valuesIn, Object valueIn) {
+   public static <T> List<T> m_324319_(List<T> valuesIn, T valueIn) {
       return ImmutableList.builderWithExpectedSize(valuesIn.size() + 1).addAll(valuesIn).add(valueIn).build();
    }
 
-   public static List m_321242_(Object valueIn, List valuesIn) {
+   public static <T> List<T> m_321242_(T valueIn, List<T> valuesIn) {
       return ImmutableList.builderWithExpectedSize(valuesIn.size() + 1).add(valueIn).addAll(valuesIn).build();
    }
 
-   public static Map m_321632_(Map mapIn, Object keyIn, Object valueIn) {
+   public static <K, V> Map<K, V> m_321632_(Map<K, V> mapIn, K keyIn, V valueIn) {
       return ImmutableMap.builderWithExpectedSize(mapIn.size() + 1).putAll(mapIn).put(keyIn, valueIn).buildKeepingLast();
    }
 
-   static {
-      f_241646_ = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss", Locale.ROOT);
-      f_337259_ = Set.of("http", "https");
-      f_137440_ = System::nanoTime;
-      f_211544_ = new Ticker() {
-         public long read() {
-            return Util.f_137440_.getAsLong();
-         }
-      };
-      f_137441_ = new UUID(0L, 0L);
-      f_143778_ = (FileSystemProvider)FileSystemProvider.installedProviders().stream().filter((providerIn) -> {
-         return providerIn.getScheme().equalsIgnoreCase("jar");
-      }).findFirst().orElseThrow(() -> {
-         return new IllegalStateException("No jar file system provider found");
-      });
-      f_183937_ = (nameIn) -> {
-      };
-      CAPE_EXECUTOR = m_137477_("Cape");
-      INNER_CLASS_SHIFT1 = () -> {
-         return 0L;
-      };
-      INNER_CLASS_SHIFT2 = () -> {
-         return 0L;
-      };
-   }
-
-   public static enum class_0 {
+   public static enum OS {
       LINUX("linux"),
       SOLARIS("solaris"),
       WINDOWS("windows") {
+         @Override
          protected String[] m_338887_(URI uriIn) {
             return new String[]{"rundll32", "url.dll,FileProtocolHandler", uriIn.toString()};
          }
       },
       OSX("mac") {
+         @Override
          protected String[] m_338887_(URI uriIn) {
             return new String[]{"open", uriIn.toString()};
          }
       },
       UNKNOWN("unknown");
 
-      private final String f_183994_;
+      private String f_183994_;
 
-      private class_0(final String nameIn) {
+      private OS(final String nameIn) {
          this.f_183994_ = nameIn;
       }
 
       public void m_137648_(URI uri) {
          try {
-            Process process = (Process)AccessController.doPrivileged(() -> {
-               return Runtime.getRuntime().exec(this.m_338887_(uri));
-            });
+            Process process = (Process)AccessController.doPrivileged(() -> Runtime.getRuntime().exec(this.m_338887_(uri)));
             process.getInputStream().close();
             process.getErrorStream().close();
             process.getOutputStream().close();
@@ -1085,7 +1001,6 @@ public class Util {
             Util.f_137446_.error("Couldn't open location '{}'", uri, var3);
             Util.exceptionOpenUrl = var3;
          }
-
       }
 
       public void m_137644_(File fileIn) {
@@ -1111,16 +1026,10 @@ public class Util {
          } catch (URISyntaxException | IllegalArgumentException var3) {
             Util.f_137446_.error("Couldn't open uri '{}'", uri, var3);
          }
-
       }
 
       public String m_183999_() {
          return this.f_183994_;
-      }
-
-      // $FF: synthetic method
-      private static class_0[] $values() {
-         return new class_0[]{LINUX, SOLARIS, WINDOWS, OSX, UNKNOWN};
       }
    }
 }

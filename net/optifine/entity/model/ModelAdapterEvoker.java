@@ -14,10 +14,12 @@ public class ModelAdapterEvoker extends ModelAdapterIllager {
       super(EntityType.f_20568_, "evoker", 0.5F, new String[]{"evocation_illager"});
    }
 
+   @Override
    public Model makeModel() {
       return new IllagerModel(bakeModelLayer(ModelLayers.f_171146_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       EvokerRenderer render = new EvokerRenderer(renderManager.getContext());

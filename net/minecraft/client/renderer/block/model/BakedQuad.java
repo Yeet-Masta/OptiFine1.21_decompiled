@@ -11,20 +11,18 @@ import net.optifine.render.VertexPosition;
 
 public class BakedQuad {
    protected int[] f_111292_;
-   protected final int f_111293_;
+   protected int f_111293_;
    protected Direction f_111294_;
    protected TextureAtlasSprite f_111295_;
-   private final boolean f_111296_;
-   private boolean hasAmbientOcclusion;
-   private int[] vertexDataSingle;
+   private boolean f_111296_;
+   private boolean hasAmbientOcclusion = true;
+   private int[] vertexDataSingle = null;
    private QuadBounds quadBounds;
    private boolean quadEmissiveChecked;
    private BakedQuad quadEmissive;
    private QuadVertexPositions quadVertexPositions;
 
    public BakedQuad(int[] vertexDataIn, int tintIndexIn, Direction faceIn, TextureAtlasSprite spriteIn, boolean shadeIn) {
-      this.hasAmbientOcclusion = true;
-      this.vertexDataSingle = null;
       this.f_111292_ = vertexDataIn;
       this.f_111293_ = tintIndexIn;
       this.f_111294_ = faceIn;
@@ -87,7 +85,7 @@ public class BakedQuad {
       int[] vdSingle = (int[])vd.clone();
       int step = vdSingle.length / 4;
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          int pos = i * step;
          float tu = Float.intBitsToFloat(vdSingle[pos + 4]);
          float tv = Float.intBitsToFloat(vdSingle[pos + 4 + 1]);
@@ -107,7 +105,7 @@ public class BakedQuad {
       float vMax = 0.0F;
       int step = vertexData.length / 4;
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          int pos = i * step;
          float tu = Float.intBitsToFloat(vertexData[pos + 4]);
          float tv = Float.intBitsToFloat(vertexData[pos + 4 + 1]);
@@ -119,8 +117,7 @@ public class BakedQuad {
 
       float uMid = (uMin + uMax) / 2.0F;
       float vMid = (vMin + vMax) / 2.0F;
-      TextureAtlasSprite spriteUv = Config.getTextureMap().getIconByUV((double)uMid, (double)vMid);
-      return spriteUv;
+      return Config.getTextureMap().getIconByUV((double)uMid, (double)vMid);
    }
 
    protected void fixVertexData() {
@@ -131,7 +128,6 @@ public class BakedQuad {
       } else if (this.f_111292_.length == DefaultVertexFormat.BLOCK_SHADERS_SIZE) {
          this.f_111292_ = fixVertexDataSize(this.f_111292_, DefaultVertexFormat.BLOCK_VANILLA_SIZE);
       }
-
    }
 
    private static int[] fixVertexDataSize(int[] vd, int sizeNew) {
@@ -139,7 +135,7 @@ public class BakedQuad {
       int stepNew = sizeNew / 4;
       int[] vdNew = new int[stepNew * 4];
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          int len = Math.min(step, stepNew);
          System.arraycopy(vd, i * step, vdNew, i * stepNew, len);
       }
@@ -202,7 +198,7 @@ public class BakedQuad {
          this.quadVertexPositions = new QuadVertexPositions();
       }
 
-      return (VertexPosition[])this.quadVertexPositions.get(key);
+      return this.quadVertexPositions.get(key);
    }
 
    public boolean hasAmbientOcclusion() {
@@ -210,7 +206,6 @@ public class BakedQuad {
    }
 
    public String toString() {
-      int var10000 = this.f_111292_.length;
-      return "vertexData: " + var10000 + ", tint: " + this.f_111293_ + ", facing: " + String.valueOf(this.f_111294_) + ", sprite: " + String.valueOf(this.f_111295_);
+      return "vertexData: " + this.f_111292_.length + ", tint: " + this.f_111293_ + ", facing: " + this.f_111294_ + ", sprite: " + this.f_111295_;
    }
 }

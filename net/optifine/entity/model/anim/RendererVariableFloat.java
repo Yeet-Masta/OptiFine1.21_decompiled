@@ -16,86 +16,87 @@ public enum RendererVariableFloat implements IModelVariableFloat {
 
    private String name;
    private EntityRenderDispatcher renderManager;
-   private static final RendererVariableFloat[] VALUES = values();
+   private static RendererVariableFloat[] VALUES = values();
 
    private RendererVariableFloat(String name) {
       this.name = name;
       this.renderManager = Minecraft.m_91087_().m_91290_();
    }
 
+   @Override
    public float eval() {
       return this.getValue();
    }
 
+   @Override
    public float getValue() {
       EntityRenderer renderer = this.renderManager.getEntityRenderer();
       if (renderer == null) {
          return 0.0F;
       } else {
-         switch (this.ordinal()) {
-            case 0:
+         switch (this) {
+            case SHADOW_SIZE:
                return renderer.f_114477_;
-            case 1:
+            case SHADOW_OPACITY:
                return renderer.f_114478_;
-            case 2:
-            case 3:
-            case 4:
+            case LEASH_OFFSET_X:
+            case LEASH_OFFSET_Y:
+            case LEASH_OFFSET_Z:
             default:
-               if (renderer instanceof MobRenderer) {
-                  MobRenderer mobRenderer = (MobRenderer)renderer;
-                  switch (this.ordinal()) {
-                     case 2:
+               if (renderer instanceof MobRenderer mobRenderer) {
+                  switch (this) {
+                     case LEASH_OFFSET_X:
                         return mobRenderer.leashOffsetX;
-                     case 3:
+                     case LEASH_OFFSET_Y:
                         return mobRenderer.leashOffsetY;
-                     case 4:
+                     case LEASH_OFFSET_Z:
                         return mobRenderer.leashOffsetZ;
                   }
                }
 
                return 0.0F;
-            case 5:
+            case SHADOW_OFFSET_X:
                return renderer.shadowOffsetX;
-            case 6:
+            case SHADOW_OFFSET_Z:
                return renderer.shadowOffsetZ;
          }
       }
    }
 
+   @Override
    public void setValue(float value) {
       EntityRenderer renderer = this.renderManager.getEntityRenderer();
       if (renderer != null) {
-         switch (this.ordinal()) {
-            case 0:
+         switch (this) {
+            case SHADOW_SIZE:
                renderer.f_114477_ = value;
                return;
-            case 1:
+            case SHADOW_OPACITY:
                renderer.f_114478_ = value;
                return;
-            case 2:
-            case 3:
-            case 4:
+            case LEASH_OFFSET_X:
+            case LEASH_OFFSET_Y:
+            case LEASH_OFFSET_Z:
             default:
-               if (renderer instanceof MobRenderer) {
-                  MobRenderer mobRenderer = (MobRenderer)renderer;
-                  switch (this.ordinal()) {
-                     case 2:
+               if (renderer instanceof MobRenderer mobRenderer) {
+                  switch (this) {
+                     case LEASH_OFFSET_X:
                         mobRenderer.leashOffsetX = value;
                         return;
-                     case 3:
+                     case LEASH_OFFSET_Y:
                         mobRenderer.leashOffsetY = value;
                         return;
-                     case 4:
+                     case LEASH_OFFSET_Z:
                         mobRenderer.leashOffsetZ = value;
                         return;
                   }
                }
 
                return;
-            case 5:
+            case SHADOW_OFFSET_X:
                renderer.shadowOffsetX = value;
                return;
-            case 6:
+            case SHADOW_OFFSET_Z:
                renderer.shadowOffsetZ = value;
          }
       }
@@ -105,11 +106,11 @@ public enum RendererVariableFloat implements IModelVariableFloat {
       return this.name;
    }
 
-   public static RendererVariableFloat parse(String str) {
+   public static RendererVariableFloat m_82160_(String str) {
       if (str == null) {
          return null;
       } else {
-         for(int i = 0; i < VALUES.length; ++i) {
+         for (int i = 0; i < VALUES.length; i++) {
             RendererVariableFloat type = VALUES[i];
             if (type.getName().equals(str)) {
                return type;
@@ -122,10 +123,5 @@ public enum RendererVariableFloat implements IModelVariableFloat {
 
    public String toString() {
       return this.name;
-   }
-
-   // $FF: synthetic method
-   private static RendererVariableFloat[] $values() {
-      return new RendererVariableFloat[]{SHADOW_SIZE, SHADOW_OPACITY, LEASH_OFFSET_X, LEASH_OFFSET_Y, LEASH_OFFSET_Z, SHADOW_OFFSET_X, SHADOW_OFFSET_Z};
    }
 }

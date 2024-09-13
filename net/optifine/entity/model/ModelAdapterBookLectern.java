@@ -15,15 +15,15 @@ public class ModelAdapterBookLectern extends ModelAdapterBook {
       super(BlockEntityType.f_58908_, "lectern_book", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new BookModel(bakeModelLayer(ModelLayers.f_171271_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58908_, index, () -> {
-         return new LecternRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58908_, index, () -> new LecternRenderer(dispatcher.getContext()));
       if (!(renderer instanceof LecternRenderer)) {
          return null;
       } else if (!Reflector.TileEntityLecternRenderer_modelBook.exists()) {

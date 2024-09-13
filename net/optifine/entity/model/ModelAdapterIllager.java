@@ -14,6 +14,7 @@ public abstract class ModelAdapterIllager extends ModelAdapter {
       super(type, name, shadowSize, aliases);
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof IllagerModel modelVillager)) {
          return null;
@@ -40,6 +41,7 @@ public abstract class ModelAdapterIllager extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "hat", "body", "arms", "right_leg", "left_leg", "nose", "right_arm", "left_arm", "root"};
    }

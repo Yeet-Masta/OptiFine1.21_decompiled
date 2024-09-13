@@ -12,23 +12,25 @@ import net.minecraft.client.renderer.entity.RavagerRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterRavager extends ModelAdapter {
-   private static Map mapPartFields = null;
+   private static Map<String, String> mapPartFields = null;
 
    public ModelAdapterRavager() {
       super(EntityType.f_20518_, "ravager", 1.1F);
    }
 
+   @Override
    public Model makeModel() {
       return new RavagerModel(bakeModelLayer(ModelLayers.f_171175_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof RavagerModel modelRavager)) {
          return null;
       } else if (modelPart.equals("root")) {
          return modelRavager.m_142109_();
       } else {
-         Map mapParts = getMapPartFields();
+         Map<String, String> mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             String name = (String)mapParts.get(modelPart);
             return modelRavager.m_142109_().getChildModelDeep(name);
@@ -38,11 +40,12 @@ public class ModelAdapterRavager extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return (String[])getMapPartFields().keySet().toArray(new String[0]);
    }
 
-   private static Map getMapPartFields() {
+   private static Map<String, String> getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -60,6 +63,7 @@ public class ModelAdapterRavager extends ModelAdapter {
       }
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       RavagerRenderer render = new RavagerRenderer(renderManager.getContext());

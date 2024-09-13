@@ -6,18 +6,19 @@ import net.optifine.util.StrUtils;
 
 public class ShaderOptionVariableConst extends ShaderOptionVariable {
    private String type = null;
-   private static final Pattern PATTERN_CONST = Pattern.compile("^\\s*const\\s*(float|int)\\s*([A-Za-z0-9_]+)\\s*=\\s*(-?[0-9\\.]+f?F?)\\s*;\\s*(//.*)?$");
+   private static Pattern PATTERN_CONST = Pattern.m_289905_("^\\s*const\\s*(float|int)\\s*([A-Za-z0-9_]+)\\s*=\\s*(-?[0-9\\.]+f?F?)\\s*;\\s*(//.*)?$");
 
    public ShaderOptionVariableConst(String name, String type, String description, String value, String[] values, String path) {
       super(name, description, value, values, path);
       this.type = type;
    }
 
+   @Override
    public String getSourceLine() {
-      String var10000 = this.type;
-      return "const " + var10000 + " " + this.getName() + " = " + this.getValue() + "; // Shader option " + this.getValue();
+      return "const " + this.type + " " + this.getName() + " = " + this.getValue() + "; // Shader option " + this.getValue();
    }
 
+   @Override
    public boolean matchesLine(String line) {
       Matcher m = PATTERN_CONST.matcher(line);
       if (!m.matches()) {

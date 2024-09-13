@@ -5,7 +5,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.ThreadSafeLegacyRandomSource;
 
 public class RandomUtils {
-   private static final Random random = new Random();
+   private static Random random = new Random();
 
    public static Random getRandom() {
       return random;

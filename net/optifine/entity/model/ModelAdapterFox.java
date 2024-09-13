@@ -13,21 +13,23 @@ import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterFox extends ModelAdapter {
-   private static Map mapPartFields = null;
+   private static Map<String, Integer> mapPartFields = null;
 
    public ModelAdapterFox() {
       super(EntityType.f_20452_, "fox", 0.4F);
    }
 
+   @Override
    public Model makeModel() {
       return new FoxModel(bakeModelLayer(ModelLayers.f_171148_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof FoxModel modelFox)) {
          return null;
       } else {
-         Map mapParts = getMapPartFields();
+         Map<String, Integer> mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             int index = (Integer)mapParts.get(modelPart);
             return (ModelPart)Reflector.getFieldValue(modelFox, Reflector.ModelFox_ModelRenderers, index);
@@ -37,11 +39,12 @@ public class ModelAdapterFox extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return (String[])getMapPartFields().keySet().toArray(new String[0]);
    }
 
-   private static Map getMapPartFields() {
+   private static Map<String, Integer> getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -57,6 +60,7 @@ public class ModelAdapterFox extends ModelAdapter {
       }
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       FoxRenderer render = new FoxRenderer(renderManager.getContext());

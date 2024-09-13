@@ -9,7 +9,7 @@ public class Matches {
       if (matchBlocks == null) {
          return true;
       } else {
-         for(int i = 0; i < matchBlocks.length; ++i) {
+         for (int i = 0; i < matchBlocks.length; i++) {
             MatchBlock mb = matchBlocks[i];
             if (mb.matches(blockStateBase)) {
                return true;
@@ -24,7 +24,7 @@ public class Matches {
       if (matchBlocks == null) {
          return true;
       } else {
-         for(int i = 0; i < matchBlocks.length; ++i) {
+         for (int i = 0; i < matchBlocks.length; i++) {
             MatchBlock mb = matchBlocks[i];
             if (mb.matches(blockId, metadata)) {
                return true;
@@ -39,7 +39,7 @@ public class Matches {
       if (matchBlocks == null) {
          return true;
       } else {
-         for(int i = 0; i < matchBlocks.length; ++i) {
+         for (int i = 0; i < matchBlocks.length; i++) {
             MatchBlock mb = matchBlocks[i];
             if (mb.getBlockId() == blockId) {
                return true;
@@ -54,7 +54,7 @@ public class Matches {
       if (metadatas == null) {
          return true;
       } else {
-         for(int i = 0; i < metadatas.length; ++i) {
+         for (int i = 0; i < metadatas.length; i++) {
             if (metadatas[i] == metadata) {
                return true;
             }
@@ -68,7 +68,7 @@ public class Matches {
       if (sprites == null) {
          return true;
       } else {
-         for(int i = 0; i < sprites.length; ++i) {
+         for (int i = 0; i < sprites.length; i++) {
             if (sprites[i] == sprite) {
                return true;
             }
@@ -82,7 +82,7 @@ public class Matches {
       if (biomes == null) {
          return true;
       } else {
-         for(int i = 0; i < biomes.length; ++i) {
+         for (int i = 0; i < biomes.length; i++) {
             BiomeId bi = biomes[i];
             if (bi != null && bi.getBiome() == biome) {
                return true;

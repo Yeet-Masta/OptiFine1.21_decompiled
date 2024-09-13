@@ -15,10 +15,12 @@ public class ModelAdapterWitch extends ModelAdapterVillager {
       super(EntityType.f_20495_, "witch", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new WitchModel(bakeModelLayer(ModelLayers.f_171213_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof WitchModel modelWitch)) {
          return null;
@@ -27,12 +29,13 @@ public class ModelAdapterWitch extends ModelAdapterVillager {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       String[] names = super.getModelRendererNames();
-      names = (String[])Config.addObjectToArray(names, "mole");
-      return names;
+      return (String[])Config.addObjectToArray(names, "mole");
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WitchRenderer render = new WitchRenderer(renderManager.getContext());

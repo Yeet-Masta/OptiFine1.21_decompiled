@@ -2,7 +2,6 @@ package net.optifine.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -23,8 +22,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.BlockBehaviour.OffsetType;
 import net.minecraft.world.phys.AABB;
 import net.optifine.Config;
@@ -32,8 +29,8 @@ import net.optifine.util.RandomUtils;
 import org.joml.Vector3f;
 
 public class BlockModelUtils {
-   private static final float VERTEX_COORD_ACCURACY = 1.0E-6F;
-   private static final RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
+   private static float VERTEX_COORD_ACCURACY;
+   private static RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
 
    public static BakedModel makeModelCube(String spriteName, int tintIndex) {
       TextureAtlasSprite sprite = Config.getTextureMap().getUploadedSprite(spriteName);
@@ -43,9 +40,9 @@ public class BlockModelUtils {
    public static BakedModel makeModelCube(TextureAtlasSprite sprite, int tintIndex) {
       List generalQuads = new ArrayList();
       Direction[] facings = Direction.f_122346_;
-      Map faceQuads = new HashMap();
+      Map<Direction, List<BakedQuad>> faceQuads = new HashMap();
 
-      for(int i = 0; i < facings.length; ++i) {
+      for (int i = 0; i < facings.length; i++) {
          Direction facing = facings[i];
          List quads = new ArrayList();
          quads.add(makeBakedQuad(facing, sprite, tintIndex));
@@ -58,17 +55,17 @@ public class BlockModelUtils {
    }
 
    public static BakedModel joinModelsCube(BakedModel modelBase, BakedModel modelAdd) {
-      List generalQuads = new ArrayList();
-      generalQuads.addAll(modelBase.m_213637_((BlockState)null, (Direction)null, RANDOM));
-      generalQuads.addAll(modelAdd.m_213637_((BlockState)null, (Direction)null, RANDOM));
+      List<BakedQuad> generalQuads = new ArrayList();
+      generalQuads.addAll(modelBase.m_213637_(null, null, RANDOM));
+      generalQuads.addAll(modelAdd.m_213637_(null, null, RANDOM));
       Direction[] facings = Direction.f_122346_;
-      Map faceQuads = new HashMap();
+      Map<Direction, List<BakedQuad>> faceQuads = new HashMap();
 
-      for(int i = 0; i < facings.length; ++i) {
+      for (int i = 0; i < facings.length; i++) {
          Direction facing = facings[i];
          List quads = new ArrayList();
-         quads.addAll(modelBase.m_213637_((BlockState)null, facing, RANDOM));
-         quads.addAll(modelAdd.m_213637_((BlockState)null, facing, RANDOM));
+         quads.addAll(modelBase.m_213637_(null, facing, RANDOM));
+         quads.addAll(modelAdd.m_213637_(null, facing, RANDOM));
          faceQuads.put(facing, quads);
       }
 
@@ -91,8 +88,7 @@ public class BlockModelUtils {
       boolean shade = true;
       ResourceLocation modelLoc = sprite.getName();
       FaceBakery faceBakery = new FaceBakery();
-      BakedQuad quad = faceBakery.m_111600_(posFrom, posTo, face, sprite, facing, modelRotation, (BlockElementRotation)partRotation, shade);
-      return quad;
+      return faceBakery.m_111600_(posFrom, posTo, face, sprite, facing, modelRotation, partRotation, shade);
    }
 
    public static BakedModel makeModel(String modelName, String spriteOldName, String spriteNewName) {
@@ -114,13 +110,13 @@ public class BlockModelUtils {
                BakedModel modelNew = ModelUtils.duplicateModel(model);
                Direction[] faces = Direction.f_122346_;
 
-               for(int i = 0; i < faces.length; ++i) {
+               for (int i = 0; i < faces.length; i++) {
                   Direction face = faces[i];
-                  List quads = modelNew.m_213637_((BlockState)null, face, RANDOM);
+                  List<BakedQuad> quads = modelNew.m_213637_(null, face, RANDOM);
                   replaceTexture(quads, spriteOld, spriteNew);
                }
 
-               List quadsGeneral = modelNew.m_213637_((BlockState)null, (Direction)null, RANDOM);
+               List<BakedQuad> quadsGeneral = modelNew.m_213637_(null, null, RANDOM);
                replaceTexture(quadsGeneral, spriteOld, spriteNew);
                return modelNew;
             } else {
@@ -132,15 +128,15 @@ public class BlockModelUtils {
       }
    }
 
-   private static void replaceTexture(List quads, TextureAtlasSprite spriteOld, TextureAtlasSprite spriteNew) {
-      List quadsNew = new ArrayList();
+   private static void replaceTexture(List<BakedQuad> quads, TextureAtlasSprite spriteOld, TextureAtlasSprite spriteNew) {
+      List<BakedQuad> quadsNew = new ArrayList();
 
-      Object quad;
-      for(Iterator it = quads.iterator(); it.hasNext(); quadsNew.add(quad)) {
-         quad = (BakedQuad)it.next();
-         if (((BakedQuad)quad).m_173410_() == spriteOld) {
-            quad = new BakedQuadRetextured((BakedQuad)quad, spriteNew);
+      for (BakedQuad quad : quads) {
+         if (quad.m_173410_() == spriteOld) {
+            quad = new BakedQuadRetextured(quad, spriteNew);
          }
+
+         quadsNew.add(quad);
       }
 
       quads.clear();
@@ -148,7 +144,7 @@ public class BlockModelUtils {
    }
 
    public static void snapVertexPosition(Vector3f pos) {
-      pos.set(snapVertexCoord(pos.x()), snapVertexCoord(pos.y()), snapVertexCoord(pos.z()));
+      pos.set(snapVertexCoord(pos.m_305649_()), snapVertexCoord(pos.m_306225_()), snapVertexCoord(pos.m_240700_()));
    }
 
    private static float snapVertexCoord(float x) {
@@ -159,7 +155,7 @@ public class BlockModelUtils {
       }
    }
 
-   public static AABB getOffsetBoundingBox(AABB aabb, BlockBehaviour.OffsetType offsetType, BlockPos pos) {
+   public static AABB getOffsetBoundingBox(AABB aabb, OffsetType offsetType, BlockPos pos) {
       int x = pos.m_123341_();
       int z = pos.m_123343_();
       long k = (long)(x * 3129871) ^ (long)z * 116129781L;

@@ -14,7 +14,7 @@ public class ReflectorRaw {
       try {
          Field[] fileds = cls.getDeclaredFields();
 
-         for(int i = 0; i < fileds.length; ++i) {
+         for (int i = 0; i < fileds.length; i++) {
             Field field = fileds[i];
             if (field.getType() == fieldType) {
                field.setAccessible(true);
@@ -41,7 +41,7 @@ public class ReflectorRaw {
       try {
          List list = new ArrayList();
 
-         for(int i = 0; i < fields.length; ++i) {
+         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
             if (field.getType() == fieldType) {
                field.setAccessible(true);
@@ -49,8 +49,7 @@ public class ReflectorRaw {
             }
          }
 
-         Field[] fs = (Field[])list.toArray(new Field[list.size()]);
-         return fs;
+         return (Field[])list.toArray(new Field[list.size()]);
       } catch (Exception var5) {
          return null;
       }
@@ -59,12 +58,12 @@ public class ReflectorRaw {
    public static Field[] getFieldsAfter(Class cls, Field field, Class fieldType) {
       try {
          Field[] fields = cls.getDeclaredFields();
-         List list = Arrays.asList(fields);
+         List<Field> list = Arrays.asList(fields);
          int posStart = list.indexOf(field);
          if (posStart < 0) {
             return new Field[0];
          } else {
-            List listAfter = list.subList(posStart + 1, list.size());
+            List<Field> listAfter = list.subList(posStart + 1, list.size());
             Field[] fieldsAfter = (Field[])listAfter.toArray(new Field[listAfter.size()]);
             return getFields(fieldsAfter, fieldType);
          }
@@ -75,9 +74,9 @@ public class ReflectorRaw {
 
    public static Field[] getFields(Object obj, Field[] fields, Class fieldType, Object value) {
       try {
-         List list = new ArrayList();
+         List<Field> list = new ArrayList();
 
-         for(int i = 0; i < fields.length; ++i) {
+         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
             if (field.getType() == fieldType) {
                boolean staticField = Modifier.isStatic(field.getModifiers());
@@ -93,8 +92,7 @@ public class ReflectorRaw {
             }
          }
 
-         Field[] fs = (Field[])list.toArray(new Field[list.size()]);
-         return fs;
+         return (Field[])list.toArray(new Field[list.size()]);
       } catch (Exception var9) {
          return null;
       }

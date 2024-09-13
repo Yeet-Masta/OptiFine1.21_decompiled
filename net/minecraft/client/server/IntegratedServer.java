@@ -5,10 +5,7 @@ import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
 import com.mojang.logging.LogUtils;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
@@ -35,15 +32,15 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
-import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 import org.slf4j.Logger;
 
 public class IntegratedServer extends MinecraftServer {
-   private static final Logger f_120014_ = LogUtils.getLogger();
-   private static final int f_194466_ = 2;
-   private final Minecraft f_120015_;
+   private static Logger f_120014_ = LogUtils.getLogger();
+   private static int f_194466_;
+   private Minecraft f_120015_;
    private boolean f_120016_ = true;
    private int f_120017_ = -1;
    @Nullable
@@ -58,7 +55,15 @@ public class IntegratedServer extends MinecraftServer {
    public BlockPos difficultyUpdatePos = null;
    public DifficultyInstance difficultyLast = null;
 
-   public IntegratedServer(Thread threadIn, Minecraft mcIn, LevelStorageSource.LevelStorageAccess levelSaveIn, PackRepository resPackListIn, WorldStem worldStemIn, Services servicesIn, ChunkProgressListenerFactory listenerFactoryIn) {
+   public IntegratedServer(
+      Thread threadIn,
+      Minecraft mcIn,
+      LevelStorageAccess levelSaveIn,
+      PackRepository resPackListIn,
+      WorldStem worldStemIn,
+      Services servicesIn,
+      ChunkProgressListenerFactory listenerFactoryIn
+   ) {
       super(threadIn, levelSaveIn, resPackListIn, worldStemIn, mcIn.m_91096_(), mcIn.m_91295_(), servicesIn, listenerFactoryIn);
       this.m_236740_(mcIn.m_294346_());
       this.m_129975_(mcIn.m_91402_());
@@ -72,14 +77,17 @@ public class IntegratedServer extends MinecraftServer {
       this.m_129997_(true);
       this.m_129999_(true);
       this.m_129793_();
-      if (Reflector.ServerLifecycleHooks_handleServerAboutToStart.exists() && !Reflector.callBoolean(Reflector.ServerLifecycleHooks_handleServerAboutToStart, this)) {
+      if (Reflector.ServerLifecycleHooks_handleServerAboutToStart.exists()
+         && !Reflector.callBoolean(Reflector.ServerLifecycleHooks_handleServerAboutToStart, this)) {
          return false;
       } else {
          this.m_130006_();
          GameProfile gameprofile = this.m_236731_();
          String s = this.m_129910_().m_5462_();
          this.m_129989_(gameprofile != null ? gameprofile.getName() + " - " + s : s);
-         return Reflector.ServerLifecycleHooks_handleServerStarting.exists() ? Reflector.callBoolean(Reflector.ServerLifecycleHooks_handleServerStarting, this) : true;
+         return Reflector.ServerLifecycleHooks_handleServerStarting.exists()
+            ? Reflector.callBoolean(Reflector.ServerLifecycleHooks_handleServerStarting, this)
+            : true;
       }
    }
 
@@ -108,20 +116,19 @@ public class IntegratedServer extends MinecraftServer {
          }
 
          super.m_5705_(hasTimeLeft);
-         int i = Math.max(2, (Integer)this.f_120015_.f_91066_.m_231984_().m_231551_());
+         int i = Math.max(2, this.f_120015_.f_91066_.m_231984_().m_231551_());
          if (i != this.m_6846_().m_11312_()) {
             f_120014_.info("Changing view distance to {}, from {}", i, this.m_6846_().m_11312_());
             this.m_6846_().m_11217_(i);
          }
 
-         int j = Math.max(2, (Integer)this.f_120015_.f_91066_.m_232001_().m_231551_());
+         int j = Math.max(2, this.f_120015_.f_91066_.m_232001_().m_231551_());
          if (j != this.f_194467_) {
             f_120014_.info("Changing simulation distance to {}, from {}", j, this.f_194467_);
             this.m_6846_().m_184211_(j);
             this.f_194467_ = j;
          }
       }
-
    }
 
    protected LocalSampleLogger m_318596_() {
@@ -133,13 +140,9 @@ public class IntegratedServer extends MinecraftServer {
    }
 
    private void m_174968_() {
-      Iterator var1 = this.m_6846_().m_11314_().iterator();
-
-      while(var1.hasNext()) {
-         ServerPlayer serverplayer = (ServerPlayer)var1.next();
+      for (ServerPlayer serverplayer : this.m_6846_().m_11314_()) {
          serverplayer.m_36220_(Stats.f_144256_);
       }
-
    }
 
    public boolean m_6983_() {
@@ -172,12 +175,8 @@ public class IntegratedServer extends MinecraftServer {
 
    public SystemReport m_142424_(SystemReport report) {
       report.m_143519_("Type", "Integrated Server (map_client.txt)");
-      report.m_143522_("Is Modded", () -> {
-         return this.m_183471_().m_184605_();
-      });
-      Minecraft var10002 = this.f_120015_;
-      Objects.requireNonNull(var10002);
-      report.m_143522_("Launched Version", var10002::m_91388_);
+      report.m_143522_("Is Modded", () -> this.m_183471_().m_184605_());
+      report.m_143522_("Launched Version", this.f_120015_::m_91388_);
       return report;
    }
 
@@ -188,28 +187,23 @@ public class IntegratedServer extends MinecraftServer {
    public boolean m_7386_(@Nullable GameType gameMode, boolean cheats, int port) {
       try {
          this.f_120015_.m_193588_();
-         this.f_120015_.m_231465_().m_252904_().thenAcceptAsync((optionalIn) -> {
-            optionalIn.ifPresent((keyPairIn) -> {
+         this.f_120015_.m_231465_().m_252904_().thenAcceptAsync(optionalIn -> optionalIn.ifPresent(keyPairIn -> {
                ClientPacketListener clientpacketlistener = this.f_120015_.m_91403_();
                if (clientpacketlistener != null) {
                   clientpacketlistener.m_260951_(keyPairIn);
                }
-
-            });
-         }, this.f_120015_);
-         this.m_129919_().m_9711_((InetAddress)null, port);
+            }), this.f_120015_);
+         this.m_129919_().m_9711_(null, port);
          f_120014_.info("Started serving on {}", port);
          this.f_120017_ = port;
-         this.f_120018_ = new LanServerPinger(this.m_129916_(), "" + port);
+         this.f_120018_ = new LanServerPinger(this.m_129916_(), port + "");
          this.f_120018_.start();
          this.f_174966_ = gameMode;
          this.m_6846_().m_318715_(cheats);
          int i = this.m_129944_(this.f_120015_.f_91074_.m_36316_());
          this.f_120015_.f_91074_.m_108648_(i);
-         Iterator var5 = this.m_6846_().m_11314_().iterator();
 
-         while(var5.hasNext()) {
-            ServerPlayer serverplayer = (ServerPlayer)var5.next();
+         for (ServerPlayer serverplayer : this.m_6846_().m_11314_()) {
             this.m_129892_().m_82095_(serverplayer);
          }
 
@@ -225,21 +219,16 @@ public class IntegratedServer extends MinecraftServer {
          this.f_120018_.interrupt();
          this.f_120018_ = null;
       }
-
    }
 
    public void m_7570_(boolean waitForServer) {
       if (!Reflector.MinecraftForge.exists() || this.m_130010_()) {
          this.m_18709_(() -> {
-            Iterator var1 = Lists.newArrayList(this.m_6846_().m_11314_()).iterator();
-
-            while(var1.hasNext()) {
-               ServerPlayer serverplayer = (ServerPlayer)var1.next();
+            for (ServerPlayer serverplayer : Lists.newArrayList(this.m_6846_().m_11314_())) {
                if (!serverplayer.m_20148_().equals(this.f_120019_)) {
                   this.m_6846_().m_11286_(serverplayer);
                }
             }
-
          });
       }
 
@@ -248,7 +237,6 @@ public class IntegratedServer extends MinecraftServer {
          this.f_120018_.interrupt();
          this.f_120018_ = null;
       }
-
    }
 
    public boolean m_6992_() {
@@ -285,7 +273,7 @@ public class IntegratedServer extends MinecraftServer {
    }
 
    public int m_7186_(int distanceIn) {
-      return (int)((Double)this.f_120015_.f_91066_.m_232018_().m_231551_() * (double)distanceIn);
+      return (int)(this.f_120015_.f_91066_.m_232018_().m_231551_() * (double)distanceIn);
    }
 
    public boolean m_6365_() {
@@ -305,38 +293,26 @@ public class IntegratedServer extends MinecraftServer {
 
    private void m_321341_() {
       if (this.f_129744_.m_323802_()) {
-         this.f_120015_.execute(() -> {
-            SystemToast.m_321093_(this.f_120015_);
-         });
+         this.f_120015_.m_305380_(() -> SystemToast.m_321093_(this.f_120015_));
       }
-
    }
 
    public void m_293783_(Throwable throwableIn, RegionStorageInfo storageInfoIn, ChunkPos chunkPosIn) {
       super.m_293783_(throwableIn, storageInfoIn, chunkPosIn);
       this.m_321341_();
-      this.f_120015_.execute(() -> {
-         SystemToast.m_321637_(this.f_120015_, chunkPosIn);
-      });
+      this.f_120015_.m_305380_(() -> SystemToast.m_321637_(this.f_120015_, chunkPosIn));
    }
 
    public void m_322794_(Throwable throwableIn, RegionStorageInfo storageInfoIn, ChunkPos chunkPosIn) {
       super.m_322794_(throwableIn, storageInfoIn, chunkPosIn);
       this.m_321341_();
-      this.f_120015_.execute(() -> {
-         SystemToast.m_323567_(this.f_120015_, chunkPosIn);
-      });
+      this.f_120015_.m_305380_(() -> SystemToast.m_323567_(this.f_120015_, chunkPosIn));
    }
 
    private void onTick() {
-      Iterable iws = this.m_129785_();
-      Iterator it = iws.iterator();
-
-      while(it.hasNext()) {
-         ServerLevel ws = (ServerLevel)it.next();
+      for (ServerLevel ws : this.m_129785_()) {
          this.onTick(ws);
       }
-
    }
 
    private void onTick(ServerLevel ws) {
@@ -353,7 +329,6 @@ public class IntegratedServer extends MinecraftServer {
          this.difficultyUpdateWorld = null;
          this.difficultyUpdatePos = null;
       }
-
    }
 
    public DifficultyInstance getDifficultyAsync(Level world, BlockPos blockPos) {
@@ -366,7 +341,6 @@ public class IntegratedServer extends MinecraftServer {
       if (ws.m_46722_(1.0F) > 0.0F || ws.m_46470_()) {
          ws.m_8606_(6000, 0, false, false);
       }
-
    }
 
    private void fixWorldTime(ServerLevel ws) {
@@ -392,7 +366,6 @@ public class IntegratedServer extends MinecraftServer {
                ws.m_8615_(time - timeOfDay + 24000L + 14001L);
             }
          }
-
       }
    }
 

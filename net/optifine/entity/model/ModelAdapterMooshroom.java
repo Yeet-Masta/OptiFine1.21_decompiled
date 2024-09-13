@@ -13,10 +13,12 @@ public class ModelAdapterMooshroom extends ModelAdapterQuadruped {
       super(EntityType.f_20504_, "mooshroom", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new CowModel(bakeModelLayer(ModelLayers.f_171199_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       MushroomCowRenderer render = new MushroomCowRenderer(renderManager.getContext());

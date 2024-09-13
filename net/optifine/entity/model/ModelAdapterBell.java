@@ -13,10 +13,12 @@ public class ModelAdapterBell extends ModelAdapter {
       super(BlockEntityType.f_58909_, "bell", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new BellModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BellModel modelBell)) {
          return null;
@@ -25,24 +27,22 @@ public class ModelAdapterBell extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model model, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58909_, index, () -> {
-         return new BellRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58909_, index, () -> new BellRenderer(dispatcher.getContext()));
       if (!(renderer instanceof BellRenderer)) {
          return null;
-      } else if (!(model instanceof BellModel)) {
-         Config.warn("Not a bell model: " + String.valueOf(model));
+      } else if (!(model instanceof BellModel bellModel)) {
+         Config.warn("Not a bell model: " + model);
          return null;
       } else {
-         BellModel bellModel = (BellModel)model;
-         renderer = bellModel.updateRenderer(renderer);
-         return renderer;
+         return bellModel.updateRenderer(renderer);
       }
    }
 }

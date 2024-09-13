@@ -7,46 +7,42 @@ import net.minecraft.client.renderer.RenderType;
 
 public class RenderStateManager {
    private static boolean cacheEnabled;
-   private static final RenderStateShard[] PENDING_CLEAR_STATES = new RenderStateShard[RenderType.getCountRenderStates()];
+   private static RenderStateShard[] PENDING_CLEAR_STATES = new RenderStateShard[RenderType.getCountRenderStates()];
 
-   public static void setupRenderStates(List renderStates) {
+   public static void setupRenderStates(List<RenderStateShard> renderStates) {
       if (cacheEnabled) {
          setupCached(renderStates);
       } else {
-         for(int i = 0; i < renderStates.size(); ++i) {
+         for (int i = 0; i < renderStates.size(); i++) {
             RenderStateShard renderState = (RenderStateShard)renderStates.get(i);
             renderState.m_110185_();
          }
-
       }
    }
 
-   public static void clearRenderStates(List renderStates) {
+   public static void clearRenderStates(List<RenderStateShard> renderStates) {
       if (cacheEnabled) {
          clearCached(renderStates);
       } else {
-         for(int i = 0; i < renderStates.size(); ++i) {
+         for (int i = 0; i < renderStates.size(); i++) {
             RenderStateShard renderState = (RenderStateShard)renderStates.get(i);
             renderState.m_110188_();
          }
-
       }
    }
 
-   private static void setupCached(List renderStates) {
-      for(int i = 0; i < renderStates.size(); ++i) {
+   private static void setupCached(List<RenderStateShard> renderStates) {
+      for (int i = 0; i < renderStates.size(); i++) {
          RenderStateShard state = (RenderStateShard)renderStates.get(i);
          setupCached(state, i);
       }
-
    }
 
-   private static void clearCached(List renderStates) {
-      for(int i = 0; i < renderStates.size(); ++i) {
+   private static void clearCached(List<RenderStateShard> renderStates) {
+      for (int i = 0; i < renderStates.size(); i++) {
          RenderStateShard state = (RenderStateShard)renderStates.get(i);
          clearCached(state, i);
       }
-
    }
 
    private static void setupCached(RenderStateShard state, int index) {
@@ -76,7 +72,7 @@ public class RenderStateManager {
    public static void enableCache() {
       if (!cacheEnabled) {
          cacheEnabled = true;
-         Arrays.fill(PENDING_CLEAR_STATES, (Object)null);
+         Arrays.fill(PENDING_CLEAR_STATES, null);
       }
    }
 
@@ -91,14 +87,14 @@ public class RenderStateManager {
       if (cacheEnabled) {
          cacheEnabled = false;
 
-         for(int i = 0; i < PENDING_CLEAR_STATES.length; ++i) {
+         for (int i = 0; i < PENDING_CLEAR_STATES.length; i++) {
             RenderStateShard pendingClearState = PENDING_CLEAR_STATES[i];
             if (pendingClearState != null) {
                pendingClearState.m_110188_();
             }
          }
 
-         Arrays.fill(PENDING_CLEAR_STATES, (Object)null);
+         Arrays.fill(PENDING_CLEAR_STATES, null);
       }
    }
 }

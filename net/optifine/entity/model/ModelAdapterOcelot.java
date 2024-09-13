@@ -13,7 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.optifine.reflect.Reflector;
 
 public class ModelAdapterOcelot extends ModelAdapter {
-   private static Map mapPartFields = null;
+   private static Map<String, Integer> mapPartFields = null;
 
    public ModelAdapterOcelot() {
       super(EntityType.f_20505_, "ocelot", 0.4F);
@@ -23,15 +23,17 @@ public class ModelAdapterOcelot extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new OcelotModel(bakeModelLayer(ModelLayers.f_171201_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof OcelotModel modelOcelot)) {
          return null;
       } else {
-         Map mapParts = getMapPartFields();
+         Map<String, Integer> mapParts = getMapPartFields();
          if (mapParts.containsKey(modelPart)) {
             int index = (Integer)mapParts.get(modelPart);
             return (ModelPart)Reflector.getFieldValue(modelOcelot, Reflector.ModelOcelot_ModelRenderers, index);
@@ -41,11 +43,12 @@ public class ModelAdapterOcelot extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"back_left_leg", "back_right_leg", "front_left_leg", "front_right_leg", "tail", "tail2", "head", "body"};
    }
 
-   private static Map getMapPartFields() {
+   private static Map<String, Integer> getMapPartFields() {
       if (mapPartFields != null) {
          return mapPartFields;
       } else {
@@ -62,6 +65,7 @@ public class ModelAdapterOcelot extends ModelAdapter {
       }
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       OcelotRenderer render = new OcelotRenderer(renderManager.getContext());

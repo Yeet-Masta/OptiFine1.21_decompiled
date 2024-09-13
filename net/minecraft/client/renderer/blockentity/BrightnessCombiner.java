@@ -3,13 +3,13 @@ package net.minecraft.client.renderer.blockentity;
 import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.world.level.block.DoubleBlockCombiner;
+import net.minecraft.world.level.block.DoubleBlockCombiner.Combiner;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.optifine.EmissiveTextures;
 
-public class BrightnessCombiner implements DoubleBlockCombiner.Combiner {
-   public Int2IntFunction m_6959_(BlockEntity blockEntity1, BlockEntity blockEntity2) {
-      return (valIn) -> {
+public class BrightnessCombiner<S extends BlockEntity> implements Combiner<S, Int2IntFunction> {
+   public Int2IntFunction m_6959_(S blockEntity1, S blockEntity2) {
+      return valIn -> {
          if (EmissiveTextures.isRenderEmissive()) {
             return LightTexture.MAX_BRIGHTNESS;
          } else {
@@ -24,15 +24,11 @@ public class BrightnessCombiner implements DoubleBlockCombiner.Combiner {
       };
    }
 
-   public Int2IntFunction m_7693_(BlockEntity blockEntityIn) {
-      return (valIn) -> {
-         return valIn;
-      };
+   public Int2IntFunction m_7693_(S blockEntityIn) {
+      return valIn -> valIn;
    }
 
    public Int2IntFunction m_6502_() {
-      return (valIn) -> {
-         return valIn;
-      };
+      return valIn -> valIn;
    }
 }

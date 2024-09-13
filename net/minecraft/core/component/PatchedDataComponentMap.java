@@ -8,21 +8,20 @@ import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.Level;
 
-public final class PatchedDataComponentMap implements DataComponentMap {
-   private final DataComponentMap f_316296_;
-   private Reference2ObjectMap f_315990_;
+public class PatchedDataComponentMap implements DataComponentMap {
+   private DataComponentMap f_316296_;
+   private Reference2ObjectMap<DataComponentType<?>, Optional<?>> f_315990_;
    private boolean f_316660_;
    private CompoundTag tag;
 
@@ -30,7 +29,7 @@ public final class PatchedDataComponentMap implements DataComponentMap {
       this(p_i323282_1_, Reference2ObjectMaps.emptyMap(), true);
    }
 
-   private PatchedDataComponentMap(DataComponentMap p_i318911_1_, Reference2ObjectMap p_i318911_2_, boolean p_i318911_3_) {
+   private PatchedDataComponentMap(DataComponentMap p_i318911_1_, Reference2ObjectMap<DataComponentType<?>, Optional<?>> p_i318911_2_, boolean p_i318911_3_) {
       this.f_316296_ = p_i318911_1_;
       this.f_315990_ = p_i318911_2_;
       this.f_316660_ = p_i318911_3_;
@@ -46,74 +45,71 @@ public final class PatchedDataComponentMap implements DataComponentMap {
       }
    }
 
-   private static boolean m_323581_(DataComponentMap p_323581_0_, Reference2ObjectMap p_323581_1_) {
+   private static boolean m_323581_(DataComponentMap p_323581_0_, Reference2ObjectMap<DataComponentType<?>, Optional<?>> p_323581_1_) {
       ObjectIterator var2 = Reference2ObjectMaps.fastIterable(p_323581_1_).iterator();
 
-      Object object;
-      Optional optional;
-      do {
-         if (!var2.hasNext()) {
-            return true;
-         }
-
-         Map.Entry entry = (Map.Entry)var2.next();
-         object = p_323581_0_.m_318834_((DataComponentType)entry.getKey());
-         optional = (Optional)entry.getValue();
+      while (var2.hasNext()) {
+         Entry<DataComponentType<?>, Optional<?>> entry = (Entry<DataComponentType<?>, Optional<?>>)var2.next();
+         Object object = p_323581_0_.m_318834_((DataComponentType)entry.getKey());
+         Optional<?> optional = (Optional<?>)entry.getValue();
          if (optional.isPresent() && optional.get().equals(object)) {
             return false;
          }
-      } while(!optional.isEmpty() || object != null);
 
-      return false;
+         if (optional.isEmpty() && object == null) {
+            return false;
+         }
+      }
+
+      return true;
    }
 
    @Nullable
-   public Object m_318834_(DataComponentType p_318834_1_) {
-      Optional optional = (Optional)this.f_315990_.get(p_318834_1_);
-      return optional != null ? optional.orElse((Object)null) : this.f_316296_.m_318834_(p_318834_1_);
+   public <T> T m_318834_(DataComponentType<? extends T> p_318834_1_) {
+      Optional<? extends T> optional = (Optional<? extends T>)this.f_315990_.get(p_318834_1_);
+      return (T)(optional != null ? optional.orElse(null) : this.f_316296_.m_318834_(p_318834_1_));
    }
 
    @Nullable
-   public Object m_322371_(DataComponentType p_322371_1_, @Nullable Object p_322371_2_) {
+   public <T> T m_322371_(DataComponentType<? super T> p_322371_1_, @Nullable T p_322371_2_) {
       this.m_322433_();
-      Object t = this.f_316296_.m_318834_(p_322371_1_);
-      Optional optional;
+      T t = (T)this.f_316296_.m_318834_(p_322371_1_);
+      Optional<T> optional;
       if (Objects.equals(p_322371_2_, t)) {
-         optional = (Optional)this.f_315990_.remove(p_322371_1_);
+         optional = (Optional<T>)this.f_315990_.remove(p_322371_1_);
       } else {
-         optional = (Optional)this.f_315990_.put(p_322371_1_, Optional.ofNullable(p_322371_2_));
+         optional = (Optional<T>)this.f_315990_.put(p_322371_1_, Optional.ofNullable(p_322371_2_));
       }
 
       this.markDirty();
-      return optional != null ? optional.orElse(t) : t;
+      return (T)(optional != null ? optional.orElse(t) : t);
    }
 
    @Nullable
-   public Object m_321460_(DataComponentType p_321460_1_) {
+   public <T> T m_321460_(DataComponentType<? extends T> p_321460_1_) {
       this.m_322433_();
-      Object t = this.f_316296_.m_318834_(p_321460_1_);
-      Optional optional;
+      T t = (T)this.f_316296_.m_318834_(p_321460_1_);
+      Optional<? extends T> optional;
       if (t != null) {
-         optional = (Optional)this.f_315990_.put(p_321460_1_, Optional.empty());
+         optional = (Optional<? extends T>)this.f_315990_.put(p_321460_1_, Optional.m_274566_());
       } else {
-         optional = (Optional)this.f_315990_.remove(p_321460_1_);
+         optional = (Optional<? extends T>)this.f_315990_.remove(p_321460_1_);
       }
 
-      return optional != null ? optional.orElse((Object)null) : t;
+      return (T)(optional != null ? optional.orElse(null) : t);
    }
 
    public void m_320975_(DataComponentPatch p_320975_1_) {
       this.m_322433_();
       ObjectIterator var2 = Reference2ObjectMaps.fastIterable(p_320975_1_.f_314958_).iterator();
 
-      while(var2.hasNext()) {
-         Map.Entry entry = (Map.Entry)var2.next();
-         this.m_318645_((DataComponentType)entry.getKey(), (Optional)entry.getValue());
+      while (var2.hasNext()) {
+         Entry<DataComponentType<?>, Optional<?>> entry = (Entry<DataComponentType<?>, Optional<?>>)var2.next();
+         this.m_318645_((DataComponentType<?>)entry.getKey(), (Optional<?>)entry.getValue());
       }
-
    }
 
-   private void m_318645_(DataComponentType p_318645_1_, Optional p_318645_2_) {
+   private void m_318645_(DataComponentType<?> p_318645_1_, Optional<?> p_318645_2_) {
       Object object = this.f_316296_.m_318834_(p_318645_1_);
       if (p_318645_2_.isPresent()) {
          if (p_318645_2_.get().equals(object)) {
@@ -122,11 +118,10 @@ public final class PatchedDataComponentMap implements DataComponentMap {
             this.f_315990_.put(p_318645_1_, p_318645_2_);
          }
       } else if (object != null) {
-         this.f_315990_.put(p_318645_1_, Optional.empty());
+         this.f_315990_.put(p_318645_1_, Optional.m_274566_());
       } else {
          this.f_315990_.remove(p_318645_1_);
       }
-
    }
 
    public void m_324830_(DataComponentPatch p_324830_1_) {
@@ -136,13 +131,9 @@ public final class PatchedDataComponentMap implements DataComponentMap {
    }
 
    public void m_324935_(DataComponentMap p_324935_1_) {
-      Iterator var2 = p_324935_1_.iterator();
-
-      while(var2.hasNext()) {
-         TypedDataComponent typeddatacomponent = (TypedDataComponent)var2.next();
+      for (TypedDataComponent<?> typeddatacomponent : p_324935_1_) {
          typeddatacomponent.m_324030_(this);
       }
-
    }
 
    private void m_322433_() {
@@ -150,19 +141,18 @@ public final class PatchedDataComponentMap implements DataComponentMap {
          this.f_315990_ = new Reference2ObjectArrayMap(this.f_315990_);
          this.f_316660_ = false;
       }
-
    }
 
-   public Set m_319675_() {
+   public Set<DataComponentType<?>> m_319675_() {
       if (this.f_315990_.isEmpty()) {
          return this.f_316296_.m_319675_();
       } else {
-         Set set = new ReferenceArraySet(this.f_316296_.m_319675_());
+         Set<DataComponentType<?>> set = new ReferenceArraySet(this.f_316296_.m_319675_());
          ObjectIterator var2 = Reference2ObjectMaps.fastIterable(this.f_315990_).iterator();
 
-         while(var2.hasNext()) {
-            Reference2ObjectMap.Entry entry = (Reference2ObjectMap.Entry)var2.next();
-            Optional optional = (Optional)entry.getValue();
+         while (var2.hasNext()) {
+            it.unimi.dsi.fastutil.objects.Reference2ObjectMap.Entry<DataComponentType<?>, Optional<?>> entry = (it.unimi.dsi.fastutil.objects.Reference2ObjectMap.Entry<DataComponentType<?>, Optional<?>>)var2.next();
+            Optional<?> optional = (Optional<?>)entry.getValue();
             if (optional.isPresent()) {
                set.add((DataComponentType)entry.getKey());
             } else {
@@ -174,24 +164,21 @@ public final class PatchedDataComponentMap implements DataComponentMap {
       }
    }
 
-   public Iterator iterator() {
+   public Iterator<TypedDataComponent<?>> iterator() {
       if (this.f_315990_.isEmpty()) {
          return this.f_316296_.iterator();
       } else {
-         List list = new ArrayList(this.f_315990_.size() + this.f_316296_.m_319491_());
+         List<TypedDataComponent<?>> list = new ArrayList(this.f_315990_.size() + this.f_316296_.m_319491_());
          ObjectIterator var2 = Reference2ObjectMaps.fastIterable(this.f_315990_).iterator();
 
-         while(var2.hasNext()) {
-            Reference2ObjectMap.Entry entry = (Reference2ObjectMap.Entry)var2.next();
+         while (var2.hasNext()) {
+            it.unimi.dsi.fastutil.objects.Reference2ObjectMap.Entry<DataComponentType<?>, Optional<?>> entry = (it.unimi.dsi.fastutil.objects.Reference2ObjectMap.Entry<DataComponentType<?>, Optional<?>>)var2.next();
             if (((Optional)entry.getValue()).isPresent()) {
                list.add(TypedDataComponent.m_321971_((DataComponentType)entry.getKey(), ((Optional)entry.getValue()).get()));
             }
          }
 
-         Iterator var4 = this.f_316296_.iterator();
-
-         while(var4.hasNext()) {
-            TypedDataComponent typeddatacomponent = (TypedDataComponent)var4.next();
+         for (TypedDataComponent<?> typeddatacomponent : this.f_316296_) {
             if (!this.f_315990_.containsKey(typeddatacomponent.f_316611_())) {
                list.add(typeddatacomponent);
             }
@@ -205,8 +192,8 @@ public final class PatchedDataComponentMap implements DataComponentMap {
       int i = this.f_316296_.m_319491_();
       ObjectIterator var2 = Reference2ObjectMaps.fastIterable(this.f_315990_).iterator();
 
-      while(var2.hasNext()) {
-         Reference2ObjectMap.Entry entry = (Reference2ObjectMap.Entry)var2.next();
+      while (var2.hasNext()) {
+         it.unimi.dsi.fastutil.objects.Reference2ObjectMap.Entry<DataComponentType<?>, Optional<?>> entry = (it.unimi.dsi.fastutil.objects.Reference2ObjectMap.Entry<DataComponentType<?>, Optional<?>>)var2.next();
          boolean flag = ((Optional)entry.getValue()).isPresent();
          boolean flag1 = this.f_316296_.m_321946_((DataComponentType)entry.getKey());
          if (flag != flag1) {
@@ -235,11 +222,10 @@ public final class PatchedDataComponentMap implements DataComponentMap {
       if (this == p_equals_1_) {
          return true;
       } else {
-         if (p_equals_1_ instanceof PatchedDataComponentMap) {
-            PatchedDataComponentMap patcheddatacomponentmap = (PatchedDataComponentMap)p_equals_1_;
-            if (this.f_316296_.equals(patcheddatacomponentmap.f_316296_) && this.f_315990_.equals(patcheddatacomponentmap.f_315990_)) {
-               return true;
-            }
+         if (p_equals_1_ instanceof PatchedDataComponentMap patcheddatacomponentmap
+            && this.f_316296_.equals(patcheddatacomponentmap.f_316296_)
+            && this.f_315990_.equals(patcheddatacomponentmap.f_315990_)) {
+            return true;
          }
 
          return false;
@@ -251,8 +237,7 @@ public final class PatchedDataComponentMap implements DataComponentMap {
    }
 
    public String toString() {
-      Stream var10000 = this.m_322172_().map(TypedDataComponent::toString);
-      return "{" + (String)var10000.collect(Collectors.joining(", ")) + "}";
+      return "{" + (String)this.m_322172_().map(TypedDataComponent::toString).collect(Collectors.joining(", ")) + "}";
    }
 
    public CompoundTag getTag() {

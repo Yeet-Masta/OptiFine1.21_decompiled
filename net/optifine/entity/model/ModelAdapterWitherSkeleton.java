@@ -13,10 +13,12 @@ public class ModelAdapterWitherSkeleton extends ModelAdapterBiped {
       super(EntityType.f_20497_, "wither_skeleton", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new SkeletonModel(bakeModelLayer(ModelLayers.f_171216_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WitherSkeletonRenderer render = new WitherSkeletonRenderer(renderManager.getContext());

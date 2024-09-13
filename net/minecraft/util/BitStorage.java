@@ -21,6 +21,6 @@ public interface BitStorage {
 
    BitStorage m_199833_();
 
-   default void finish() {
+   default void m_185413_() {
    }
 }

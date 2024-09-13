@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
@@ -29,17 +30,23 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.joml.Matrix4f;
 
 public class ScreenEffectRenderer {
-   private static final ResourceLocation f_110714_ = ResourceLocation.m_340282_("textures/misc/underwater.png");
+   private static ResourceLocation f_110714_ = ResourceLocation.m_340282_("textures/misc/underwater.png");
 
    public static void m_110718_(Minecraft minecraftIn, PoseStack matrixStackIn) {
       Player player = minecraftIn.f_91074_;
       if (!player.f_19794_) {
          if (Reflector.ForgeHooksClient_renderBlockOverlay.exists() && Reflector.ForgeBlockModelShapes_getTexture3.exists()) {
-            Pair overlay = getOverlayBlock(player);
+            Pair<BlockState, BlockPos> overlay = getOverlayBlock(player);
             if (overlay != null) {
                Object overlayType = Reflector.getFieldValue(Reflector.RenderBlockScreenEffectEvent_OverlayType_BLOCK);
                if (!Reflector.ForgeHooksClient_renderBlockOverlay.callBoolean(player, matrixStackIn, overlayType, overlay.getLeft(), overlay.getRight())) {
-                  TextureAtlasSprite sprite = (TextureAtlasSprite)Reflector.call(minecraftIn.m_91289_().m_110907_(), Reflector.ForgeBlockModelShapes_getTexture3, overlay.getLeft(), minecraftIn.f_91073_, overlay.getRight());
+                  TextureAtlasSprite sprite = (TextureAtlasSprite)Reflector.m_46374_(
+                     minecraftIn.m_91289_().m_110907_(),
+                     Reflector.ForgeBlockModelShapes_getTexture3,
+                     overlay.getLeft(),
+                     minecraftIn.f_91073_,
+                     overlay.getRight()
+                  );
                   m_173296_(sprite, matrixStackIn);
                }
             }
@@ -57,9 +64,9 @@ public class ScreenEffectRenderer {
                m_110725_(minecraftIn, matrixStackIn);
             }
          } else if (Reflector.IForgeEntity_getEyeInFluidType.exists()) {
-            FluidType eyeFluidType = (FluidType)Reflector.call(player, Reflector.IForgeEntity_getEyeInFluidType);
+            FluidType eyeFluidType = (FluidType)Reflector.m_46374_(player, Reflector.IForgeEntity_getEyeInFluidType);
             if (!eyeFluidType.isAir()) {
-               IClientFluidTypeExtensions.method_1(eyeFluidType).renderOverlay(minecraftIn, matrixStackIn);
+               IClientFluidTypeExtensions.m_253057_(eyeFluidType).renderOverlay(minecraftIn, matrixStackIn);
             }
          }
 
@@ -67,26 +74,25 @@ public class ScreenEffectRenderer {
             m_110728_(minecraftIn, matrixStackIn);
          }
       }
-
    }
 
    @Nullable
    private static BlockState m_110716_(Player playerIn) {
-      Pair overlay = getOverlayBlock(playerIn);
+      Pair<BlockState, BlockPos> overlay = getOverlayBlock(playerIn);
       return overlay == null ? null : (BlockState)overlay.getLeft();
    }
 
-   private static Pair getOverlayBlock(Player playerIn) {
-      BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+   private static Pair<BlockState, BlockPos> getOverlayBlock(Player playerIn) {
+      MutableBlockPos blockpos$mutableblockpos = new MutableBlockPos();
 
-      for(int i = 0; i < 8; ++i) {
+      for (int i = 0; i < 8; i++) {
          double d0 = playerIn.m_20185_() + (double)(((float)((i >> 0) % 2) - 0.5F) * playerIn.m_20205_() * 0.8F);
          double d1 = playerIn.m_20188_() + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F * playerIn.m_6134_());
          double d2 = playerIn.m_20189_() + (double)(((float)((i >> 2) % 2) - 0.5F) * playerIn.m_20205_() * 0.8F);
          blockpos$mutableblockpos.m_122169_(d0, d1, d2);
          BlockState blockstate = playerIn.m_9236_().m_8055_(blockpos$mutableblockpos);
          if (blockstate.m_60799_() != RenderShape.INVISIBLE && blockstate.m_60831_(playerIn.m_9236_(), blockpos$mutableblockpos)) {
-            return Pair.of(blockstate, blockpos$mutableblockpos.m_7949_());
+            return Pair.m_253057_(blockstate, blockpos$mutableblockpos.m_7949_());
          }
       }
 
@@ -179,7 +185,7 @@ public class ScreenEffectRenderer {
       float f10 = Mth.m_14179_(f6, f4, f5);
       float f11 = 1.0F;
 
-      for(int i = 0; i < 2; ++i) {
+      for (int i = 0; i < 2; i++) {
          matrixStackIn.m_85836_();
          float f12 = -0.5F;
          float f13 = 0.5F;

@@ -2,7 +2,6 @@ package optifine.json;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Iterator;
 import java.util.Set;
 
 public class JSONWriter {
@@ -42,7 +41,7 @@ public class JSONWriter {
       this.indentAdd();
       int num = jArr.size();
 
-      for(int i = 0; i < num; ++i) {
+      for (int i = 0; i < num; i++) {
          Object val = jArr.get(i);
          this.writeIndent();
          this.writeObject(val);
@@ -64,17 +63,14 @@ public class JSONWriter {
       Set keys = jObj.keySet();
       int keyNum = keys.size();
       int count = 0;
-      Iterator it = keys.iterator();
 
-      while(it.hasNext()) {
-         String key = (String)it.next();
+      for (String key : keys) {
          Object val = jObj.get(key);
          this.writeIndent();
          this.writer.write(JSONValue.toJSONString(key));
          this.writer.write(": ");
          this.writeObject(val);
-         ++count;
-         if (count < keyNum) {
+         if (++count < keyNum) {
             this.writeLine(",");
          } else {
             this.writeLine("");
@@ -96,17 +92,16 @@ public class JSONWriter {
    }
 
    private void writeIndent() throws IOException {
-      for(int i = 0; i < this.indent; ++i) {
+      for (int i = 0; i < this.indent; i++) {
          this.writer.write(32);
       }
-
    }
 
    private void indentAdd() {
-      this.indent += this.indentStep;
+      this.indent = this.indent + this.indentStep;
    }
 
    private void indentRemove() {
-      this.indent -= this.indentStep;
+      this.indent = this.indent - this.indentStep;
    }
 }

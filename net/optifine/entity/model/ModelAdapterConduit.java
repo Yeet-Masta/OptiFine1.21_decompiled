@@ -13,10 +13,12 @@ public class ModelAdapterConduit extends ModelAdapter {
       super(BlockEntityType.f_58941_, "conduit", 0.0F);
    }
 
+   @Override
    public Model makeModel() {
       return new ConduitModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof ConduitModel modelConduit)) {
          return null;
@@ -31,24 +33,22 @@ public class ModelAdapterConduit extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"eye", "wind", "base", "cage"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58941_, index, () -> {
-         return new ConduitRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58941_, index, () -> new ConduitRenderer(dispatcher.getContext()));
       if (!(renderer instanceof ConduitRenderer)) {
          return null;
-      } else if (!(modelBase instanceof ConduitModel)) {
-         Config.warn("Not a conduit model: " + String.valueOf(modelBase));
+      } else if (!(modelBase instanceof ConduitModel conduitModel)) {
+         Config.warn("Not a conduit model: " + modelBase);
          return null;
       } else {
-         ConduitModel conduitModel = (ConduitModel)modelBase;
-         renderer = conduitModel.updateRenderer(renderer);
-         return renderer;
+         return conduitModel.updateRenderer(renderer);
       }
    }
 }

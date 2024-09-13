@@ -1,12 +1,14 @@
 package net.optifine.entity.model;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.optifine.util.Either;
 
 public interface IEntityRenderer {
-   Either getType();
+   Either<EntityType, BlockEntityType> getType();
 
-   void setType(Either var1);
+   void setType(Either<EntityType, BlockEntityType> var1);
 
    ResourceLocation getLocationTextureCustom();
 

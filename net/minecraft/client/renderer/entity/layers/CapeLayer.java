@@ -17,12 +17,23 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.optifine.Config;
 
-public class CapeLayer extends RenderLayer {
-   public CapeLayer(RenderLayerParent playerModelIn) {
+public class CapeLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
+   public CapeLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> playerModelIn) {
       super(playerModelIn);
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, AbstractClientPlayer entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      AbstractClientPlayer entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       if (!entitylivingbaseIn.m_20145_() && entitylivingbaseIn.m_36170_(PlayerModelPart.CAPE)) {
          PlayerSkin playerskin = entitylivingbaseIn.m_294544_();
          if (entitylivingbaseIn.getLocationCape() != null) {
@@ -30,12 +41,15 @@ public class CapeLayer extends RenderLayer {
             if (!itemstack.m_150930_(Items.f_42741_)) {
                matrixStackIn.m_85836_();
                matrixStackIn.m_252880_(0.0F, 0.0F, 0.125F);
-               double d0 = Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_36102_, entitylivingbaseIn.f_36105_) - Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_19854_, entitylivingbaseIn.m_20185_());
-               double d1 = Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_36103_, entitylivingbaseIn.f_36106_) - Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_19855_, entitylivingbaseIn.m_20186_());
-               double d2 = Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_36104_, entitylivingbaseIn.f_36075_) - Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_19856_, entitylivingbaseIn.m_20189_());
+               double d0 = Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_36102_, entitylivingbaseIn.f_36105_)
+                  - Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_19854_, entitylivingbaseIn.m_20185_());
+               double d1 = Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_36103_, entitylivingbaseIn.f_36106_)
+                  - Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_19855_, entitylivingbaseIn.m_20186_());
+               double d2 = Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_36104_, entitylivingbaseIn.f_36075_)
+                  - Mth.m_14139_((double)partialTicks, entitylivingbaseIn.f_19856_, entitylivingbaseIn.m_20189_());
                float f = Mth.m_14189_(partialTicks, entitylivingbaseIn.f_20884_, entitylivingbaseIn.f_20883_);
-               double d3 = (double)Mth.m_14031_(f * 0.017453292F);
-               double d4 = (double)(-Mth.m_14089_(f * 0.017453292F));
+               double d3 = (double)Mth.m_14031_(f * (float) (Math.PI / 180.0));
+               double d4 = (double)(-Mth.m_14089_(f * (float) (Math.PI / 180.0)));
                float f1 = (float)d1 * 10.0F;
                f1 = Mth.m_14036_(f1, -6.0F, 32.0F);
                float f2 = (float)(d0 * d3 + d2 * d4) * 100.0F;
@@ -69,11 +83,10 @@ public class CapeLayer extends RenderLayer {
                matrixStackIn.m_252781_(Axis.f_252403_.m_252977_(entitylivingbaseIn.capeRotateZ));
                matrixStackIn.m_252781_(Axis.f_252436_.m_252977_(entitylivingbaseIn.capeRotateY));
                VertexConsumer vertexconsumer = bufferIn.m_6299_(RenderType.m_110446_(entitylivingbaseIn.getLocationCape()));
-               ((PlayerModel)this.m_117386_()).m_103411_(matrixStackIn, vertexconsumer, packedLightIn, OverlayTexture.f_118083_);
+               this.m_117386_().m_103411_(matrixStackIn, vertexconsumer, packedLightIn, OverlayTexture.f_118083_);
                matrixStackIn.m_85849_();
             }
          }
       }
-
    }
 }

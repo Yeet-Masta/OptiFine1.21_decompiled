@@ -20,10 +20,12 @@ public class ModelAdapterSquid extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new SquidModel(bakeModelLayer(ModelLayers.f_171246_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SquidModel modelSquid)) {
          return null;
@@ -42,10 +44,12 @@ public class ModelAdapterSquid extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body", "tentacle1", "tentacle2", "tentacle3", "tentacle4", "tentacle5", "tentacle6", "tentacle7", "tentacle8", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SquidRenderer render = new SquidRenderer(renderManager.getContext(), (SquidModel)modelBase);

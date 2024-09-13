@@ -1,8 +1,6 @@
 package net.optifine.util;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import java.util.Collection;
-import java.util.Iterator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.font.FontTexture;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -42,15 +40,14 @@ public class GpuMemory {
    private static long calculateTextureAllocated() {
       TextureManager textureManager = Minecraft.m_91087_().m_91097_();
       long sum = 0L;
-      Collection textures = textureManager.getTextures();
 
-      long size;
-      for(Iterator var4 = textures.iterator(); var4.hasNext(); sum += size) {
-         AbstractTexture texture = (AbstractTexture)var4.next();
-         size = getTextureSize(texture);
+      for (AbstractTexture texture : textureManager.getTextures()) {
+         long size = getTextureSize(texture);
          if (Config.isShaders()) {
             size *= 3L;
          }
+
+         sum += size;
       }
 
       return sum;
@@ -70,10 +67,8 @@ public class GpuMemory {
          return sst.getSize();
       } else if (texture instanceof SimpleTexture st) {
          return st.size;
-      } else if (texture instanceof TextureAtlas ta) {
-         return (long)(ta.m_276092_() * ta.m_276095_() * 4);
       } else {
-         return 0L;
+         return texture instanceof TextureAtlas ta ? (long)(ta.m_276092_() * ta.m_276095_() * 4) : 0L;
       }
    }
 }

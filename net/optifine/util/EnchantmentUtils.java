@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Holder.Reference;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.network.chat.Component;
@@ -17,11 +17,11 @@ import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 
 public class EnchantmentUtils {
-   private static final ResourceKey[] ENCHANTMENT_KEYS = makeEnchantmentKeys();
-   private static final Map TRANSLATION_KEY_IDS = new HashMap();
-   private static final Map MAP_ENCHANTMENTS = new HashMap();
-   private static final Map LEGACY_ID_NAMES = makeLegacyIdsMap();
-   private static final Pattern PATTERN_NUMBER = Pattern.compile("\\d+");
+   private static ResourceKey[] ENCHANTMENT_KEYS = makeEnchantmentKeys();
+   private static Map<String, Integer> TRANSLATION_KEY_IDS = new HashMap();
+   private static Map<String, Enchantment> MAP_ENCHANTMENTS = new HashMap();
+   private static Map<Integer, String> LEGACY_ID_NAMES = makeLegacyIdsMap();
+   private static Pattern PATTERN_NUMBER = Pattern.m_289905_("\\d+");
 
    public static Enchantment getEnchantment(String name) {
       if (PATTERN_NUMBER.matcher(name).matches()) {
@@ -34,13 +34,13 @@ public class EnchantmentUtils {
 
       Enchantment enchantment = (Enchantment)MAP_ENCHANTMENTS.get(name);
       if (enchantment == null) {
-         HolderLookup.Provider holderlookup$provider = VanillaRegistries.m_255371_();
-         HolderGetter holdergetter = holderlookup$provider.m_255025_(Registries.f_256762_);
+         Provider holderlookup$provider = VanillaRegistries.m_255371_();
+         HolderGetter<Enchantment> holdergetter = holderlookup$provider.m_255025_(Registries.f_256762_);
          ResourceLocation loc = new ResourceLocation(name);
-         ResourceKey key = ResourceKey.m_135785_(Registries.f_256762_, loc);
-         Optional optRef = holdergetter.m_254926_(key);
+         ResourceKey<Enchantment> key = ResourceKey.m_135785_(Registries.f_256762_, loc);
+         Optional<Reference<Enchantment>> optRef = holdergetter.m_254926_(key);
          if (optRef.isPresent()) {
-            enchantment = (Enchantment)((Holder.Reference)optRef.get()).m_203334_();
+            enchantment = (Enchantment)((Reference)optRef.get()).m_203334_();
          }
 
          MAP_ENCHANTMENTS.put(name, enchantment);
@@ -50,11 +50,11 @@ public class EnchantmentUtils {
    }
 
    private static ResourceKey[] makeEnchantmentKeys() {
-      return (ResourceKey[])Reflector.Enchantments_ResourceKeys.getFieldValues((Object)null);
+      return (ResourceKey[])Reflector.Enchantments_ResourceKeys.getFieldValues(null);
    }
 
-   private static Map makeLegacyIdsMap() {
-      Map map = new HashMap();
+   private static Map<Integer, String> makeLegacyIdsMap() {
+      Map<Integer, String> map = new HashMap();
       map.put(0, "protection");
       map.put(1, "fire_protection");
       map.put(2, "feather_falling");
@@ -124,8 +124,8 @@ public class EnchantmentUtils {
       } else {
          String name = parts[2];
 
-         for(int i = 0; i < ENCHANTMENT_KEYS.length; ++i) {
-            ResourceKey rk = ENCHANTMENT_KEYS[i];
+         for (int i = 0; i < ENCHANTMENT_KEYS.length; i++) {
+            ResourceKey<Enchantment> rk = ENCHANTMENT_KEYS[i];
             if (Config.equals(rk.m_135782_().m_135815_(), name)) {
                return rk;
             }

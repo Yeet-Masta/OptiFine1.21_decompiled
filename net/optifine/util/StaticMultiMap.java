@@ -5,41 +5,41 @@ import java.util.Map;
 import net.optifine.Config;
 
 public class StaticMultiMap {
-   public static Map getMap(String mapName) {
+   public static Map<String, Object> getMap(String mapName) {
       Object mapObj = StaticMap.get(mapName);
       if (mapObj == null) {
          mapObj = new HashMap();
          StaticMap.put(mapName, mapObj);
       }
 
-      if (!(mapObj instanceof Map map)) {
-         throw new IllegalArgumentException("Not a map: " + String.valueOf(mapObj));
+      if (!(mapObj instanceof Map)) {
+         throw new IllegalArgumentException("Not a map: " + mapObj);
       } else {
-         return map;
+         return (Map<String, Object>)mapObj;
       }
    }
 
    public static void put(String mapName, String key, Object value) {
-      Map map = getMap(mapName);
+      Map<String, Object> map = getMap(mapName);
       map.put(key, value);
    }
 
    public static Object get(String mapName, String key) {
-      Map map = getMap(mapName);
+      Map<String, Object> map = getMap(mapName);
       return map.get(key);
    }
 
-   public static boolean contains(String mapName, String key) {
-      Map map = getMap(mapName);
+   public static boolean m_274455_(String mapName, String key) {
+      Map<String, Object> map = getMap(mapName);
       return map.containsKey(key);
    }
 
    public static boolean containsValue(String mapName, Object val) {
-      Map map = getMap(mapName);
+      Map<String, Object> map = getMap(mapName);
       return map.containsValue(val);
    }
 
-   public static boolean contains(String mapName, String key, Object value) {
+   public static boolean m_274455_(String mapName, String key, Object value) {
       Object val = get(mapName, key);
       return Config.equals(val, value);
    }

@@ -24,7 +24,7 @@ public class ModelVariableUpdater {
       } else {
          try {
             ExpressionParser ep = new ExpressionParser(mr);
-            this.expression = ep.parse(this.expressionText);
+            this.expression = ep.m_82160_(this.expressionText);
             if (this.modelVariable.getExpressionType() != this.expression.getExpressionType()) {
                Config.warn("Eypression type not matching variable type: " + this.modelVariableName + " != " + this.expressionText);
                return false;
@@ -33,8 +33,7 @@ public class ModelVariableUpdater {
             }
          } catch (ParseException var3) {
             Config.warn("Error parsing expression: " + this.expressionText);
-            String var10000 = var3.getClass().getName();
-            Config.warn(var10000 + ": " + var3.getMessage());
+            Config.warn(var3.getClass().getName() + ": " + var3.getMessage());
             return false;
          }
       }
@@ -44,7 +43,7 @@ public class ModelVariableUpdater {
       return this.modelVariable;
    }
 
-   public void update() {
+   public void m_252999_() {
       this.modelVariable.setValue(this.expression);
    }
 

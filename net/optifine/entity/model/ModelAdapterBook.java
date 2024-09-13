@@ -20,10 +20,12 @@ public class ModelAdapterBook extends ModelAdapter {
       super(tileEntityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new BookModel(bakeModelLayer(ModelLayers.f_171271_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof BookModel modelBook)) {
          return null;
@@ -67,15 +69,15 @@ public class ModelAdapterBook extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"cover_right", "cover_left", "pages_right", "pages_left", "flipping_page_right", "flipping_page_left", "book_spine", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       BlockEntityRenderDispatcher dispatcher = Config.getMinecraft().m_167982_();
-      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58928_, index, () -> {
-         return new EnchantTableRenderer(dispatcher.getContext());
-      });
+      BlockEntityRenderer renderer = rendererCache.get(BlockEntityType.f_58928_, index, () -> new EnchantTableRenderer(dispatcher.getContext()));
       if (!(renderer instanceof EnchantTableRenderer)) {
          return null;
       } else if (!Reflector.TileEntityEnchantmentTableRenderer_modelBook.exists()) {

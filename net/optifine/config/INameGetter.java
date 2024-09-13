@@ -1,5 +1,5 @@
 package net.optifine.config;
 
-public interface INameGetter {
-   String getName(Object var1);
+public interface INameGetter<T> {
+   String getName(T var1);
 }

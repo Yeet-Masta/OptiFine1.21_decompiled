@@ -26,21 +26,19 @@ public class Attachment {
       if (this.translate[0] != 0.0F || this.translate[1] != 0.0F || this.translate[2] != 0.0F) {
          matrixStackIn.m_252880_(this.translate[0], this.translate[1], this.translate[2]);
       }
-
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.type);
-      return var10000 + ", translate: " + ArrayUtils.arrayToString(this.translate);
+      return this.type + ", translate: " + ArrayUtils.arrayToString(this.translate);
    }
 
-   public static Attachment parse(JsonObject jo, AttachmentType type) {
+   public static Attachment m_82160_(JsonObject jo, AttachmentType type) {
       if (jo == null) {
          return null;
       } else if (type == null) {
          return null;
       } else {
-         float[] translate = Json.parseFloatArray(jo.get(type.getName()), 3, (float[])null);
+         float[] translate = Json.parseFloatArray(jo.get(type.getName()), 3, null);
          return translate == null ? null : new Attachment(type, translate);
       }
    }

@@ -8,28 +8,28 @@ import java.util.List;
 import java.util.Map;
 
 public class JSONValue {
-   public static Object parse(Reader in) {
+   public static Object m_82160_(Reader in) {
       try {
          JSONParser parser = new JSONParser();
-         return parser.parse(in);
+         return parser.m_82160_(in);
       } catch (Exception var2) {
          return null;
       }
    }
 
-   public static Object parse(String s) {
+   public static Object m_82160_(String s) {
       StringReader in = new StringReader(s);
-      return parse((Reader)in);
+      return m_82160_(in);
    }
 
    public static Object parseWithException(Reader in) throws IOException, ParseException {
       JSONParser parser = new JSONParser();
-      return parser.parse(in);
+      return parser.m_82160_(in);
    }
 
    public static Object parseWithException(String s) throws ParseException {
       JSONParser parser = new JSONParser();
-      return parser.parse(s);
+      return parser.m_82160_(s);
    }
 
    public static void writeJSONString(Object value, Writer out) throws IOException {
@@ -45,7 +45,6 @@ public class JSONValue {
          } else {
             out.write("null");
          }
-
       } else if (!(value instanceof Float)) {
          if (value instanceof Number) {
             out.write(value.toString());
@@ -68,7 +67,6 @@ public class JSONValue {
          } else {
             out.write("null");
          }
-
       }
    }
 
@@ -105,7 +103,7 @@ public class JSONValue {
    }
 
    static void escape(String s, StringBuffer sb) {
-      for(int i = 0; i < s.length(); ++i) {
+      for (int i = 0; i < s.length(); i++) {
          char ch = s.charAt(i);
          switch (ch) {
             case '\b':
@@ -135,7 +133,7 @@ public class JSONValue {
             String ss = Integer.toHexString(ch);
             sb.append("\\u");
 
-            for(int k = 0; k < 4 - ss.length(); ++k) {
+            for (int k = 0; k < 4 - ss.length(); k++) {
                sb.append('0');
             }
 
@@ -144,6 +142,5 @@ public class JSONValue {
             sb.append(ch);
          }
       }
-
    }
 }

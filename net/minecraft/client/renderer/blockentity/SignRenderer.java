@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.Model;
@@ -22,6 +21,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.FormattedCharSequence;
@@ -40,30 +40,33 @@ import net.optifine.Config;
 import net.optifine.CustomColors;
 import net.optifine.shaders.Shaders;
 
-public class SignRenderer implements BlockEntityRenderer {
-   private static final String f_173629_ = "stick";
-   private static final int f_173630_ = -988212;
-   private static final int f_173631_ = Mth.m_144944_(16);
-   private static final float f_278501_ = 0.6666667F;
-   private static final Vec3 f_278459_ = new Vec3(0.0, 0.3333333432674408, 0.046666666865348816);
-   private final Map f_173632_;
-   private final Font f_173633_;
+public class SignRenderer implements BlockEntityRenderer<SignBlockEntity> {
+   private static String f_173629_;
+   private static int f_173630_;
+   private static int f_173631_ = Mth.m_144944_(16);
+   private static float f_278501_;
+   private static Vec3 f_278459_ = new Vec3(0.0, 0.33333334F, 0.046666667F);
+   private Map<WoodType, SignRenderer.SignModel> f_173632_;
+   private Font f_173633_;
    private static double textRenderDistanceSq = 4096.0;
 
-   public SignRenderer(BlockEntityRendererProvider.Context contextIn) {
-      this.f_173632_ = (Map)WoodType.m_61843_().collect(ImmutableMap.toImmutableMap((woodTypeIn) -> {
-         return woodTypeIn;
-      }, (woodTypeIn) -> {
-         return new SignModel(contextIn.m_173582_(ModelLayers.m_171291_(woodTypeIn)));
-      }));
+   public SignRenderer(Context contextIn) {
+      this.f_173632_ = (Map<WoodType, SignRenderer.SignModel>)WoodType.m_61843_()
+         .collect(
+            ImmutableMap.toImmutableMap(
+               woodTypeIn -> woodTypeIn, woodTypeIn -> new SignRenderer.SignModel(contextIn.m_173582_(ModelLayers.m_171291_(woodTypeIn)))
+            )
+         );
       this.f_173633_ = contextIn.m_173586_();
    }
 
-   public void m_6922_(SignBlockEntity tileEntityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
+   public void m_6922_(
+      SignBlockEntity tileEntityIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn
+   ) {
       BlockState blockstate = tileEntityIn.m_58900_();
       SignBlock signblock = (SignBlock)blockstate.m_60734_();
       WoodType woodtype = SignBlock.m_247329_(signblock);
-      SignModel signrenderer$signmodel = (SignModel)this.f_173632_.get(woodtype);
+      SignRenderer.SignModel signrenderer$signmodel = (SignRenderer.SignModel)this.f_173632_.get(woodtype);
       signrenderer$signmodel.f_112507_.f_104207_ = blockstate.m_60734_() instanceof StandingSignBlock;
       this.m_278756_(tileEntityIn, matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn, blockstate, signblock, woodtype, signrenderer$signmodel);
    }
@@ -76,12 +79,26 @@ public class SignRenderer implements BlockEntityRenderer {
       return 0.6666667F;
    }
 
-   void m_278756_(SignBlockEntity tileEntityIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn, BlockState stateIn, SignBlock blockIn, WoodType woodTypeIn, Model modelIn) {
+   void m_278756_(
+      SignBlockEntity tileEntityIn,
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int combinedLightIn,
+      int combinedOverlayIn,
+      BlockState stateIn,
+      SignBlock blockIn,
+      WoodType woodTypeIn,
+      Model modelIn
+   ) {
       matrixStackIn.m_85836_();
       this.m_276777_(matrixStackIn, -blockIn.m_276903_(stateIn), stateIn);
       this.m_278784_(matrixStackIn, bufferIn, combinedLightIn, combinedOverlayIn, woodTypeIn, modelIn);
-      this.m_278841_(tileEntityIn.m_58899_(), tileEntityIn.m_277142_(), matrixStackIn, bufferIn, combinedLightIn, tileEntityIn.m_245065_(), tileEntityIn.m_245123_(), true);
-      this.m_278841_(tileEntityIn.m_58899_(), tileEntityIn.m_277159_(), matrixStackIn, bufferIn, combinedLightIn, tileEntityIn.m_245065_(), tileEntityIn.m_245123_(), false);
+      this.m_278841_(
+         tileEntityIn.m_58899_(), tileEntityIn.m_277142_(), matrixStackIn, bufferIn, combinedLightIn, tileEntityIn.m_245065_(), tileEntityIn.m_245123_(), true
+      );
+      this.m_278841_(
+         tileEntityIn.m_58899_(), tileEntityIn.m_277159_(), matrixStackIn, bufferIn, combinedLightIn, tileEntityIn.m_245065_(), tileEntityIn.m_245123_(), false
+      );
       matrixStackIn.m_85849_();
    }
 
@@ -91,7 +108,6 @@ public class SignRenderer implements BlockEntityRenderer {
       if (!(stateIn.m_60734_() instanceof StandingSignBlock)) {
          matrixStackIn.m_252880_(0.0F, -0.3125F, -0.4375F);
       }
-
    }
 
    void m_278784_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn, WoodType woodTypeIn, Model modelIn) {
@@ -99,14 +115,13 @@ public class SignRenderer implements BlockEntityRenderer {
       float f = this.m_278770_();
       matrixStackIn.m_85841_(f, -f, -f);
       Material material = this.m_245629_(woodTypeIn);
-      Objects.requireNonNull(modelIn);
       VertexConsumer vertexconsumer = material.m_119194_(bufferIn, modelIn::m_103119_);
       this.m_245885_(matrixStackIn, combinedLightIn, combinedOverlayIn, modelIn, vertexconsumer);
       matrixStackIn.m_85849_();
    }
 
    void m_245885_(PoseStack matrixStackIn, int packedLightIn, int packedOverlayIn, Model modelIn, VertexConsumer bufferIn) {
-      SignModel signrenderer$signmodel = (SignModel)modelIn;
+      SignRenderer.SignModel signrenderer$signmodel = (SignRenderer.SignModel)modelIn;
       signrenderer$signmodel.f_173655_.m_104301_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
    }
 
@@ -114,14 +129,16 @@ public class SignRenderer implements BlockEntityRenderer {
       return Sheets.m_173381_(typeIn);
    }
 
-   void m_278841_(BlockPos posIn, SignText textIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int lineHeight, int lineWidth, boolean frontIn) {
+   void m_278841_(
+      BlockPos posIn, SignText textIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int combinedLightIn, int lineHeight, int lineWidth, boolean frontIn
+   ) {
       if (isRenderText(posIn)) {
          matrixStackIn.m_85836_();
          this.m_278823_(matrixStackIn, frontIn, this.m_278725_());
          int i = m_173639_(textIn);
          int j = 4 * lineHeight / 2;
-         FormattedCharSequence[] aformattedcharsequence = textIn.m_277130_(Minecraft.m_91087_().m_167974_(), (componentIn) -> {
-            List list = this.f_173633_.m_92923_(componentIn, lineWidth);
+         FormattedCharSequence[] aformattedcharsequence = textIn.m_277130_(Minecraft.m_91087_().m_167974_(), componentIn -> {
+            List<FormattedCharSequence> list = this.f_173633_.m_92923_(componentIn, lineWidth);
             return list.isEmpty() ? FormattedCharSequence.f_13691_ : (FormattedCharSequence)list.get(0);
          });
          int k;
@@ -141,13 +158,25 @@ public class SignRenderer implements BlockEntityRenderer {
             l = combinedLightIn;
          }
 
-         for(int i1 = 0; i1 < 4; ++i1) {
+         for (int i1 = 0; i1 < 4; i1++) {
             FormattedCharSequence formattedcharsequence = aformattedcharsequence[i1];
             float f = (float)(-this.f_173633_.m_92724_(formattedcharsequence) / 2);
             if (flag) {
                this.f_173633_.m_168645_(formattedcharsequence, f, (float)(i1 * lineHeight - j), k, i, matrixStackIn.m_85850_().m_252922_(), bufferIn, l);
             } else {
-               this.f_173633_.m_272191_(formattedcharsequence, f, (float)(i1 * lineHeight - j), k, false, matrixStackIn.m_85850_().m_252922_(), bufferIn, Font.DisplayMode.POLYGON_OFFSET, 0, l);
+               this.f_173633_
+                  .m_272191_(
+                     formattedcharsequence,
+                     f,
+                     (float)(i1 * lineHeight - j),
+                     k,
+                     false,
+                     matrixStackIn.m_85850_().m_252922_(),
+                     bufferIn,
+                     Font.DisplayMode.POLYGON_OFFSET,
+                     0,
+                     l
+                  );
             }
          }
 
@@ -201,8 +230,8 @@ public class SignRenderer implements BlockEntityRenderer {
       }
    }
 
-   public static SignModel m_173646_(EntityModelSet modelSetIn, WoodType woodTypeIn) {
-      return new SignModel(modelSetIn.m_171103_(ModelLayers.m_171291_(woodTypeIn)));
+   public static SignRenderer.SignModel m_173646_(EntityModelSet modelSetIn, WoodType woodTypeIn) {
+      return new SignRenderer.SignModel(modelSetIn.m_171103_(ModelLayers.m_171291_(woodTypeIn)));
    }
 
    public static LayerDefinition m_173654_() {
@@ -231,14 +260,14 @@ public class SignRenderer implements BlockEntityRenderer {
 
    public static void updateTextRenderDistance() {
       Minecraft mc = Minecraft.m_91087_();
-      double fov = (double)Config.limit((Integer)mc.f_91066_.m_231837_().m_231551_(), 1, 120);
+      double fov = (double)Config.limit(mc.f_91066_.m_231837_().m_231551_(), 1, 120);
       double textRenderDistance = Math.max(1.5 * (double)mc.m_91268_().m_85444_() / fov, 16.0);
       textRenderDistanceSq = textRenderDistance * textRenderDistance;
    }
 
-   public static final class SignModel extends Model {
-      public final ModelPart f_173655_;
-      public final ModelPart f_112507_;
+   public static class SignModel extends Model {
+      public ModelPart f_173655_;
+      public ModelPart f_112507_;
 
       public SignModel(ModelPart partIn) {
          super(RenderType::m_110458_);
@@ -246,6 +275,7 @@ public class SignRenderer implements BlockEntityRenderer {
          this.f_112507_ = partIn.m_171324_("stick");
       }
 
+      @Override
       public void m_7695_(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int colorIn) {
          this.f_173655_.m_104306_(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, colorIn);
       }

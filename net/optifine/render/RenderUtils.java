@@ -5,8 +5,7 @@ import net.minecraft.client.renderer.RenderBuffers;
 
 public class RenderUtils {
    private static boolean flushRenderBuffers = true;
-   // $FF: renamed from: mc net.minecraft.client.Minecraft
-   private static Minecraft field_28 = Minecraft.m_91087_();
+   private static Minecraft f_303183_ = Minecraft.m_91087_();
 
    public static boolean setFlushRenderBuffers(boolean flushRenderBuffers) {
       boolean prev = RenderUtils.flushRenderBuffers;
@@ -20,14 +19,14 @@ public class RenderUtils {
 
    public static void flushRenderBuffers() {
       if (flushRenderBuffers) {
-         RenderBuffers rtb = field_28.m_91269_();
+         RenderBuffers rtb = f_303183_.m_91269_();
          rtb.m_110104_().flushRenderBuffers();
          rtb.m_110108_().flushRenderBuffers();
       }
    }
 
    public static void finishRenderBuffers() {
-      RenderBuffers rtb = field_28.m_91269_();
+      RenderBuffers rtb = f_303183_.m_91269_();
       rtb.m_110104_().m_109911_();
       rtb.m_110108_().m_109911_();
    }

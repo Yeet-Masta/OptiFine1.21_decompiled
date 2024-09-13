@@ -9,10 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
@@ -25,34 +24,34 @@ import net.optifine.player.PlayerItemParser;
 import net.optifine.util.Json;
 
 public class CustomEntityModelParser {
-   public static final String ENTITY = "entity";
-   public static final String TEXTURE = "texture";
-   public static final String SHADOW_SIZE = "shadowSize";
-   public static final String ITEM_TYPE = "type";
-   public static final String ITEM_TEXTURE_SIZE = "textureSize";
-   public static final String ITEM_USE_PLAYER_TEXTURE = "usePlayerTexture";
-   public static final String ITEM_MODELS = "models";
-   public static final String ITEM_ANIMATIONS = "animations";
-   public static final String MODEL_ID = "id";
-   public static final String MODEL_BASE_ID = "baseId";
-   public static final String MODEL_MODEL = "model";
-   public static final String MODEL_TYPE = "type";
-   public static final String MODEL_PART = "part";
-   public static final String MODEL_ATTACH = "attach";
-   public static final String MODEL_INVERT_AXIS = "invertAxis";
-   public static final String MODEL_MIRROR_TEXTURE = "mirrorTexture";
-   public static final String MODEL_TRANSLATE = "translate";
-   public static final String MODEL_ROTATE = "rotate";
-   public static final String MODEL_SCALE = "scale";
-   public static final String MODEL_BOXES = "boxes";
-   public static final String MODEL_SPRITES = "sprites";
-   public static final String MODEL_SUBMODEL = "submodel";
-   public static final String MODEL_SUBMODELS = "submodels";
-   public static final String BOX_TEXTURE_OFFSET = "textureOffset";
-   public static final String BOX_COORDINATES = "coordinates";
-   public static final String BOX_SIZE_ADD = "sizeAdd";
-   public static final String ENTITY_MODEL = "EntityModel";
-   public static final String ENTITY_MODEL_PART = "EntityModelPart";
+   public static String ENTITY;
+   public static String TEXTURE;
+   public static String SHADOW_SIZE;
+   public static String ITEM_TYPE;
+   public static String ITEM_TEXTURE_SIZE;
+   public static String ITEM_USE_PLAYER_TEXTURE;
+   public static String ITEM_MODELS;
+   public static String ITEM_ANIMATIONS;
+   public static String MODEL_ID;
+   public static String MODEL_BASE_ID;
+   public static String MODEL_MODEL;
+   public static String MODEL_TYPE;
+   public static String MODEL_PART;
+   public static String MODEL_ATTACH;
+   public static String MODEL_INVERT_AXIS;
+   public static String MODEL_MIRROR_TEXTURE;
+   public static String MODEL_TRANSLATE;
+   public static String MODEL_ROTATE;
+   public static String MODEL_SCALE;
+   public static String MODEL_BOXES;
+   public static String MODEL_SPRITES;
+   public static String MODEL_SUBMODEL;
+   public static String MODEL_SUBMODELS;
+   public static String BOX_TEXTURE_OFFSET;
+   public static String BOX_COORDINATES;
+   public static String BOX_SIZE_ADD;
+   public static String ENTITY_MODEL;
+   public static String ENTITY_MODEL_PART;
 
    public static CustomEntityRenderer parseEntityRender(JsonObject obj, String path) {
       ConnectedParser cp = new ConnectedParser("CustomEntityModels");
@@ -66,7 +65,7 @@ public class CustomEntityModelParser {
       Map mapModelJsons = new HashMap();
       List listModels = new ArrayList();
 
-      for(int i = 0; i < models.size(); ++i) {
+      for (int i = 0; i < models.size(); i++) {
          JsonObject elem = (JsonObject)models.get(i);
          processBaseId(elem, mapModelJsons);
          processExternalModel(elem, mapModelJsons, basePath);
@@ -83,8 +82,7 @@ public class CustomEntityModelParser {
          textureLocation = getResourceLocation(basePath, texture, ".png");
       }
 
-      CustomEntityRenderer cer = new CustomEntityRenderer(name, basePath, textureLocation, modelRenderers, shadowSize);
-      return cer;
+      return new CustomEntityRenderer(name, basePath, textureLocation, modelRenderers, shadowSize);
    }
 
    private static void processBaseId(JsonObject elem, Map mapModelJsons) {
@@ -104,39 +102,30 @@ public class CustomEntityModelParser {
       if (modelPath != null) {
          ResourceLocation locJson = getResourceLocation(basePath, modelPath, ".jpm");
 
-         String var10000;
          try {
             JsonObject modelObj = loadJson(locJson);
             if (modelObj == null) {
-               Config.warn("Model not found: " + String.valueOf(locJson));
+               Config.warn("Model not found: " + locJson);
                return;
             }
 
             copyJsonElements(modelObj, elem);
          } catch (IOException var6) {
-            var10000 = var6.getClass().getName();
-            Config.error(var10000 + ": " + var6.getMessage());
+            Config.error(var6.getClass().getName() + ": " + var6.getMessage());
          } catch (JsonParseException var7) {
-            var10000 = var7.getClass().getName();
-            Config.error(var10000 + ": " + var7.getMessage());
+            Config.error(var7.getClass().getName() + ": " + var7.getMessage());
          } catch (Exception var8) {
             var8.printStackTrace();
          }
-
       }
    }
 
    private static void copyJsonElements(JsonObject objFrom, JsonObject objTo) {
-      Set setEntries = objFrom.entrySet();
-      Iterator iterator = setEntries.iterator();
-
-      while(iterator.hasNext()) {
-         Map.Entry entry = (Map.Entry)iterator.next();
+      for (Entry<String, JsonElement> entry : objFrom.entrySet()) {
          if (!((String)entry.getKey()).equals("id") && !objTo.has((String)entry.getKey())) {
             objTo.add((String)entry.getKey(), (JsonElement)entry.getValue());
          }
       }
-
    }
 
    public static ResourceLocation getResourceLocation(String basePath, String path, String extension) {
@@ -144,7 +133,7 @@ public class CustomEntityModelParser {
          path = path + extension;
       }
 
-      if (!path.contains("/")) {
+      if (!path.m_274455_("/")) {
          path = basePath + "/" + path;
       } else if (path.startsWith("./")) {
          path = basePath + "/" + path.substring(2);
@@ -181,15 +170,12 @@ public class CustomEntityModelParser {
       ModelUpdater mu = null;
       JsonArray animations = (JsonArray)elem.get("animations");
       if (animations != null) {
-         List listModelVariableUpdaters = new ArrayList();
+         List<ModelVariableUpdater> listModelVariableUpdaters = new ArrayList();
 
-         for(int i = 0; i < animations.size(); ++i) {
+         for (int i = 0; i < animations.size(); i++) {
             JsonObject anim = (JsonObject)animations.get(i);
-            Set entries = anim.entrySet();
-            Iterator it = entries.iterator();
 
-            while(it.hasNext()) {
-               Map.Entry entry = (Map.Entry)it.next();
+            for (Entry<String, JsonElement> entry : anim.entrySet()) {
                String key = (String)entry.getKey();
                String val = ((JsonElement)entry.getValue()).getAsString();
                ModelVariableUpdater mvu = new ModelVariableUpdater(key, val);
@@ -204,8 +190,7 @@ public class CustomEntityModelParser {
       }
 
       ModelPart mr = PlayerItemParser.parseModelRenderer(elem, modelBase, textureSize, basePath);
-      CustomModelRenderer cmr = new CustomModelRenderer(modelPart, attach, mr, mu);
-      return cmr;
+      return new CustomModelRenderer(modelPart, attach, mr, mu);
    }
 
    private static void checkNull(Object obj, String msg) {
@@ -222,8 +207,7 @@ public class CustomEntityModelParser {
          String jsonStr = Config.readInputStream(in, "ASCII");
          in.close();
          JsonParser jp = new JsonParser();
-         JsonObject jo = (JsonObject)jp.parse(jsonStr);
-         return jo;
+         return (JsonObject)jp.m_82160_(jsonStr);
       }
    }
 }

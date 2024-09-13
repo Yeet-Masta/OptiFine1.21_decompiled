@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.entity.StriderRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterStrider extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterStrider() {
       super(EntityType.f_20482_, "strider", 0.5F);
@@ -22,10 +22,12 @@ public class ModelAdapterStrider extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new StriderModel(bakeModelLayer(ModelLayers.f_171251_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof StriderModel modelStrider)) {
          return null;
@@ -39,13 +41,13 @@ public class ModelAdapterStrider extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("right_leg", "right_leg");
       map.put("left_leg", "left_leg");
       map.put("body", "body");
@@ -59,6 +61,7 @@ public class ModelAdapterStrider extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       StriderRenderer render = new StriderRenderer(renderManager.getContext());

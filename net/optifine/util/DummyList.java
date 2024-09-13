@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-public class DummyList implements List {
-   public static final DummyList INSTANCE = new DummyList();
+public class DummyList<E> implements List<E> {
+   public static DummyList INSTANCE = new DummyList();
 
    public int size() {
       return 0;
@@ -16,11 +16,11 @@ public class DummyList implements List {
       return true;
    }
 
-   public boolean contains(Object o) {
+   public boolean m_274455_(Object o) {
       return false;
    }
 
-   public Iterator iterator() {
+   public Iterator<E> iterator() {
       return null;
    }
 
@@ -28,11 +28,11 @@ public class DummyList implements List {
       return null;
    }
 
-   public Object[] toArray(Object[] a) {
+   public <T> T[] toArray(T[] a) {
       return null;
    }
 
-   public boolean add(Object e) {
+   public boolean add(E e) {
       return false;
    }
 
@@ -40,41 +40,41 @@ public class DummyList implements List {
       return false;
    }
 
-   public boolean containsAll(Collection c) {
+   public boolean containsAll(Collection<?> c) {
       return false;
    }
 
-   public boolean addAll(Collection c) {
+   public boolean addAll(Collection<? extends E> c) {
       return false;
    }
 
-   public boolean addAll(int index, Collection c) {
+   public boolean addAll(int index, Collection<? extends E> c) {
       return false;
    }
 
-   public boolean removeAll(Collection c) {
+   public boolean removeAll(Collection<?> c) {
       return false;
    }
 
-   public boolean retainAll(Collection c) {
+   public boolean retainAll(Collection<?> c) {
       return false;
    }
 
    public void clear() {
    }
 
-   public Object get(int index) {
+   public E get(int index) {
       return null;
    }
 
-   public Object set(int index, Object element) {
+   public E set(int index, E element) {
       return null;
    }
 
-   public void add(int index, Object element) {
+   public void add(int index, E element) {
    }
 
-   public Object remove(int index) {
+   public E remove(int index) {
       return null;
    }
 
@@ -86,27 +86,34 @@ public class DummyList implements List {
       return -1;
    }
 
-   public ListIterator listIterator() {
+   public ListIterator<E> listIterator() {
       return null;
    }
 
-   public ListIterator listIterator(int index) {
+   public ListIterator<E> listIterator(int index) {
       return null;
    }
 
-   public List subList(int fromIndex, int toIndex) {
+   public List<E> subList(int fromIndex, int toIndex) {
       return this;
    }
 
-   public class DummyListIterator implements ListIterator {
-      public DummyListIterator(final DummyList this$0) {
-      }
-
+   public class DummyIterator<E> implements Iterator<E> {
       public boolean hasNext() {
          return false;
       }
 
-      public Object next() {
+      public E next() {
+         return null;
+      }
+   }
+
+   public class DummyListIterator<E> implements ListIterator<E> {
+      public boolean hasNext() {
+         return false;
+      }
+
+      public E next() {
          return null;
       }
 
@@ -114,7 +121,7 @@ public class DummyList implements List {
          return false;
       }
 
-      public Object previous() {
+      public E previous() {
          return null;
       }
 
@@ -129,23 +136,10 @@ public class DummyList implements List {
       public void remove() {
       }
 
-      public void set(Object e) {
+      public void set(E e) {
       }
 
-      public void add(Object e) {
-      }
-   }
-
-   public class DummyIterator implements Iterator {
-      public DummyIterator(final DummyList this$0) {
-      }
-
-      public boolean hasNext() {
-         return false;
-      }
-
-      public Object next() {
-         return null;
+      public void add(E e) {
       }
    }
 }

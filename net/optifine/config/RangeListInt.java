@@ -17,7 +17,7 @@ public class RangeListInt {
    }
 
    public boolean isInRange(int val) {
-      for(int i = 0; i < this.ranges.length; ++i) {
+      for (int i = 0; i < this.ranges.length; i++) {
          RangeInt ri = this.ranges[i];
          if (ri.isInRange(val)) {
             return true;
@@ -39,7 +39,7 @@ public class RangeListInt {
       StringBuffer sb = new StringBuffer();
       sb.append("[");
 
-      for(int i = 0; i < this.ranges.length; ++i) {
+      for (int i = 0; i < this.ranges.length; i++) {
          RangeInt ri = this.ranges[i];
          if (i > 0) {
             sb.append(", ");

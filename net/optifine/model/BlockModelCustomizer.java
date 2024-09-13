@@ -18,7 +18,7 @@ import net.optifine.render.RenderEnv;
 import net.optifine.render.RenderTypes;
 
 public class BlockModelCustomizer {
-   private static final List NO_QUADS = ImmutableList.of();
+   private static List<BakedQuad> NO_QUADS = ImmutableList.m_253057_();
 
    public static BakedModel getRenderModel(BakedModel modelIn, BlockState stateIn, RenderEnv renderEnv) {
       if (renderEnv.isSmartLeaves()) {
@@ -28,7 +28,16 @@ public class BlockModelCustomizer {
       return modelIn;
    }
 
-   public static List getRenderQuads(List quads, BlockAndTintGetter worldIn, BlockState stateIn, BlockPos posIn, Direction enumfacing, RenderType layer, long rand, RenderEnv renderEnv) {
+   public static List<BakedQuad> getRenderQuads(
+      List<BakedQuad> quads,
+      BlockAndTintGetter worldIn,
+      BlockState stateIn,
+      BlockPos posIn,
+      Direction enumfacing,
+      RenderType layer,
+      long rand,
+      RenderEnv renderEnv
+   ) {
       if (enumfacing != null) {
          if (renderEnv.isSmartLeaves() && SmartLeaves.isSameLeaves(worldIn.m_8055_(posIn.m_121945_(enumfacing)), stateIn)) {
             return NO_QUADS;
@@ -39,17 +48,17 @@ public class BlockModelCustomizer {
          }
       }
 
-      List quadsNew = renderEnv.getListQuadsCustomizer();
+      List<BakedQuad> quadsNew = renderEnv.getListQuadsCustomizer();
       quadsNew.clear();
 
-      for(int i = 0; i < quads.size(); ++i) {
+      for (int i = 0; i < quads.size(); i++) {
          BakedQuad quad = (BakedQuad)quads.get(i);
          BakedQuad[] quadArr = getRenderQuads(quad, worldIn, stateIn, posIn, enumfacing, rand, renderEnv);
          if (i == 0 && quads.size() == 1 && quadArr.length == 1 && quadArr[0] == quad && quad.getQuadEmissive() == null) {
             return quads;
          }
 
-         for(int q = 0; q < quadArr.length; ++q) {
+         for (int q = 0; q < quadArr.length; q++) {
             BakedQuad quadSingle = quadArr[q];
             quadsNew.add(quadSingle);
             if (quadSingle.getQuadEmissive() != null) {
@@ -66,7 +75,9 @@ public class BlockModelCustomizer {
       return layer != null && layer != RenderTypes.SOLID ? layer : RenderTypes.CUTOUT_MIPPED;
    }
 
-   private static BakedQuad[] getRenderQuads(BakedQuad quad, BlockAndTintGetter worldIn, BlockState stateIn, BlockPos posIn, Direction enumfacing, long rand, RenderEnv renderEnv) {
+   private static BakedQuad[] getRenderQuads(
+      BakedQuad quad, BlockAndTintGetter worldIn, BlockState stateIn, BlockPos posIn, Direction enumfacing, long rand, RenderEnv renderEnv
+   ) {
       if (renderEnv.isBreakingAnimation(quad)) {
          return renderEnv.getArrayQuadsCtm(quad);
       } else {

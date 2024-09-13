@@ -29,6 +29,7 @@ public class HFNoiseTexture implements ICustomTexture {
       return this.texID;
    }
 
+   @Override
    public void deleteTexture() {
       GlStateManager._deleteTexture(this.texID);
       this.texID = 0;
@@ -37,8 +38,7 @@ public class HFNoiseTexture implements ICustomTexture {
    private int random(int seed) {
       seed ^= seed << 13;
       seed ^= seed >> 17;
-      seed ^= seed << 5;
-      return seed;
+      return seed ^ seed << 5;
    }
 
    private byte random(int x, int y, int z) {
@@ -50,9 +50,9 @@ public class HFNoiseTexture implements ICustomTexture {
       byte[] image = new byte[width * height * 3];
       int index = 0;
 
-      for(int y = 0; y < height; ++y) {
-         for(int x = 0; x < width; ++x) {
-            for(int z = 1; z < 4; ++z) {
+      for (int y = 0; y < height; y++) {
+         for (int x = 0; x < width; x++) {
+            for (int z = 1; z < 4; z++) {
                image[index++] = this.random(x, y, z);
             }
          }
@@ -61,10 +61,12 @@ public class HFNoiseTexture implements ICustomTexture {
       return image;
    }
 
+   @Override
    public int getTextureId() {
       return this.texID;
    }
 
+   @Override
    public int getTextureUnit() {
       return this.textureUnit;
    }

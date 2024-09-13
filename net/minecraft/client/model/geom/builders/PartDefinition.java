@@ -5,17 +5,18 @@ import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 
 public class PartDefinition {
-   private final List f_171577_;
-   private final PartPose f_171578_;
-   private final Map f_171579_ = Maps.newHashMap();
+   private List<CubeDefinition> f_171577_;
+   private PartPose f_171578_;
+   private Map<String, PartDefinition> f_171579_ = Maps.newHashMap();
    private String name;
 
-   PartDefinition(List p_i171580_1_, PartPose p_i171580_2_) {
+   PartDefinition(List<CubeDefinition> p_i171580_1_, PartPose p_i171580_2_) {
       this.f_171577_ = p_i171580_1_;
       this.f_171578_ = p_i171580_2_;
    }
@@ -32,14 +33,21 @@ public class PartDefinition {
    }
 
    public ModelPart m_171583_(int p_171583_1_, int p_171583_2_) {
-      Object2ObjectArrayMap object2objectarraymap = (Object2ObjectArrayMap)this.f_171579_.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, (p_171590_2_) -> {
-         return ((PartDefinition)p_171590_2_.getValue()).m_171583_(p_171583_1_, p_171583_2_);
-      }, (p_171594_0_, p_171594_1_) -> {
-         return p_171594_0_;
-      }, Object2ObjectArrayMap::new));
-      List list = (List)this.f_171577_.stream().map((p_171586_2_) -> {
-         return p_171586_2_.m_171455_(p_171583_1_, p_171583_2_);
-      }).collect(ImmutableList.toImmutableList());
+      Object2ObjectArrayMap<String, ModelPart> object2objectarraymap = (Object2ObjectArrayMap<String, ModelPart>)this.f_171579_
+         .entrySet()
+         .stream()
+         .collect(
+            Collectors.toMap(
+               Entry::getKey,
+               p_171590_2_ -> ((PartDefinition)p_171590_2_.getValue()).m_171583_(p_171583_1_, p_171583_2_),
+               (p_171594_0_, p_171594_1_) -> p_171594_0_,
+               Object2ObjectArrayMap::new
+            )
+         );
+      List<ModelPart.Cube> list = (List<ModelPart.Cube>)this.f_171577_
+         .stream()
+         .map(p_171586_2_ -> p_171586_2_.m_171455_(p_171583_1_, p_171583_2_))
+         .collect(ImmutableList.toImmutableList());
       ModelPart modelpart = new ModelPart(list, object2objectarraymap);
       modelpart.m_233560_(this.f_171578_);
       modelpart.m_171322_(this.f_171578_);

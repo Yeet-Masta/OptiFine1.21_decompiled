@@ -35,18 +35,13 @@ public class TileEntityUtils {
             nameServer = Component.m_237113_("");
          }
 
-         setTileEntityRawName(te, (Component)nameServer);
+         setTileEntityRawName(te, nameServer);
       }
    }
 
    public static Component getServerTileEntityRawName(BlockPos blockPos) {
       BlockEntity tes = IntegratedServerUtils.getTileEntity(blockPos);
-      if (tes == null) {
-         return null;
-      } else {
-         Component itc = getTileEntityRawName(tes);
-         return itc;
-      }
+      return tes == null ? null : getTileEntityRawName(tes);
    }
 
    public static Component getTileEntityRawName(BlockEntity te) {

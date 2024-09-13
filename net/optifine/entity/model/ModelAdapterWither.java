@@ -18,10 +18,12 @@ public class ModelAdapterWither extends ModelAdapter {
       super(entityType, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new WitherBossModel(bakeModelLayer(ModelLayers.f_171214_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof WitherBossModel modelWither)) {
          return null;
@@ -42,10 +44,12 @@ public class ModelAdapterWither extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body1", "body2", "body3", "head1", "head2", "head3", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WitherBossRenderer render = new WitherBossRenderer(renderManager.getContext());

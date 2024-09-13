@@ -4,28 +4,27 @@ import net.minecraft.util.Mth;
 
 public class MathUtilsTest {
    public static void main(String[] args) throws Exception {
-      OPER[] values = MathUtilsTest.OPER.values();
+      MathUtilsTest.OPER[] values = MathUtilsTest.OPER.values();
 
-      for(int i = 0; i < values.length; ++i) {
-         OPER oper = values[i];
-         dbg("******** " + String.valueOf(oper) + " ***********");
-         test(oper, false);
+      for (int i = 0; i < values.length; i++) {
+         MathUtilsTest.OPER oper = values[i];
+         dbg("******** " + oper + " ***********");
+         m_125854_(oper, false);
       }
-
    }
 
-   private static void test(OPER oper, boolean fast) {
+   private static void m_125854_(MathUtilsTest.OPER oper, boolean fast) {
       Mth.fastMath = fast;
       double min;
       double max;
-      switch (oper.ordinal()) {
-         case 0:
-         case 1:
-            min = -3.1415927410125732;
-            max = 3.1415927410125732;
+      switch (oper) {
+         case SIN:
+         case COS:
+            min = (float) -Math.PI;
+            max = (float) Math.PI;
             break;
-         case 2:
-         case 3:
+         case ASIN:
+         case ACOS:
             min = -1.0;
             max = 1.0;
             break;
@@ -35,24 +34,24 @@ public class MathUtilsTest {
 
       int count = 10;
 
-      for(int i = 0; i <= count; ++i) {
+      for (int i = 0; i <= count; i++) {
          double val = min + (double)i * (max - min) / (double)count;
          float res1;
          float res2;
-         switch (oper.ordinal()) {
-            case 0:
+         switch (oper) {
+            case SIN:
                res1 = (float)Math.sin(val);
                res2 = Mth.m_14031_((float)val);
                break;
-            case 1:
+            case COS:
                res1 = (float)Math.cos(val);
                res2 = Mth.m_14089_((float)val);
                break;
-            case 2:
+            case ASIN:
                res1 = (float)Math.asin(val);
                res2 = MathUtils.asin((float)val);
                break;
-            case 3:
+            case ACOS:
                res1 = (float)Math.acos(val);
                res2 = MathUtils.acos((float)val);
                break;
@@ -60,9 +59,8 @@ public class MathUtilsTest {
                return;
          }
 
-         dbg(String.format("%.2f, Math: %f, Helper: %f, diff: %f", val, res1, res2, Math.abs(res1 - res2)));
+         dbg(String.m_12886_("%.2f, Math: %f, Helper: %f, diff: %f", new Object[]{val, res1, res2, Math.abs(res1 - res2)}));
       }
-
    }
 
    public static void dbg(String str) {
@@ -74,10 +72,5 @@ public class MathUtilsTest {
       COS,
       ASIN,
       ACOS;
-
-      // $FF: synthetic method
-      private static OPER[] $values() {
-         return new OPER[]{SIN, COS, ASIN, ACOS};
-      }
    }
 }

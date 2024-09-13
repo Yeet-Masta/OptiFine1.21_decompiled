@@ -21,7 +21,7 @@ public class CustomPanoramaProperties {
       this.path = path;
       this.panoramaLocations = new ResourceLocation[6];
 
-      for(int i = 0; i < this.panoramaLocations.length; ++i) {
+      for (int i = 0; i < this.panoramaLocations.length; i++) {
          this.panoramaLocations[i] = new ResourceLocation(path + "/panorama_" + i + ".png");
       }
 
@@ -72,6 +72,22 @@ public class CustomPanoramaProperties {
    }
 
    public String toString() {
-      return this.path + ", weight: " + this.weight + ", blur: " + this.blur1 + " " + this.blur2 + " " + this.blur3 + ", overlay: " + this.overlay1Top + " " + this.overlay1Bottom + " " + this.overlay2Top + " " + this.overlay2Bottom;
+      return this.path
+         + ", weight: "
+         + this.weight
+         + ", blur: "
+         + this.blur1
+         + " "
+         + this.blur2
+         + " "
+         + this.blur3
+         + ", overlay: "
+         + this.overlay1Top
+         + " "
+         + this.overlay1Bottom
+         + " "
+         + this.overlay2Top
+         + " "
+         + this.overlay2Bottom;
    }
 }

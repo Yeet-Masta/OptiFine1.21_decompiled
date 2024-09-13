@@ -15,46 +15,46 @@ public enum UniformType {
    VEC4;
 
    public ShaderUniformBase makeShaderUniform(String name) {
-      switch (this.ordinal()) {
-         case 0:
+      switch (this) {
+         case BOOL:
             return new ShaderUniform1i(name);
-         case 1:
+         case INT:
             return new ShaderUniform1i(name);
-         case 2:
+         case FLOAT:
             return new ShaderUniform1f(name);
-         case 3:
+         case VEC2:
             return new ShaderUniform2f(name);
-         case 4:
+         case VEC3:
             return new ShaderUniform3f(name);
-         case 5:
+         case VEC4:
             return new ShaderUniform4f(name);
          default:
-            throw new RuntimeException("Unknown uniform type: " + String.valueOf(this));
+            throw new RuntimeException("Unknown uniform type: " + this);
       }
    }
 
    public void updateUniform(IExpression expression, ShaderUniformBase uniform) {
-      switch (this.ordinal()) {
-         case 0:
+      switch (this) {
+         case BOOL:
             this.updateUniformBool((IExpressionBool)expression, (ShaderUniform1i)uniform);
             return;
-         case 1:
+         case INT:
             this.updateUniformInt((IExpressionFloat)expression, (ShaderUniform1i)uniform);
             return;
-         case 2:
+         case FLOAT:
             this.updateUniformFloat((IExpressionFloat)expression, (ShaderUniform1f)uniform);
             return;
-         case 3:
+         case VEC2:
             this.updateUniformFloat2((IExpressionFloatArray)expression, (ShaderUniform2f)uniform);
             return;
-         case 4:
+         case VEC3:
             this.updateUniformFloat3((IExpressionFloatArray)expression, (ShaderUniform3f)uniform);
             return;
-         case 5:
+         case VEC4:
             this.updateUniformFloat4((IExpressionFloatArray)expression, (ShaderUniform4f)uniform);
             return;
          default:
-            throw new RuntimeException("Unknown uniform type: " + String.valueOf(this));
+            throw new RuntimeException("Unknown uniform type: " + this);
       }
    }
 
@@ -102,26 +102,26 @@ public enum UniformType {
    }
 
    public boolean matchesExpressionType(ExpressionType expressionType) {
-      switch (this.ordinal()) {
-         case 0:
+      switch (this) {
+         case BOOL:
             return expressionType == ExpressionType.BOOL;
-         case 1:
+         case INT:
             return expressionType == ExpressionType.FLOAT;
-         case 2:
+         case FLOAT:
             return expressionType == ExpressionType.FLOAT;
-         case 3:
-         case 4:
-         case 5:
+         case VEC2:
+         case VEC3:
+         case VEC4:
             return expressionType == ExpressionType.FLOAT_ARRAY;
          default:
-            throw new RuntimeException("Unknown uniform type: " + String.valueOf(this));
+            throw new RuntimeException("Unknown uniform type: " + this);
       }
    }
 
-   public static UniformType parse(String type) {
+   public static UniformType m_82160_(String type) {
       UniformType[] values = values();
 
-      for(int i = 0; i < values.length; ++i) {
+      for (int i = 0; i < values.length; i++) {
          UniformType uniformType = values[i];
          if (uniformType.name().toLowerCase().equals(type)) {
             return uniformType;
@@ -129,10 +129,5 @@ public enum UniformType {
       }
 
       return null;
-   }
-
-   // $FF: synthetic method
-   private static UniformType[] $values() {
-      return new UniformType[]{BOOL, INT, FLOAT, VEC2, VEC3, VEC4};
    }
 }

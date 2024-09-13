@@ -1,7 +1,5 @@
 package net.optifine.entity.model;
 
-import java.util.Iterator;
-import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.TropicalFishModelB;
@@ -20,20 +18,20 @@ public class ModelAdapterTropicalFishPatternB extends ModelAdapterTropicalFishB 
       super(EntityType.f_20489_, "tropical_fish_pattern_b", 0.2F);
    }
 
+   @Override
    public Model makeModel() {
       return new TropicalFishModelB(bakeModelLayer(ModelLayers.f_171257_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TropicalFishRenderer customRenderer = new TropicalFishRenderer(renderManager.getContext());
       customRenderer.f_115290_ = new TropicalFishModelB(bakeModelLayer(ModelLayers.f_171257_));
       customRenderer.f_114477_ = 0.2F;
-      EntityRenderer render = rendererCache.get(EntityType.f_20489_, index, () -> {
-         return customRenderer;
-      });
+      EntityRenderer render = rendererCache.get(EntityType.f_20489_, index, () -> customRenderer);
       if (!(render instanceof TropicalFishRenderer renderTropicalFish)) {
-         Config.warn("Not a RenderTropicalFish: " + String.valueOf(render));
+         Config.warn("Not a RenderTropicalFish: " + render);
          return null;
       } else {
          TropicalFishPatternLayer layer = (TropicalFishPatternLayer)renderTropicalFish.getLayer(TropicalFishPatternLayer.class);
@@ -54,13 +52,11 @@ public class ModelAdapterTropicalFishPatternB extends ModelAdapterTropicalFishB 
       }
    }
 
+   @Override
    public boolean setTextureLocation(IEntityRenderer er, ResourceLocation textureLocation) {
       TropicalFishRenderer renderTropicalFish = (TropicalFishRenderer)er;
-      List layers = renderTropicalFish.getLayers(TropicalFishPatternLayer.class);
-      Iterator var5 = layers.iterator();
 
-      while(var5.hasNext()) {
-         TropicalFishPatternLayer layer = (TropicalFishPatternLayer)var5.next();
+      for (TropicalFishPatternLayer layer : renderTropicalFish.getLayers(TropicalFishPatternLayer.class)) {
          TropicalFishModelB modelB = (TropicalFishModelB)Reflector.TropicalFishPatternLayer_modelB.getValue(layer);
          if (modelB != null) {
             modelB.locationTextureCustom = textureLocation;

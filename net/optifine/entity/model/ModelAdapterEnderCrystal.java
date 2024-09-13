@@ -18,10 +18,12 @@ public class ModelAdapterEnderCrystal extends ModelAdapter {
       super(EntityType.f_20564_, name, 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new EnderCrystalModel();
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof EnderCrystalModel modelEnderCrystal)) {
          return null;
@@ -34,25 +36,25 @@ public class ModelAdapterEnderCrystal extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"cube", "glass", "base"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
-      EntityRenderer renderObj = rendererCache.get(EntityType.f_20564_, index, () -> {
-         return new EndCrystalRenderer(renderManager.getContext());
-      });
+      EntityRenderer renderObj = rendererCache.get(EntityType.f_20564_, index, () -> new EndCrystalRenderer(renderManager.getContext()));
       if (!(renderObj instanceof EndCrystalRenderer render)) {
-         Config.warn("Not an instance of RenderEnderCrystal: " + String.valueOf(renderObj));
+         Config.warn("Not an instance of RenderEnderCrystal: " + renderObj);
          return null;
       } else if (!(modelBase instanceof EnderCrystalModel enderCrystalModel)) {
-         Config.warn("Not a EnderCrystalModel model: " + String.valueOf(modelBase));
+         Config.warn("Not a EnderCrystalModel model: " + modelBase);
          return null;
       } else {
-         render = enderCrystalModel.updateRenderer(render);
-         render.f_114477_ = shadowSize;
-         return render;
+         EndCrystalRenderer var9 = enderCrystalModel.updateRenderer(render);
+         var9.f_114477_ = shadowSize;
+         return var9;
       }
    }
 }

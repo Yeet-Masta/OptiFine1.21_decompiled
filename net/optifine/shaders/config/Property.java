@@ -47,17 +47,16 @@ public class Property {
       int max = this.propertyValues.length - 1;
       this.value = Config.limit(this.value, min, max);
       if (forward) {
-         ++this.value;
+         this.value++;
          if (this.value > max) {
             this.value = min;
          }
       } else {
-         --this.value;
+         this.value--;
          if (this.value < min) {
             this.value = max;
          }
       }
-
    }
 
    public void setValue(int val) {
@@ -65,7 +64,6 @@ public class Property {
       if (this.value < 0 || this.value >= this.propertyValues.length) {
          this.value = this.defaultValue;
       }
-
    }
 
    public int getValue() {
@@ -109,7 +107,6 @@ public class Property {
    }
 
    public String toString() {
-      String var10000 = this.propertyName;
-      return var10000 + "=" + this.getPropertyValue() + " [" + Config.arrayToString((Object[])this.propertyValues) + "], value: " + this.value;
+      return this.propertyName + "=" + this.getPropertyValue() + " [" + Config.arrayToString((Object[])this.propertyValues) + "], value: " + this.value;
    }
 }

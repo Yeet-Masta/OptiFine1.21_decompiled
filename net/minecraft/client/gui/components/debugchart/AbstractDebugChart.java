@@ -9,11 +9,11 @@ import net.minecraft.util.FastColor.ARGB32;
 import net.minecraft.util.debugchart.SampleStorage;
 
 public abstract class AbstractDebugChart {
-   protected static final int f_290832_ = 14737632;
-   protected static final int f_290328_ = 60;
-   protected static final int f_291047_ = 1;
-   protected final Font f_290686_;
-   protected final SampleStorage f_316855_;
+   protected static int f_290832_;
+   protected static int f_290328_;
+   protected static int f_291047_;
+   protected Font f_290686_;
+   protected SampleStorage f_316855_;
 
    protected AbstractDebugChart(Font fontIn, SampleStorage loggerIn) {
       this.f_290686_ = fontIn;
@@ -40,7 +40,7 @@ public abstract class AbstractDebugChart {
       int i1 = Math.max(0, this.f_316855_.m_323740_() - (widthIn - 2));
       int j1 = this.f_316855_.m_322219_() - i1;
 
-      for(int k1 = 0; k1 < j1; ++k1) {
+      for (int k1 = 0; k1 < j1; k1++) {
          int l1 = xIn + k1 + 1;
          int i2 = i1 + k1;
          long j2 = this.m_320595_(i2);
@@ -55,12 +55,9 @@ public abstract class AbstractDebugChart {
       graphicsIn.m_285886_(RenderType.m_286086_(), xIn, i - 60, i, -1);
       graphicsIn.m_285886_(RenderType.m_286086_(), xIn + widthIn - 1, i - 60, i, -1);
       if (j1 > 0) {
-         String var10000 = this.m_293688_((double)k);
-         String s = var10000 + " min";
-         var10000 = this.m_293688_((double)j / (double)j1);
-         String s1 = var10000 + " avg";
-         var10000 = this.m_293688_((double)l);
-         String s2 = var10000 + " max";
+         String s = this.m_293688_((double)k) + " min";
+         String s1 = this.m_293688_((double)j / (double)j1) + " avg";
+         String s2 = this.m_293688_((double)l) + " max";
          graphicsIn.m_280488_(this.f_290686_, s, xIn + 2, i - 60 - 9, 14737632);
          graphicsIn.m_280137_(this.f_290686_, s1, xIn + widthIn / 2, i - 60 - 9, 14737632);
          graphicsIn.m_280488_(this.f_290686_, s2, xIn + widthIn - this.f_290686_.m_92895_(s2) - 2, i - 60 - 9, 14737632);
@@ -104,6 +101,8 @@ public abstract class AbstractDebugChart {
 
    protected int m_295426_(double valueIn, double valueMinIn, int colMinIn, double valueTresholdIn, int colThreasholdIn, double valueMaxIn, int colMaxIn) {
       valueIn = Mth.m_14008_(valueIn, valueMinIn, valueMaxIn);
-      return valueIn < valueTresholdIn ? ARGB32.m_269105_((float)((valueIn - valueMinIn) / (valueTresholdIn - valueMinIn)), colMinIn, colThreasholdIn) : ARGB32.m_269105_((float)((valueIn - valueTresholdIn) / (valueMaxIn - valueTresholdIn)), colThreasholdIn, colMaxIn);
+      return valueIn < valueTresholdIn
+         ? ARGB32.m_269105_((float)((valueIn - valueMinIn) / (valueTresholdIn - valueMinIn)), colMinIn, colThreasholdIn)
+         : ARGB32.m_269105_((float)((valueIn - valueTresholdIn) / (valueMaxIn - valueTresholdIn)), colThreasholdIn, colMaxIn);
    }
 }

@@ -29,31 +29,31 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 public class ActiveProfiler implements ProfileCollector {
-   private static final long f_18368_ = Duration.ofMillis(100L).toNanos();
-   private static final Logger f_18369_ = LogUtils.getLogger();
-   private final List f_18370_ = Lists.newArrayList();
-   private final LongList f_18371_ = new LongArrayList();
-   private final Map f_18372_ = Maps.newHashMap();
-   private final IntSupplier f_18373_;
-   private final LongSupplier f_18374_;
-   private final long f_18375_;
-   private final int f_18376_;
+   private static long f_18368_ = Duration.ofMillis(100L).toNanos();
+   private static Logger f_18369_ = LogUtils.getLogger();
+   private List<String> f_18370_ = Lists.newArrayList();
+   private LongList f_18371_ = new LongArrayList();
+   private Map<String, ActiveProfiler.PathEntry> f_18372_ = Maps.newHashMap();
+   private IntSupplier f_18373_;
+   private LongSupplier f_18374_;
+   private long f_18375_;
+   private int f_18376_;
    private String f_18377_ = "";
    private boolean f_18378_;
    @Nullable
-   private PathEntry f_18379_;
-   private final boolean f_18380_;
-   private final Set f_145926_ = new ObjectArraySet();
+   private ActiveProfiler.PathEntry f_18379_;
+   private boolean f_18380_;
+   private Set<Pair<String, MetricCategory>> f_145926_ = new ObjectArraySet();
    private boolean clientProfiler = false;
    private boolean lagometerActive = false;
-   private static final String SCHEDULED_EXECUTABLES = "scheduledExecutables";
-   private static final String TICK = "tick";
-   private static final String SOUND = "sound";
-   private static final int HASH_SCHEDULED_EXECUTABLES = "scheduledExecutables".hashCode();
-   private static final int HASH_TICK = "tick".hashCode();
-   private static final int HASH_SOUND = "sound".hashCode();
-   private static final ReflectorClass MINECRAFT = new ReflectorClass(Minecraft.class);
-   private static final ReflectorField Minecraft_timeTracker;
+   private static String SCHEDULED_EXECUTABLES;
+   private static String TICK;
+   private static String SOUND;
+   private static int HASH_SCHEDULED_EXECUTABLES = "scheduledExecutables".hashCode();
+   private static int HASH_TICK = "tick".hashCode();
+   private static int HASH_SOUND = "sound".hashCode();
+   private static ReflectorClass MINECRAFT = new ReflectorClass(Minecraft.class);
+   private static ReflectorField Minecraft_timeTracker = new ReflectorField(MINECRAFT, ContinuousProfiler.class);
 
    public ActiveProfiler(LongSupplier p_i18382_1_, IntSupplier p_i18382_2_, boolean p_i18382_3_) {
       this.f_18375_ = p_i18382_1_.getAsLong();
@@ -75,7 +75,6 @@ public class ActiveProfiler implements ProfileCollector {
          this.f_18370_.clear();
          this.m_6180_("root");
       }
-
    }
 
    public void m_7241_() {
@@ -85,12 +84,12 @@ public class ActiveProfiler implements ProfileCollector {
          this.m_7238_();
          this.f_18378_ = false;
          if (!this.f_18377_.isEmpty()) {
-            f_18369_.error("Profiler tick ended before path was fully popped (remainder: '{}'). Mismatched push/pop?", LogUtils.defer(() -> {
-               return ProfileResults.m_18575_(this.f_18377_);
-            }));
+            f_18369_.error(
+               "Profiler tick ended before path was fully popped (remainder: '{}'). Mismatched push/pop?",
+               LogUtils.defer(() -> ProfileResults.m_18575_(this.f_18377_))
+            );
          }
       }
-
    }
 
    public void m_6180_(String name) {
@@ -116,15 +115,14 @@ public class ActiveProfiler implements ProfileCollector {
          this.f_18371_.add(Util.m_137569_());
          this.f_18379_ = null;
       }
-
    }
 
-   public void m_6521_(Supplier nameSupplier) {
+   public void m_6521_(Supplier<String> nameSupplier) {
       this.m_6180_((String)nameSupplier.get());
    }
 
    public void m_142259_(MetricCategory categoryIn) {
-      this.f_145926_.add(Pair.of(this.f_18377_, categoryIn));
+      this.f_145926_.add(Pair.m_253057_(this.f_18377_, categoryIn));
    }
 
    public void m_7238_() {
@@ -137,25 +135,24 @@ public class ActiveProfiler implements ProfileCollector {
          long j = this.f_18371_.removeLong(this.f_18371_.size() - 1);
          this.f_18370_.remove(this.f_18370_.size() - 1);
          long k = i - j;
-         PathEntry activeprofiler$pathentry = this.m_18406_();
+         ActiveProfiler.PathEntry activeprofiler$pathentry = this.m_18406_();
          activeprofiler$pathentry.f_145934_ = (activeprofiler$pathentry.f_145934_ * 49L + k) / 50L;
          activeprofiler$pathentry.f_18410_ = 1L;
          activeprofiler$pathentry.f_145934_ += k;
-         ++activeprofiler$pathentry.f_18410_;
+         activeprofiler$pathentry.f_18410_++;
          activeprofiler$pathentry.f_145932_ = Math.max(activeprofiler$pathentry.f_145932_, k);
          activeprofiler$pathentry.f_145933_ = Math.min(activeprofiler$pathentry.f_145933_, k);
          if (this.f_18380_ && k > f_18368_) {
-            f_18369_.warn("Something's taking too long! '{}' took aprox {} ms", LogUtils.defer(() -> {
-               return ProfileResults.m_18575_(this.f_18377_);
-            }), LogUtils.defer(() -> {
-               return (double)k / 1000000.0;
-            }));
+            f_18369_.warn(
+               "Something's taking too long! '{}' took aprox {} ms",
+               LogUtils.defer(() -> ProfileResults.m_18575_(this.f_18377_)),
+               LogUtils.defer(() -> (double)k / 1000000.0)
+            );
          }
 
          this.f_18377_ = this.f_18370_.isEmpty() ? "" : (String)this.f_18370_.get(this.f_18370_.size() - 1);
          this.f_18379_ = null;
       }
-
    }
 
    public void m_6182_(String name) {
@@ -170,16 +167,14 @@ public class ActiveProfiler implements ProfileCollector {
       this.m_6180_(name);
    }
 
-   public void m_6523_(Supplier nameSupplier) {
+   public void m_6523_(Supplier<String> nameSupplier) {
       this.m_7238_();
       this.m_6521_(nameSupplier);
    }
 
-   private PathEntry m_18406_() {
+   private ActiveProfiler.PathEntry m_18406_() {
       if (this.f_18379_ == null) {
-         this.f_18379_ = (PathEntry)this.f_18372_.computeIfAbsent(this.f_18377_, (keyIn) -> {
-            return new PathEntry();
-         });
+         this.f_18379_ = (ActiveProfiler.PathEntry)this.f_18372_.computeIfAbsent(this.f_18377_, keyIn -> new ActiveProfiler.PathEntry());
       }
 
       return this.f_18379_;
@@ -189,7 +184,7 @@ public class ActiveProfiler implements ProfileCollector {
       this.m_18406_().f_18411_.addTo(nameIn, (long)countIn);
    }
 
-   public void m_183536_(Supplier nameSupplierIn, int countIn) {
+   public void m_183536_(Supplier<String> nameSupplierIn, int countIn) {
       this.m_18406_().f_18411_.addTo((String)nameSupplierIn.get(), (long)countIn);
    }
 
@@ -198,16 +193,12 @@ public class ActiveProfiler implements ProfileCollector {
    }
 
    @Nullable
-   public PathEntry m_142431_(String nameIn) {
-      return (PathEntry)this.f_18372_.get(nameIn);
+   public ActiveProfiler.PathEntry m_142431_(String nameIn) {
+      return (ActiveProfiler.PathEntry)this.f_18372_.get(nameIn);
    }
 
-   public Set m_142579_() {
+   public Set<Pair<String, MetricCategory>> m_142579_() {
       return this.f_145926_;
-   }
-
-   static {
-      Minecraft_timeTracker = new ReflectorField(MINECRAFT, ContinuousProfiler.class);
    }
 
    public static class PathEntry implements ProfilerPathEntry {
@@ -215,7 +206,7 @@ public class ActiveProfiler implements ProfileCollector {
       long f_145933_ = Long.MAX_VALUE;
       long f_145934_;
       long f_18410_;
-      final Object2LongOpenHashMap f_18411_ = new Object2LongOpenHashMap();
+      Object2LongOpenHashMap<String> f_18411_ = new Object2LongOpenHashMap();
 
       public long m_7235_() {
          return this.f_145934_;
@@ -229,7 +220,7 @@ public class ActiveProfiler implements ProfileCollector {
          return this.f_18410_;
       }
 
-      public Object2LongMap m_7446_() {
+      public Object2LongMap<String> m_7446_() {
          return Object2LongMaps.unmodifiable(this.f_18411_);
       }
    }

@@ -13,6 +13,7 @@ public class ModelAdapterZombifiedPiglin extends ModelAdapterPiglin {
       super(EntityType.f_20531_, "zombified_piglin", 0.5F);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PiglinRenderer render = new PiglinRenderer(renderManager.getContext(), ModelLayers.f_171231_, ModelLayers.f_171232_, ModelLayers.f_171233_, true);

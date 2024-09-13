@@ -10,15 +10,14 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 public class VertexFormat {
-   public static final int f_337347_ = -1;
-   private List f_86012_;
-   private List f_337579_;
+   public static int f_337347_;
+   private List<VertexFormatElement> f_86012_;
+   private List<String> f_337579_;
    private int f_86014_;
    private int f_337518_;
    private int[] f_337288_ = new int[32];
@@ -29,20 +28,17 @@ public class VertexFormat {
    private int normalElementOffset = -1;
    private int colorElementOffset = -1;
    private Int2IntMap uvOffsetsById = new Int2IntArrayMap();
-   private ImmutableMap elementMapping;
+   private ImmutableMap<String, VertexFormatElement> elementMapping;
    private boolean extended;
 
-   VertexFormat(List elementsIn, List namesIn, IntList offsetsIn, int vertexSizeIn) {
+   VertexFormat(List<VertexFormatElement> elementsIn, List<String> namesIn, IntList offsetsIn, int vertexSizeIn) {
       this.f_86012_ = elementsIn;
       this.f_337579_ = namesIn;
       this.f_86014_ = vertexSizeIn;
-      this.f_337518_ = elementsIn.stream().mapToInt(VertexFormatElement::m_339950_).reduce(0, (val1, val2) -> {
-         return val1 | val2;
-      });
-      Map mapElements = new HashMap();
+      this.f_337518_ = elementsIn.stream().mapToInt(VertexFormatElement::m_339950_).reduce(0, (val1, val2) -> val1 | val2);
+      Map<String, VertexFormatElement> mapElements = new HashMap();
 
-      int i;
-      for(i = 0; i < this.f_337579_.size(); ++i) {
+      for (int i = 0; i < this.f_337579_.size(); i++) {
          String name = (String)this.f_337579_.get(i);
          VertexFormatElement element = (VertexFormatElement)this.f_86012_.get(i);
          mapElements.put(name, element);
@@ -50,7 +46,7 @@ public class VertexFormat {
 
       this.elementMapping = ImmutableMap.copyOf(mapElements);
 
-      for(i = 0; i < this.f_337288_.length; ++i) {
+      for (int i = 0; i < this.f_337288_.length; i++) {
          VertexFormatElement vertexformatelement = VertexFormatElement.m_340524_(i);
          int j = vertexformatelement != null ? elementsIn.indexOf(vertexformatelement) : -1;
          this.f_337288_[i] = j != -1 ? offsetsIn.getInt(j) : -1;
@@ -63,24 +59,30 @@ public class VertexFormat {
                this.normalElementOffset = offset;
             } else if (usage == VertexFormatElement.Usage.COLOR) {
                this.colorElementOffset = offset;
-            } else if (usage == VertexFormatElement.Usage.field_48) {
+            } else if (usage == VertexFormatElement.Usage.UV) {
                this.uvOffsetsById.put(vertexformatelement.f_86032_(), offset);
             }
          }
       }
-
    }
 
-   public static Builder m_339703_() {
-      return new Builder();
+   public static VertexFormat.Builder m_339703_() {
+      return new VertexFormat.Builder();
    }
 
    public String toString() {
-      StringBuilder stringbuilder = (new StringBuilder("Vertex format: " + this.name + " (")).append(this.f_86014_).append(" bytes):\n");
+      StringBuilder stringbuilder = new StringBuilder("Vertex format: " + this.name + " (").append(this.f_86014_).append(" bytes):\n");
 
-      for(int i = 0; i < this.f_86012_.size(); ++i) {
+      for (int i = 0; i < this.f_86012_.size(); i++) {
          VertexFormatElement vertexformatelement = (VertexFormatElement)this.f_86012_.get(i);
-         stringbuilder.append(i).append(". ").append((String)this.f_337579_.get(i)).append(": ").append(vertexformatelement).append(" @ ").append(this.m_338798_(vertexformatelement)).append('\n');
+         stringbuilder.append(i)
+            .append(". ")
+            .append((String)this.f_337579_.get(i))
+            .append(": ")
+            .append(vertexformatelement)
+            .append(" @ ")
+            .append(this.m_338798_(vertexformatelement))
+            .append('\n');
       }
 
       return stringbuilder.toString();
@@ -90,11 +92,11 @@ public class VertexFormat {
       return this.f_86014_;
    }
 
-   public List m_86023_() {
+   public List<VertexFormatElement> m_86023_() {
       return this.f_86012_;
    }
 
-   public List m_166911_() {
+   public List<String> m_166911_() {
       return this.f_337579_;
    }
 
@@ -117,7 +119,7 @@ public class VertexFormat {
    public String m_340604_(VertexFormatElement elementIn) {
       int i = this.f_86012_.indexOf(elementIn);
       if (i == -1) {
-         throw new IllegalArgumentException(String.valueOf(elementIn) + " is not contained in format");
+         throw new IllegalArgumentException(elementIn + " is not contained in format");
       } else {
          return (String)this.f_337579_.get(i);
       }
@@ -127,11 +129,12 @@ public class VertexFormat {
       if (this == p_equals_1_) {
          return true;
       } else {
-         if (p_equals_1_ instanceof VertexFormat) {
-            VertexFormat vertexformat = (VertexFormat)p_equals_1_;
-            if (this.f_337518_ == vertexformat.f_337518_ && this.f_86014_ == vertexformat.f_86014_ && this.f_337579_.equals(vertexformat.f_337579_) && Arrays.equals(this.f_337288_, vertexformat.f_337288_)) {
-               return true;
-            }
+         if (p_equals_1_ instanceof VertexFormat vertexformat
+            && this.f_337518_ == vertexformat.f_337518_
+            && this.f_86014_ == vertexformat.f_86014_
+            && this.f_337579_.equals(vertexformat.f_337579_)
+            && Arrays.equals(this.f_337288_, vertexformat.f_337288_)) {
+            return true;
          }
 
          return false;
@@ -148,13 +151,12 @@ public class VertexFormat {
       } else {
          this.m_166916_();
       }
-
    }
 
    private void m_166916_() {
       int i = this.m_86020_();
 
-      for(int j = 0; j < this.f_86012_.size(); ++j) {
+      for (int j = 0; j < this.f_86012_.size(); j++) {
          VertexFormatElement vertexformatelement = (VertexFormatElement)this.f_86012_.get(j);
          int attributeIndex = vertexformatelement.getAttributeIndex();
          if (attributeIndex >= 0) {
@@ -162,7 +164,6 @@ public class VertexFormat {
             vertexformatelement.m_166965_(attributeIndex, (long)this.m_338798_(vertexformatelement), i);
          }
       }
-
    }
 
    public void m_86024_() {
@@ -171,18 +172,16 @@ public class VertexFormat {
       } else {
          this.m_166917_();
       }
-
    }
 
    private void m_166917_() {
-      for(int i = 0; i < this.f_86012_.size(); ++i) {
+      for (int i = 0; i < this.f_86012_.size(); i++) {
          VertexFormatElement vertexformatelement = (VertexFormatElement)this.f_86012_.get(i);
          int attributeIndex = vertexformatelement.getAttributeIndex();
          if (attributeIndex >= 0) {
             GlStateManager._disableVertexAttribArray(attributeIndex);
          }
       }
-
    }
 
    public VertexBuffer m_231233_() {
@@ -255,13 +254,12 @@ public class VertexFormat {
    }
 
    public VertexFormat duplicate() {
-      Builder vfb = m_339703_();
+      VertexFormat.Builder vfb = m_339703_();
       vfb.addAll(this);
-      VertexFormat vf = vfb.m_339368_();
-      return vf;
+      return vfb.m_339368_();
    }
 
-   public ImmutableMap getElementMapping() {
+   public ImmutableMap<String, VertexFormatElement> getElementMapping() {
       return this.elementMapping;
    }
 
@@ -278,44 +276,57 @@ public class VertexFormat {
    }
 
    public static class Builder {
-      private final ImmutableMap.Builder f_337231_ = ImmutableMap.builder();
-      private final IntList f_337307_ = new IntArrayList();
+      private com.google.common.collect.ImmutableMap.Builder<String, VertexFormatElement> f_337231_ = ImmutableMap.builder();
+      private IntList f_337307_ = new IntArrayList();
       private int f_336835_;
 
-      public Builder m_339091_(String nameIn, VertexFormatElement elementIn) {
+      public VertexFormat.Builder m_339091_(String nameIn, VertexFormatElement elementIn) {
          this.f_337231_.put(nameIn, elementIn);
          this.f_337307_.add(this.f_336835_);
-         this.f_336835_ += elementIn.m_339527_();
+         this.f_336835_ = this.f_336835_ + elementIn.m_339527_();
          return this;
       }
 
-      public Builder m_339010_(int sizeIn) {
+      public VertexFormat.Builder m_339010_(int sizeIn) {
          this.f_336835_ += sizeIn;
          return this;
       }
 
       public VertexFormat m_339368_() {
-         ImmutableMap immutablemap = this.f_337231_.buildOrThrow();
-         ImmutableList immutablelist = immutablemap.values().asList();
-         ImmutableList immutablelist1 = immutablemap.keySet().asList();
+         ImmutableMap<String, VertexFormatElement> immutablemap = this.f_337231_.buildOrThrow();
+         ImmutableList<VertexFormatElement> immutablelist = immutablemap.values().asList();
+         ImmutableList<String> immutablelist1 = immutablemap.keySet().asList();
          return new VertexFormat(immutablelist, immutablelist1, this.f_337307_, this.f_336835_);
       }
 
-      public Builder addAll(VertexFormat vf) {
-         List elements = vf.m_86023_();
-         Iterator var3 = elements.iterator();
-
-         while(var3.hasNext()) {
-            VertexFormatElement vfe = (VertexFormatElement)var3.next();
+      public VertexFormat.Builder addAll(VertexFormat vf) {
+         for (VertexFormatElement vfe : vf.m_86023_()) {
             String name = vf.m_340604_(vfe);
             this.m_339091_(name, vfe);
          }
 
-         while(this.f_336835_ < vf.m_86020_()) {
+         while (this.f_336835_ < vf.m_86020_()) {
             this.m_339010_(1);
          }
 
          return this;
+      }
+   }
+
+   public static enum IndexType {
+      SHORT(5123, 2),
+      INT(5125, 4);
+
+      public int f_166923_;
+      public int f_166924_;
+
+      private IndexType(final int glTypeIn, final int sizeBytesIn) {
+         this.f_166923_ = glTypeIn;
+         this.f_166924_ = sizeBytesIn;
+      }
+
+      public static VertexFormat.IndexType m_166933_(int indexCountIn) {
+         return (indexCountIn & -65536) != 0 ? INT : SHORT;
       }
    }
 
@@ -329,10 +340,10 @@ public class VertexFormat {
       TRIANGLE_FAN(6, 3, 1, true),
       QUADS(4, 4, 4, false);
 
-      public final int f_166946_;
-      public final int f_166947_;
-      public final int f_166948_;
-      public final boolean f_231234_;
+      public int f_166946_;
+      public int f_166947_;
+      public int f_166948_;
+      public boolean f_231234_;
 
       private Mode(final int glModeIn, final int lengthIn, final int strideIn, final boolean connectedIn) {
          this.f_166946_ = glModeIn;
@@ -342,52 +353,11 @@ public class VertexFormat {
       }
 
       public int m_166958_(int vertexCountIn) {
-         int var10000;
-         switch (this.ordinal()) {
-            case 0:
-            case 7:
-               var10000 = vertexCountIn / 4 * 6;
-               break;
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-               var10000 = vertexCountIn;
-               break;
-            default:
-               var10000 = 0;
-         }
-
-         return var10000;
-      }
-
-      // $FF: synthetic method
-      private static Mode[] $values() {
-         return new Mode[]{LINES, LINE_STRIP, DEBUG_LINES, DEBUG_LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS};
-      }
-   }
-
-   public static enum IndexType {
-      SHORT(5123, 2),
-      INT(5125, 4);
-
-      public final int f_166923_;
-      public final int f_166924_;
-
-      private IndexType(final int glTypeIn, final int sizeBytesIn) {
-         this.f_166923_ = glTypeIn;
-         this.f_166924_ = sizeBytesIn;
-      }
-
-      public static IndexType m_166933_(int indexCountIn) {
-         return (indexCountIn & -65536) != 0 ? INT : SHORT;
-      }
-
-      // $FF: synthetic method
-      private static IndexType[] $values() {
-         return new IndexType[]{SHORT, INT};
+         return switch (this) {
+            case LINES, QUADS -> vertexCountIn / 4 * 6;
+            case LINE_STRIP, DEBUG_LINES, DEBUG_LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN -> vertexCountIn;
+            default -> 0;
+         };
       }
    }
 }

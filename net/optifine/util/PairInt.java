@@ -3,7 +3,7 @@ package net.optifine.util;
 public class PairInt {
    private int left;
    private int right;
-   private final int hashCode;
+   private int hashCode;
 
    public PairInt(int left, int right) {
       this.left = left;
@@ -11,8 +11,7 @@ public class PairInt {
       this.hashCode = left + 37 * right;
    }
 
-   // $FF: renamed from: of (int, int) net.optifine.util.PairInt
-   public static PairInt method_12(int left, int right) {
+   public static PairInt m_253057_(int left, int right) {
       return new PairInt(left, right);
    }
 
@@ -31,11 +30,8 @@ public class PairInt {
    public boolean equals(Object obj) {
       if (obj == this) {
          return true;
-      } else if (!(obj instanceof PairInt)) {
-         return false;
       } else {
-         PairInt pi = (PairInt)obj;
-         return this.left == pi.left && this.right == pi.right;
+         return !(obj instanceof PairInt pi) ? false : this.left == pi.left && this.right == pi.right;
       }
    }
 

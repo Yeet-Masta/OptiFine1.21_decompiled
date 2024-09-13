@@ -1,5 +1,5 @@
 package net.optifine.config;
 
-public interface ObjBooleanConsumer {
-   void accept(Object var1, Boolean var2);
+public interface ObjBooleanConsumer<T> {
+   void m_340568_(T var1, Boolean var2);
 }

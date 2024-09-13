@@ -2,7 +2,6 @@ package net.optifine.entity.model;
 
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.PiglinHeadModel;
-import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.level.block.SkullBlock.Types;
@@ -10,13 +9,15 @@ import net.optifine.reflect.Reflector;
 
 public class ModelAdapterHeadPiglin extends ModelAdapterHead {
    public ModelAdapterHeadPiglin() {
-      super("head_piglin", (ModelLayerLocation)null, Types.PIGLIN);
+      super("head_piglin", null, Types.PIGLIN);
    }
 
+   @Override
    public Model makeModel() {
       return new PiglinHeadModel(bakeModelLayer(ModelLayers.f_260668_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof PiglinHeadModel modelPiglinHead)) {
          return null;
@@ -29,6 +30,7 @@ public class ModelAdapterHeadPiglin extends ModelAdapterHead {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "left_ear", "right_ear"};
    }

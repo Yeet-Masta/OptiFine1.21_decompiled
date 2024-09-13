@@ -31,11 +31,7 @@ public class NaturalProperties {
    }
 
    public boolean isValid() {
-      if (this.rotation != 2 && this.rotation != 4) {
-         return this.flip;
-      } else {
-         return true;
-      }
+      return this.rotation == 2 || this.rotation == 4 ? true : this.flip;
    }
 
    public synchronized BakedQuad getQuad(BakedQuad quadIn, int rotate, boolean flipU) {
@@ -48,13 +44,13 @@ public class NaturalProperties {
          Map map = this.quadMaps[index];
          if (map == null) {
             map = new IdentityHashMap(1);
-            this.quadMaps[index] = (Map)map;
+            this.quadMaps[index] = map;
          }
 
-         BakedQuad quad = (BakedQuad)((Map)map).get(quadIn);
+         BakedQuad quad = (BakedQuad)map.get(quadIn);
          if (quad == null) {
             quad = this.makeQuad(quadIn, rotate, flipU);
-            ((Map)map).put(quadIn, quad);
+            map.put(quadIn, quad);
          }
 
          return quad;
@@ -74,8 +70,7 @@ public class NaturalProperties {
       }
 
       vertexData = this.transformVertexData(vertexData, rotate, flipU);
-      BakedQuad bq = new BakedQuad(vertexData, tintIndex, face, sprite, shade);
-      return bq;
+      return new BakedQuad(vertexData, tintIndex, face, sprite, shade);
    }
 
    private int[] transformVertexData(int[] vertexData, int rotate, boolean flipU) {
@@ -88,21 +83,17 @@ public class NaturalProperties {
       v2 %= 4;
       int step = vertexData2.length / 4;
 
-      for(int v = 0; v < 4; ++v) {
+      for (int v = 0; v < 4; v++) {
          int pos = v * step;
          int pos2 = v2 * step;
          vertexData2[pos2 + 4] = vertexData[pos + 4];
          vertexData2[pos2 + 4 + 1] = vertexData[pos + 4 + 1];
          if (flipU) {
-            --v2;
-            if (v2 < 0) {
+            if (--v2 < 0) {
                v2 = 3;
             }
-         } else {
-            ++v2;
-            if (v2 > 3) {
-               v2 = 0;
-            }
+         } else if (++v2 > 3) {
+            v2 = 0;
          }
       }
 
@@ -122,7 +113,7 @@ public class NaturalProperties {
       int[] vertexData = quad.m_111303_();
       int step = vertexData.length / 4;
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          int pos = i * step;
          float u = Float.intBitsToFloat(vertexData[pos + 4]);
          float v = Float.intBitsToFloat(vertexData[pos + 4 + 1]);

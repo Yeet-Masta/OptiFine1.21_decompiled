@@ -11,6 +11,7 @@ public class ModelAdapterSpectralArrow extends ModelAdapterArrow {
       super(EntityType.f_20478_, "spectral_arrow", 0.0F);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SpectralArrowRenderer render = new SpectralArrowRenderer(renderManager.getContext());

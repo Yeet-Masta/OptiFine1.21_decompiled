@@ -21,7 +21,7 @@ public interface IRandomEntity {
 
    CompoundTag getNbtTag();
 
-   DyeColor getColor();
+   DyeColor m_130045_();
 
    BlockState getBlockState();
 }

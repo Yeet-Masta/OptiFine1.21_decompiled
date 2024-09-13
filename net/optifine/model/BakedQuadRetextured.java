@@ -15,12 +15,16 @@ public class BakedQuadRetextured extends BakedQuad {
    private static int[] remapVertexData(int[] vertexData, TextureAtlasSprite sprite, TextureAtlasSprite spriteNew) {
       int[] vertexDataNew = Arrays.copyOf(vertexData, vertexData.length);
 
-      for(int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; i++) {
          VertexFormat format = DefaultVertexFormat.f_85811_;
          int j = format.getIntegerSize() * i;
          int uvIndex = format.getOffset(2) / 4;
-         vertexDataNew[j + uvIndex] = Float.floatToRawIntBits(spriteNew.getInterpolatedU16((double)sprite.getUnInterpolatedU16(Float.intBitsToFloat(vertexData[j + uvIndex]))));
-         vertexDataNew[j + uvIndex + 1] = Float.floatToRawIntBits(spriteNew.getInterpolatedV16((double)sprite.getUnInterpolatedV16(Float.intBitsToFloat(vertexData[j + uvIndex + 1]))));
+         vertexDataNew[j + uvIndex] = Float.floatToRawIntBits(
+            spriteNew.getInterpolatedU16((double)sprite.getUnInterpolatedU16(Float.intBitsToFloat(vertexData[j + uvIndex])))
+         );
+         vertexDataNew[j + uvIndex + 1] = Float.floatToRawIntBits(
+            spriteNew.getInterpolatedV16((double)sprite.getUnInterpolatedV16(Float.intBitsToFloat(vertexData[j + uvIndex + 1])))
+         );
       }
 
       return vertexDataNew;

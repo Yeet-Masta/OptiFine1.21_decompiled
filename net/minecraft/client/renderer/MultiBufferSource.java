@@ -11,7 +11,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SequencedMap;
@@ -23,12 +22,12 @@ import net.optifine.render.VertexBuilderDummy;
 import net.optifine.util.TextureUtils;
 
 public interface MultiBufferSource {
-   static BufferSource m_109898_(ByteBufferBuilder builderIn) {
+   static MultiBufferSource.BufferSource m_109898_(ByteBufferBuilder builderIn) {
       return m_109900_(Object2ObjectSortedMaps.emptyMap(), builderIn);
    }
 
-   static BufferSource m_109900_(SequencedMap mapBuildersIn, ByteBufferBuilder builderIn) {
-      return new BufferSource(builderIn, mapBuildersIn);
+   static MultiBufferSource.BufferSource m_109900_(SequencedMap<RenderType, ByteBufferBuilder> mapBuildersIn, ByteBufferBuilder builderIn) {
+      return new MultiBufferSource.BufferSource(builderIn, mapBuildersIn);
    }
 
    VertexConsumer m_6299_(RenderType var1);
@@ -40,22 +39,23 @@ public interface MultiBufferSource {
    }
 
    public static class BufferSource implements MultiBufferSource {
-      protected final ByteBufferBuilder f_336798_;
-      protected final SequencedMap f_109905_;
-      protected final Map f_337045_ = new HashMap();
+      protected ByteBufferBuilder f_336798_;
+      protected SequencedMap<RenderType, ByteBufferBuilder> f_109905_;
+      protected Map<RenderType, BufferBuilder> f_337045_ = new HashMap();
       @Nullable
       protected RenderType f_336667_;
-      private final VertexConsumer DUMMY_BUFFER = new VertexBuilderDummy(this);
-      private List listeners = new ArrayList(4);
+      private VertexConsumer DUMMY_BUFFER = new VertexBuilderDummy(this);
+      private List<IBufferSourceListener> listeners = new ArrayList(4);
       private int maxCachedBuffers = 0;
-      private Object2ObjectLinkedOpenHashMap cachedBuffers = new Object2ObjectLinkedOpenHashMap();
-      private Deque freeBufferBuilders = new ArrayDeque();
+      private Object2ObjectLinkedOpenHashMap<RenderType, BufferBuilder> cachedBuffers = new Object2ObjectLinkedOpenHashMap();
+      private Deque<BufferBuilder> freeBufferBuilders = new ArrayDeque();
 
-      protected BufferSource(ByteBufferBuilder bufferIn, SequencedMap fixedBuffersIn) {
+      protected BufferSource(ByteBufferBuilder bufferIn, SequencedMap<RenderType, ByteBufferBuilder> fixedBuffersIn) {
          this.f_336798_ = bufferIn;
          this.f_109905_ = new Object2ObjectLinkedOpenHashMap(fixedBuffersIn);
       }
 
+      @Override
       public VertexConsumer m_6299_(RenderType renderTypeIn) {
          this.addCachedBuffer(renderTypeIn);
          BufferBuilder bufferbuilder = (BufferBuilder)this.f_337045_.get(renderTypeIn);
@@ -90,23 +90,18 @@ public interface MultiBufferSource {
             this.m_109912_(this.f_336667_);
             this.f_336667_ = null;
          }
-
       }
 
       public void m_109911_() {
          if (!this.f_337045_.isEmpty()) {
             this.m_173043_();
             if (!this.f_337045_.isEmpty()) {
-               Iterator var1 = this.f_109905_.keySet().iterator();
-
-               while(var1.hasNext()) {
-                  RenderType rendertype = (RenderType)var1.next();
+               for (RenderType rendertype : this.f_109905_.keySet()) {
                   this.m_109912_(rendertype);
                   if (this.f_337045_.isEmpty()) {
                      break;
                   }
                }
-
             }
          }
       }
@@ -116,7 +111,6 @@ public interface MultiBufferSource {
          if (bufferbuilder != null) {
             this.m_338789_(renderTypeIn, bufferbuilder);
          }
-
       }
 
       private void m_338789_(RenderType renderTypeIn, BufferBuilder bufferIn) {
@@ -138,10 +132,9 @@ public interface MultiBufferSource {
          if (renderTypeIn.equals(this.f_336667_)) {
             this.f_336667_ = null;
          }
-
       }
 
-      public VertexConsumer getBuffer(ResourceLocation textureLocation, VertexConsumer bufferIn) {
+      public VertexConsumer m_6299_(ResourceLocation textureLocation, VertexConsumer bufferIn) {
          RenderType renderType = bufferIn.getRenderType();
          if (!(renderType instanceof RenderType.CompositeRenderType)) {
             return bufferIn;
@@ -149,8 +142,7 @@ public interface MultiBufferSource {
             textureLocation = RenderType.getCustomTexture(textureLocation);
             RenderType.CompositeRenderType type = (RenderType.CompositeRenderType)renderType;
             RenderType.CompositeRenderType typeTex = type.getTextured(textureLocation);
-            VertexConsumer buffer = this.m_6299_(typeTex);
-            return buffer;
+            return this.m_6299_(typeTex);
          }
       }
 
@@ -162,6 +154,7 @@ public interface MultiBufferSource {
          return (BufferBuilder)this.f_337045_.get(renderType);
       }
 
+      @Override
       public void flushRenderBuffers() {
          RenderType oldRenderType = this.f_336667_;
          BufferBuilder oldBufferBuilder = (BufferBuilder)this.f_337045_.get(oldRenderType);
@@ -176,7 +169,6 @@ public interface MultiBufferSource {
             if (bufferBuilderIn != null) {
                this.f_337045_.put(renderTypeIn, bufferBuilderIn);
             }
-
          }
       }
 
@@ -189,11 +181,10 @@ public interface MultiBufferSource {
       }
 
       private void fireFinish(RenderType renderTypeIn, BufferBuilder bufferIn) {
-         for(int i = 0; i < this.listeners.size(); ++i) {
+         for (int i = 0; i < this.listeners.size(); i++) {
             IBufferSourceListener bsl = (IBufferSourceListener)this.listeners.get(i);
-            bsl.finish(renderTypeIn, bufferIn);
+            bsl.m_185413_(renderTypeIn, bufferIn);
          }
-
       }
 
       public VertexConsumer getDummyBuffer() {
@@ -203,6 +194,7 @@ public interface MultiBufferSource {
       public void enableCache() {
       }
 
+      @Override
       public void flushCache() {
          int maxPrev = this.maxCachedBuffers;
          this.setMaxCachedBuffers(0);
@@ -247,16 +239,14 @@ public interface MultiBufferSource {
                return false;
             } else if (path.startsWith("textures/entity/horse/")) {
                return false;
-            } else if (path.startsWith("textures/entity/villager/")) {
-               return false;
             } else {
-               return !path.startsWith("textures/entity/warden/");
+               return path.startsWith("textures/entity/villager/") ? false : !path.startsWith("textures/entity/warden/");
             }
          }
       }
 
       private void trimCachedBuffers() {
-         while(this.cachedBuffers.size() > this.maxCachedBuffers) {
+         while (this.cachedBuffers.size() > this.maxCachedBuffers) {
             RenderType rt = (RenderType)this.cachedBuffers.firstKey();
             if (rt == this.f_336667_) {
                return;
@@ -264,7 +254,6 @@ public interface MultiBufferSource {
 
             this.removeCachedBuffer(rt);
          }
-
       }
 
       private void removeCachedBuffer(RenderType rt) {

@@ -8,11 +8,11 @@ public class ParametersVariable implements IParameters {
    private ExpressionType[] first;
    private ExpressionType[] repeat;
    private ExpressionType[] last;
-   private int maxCount;
-   private static final ExpressionType[] EMPTY = new ExpressionType[0];
+   private int maxCount = Integer.MAX_VALUE;
+   private static ExpressionType[] EMPTY = new ExpressionType[0];
 
    public ParametersVariable() {
-      this((ExpressionType[])null, (ExpressionType[])null, (ExpressionType[])null);
+      this(null, null, null);
    }
 
    public ParametersVariable(ExpressionType[] first, ExpressionType[] repeat, ExpressionType[] last) {
@@ -20,7 +20,6 @@ public class ParametersVariable implements IParameters {
    }
 
    public ParametersVariable(ExpressionType[] first, ExpressionType[] repeat, ExpressionType[] last, int maxCount) {
-      this.maxCount = Integer.MAX_VALUE;
       this.first = normalize(first);
       this.repeat = normalize(repeat);
       this.last = normalize(last);
@@ -47,25 +46,28 @@ public class ParametersVariable implements IParameters {
       return this.first == null ? 0 : this.first.length;
    }
 
+   @Override
    public ExpressionType[] getParameterTypes(IExpression[] arguments) {
       int countFixedParams = this.first.length + this.last.length;
       int countVarArgs = arguments.length - countFixedParams;
       int countRepeat = 0;
 
-      for(int countVarParams = 0; countVarParams + this.repeat.length <= countVarArgs && countFixedParams + countVarParams + this.repeat.length <= this.maxCount; countVarParams += this.repeat.length) {
-         ++countRepeat;
+      for (int countVarParams = 0;
+         countVarParams + this.repeat.length <= countVarArgs && countFixedParams + countVarParams + this.repeat.length <= this.maxCount;
+         countVarParams += this.repeat.length
+      ) {
+         countRepeat++;
       }
 
-      List list = new ArrayList();
+      List<ExpressionType> list = new ArrayList();
       list.addAll(Arrays.asList(this.first));
 
-      for(int i = 0; i < countRepeat; ++i) {
+      for (int i = 0; i < countRepeat; i++) {
          list.addAll(Arrays.asList(this.repeat));
       }
 
       list.addAll(Arrays.asList(this.last));
-      ExpressionType[] ets = (ExpressionType[])list.toArray(new ExpressionType[list.size()]);
-      return ets;
+      return (ExpressionType[])list.toArray(new ExpressionType[list.size()]);
    }
 
    public ParametersVariable first(ExpressionType... first) {

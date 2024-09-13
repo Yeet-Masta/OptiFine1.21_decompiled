@@ -12,6 +12,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import io.netty.buffer.ByteBuf;
 import java.lang.reflect.Type;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
@@ -21,16 +22,16 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.GsonHelper;
 
-public final class ResourceLocation implements Comparable {
-   public static final Codec f_135803_;
-   public static final StreamCodec f_314488_;
-   public static final SimpleCommandExceptionType f_135806_;
-   public static final char f_179907_ = ':';
-   public static final String f_179908_ = "minecraft";
-   public static final String f_179909_ = "realms";
-   private final String f_135804_;
-   private final String f_135805_;
-   private final boolean defaultNamespace;
+public class ResourceLocation implements Comparable<ResourceLocation> {
+   public static Codec<ResourceLocation> f_135803_ = Codec.STRING.comapFlatMap(ResourceLocation::m_135837_, ResourceLocation::toString).stable();
+   public static StreamCodec<ByteBuf, ResourceLocation> f_314488_ = ByteBufCodecs.f_315450_.m_323038_(ResourceLocation::m_338530_, ResourceLocation::toString);
+   public static SimpleCommandExceptionType f_135806_ = new SimpleCommandExceptionType(Component.m_237115_("argument.id.invalid"));
+   public static char f_179907_;
+   public static String f_179908_;
+   public static String f_179909_;
+   private String f_135804_;
+   private String f_135805_;
+   private boolean defaultNamespace;
 
    public ResourceLocation(String str) {
       this(getNamespace(str), getPath(str));
@@ -111,13 +112,11 @@ public final class ResourceLocation implements Comparable {
       }
    }
 
-   public static DataResult m_135837_(String stringIn) {
+   public static DataResult<ResourceLocation> m_135837_(String stringIn) {
       try {
          return DataResult.success(m_338530_(stringIn));
       } catch (ResourceLocationException var2) {
-         return DataResult.error(() -> {
-            return "Not a valid resource location: " + stringIn + " " + var2.getMessage();
-         });
+         return DataResult.error(() -> "Not a valid resource location: " + stringIn + " " + var2.getMessage());
       }
    }
 
@@ -133,7 +132,7 @@ public final class ResourceLocation implements Comparable {
       return new ResourceLocation(this.f_135804_, m_245185_(this.f_135804_, pathIn));
    }
 
-   public ResourceLocation m_247266_(UnaryOperator pathIn) {
+   public ResourceLocation m_247266_(UnaryOperator<String> pathIn) {
       return this.m_247449_((String)pathIn.apply(this.f_135805_));
    }
 
@@ -153,15 +152,9 @@ public final class ResourceLocation implements Comparable {
       if (this == p_equals_1_) {
          return true;
       } else {
-         boolean var10000;
-         if (p_equals_1_ instanceof ResourceLocation) {
-            ResourceLocation resourcelocation = (ResourceLocation)p_equals_1_;
-            var10000 = this.f_135804_.equals(resourcelocation.f_135804_) && this.f_135805_.equals(resourcelocation.f_135805_);
-         } else {
-            var10000 = false;
-         }
-
-         return var10000;
+         return p_equals_1_ instanceof ResourceLocation resourcelocation
+            ? this.f_135804_.equals(resourcelocation.f_135804_) && this.f_135805_.equals(resourcelocation.f_135805_)
+            : false;
       }
    }
 
@@ -201,7 +194,7 @@ public final class ResourceLocation implements Comparable {
    private static String m_324283_(StringReader readerIn) {
       int i = readerIn.getCursor();
 
-      while(readerIn.canRead() && m_135816_(readerIn.peek())) {
+      while (readerIn.canRead() && m_135816_(readerIn.peek())) {
          readerIn.skip();
       }
 
@@ -236,11 +229,17 @@ public final class ResourceLocation implements Comparable {
    }
 
    public static boolean m_135816_(char charIn) {
-      return charIn >= '0' && charIn <= '9' || charIn >= 'a' && charIn <= 'z' || charIn == '_' || charIn == ':' || charIn == '/' || charIn == '.' || charIn == '-';
+      return charIn >= '0' && charIn <= '9'
+         || charIn >= 'a' && charIn <= 'z'
+         || charIn == '_'
+         || charIn == ':'
+         || charIn == '/'
+         || charIn == '.'
+         || charIn == '-';
    }
 
    public static boolean m_135841_(String pathIn) {
-      for(int i = 0; i < pathIn.length(); ++i) {
+      for (int i = 0; i < pathIn.length(); i++) {
          if (!m_135828_(pathIn.charAt(i))) {
             return false;
          }
@@ -250,7 +249,7 @@ public final class ResourceLocation implements Comparable {
    }
 
    public static boolean m_135843_(String namespaceIn) {
-      for(int i = 0; i < namespaceIn.length(); ++i) {
+      for (int i = 0; i < namespaceIn.length(); i++) {
          if (!m_135835_(namespaceIn.charAt(i))) {
             return false;
          }
@@ -292,13 +291,7 @@ public final class ResourceLocation implements Comparable {
       return ret != 0 ? ret : this.f_135805_.compareTo(o.f_135805_);
    }
 
-   static {
-      f_135803_ = Codec.STRING.comapFlatMap(ResourceLocation::m_135837_, ResourceLocation::toString).stable();
-      f_314488_ = ByteBufCodecs.f_315450_.m_323038_(ResourceLocation::m_338530_, ResourceLocation::toString);
-      f_135806_ = new SimpleCommandExceptionType(Component.m_237115_("argument.id.invalid"));
-   }
-
-   public static class Serializer implements JsonDeserializer, JsonSerializer {
+   public static class Serializer implements JsonDeserializer<ResourceLocation>, JsonSerializer<ResourceLocation> {
       public ResourceLocation deserialize(JsonElement p_deserialize_1_, Type p_deserialize_2_, JsonDeserializationContext p_deserialize_3_) throws JsonParseException {
          return ResourceLocation.m_338530_(GsonHelper.m_13805_(p_deserialize_1_, "location"));
       }

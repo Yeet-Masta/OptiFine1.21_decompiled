@@ -15,10 +15,12 @@ public class ModelAdapterTadpole extends ModelAdapter {
       super(EntityType.f_217013_, "tadpole", 0.14F);
    }
 
+   @Override
    public Model makeModel() {
       return new TadpoleModel(bakeModelLayer(ModelLayers.f_233549_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof TadpoleModel modelTadpole)) {
          return null;
@@ -29,11 +31,12 @@ public class ModelAdapterTadpole extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = new String[]{"body", "tail"};
-      return names;
+      return new String[]{"body", "tail"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       TadpoleRenderer render = new TadpoleRenderer(renderManager.getContext());

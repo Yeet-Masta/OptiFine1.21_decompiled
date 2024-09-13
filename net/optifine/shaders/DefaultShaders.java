@@ -17,7 +17,7 @@ public class DefaultShaders {
    }
 
    private static InputStream getFinalVsh() {
-      List lines = new ArrayList();
+      List<String> lines = new ArrayList();
       lines.add("#version 150");
       lines.add("uniform mat4 modelViewMatrix;");
       lines.add("uniform mat4 projectionMatrix;");
@@ -34,7 +34,7 @@ public class DefaultShaders {
    }
 
    private static InputStream getFinalFsh() {
-      List lines = new ArrayList();
+      List<String> lines = new ArrayList();
       lines.add("#version 150");
       lines.add("uniform sampler2D colortex0;");
       lines.add("in vec2 texcoord;");

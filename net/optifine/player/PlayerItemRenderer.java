@@ -18,7 +18,7 @@ public class PlayerItemRenderer {
       return this.modelRenderer;
    }
 
-   public void render(HumanoidModel modelBiped, PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn) {
+   public void m_324219_(HumanoidModel modelBiped, PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn) {
       ModelPart attachModel = PlayerItemModel.getAttachModel(modelBiped, this.attachTo);
       if (attachModel != null) {
          attachModel.m_104299_(matrixStackIn);

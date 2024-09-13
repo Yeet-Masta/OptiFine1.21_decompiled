@@ -8,9 +8,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class ListQuadsOverlay {
-   private List listQuads = new ArrayList();
-   private List listBlockStates = new ArrayList();
-   private List listQuadsSingle = Arrays.asList();
+   private List<BakedQuad> listQuads = new ArrayList();
+   private List<BlockState> listBlockStates = new ArrayList();
+   private List<BakedQuad> listQuadsSingle = Arrays.asList();
 
    public void addQuad(BakedQuad quad, BlockState blockState) {
       if (quad != null) {
@@ -31,7 +31,7 @@ public class ListQuadsOverlay {
       return index >= 0 && index < this.listBlockStates.size() ? (BlockState)this.listBlockStates.get(index) : Blocks.f_50016_.m_49966_();
    }
 
-   public List getListQuadsSingle(BakedQuad quad) {
+   public List<BakedQuad> getListQuadsSingle(BakedQuad quad) {
       this.listQuadsSingle.set(0, quad);
       return this.listQuadsSingle;
    }

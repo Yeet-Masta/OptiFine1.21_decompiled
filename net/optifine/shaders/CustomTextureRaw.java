@@ -14,29 +14,41 @@ public class CustomTextureRaw implements ICustomTexture {
    private int textureUnit;
    private int textureId;
 
-   public CustomTextureRaw(TextureType type, InternalFormat internalFormat, int width, int height, int depth, PixelFormat pixelFormat, PixelType pixelType, ByteBuffer data, int textureUnit, boolean blur, boolean clamp) {
+   public CustomTextureRaw(
+      TextureType type,
+      InternalFormat internalFormat,
+      int width,
+      int height,
+      int depth,
+      PixelFormat pixelFormat,
+      PixelType pixelType,
+      ByteBuffer data,
+      int textureUnit,
+      boolean blur,
+      boolean clamp
+   ) {
       this.type = type;
       this.textureUnit = textureUnit;
       this.textureId = GL11.glGenTextures();
       GL11.glBindTexture(this.getTarget(), this.textureId);
       TextureUtils.resetDataUnpacking();
-      int wrapMode = clamp ? '脯' : 10497;
+      int wrapMode = clamp ? '\u812f' : 10497;
       int filterMode = blur ? 9729 : 9728;
-      switch (type) {
-         case TEXTURE_1D:
+      switch (<unrepresentable>.$SwitchMap$net$optifine$texture$TextureType[type.ordinal()]) {
+         case 1:
             GL11.glTexImage1D(3552, 0, internalFormat.getId(), width, 0, pixelFormat.getId(), pixelType.getId(), data);
             GL11.glTexParameteri(3552, 10242, wrapMode);
             GL11.glTexParameteri(3552, 10240, filterMode);
             GL11.glTexParameteri(3552, 10241, filterMode);
             break;
-         case TEXTURE_2D:
+         case 2:
             GL11.glTexImage2D(3553, 0, internalFormat.getId(), width, height, 0, pixelFormat.getId(), pixelType.getId(), data);
             GL11.glTexParameteri(3553, 10242, wrapMode);
             GL11.glTexParameteri(3553, 10243, wrapMode);
             GL11.glTexParameteri(3553, 10240, filterMode);
             GL11.glTexParameteri(3553, 10241, filterMode);
             break;
-         case TEXTURE_3D:
+         case 3:
             GL20.glTexImage3D(32879, 0, internalFormat.getId(), width, height, depth, 0, pixelFormat.getId(), pixelType.getId(), data);
             GL11.glTexParameteri(32879, 10242, wrapMode);
             GL11.glTexParameteri(32879, 10243, wrapMode);
@@ -44,7 +56,7 @@ public class CustomTextureRaw implements ICustomTexture {
             GL11.glTexParameteri(32879, 10240, filterMode);
             GL11.glTexParameteri(32879, 10241, filterMode);
             break;
-         case TEXTURE_RECTANGLE:
+         case 4:
             GL11.glTexImage2D(34037, 0, internalFormat.getId(), width, height, 0, pixelFormat.getId(), pixelType.getId(), data);
             GL11.glTexParameteri(34037, 10242, wrapMode);
             GL11.glTexParameteri(34037, 10243, wrapMode);
@@ -55,23 +67,26 @@ public class CustomTextureRaw implements ICustomTexture {
       GL11.glBindTexture(this.getTarget(), 0);
    }
 
+   @Override
    public int getTarget() {
       return this.type.getId();
    }
 
+   @Override
    public int getTextureId() {
       return this.textureId;
    }
 
+   @Override
    public int getTextureUnit() {
       return this.textureUnit;
    }
 
+   @Override
    public void deleteTexture() {
       if (this.textureId > 0) {
          GL11.glDeleteTextures(this.textureId);
          this.textureId = 0;
       }
-
    }
 }

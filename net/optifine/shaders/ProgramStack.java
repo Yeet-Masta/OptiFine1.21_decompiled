@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class ProgramStack {
-   private Deque stack = new ArrayDeque();
+   private Deque<Program> stack = new ArrayDeque();
 
    public void push(Program p) {
       this.stack.addLast(p);
@@ -17,8 +17,7 @@ public class ProgramStack {
       if (this.stack.isEmpty()) {
          throw new RuntimeException("Program stack empty");
       } else {
-         Program p = (Program)this.stack.pollLast();
-         return p;
+         return (Program)this.stack.pollLast();
       }
    }
 }

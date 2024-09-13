@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.optifine.Config;
 
 public class CacheObjectArray {
-   private static ArrayDeque arrays = new ArrayDeque();
+   private static ArrayDeque<int[]> arrays = new ArrayDeque();
    private static int maxCacheSize = 10;
 
    private static synchronized int[] allocateArray(int size) {
@@ -48,7 +48,7 @@ public class CacheObjectArray {
       long timeStart = System.currentTimeMillis();
       int[] template = new int[size];
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          int[] var6 = (int[])template.clone();
       }
 
@@ -59,8 +59,8 @@ public class CacheObjectArray {
    private static long testNew(int size, int count) {
       long timeStart = System.currentTimeMillis();
 
-      for(int i = 0; i < count; ++i) {
-         int[] var5 = (int[])Array.newInstance(Integer.TYPE, size);
+      for (int i = 0; i < count; i++) {
+         int[] var5 = (int[])Array.newInstance(int.class, size);
       }
 
       long timeEnd = System.currentTimeMillis();
@@ -71,7 +71,7 @@ public class CacheObjectArray {
       long timeStart = System.currentTimeMillis();
       BlockState[] template = new BlockState[size];
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          BlockState[] var6 = (BlockState[])template.clone();
       }
 
@@ -82,7 +82,7 @@ public class CacheObjectArray {
    private static long testNewObj(int size, int count) {
       long timeStart = System.currentTimeMillis();
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          BlockState[] var5 = new BlockState[size];
       }
 
@@ -93,7 +93,7 @@ public class CacheObjectArray {
    private static long testNewObjDyn(Class cls, int size, int count) {
       long timeStart = System.currentTimeMillis();
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          Object[] var6 = (Object[])Array.newInstance(cls, size);
       }
 

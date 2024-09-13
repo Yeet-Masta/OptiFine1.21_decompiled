@@ -5,12 +5,12 @@ import java.lang.reflect.Modifier;
 import net.optifine.util.UnsafeUtils;
 
 public class ReflectorField implements IResolvable {
-   private IFieldLocator fieldLocator;
-   private boolean checked;
-   private Field targetField;
+   private IFieldLocator fieldLocator = null;
+   private boolean checked = false;
+   private Field targetField = null;
 
    public ReflectorField(ReflectorClass reflectorClass, String targetFieldName) {
-      this((IFieldLocator)(new FieldLocatorName(reflectorClass, targetFieldName)));
+      this(new FieldLocatorName(reflectorClass, targetFieldName));
    }
 
    public ReflectorField(ReflectorClass reflectorClass, Class targetFieldType) {
@@ -18,17 +18,14 @@ public class ReflectorField implements IResolvable {
    }
 
    public ReflectorField(ReflectorClass reflectorClass, Class targetFieldType, int targetFieldIndex) {
-      this((IFieldLocator)(new FieldLocatorType(reflectorClass, targetFieldType, targetFieldIndex)));
+      this(new FieldLocatorType(reflectorClass, targetFieldType, targetFieldIndex));
    }
 
    public ReflectorField(Field field) {
-      this((IFieldLocator)(new FieldLocatorFixed(field)));
+      this(new FieldLocatorFixed(field));
    }
 
    public ReflectorField(IFieldLocator fieldLocator) {
-      this.fieldLocator = null;
-      this.checked = false;
-      this.targetField = null;
       this.fieldLocator = fieldLocator;
       ReflectorResolver.register(this);
    }
@@ -48,7 +45,7 @@ public class ReflectorField implements IResolvable {
    }
 
    public Object getValue() {
-      return Reflector.getFieldValue((Object)null, this);
+      return Reflector.getFieldValue(null, this);
    }
 
    public Object getValue(Object obj) {
@@ -56,7 +53,7 @@ public class ReflectorField implements IResolvable {
    }
 
    public void setValue(Object value) {
-      Reflector.setFieldValue((Object)null, this, value);
+      Reflector.setFieldValue(null, this, value);
    }
 
    public void setValue(Object obj, Object value) {
@@ -65,7 +62,7 @@ public class ReflectorField implements IResolvable {
 
    public void setStaticIntUnsafe(int value) {
       if (this.exists()) {
-         if (this.targetField.getType() == Integer.TYPE) {
+         if (this.targetField.getType() == int.class) {
             if (Modifier.isStatic(this.targetField.getModifiers())) {
                UnsafeUtils.setStaticInt(this.targetField, value);
             }
@@ -77,6 +74,7 @@ public class ReflectorField implements IResolvable {
       return this.getTargetField() != null;
    }
 
+   @Override
    public void resolve() {
       Field f = this.getTargetField();
    }

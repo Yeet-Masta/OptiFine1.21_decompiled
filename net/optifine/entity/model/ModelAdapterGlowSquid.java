@@ -13,10 +13,12 @@ public class ModelAdapterGlowSquid extends ModelAdapterSquid {
       super(EntityType.f_147034_, "glow_squid", 0.7F);
    }
 
+   @Override
    public Model makeModel() {
       return new SquidModel(bakeModelLayer(ModelLayers.f_171154_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       GlowSquidRenderer render = new GlowSquidRenderer(renderManager.getContext(), (SquidModel)modelBase);

@@ -17,10 +17,10 @@ import org.apache.logging.log4j.Logger;
 
 public class OptiFineClassTransformer implements IClassTransformer, IResourceProvider, IOptiFineResourceLocator {
    private ZipFile ofZipFile = null;
-   private Map patchMap = null;
+   private Map<String, String> patchMap = null;
    private Pattern[] patterns = null;
    public static OptiFineClassTransformer instance = null;
-   private static final Logger LOGGER = LogManager.getLogger();
+   private static Logger LOGGER = LogManager.getLogger();
 
    public OptiFineClassTransformer() {
       instance = this;
@@ -43,7 +43,6 @@ public class OptiFineClassTransformer implements IClassTransformer, IResourcePro
          dbg("*** Can not find the OptiFine JAR in the classpath ***");
          dbg("*** OptiFine will not be loaded! ***");
       }
-
    }
 
    public byte[] transform(String name, String transformedName, byte[] bytes) {
@@ -57,17 +56,14 @@ public class OptiFineClassTransformer implements IClassTransformer, IResourcePro
       return ofBytes != null ? ofBytes : bytes;
    }
 
+   @Override
    public synchronized InputStream getOptiFineResourceStream(String name) {
       name = Utils.removePrefix(name, "/");
       byte[] bytes = this.getOptiFineResource(name);
-      if (bytes == null) {
-         return null;
-      } else {
-         ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-         return in;
-      }
+      return bytes == null ? null : new ByteArrayInputStream(bytes);
    }
 
+   @Override
    public InputStream getResourceStream(String path) {
       path = Utils.ensurePrefix(path, "/");
       return this.getClass().getResourceAsStream(path);
@@ -147,12 +143,11 @@ public class OptiFineClassTransformer implements IClassTransformer, IResourcePro
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       byte[] buf = new byte[1024];
 
-      while(true) {
+      while (true) {
          int len = is.read(buf);
          if (len < 0) {
             is.close();
-            byte[] bytes = baos.toByteArray();
-            return bytes;
+            return baos.toByteArray();
          }
 
          baos.write(buf, 0, len);

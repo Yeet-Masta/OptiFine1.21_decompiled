@@ -9,17 +9,19 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.common.extensions.IForgeBlockState;
 import net.optifine.Config;
 import net.optifine.util.BlockUtils;
 
-public class BlockState extends BlockBehaviour.BlockStateBase implements IForgeBlockState {
-   public static final Codec f_61039_;
+public class BlockState extends BlockStateBase implements IForgeBlockState {
+   public static Codec<BlockState> f_61039_ = m_61127_(BuiltInRegistries.f_256975_.m_194605_(), Block::m_49966_).stable();
    private int blockId = -1;
    private int metadata = -1;
    private ResourceLocation blockLocation;
    private int blockStateId = -1;
-   private static final AtomicInteger blockStateIdCounter;
+   private static AtomicInteger blockStateIdCounter = new AtomicInteger(0);
 
    public int getBlockId() {
       if (this.blockId < 0) {
@@ -33,7 +35,7 @@ public class BlockState extends BlockBehaviour.BlockStateBase implements IForgeB
       if (this.metadata < 0) {
          this.metadata = BlockUtils.getMetadata(this);
          if (this.metadata < 0) {
-            Config.warn("Metadata not found, block: " + String.valueOf(this.getBlockLocation()));
+            Config.warn("Metadata not found, block: " + this.getBlockLocation());
             this.metadata = 0;
          }
       }
@@ -69,16 +71,11 @@ public class BlockState extends BlockBehaviour.BlockStateBase implements IForgeB
       return this.f_60593_ != null && this.f_60593_.f_60844_;
    }
 
-   public BlockState(Block blockIn, Reference2ObjectArrayMap propertiesIn, MapCodec codecIn) {
+   public BlockState(Block blockIn, Reference2ObjectArrayMap<Property<?>, Comparable<?>> propertiesIn, MapCodec<BlockState> codecIn) {
       super(blockIn, propertiesIn, codecIn);
    }
 
    protected BlockState m_7160_() {
       return this;
-   }
-
-   static {
-      f_61039_ = m_61127_(BuiltInRegistries.f_256975_.m_194605_(), Block::m_49966_).stable();
-      blockStateIdCounter = new AtomicInteger(0);
    }
 }

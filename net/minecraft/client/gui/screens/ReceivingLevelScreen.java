@@ -12,16 +12,16 @@ import net.optifine.CustomLoadingScreen;
 import net.optifine.CustomLoadingScreens;
 
 public class ReceivingLevelScreen extends Screen {
-   private static final Component f_96526_ = Component.m_237115_("multiplayer.downloadingTerrain");
-   private static final long f_202370_ = 30000L;
-   private final long f_202373_;
-   private final BooleanSupplier f_303520_;
-   private final Reason f_315092_;
+   private static Component f_96526_ = Component.m_237115_("multiplayer.downloadingTerrain");
+   private static long f_202370_;
+   private long f_202373_;
+   private BooleanSupplier f_303520_;
+   private ReceivingLevelScreen.Reason f_315092_;
    @Nullable
    private TextureAtlasSprite f_316402_;
    private CustomLoadingScreen customLoadingScreen = CustomLoadingScreens.getCustomLoadingScreen();
 
-   public ReceivingLevelScreen(BooleanSupplier levelReceivedIn, Reason reasonIn) {
+   public ReceivingLevelScreen(BooleanSupplier levelReceivedIn, ReceivingLevelScreen.Reason reasonIn) {
       super(GameNarrator.f_93310_);
       this.f_303520_ = levelReceivedIn;
       this.f_315092_ = reasonIn;
@@ -45,20 +45,19 @@ public class ReceivingLevelScreen extends Screen {
       if (this.customLoadingScreen != null) {
          this.customLoadingScreen.drawBackground(this.f_96543_, this.f_96544_);
       } else {
-         switch (this.f_315092_.ordinal()) {
-            case 0:
+         switch (this.f_315092_) {
+            case NETHER_PORTAL:
                graphicsIn.m_280159_(0, 0, -90, graphicsIn.m_280182_(), graphicsIn.m_280206_(), this.m_323903_());
                break;
-            case 1:
+            case END_PORTAL:
                graphicsIn.m_319756_(RenderType.m_173239_(), 0, 0, this.f_96543_, this.f_96544_, 0);
                break;
-            case 2:
+            case OTHER:
                this.m_318720_(graphicsIn, partialTicks);
                this.m_324436_(partialTicks);
                this.m_323963_(graphicsIn);
          }
       }
-
    }
 
    private TextureAtlasSprite m_323903_() {
@@ -74,7 +73,6 @@ public class ReceivingLevelScreen extends Screen {
       if (this.f_303520_.getAsBoolean() || System.currentTimeMillis() > this.f_202373_ + 30000L) {
          this.m_7379_();
       }
-
    }
 
    public void m_7379_() {
@@ -90,10 +88,5 @@ public class ReceivingLevelScreen extends Screen {
       NETHER_PORTAL,
       END_PORTAL,
       OTHER;
-
-      // $FF: synthetic method
-      private static Reason[] $values() {
-         return new Reason[]{NETHER_PORTAL, END_PORTAL, OTHER};
-      }
    }
 }

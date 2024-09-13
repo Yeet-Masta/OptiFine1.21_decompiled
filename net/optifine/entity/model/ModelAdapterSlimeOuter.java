@@ -1,7 +1,5 @@
 package net.optifine.entity.model;
 
-import java.util.Iterator;
-import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.SlimeModel;
@@ -20,10 +18,12 @@ public class ModelAdapterSlimeOuter extends ModelAdapter {
       super(EntityType.f_20526_, "slime_outer", 0.25F);
    }
 
+   @Override
    public Model makeModel() {
       return new SlimeModel(bakeModelLayer(ModelLayers.f_171242_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SlimeModel modelSlime)) {
          return null;
@@ -32,20 +32,20 @@ public class ModelAdapterSlimeOuter extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SlimeRenderer customRenderer = new SlimeRenderer(renderManager.getContext());
       customRenderer.f_115290_ = new SlimeModel(bakeModelLayer(ModelLayers.f_171242_));
       customRenderer.f_114477_ = 0.25F;
-      EntityRenderer render = rendererCache.get(EntityType.f_20526_, index, () -> {
-         return customRenderer;
-      });
+      EntityRenderer render = rendererCache.get(EntityType.f_20526_, index, () -> customRenderer);
       if (!(render instanceof SlimeRenderer renderSlime)) {
-         Config.warn("Not a SlimeRenderer: " + String.valueOf(render));
+         Config.warn("Not a SlimeRenderer: " + render);
          return null;
       } else {
          SlimeOuterLayer layer = new SlimeOuterLayer(renderSlime, renderManager.getContext().m_174027_());
@@ -56,13 +56,12 @@ public class ModelAdapterSlimeOuter extends ModelAdapter {
       }
    }
 
+   @Override
    public boolean setTextureLocation(IEntityRenderer er, ResourceLocation textureLocation) {
       SlimeRenderer renderer = (SlimeRenderer)er;
-      List layers = renderer.getLayers(SlimeOuterLayer.class);
 
-      SlimeOuterLayer layer;
-      for(Iterator var5 = layers.iterator(); var5.hasNext(); layer.customTextureLocation = textureLocation) {
-         layer = (SlimeOuterLayer)var5.next();
+      for (SlimeOuterLayer layer : renderer.getLayers(SlimeOuterLayer.class)) {
+         layer.customTextureLocation = textureLocation;
       }
 
       return true;

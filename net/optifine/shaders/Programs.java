@@ -4,12 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Programs {
-   private List programs = new ArrayList();
-   private Program programNone;
-
-   public Programs() {
-      this.programNone = this.make("", ProgramStage.NONE, true);
-   }
+   private List<Program> programs = new ArrayList();
+   private Program programNone = this.make("", ProgramStage.NONE, true);
 
    public Program make(String name, ProgramStage programStage, Program backupProgram) {
       int index = this.programs.size();
@@ -48,7 +44,7 @@ public class Programs {
    public Program[] makePrograms(String prefix, int count, ProgramStage stage, Program backupProgram) {
       Program[] ps = new Program[count];
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          String name = i == 0 ? prefix : prefix + i;
          ps[i] = this.make(name, stage, this.programNone);
       }
@@ -84,7 +80,7 @@ public class Programs {
       if (name == null) {
          return null;
       } else {
-         for(int i = 0; i < this.programs.size(); ++i) {
+         for (int i = 0; i < this.programs.size(); i++) {
             Program p = (Program)this.programs.get(i);
             String progName = p.getName();
             if (progName.equals(name)) {
@@ -99,7 +95,7 @@ public class Programs {
    public String[] getProgramNames() {
       String[] names = new String[this.programs.size()];
 
-      for(int i = 0; i < names.length; ++i) {
+      for (int i = 0; i < names.length; i++) {
          names[i] = ((Program)this.programs.get(i)).getName();
       }
 
@@ -107,8 +103,7 @@ public class Programs {
    }
 
    public Program[] getPrograms() {
-      Program[] arr = (Program[])this.programs.toArray(new Program[this.programs.size()]);
-      return arr;
+      return (Program[])this.programs.toArray(new Program[this.programs.size()]);
    }
 
    public Program[] getPrograms(Program programFrom, Program programTo) {
@@ -122,7 +117,7 @@ public class Programs {
 
       Program[] progs = new Program[iTo - iFrom + 1];
 
-      for(int i = 0; i < progs.length; ++i) {
+      for (int i = 0; i < progs.length; i++) {
          progs[i] = (Program)this.programs.get(iFrom + i);
       }
 

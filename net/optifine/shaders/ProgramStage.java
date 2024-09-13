@@ -30,9 +30,4 @@ public enum ProgramStage {
    public boolean isAnyShadow() {
       return this == SHADOW || this == SHADOWCOMP;
    }
-
-   // $FF: synthetic method
-   private static ProgramStage[] $values() {
-      return new ProgramStage[]{NONE, SHADOW, SHADOWCOMP, PREPARE, GBUFFERS, DEFERRED, COMPOSITE};
-   }
 }

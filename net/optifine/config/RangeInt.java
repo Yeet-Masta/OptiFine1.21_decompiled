@@ -10,11 +10,7 @@ public class RangeInt {
    }
 
    public boolean isInRange(int val) {
-      if (val < this.min) {
-         return false;
-      } else {
-         return val <= this.max;
-      }
+      return val < this.min ? false : val <= this.max;
    }
 
    public int getMin() {

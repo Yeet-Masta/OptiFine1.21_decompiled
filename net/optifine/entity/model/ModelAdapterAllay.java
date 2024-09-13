@@ -12,16 +12,18 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterAllay extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterAllay() {
       super(EntityType.f_217014_, "allay", 0.4F);
    }
 
+   @Override
    public Model makeModel() {
       return new AllayModel(bakeModelLayer(ModelLayers.f_233547_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof AllayModel modelAllay)) {
          return null;
@@ -35,13 +37,13 @@ public class ModelAdapterAllay extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "body");
       map.put("head", "head");
       map.put("right_arm", "right_arm");
@@ -52,6 +54,7 @@ public class ModelAdapterAllay extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       AllayRenderer render = new AllayRenderer(renderManager.getContext());

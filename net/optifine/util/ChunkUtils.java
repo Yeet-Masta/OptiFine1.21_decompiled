@@ -5,18 +5,10 @@ import net.optifine.ChunkOF;
 
 public class ChunkUtils {
    public static boolean hasEntities(LevelChunk chunk) {
-      if (chunk instanceof ChunkOF chunkOF) {
-         return chunkOF.hasEntities();
-      } else {
-         return true;
-      }
+      return chunk instanceof ChunkOF chunkOF ? chunkOF.hasEntities() : true;
    }
 
    public static boolean isLoaded(LevelChunk chunk) {
-      if (chunk instanceof ChunkOF chunkOF) {
-         return chunkOF.isLoaded();
-      } else {
-         return false;
-      }
+      return chunk instanceof ChunkOF chunkOF ? chunkOF.isLoaded() : false;
    }
 }

@@ -22,33 +22,35 @@ public class ModelAdapterPiglin extends ModelAdapterPlayer {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new PiglinModel(bakeModelLayer(ModelLayers.f_171206_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
-      if (model instanceof PiglinModel piglinModel) {
-         if (Reflector.ModelPiglin_ModelRenderers.exists()) {
-            if (modelPart.equals("left_ear")) {
-               return piglinModel.f_102808_.m_171324_("left_ear");
-            }
+      if (model instanceof PiglinModel piglinModel && Reflector.ModelPiglin_ModelRenderers.exists()) {
+         if (modelPart.equals("left_ear")) {
+            return piglinModel.f_102808_.m_171324_("left_ear");
+         }
 
-            if (modelPart.equals("right_ear")) {
-               return piglinModel.f_102808_.m_171324_("right_ear");
-            }
+         if (modelPart.equals("right_ear")) {
+            return piglinModel.f_102808_.m_171324_("right_ear");
          }
       }
 
       return super.getModelRenderer(model, modelPart);
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      List names = new ArrayList(Arrays.asList(super.getModelRendererNames()));
+      List<String> names = new ArrayList(Arrays.asList(super.getModelRendererNames()));
       names.add("left_ear");
       names.add("right_ear");
       return (String[])names.toArray(new String[names.size()]);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       PiglinRenderer render = new PiglinRenderer(renderManager.getContext(), ModelLayers.f_171206_, ModelLayers.f_171158_, ModelLayers.f_171159_, false);

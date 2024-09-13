@@ -12,6 +12,7 @@ public class ModelAdapterZoglin extends ModelAdapterHoglin {
       super(EntityType.f_20500_, "zoglin", 0.7F);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ZoglinRenderer render = new ZoglinRenderer(renderManager.getContext());

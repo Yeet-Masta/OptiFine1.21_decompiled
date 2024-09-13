@@ -2,7 +2,6 @@ package net.minecraft.client.renderer.block;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import java.util.Iterator;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -29,12 +28,12 @@ import net.minecraftforge.client.model.data.ModelData;
 import net.optifine.reflect.Reflector;
 
 public class BlockRenderDispatcher implements ResourceManagerReloadListener {
-   private final BlockModelShaper f_110899_;
-   private final ModelBlockRenderer f_110900_;
-   private final BlockEntityWithoutLevelRenderer f_173397_;
-   private final LiquidBlockRenderer f_110901_;
-   private final RandomSource f_110902_ = RandomSource.m_216327_();
-   private final BlockColors f_110903_;
+   private BlockModelShaper f_110899_;
+   private ModelBlockRenderer f_110900_;
+   private BlockEntityWithoutLevelRenderer f_173397_;
+   private LiquidBlockRenderer f_110901_;
+   private RandomSource f_110902_ = RandomSource.m_216327_();
+   private BlockColors f_110903_;
 
    public BlockRenderDispatcher(BlockModelShaper shapes, BlockEntityWithoutLevelRenderer renderer, BlockColors colors) {
       this.f_110899_ = shapes;
@@ -57,22 +56,69 @@ public class BlockRenderDispatcher implements ResourceManagerReloadListener {
       this.renderBreakingTexture(blockStateIn, posIn, lightReaderIn, matrixStackIn, vertexBuilderIn, ModelData.EMPTY);
    }
 
-   public void renderBreakingTexture(BlockState blockStateIn, BlockPos posIn, BlockAndTintGetter lightReaderIn, PoseStack matrixStackIn, VertexConsumer vertexBuilderIn, ModelData modelData) {
+   public void renderBreakingTexture(
+      BlockState blockStateIn, BlockPos posIn, BlockAndTintGetter lightReaderIn, PoseStack matrixStackIn, VertexConsumer vertexBuilderIn, ModelData modelData
+   ) {
       if (blockStateIn.m_60799_() == RenderShape.MODEL) {
          BakedModel bakedmodel = this.f_110899_.m_110893_(blockStateIn);
          long i = blockStateIn.m_60726_(posIn);
-         this.f_110900_.tesselateBlock(lightReaderIn, bakedmodel, blockStateIn, posIn, matrixStackIn, vertexBuilderIn, true, this.f_110902_, i, OverlayTexture.f_118083_, modelData, (RenderType)null);
+         this.f_110900_
+            .tesselateBlock(
+               lightReaderIn,
+               bakedmodel,
+               blockStateIn,
+               posIn,
+               matrixStackIn,
+               vertexBuilderIn,
+               true,
+               this.f_110902_,
+               i,
+               OverlayTexture.f_118083_,
+               modelData,
+               null
+            );
       }
-
    }
 
-   public void m_234355_(BlockState blockStateIn, BlockPos posIn, BlockAndTintGetter lightReaderIn, PoseStack matrixStackIn, VertexConsumer vertexBuilderIn, boolean checkSides, RandomSource rand) {
-      this.renderBatched(blockStateIn, posIn, lightReaderIn, matrixStackIn, vertexBuilderIn, checkSides, rand, ModelData.EMPTY, (RenderType)null);
+   public void m_234355_(
+      BlockState blockStateIn,
+      BlockPos posIn,
+      BlockAndTintGetter lightReaderIn,
+      PoseStack matrixStackIn,
+      VertexConsumer vertexBuilderIn,
+      boolean checkSides,
+      RandomSource rand
+   ) {
+      this.renderBatched(blockStateIn, posIn, lightReaderIn, matrixStackIn, vertexBuilderIn, checkSides, rand, ModelData.EMPTY, null);
    }
 
-   public void renderBatched(BlockState blockStateIn, BlockPos posIn, BlockAndTintGetter lightReaderIn, PoseStack matrixStackIn, VertexConsumer vertexBuilderIn, boolean checkSides, RandomSource rand, ModelData modelData, RenderType renderType) {
+   public void renderBatched(
+      BlockState blockStateIn,
+      BlockPos posIn,
+      BlockAndTintGetter lightReaderIn,
+      PoseStack matrixStackIn,
+      VertexConsumer vertexBuilderIn,
+      boolean checkSides,
+      RandomSource rand,
+      ModelData modelData,
+      RenderType renderType
+   ) {
       try {
-         this.f_110900_.tesselateBlock(lightReaderIn, this.m_110910_(blockStateIn), blockStateIn, posIn, matrixStackIn, vertexBuilderIn, checkSides, rand, blockStateIn.m_60726_(posIn), OverlayTexture.f_118083_, modelData, renderType);
+         this.f_110900_
+            .tesselateBlock(
+               lightReaderIn,
+               this.m_110910_(blockStateIn),
+               blockStateIn,
+               posIn,
+               matrixStackIn,
+               vertexBuilderIn,
+               checkSides,
+               rand,
+               blockStateIn.m_60726_(posIn),
+               OverlayTexture.f_118083_,
+               modelData,
+               renderType
+            );
       } catch (Throwable var13) {
          CrashReport crashreport = CrashReport.m_127521_(var13, "Tesselating block in world");
          CrashReportCategory crashreportcategory = crashreport.m_127514_("Block being tesselated");
@@ -87,7 +133,7 @@ public class BlockRenderDispatcher implements ResourceManagerReloadListener {
       } catch (Throwable var9) {
          CrashReport crashreport = CrashReport.m_127521_(var9, "Tesselating liquid in world");
          CrashReportCategory crashreportcategory = crashreport.m_127514_("Block being tesselated");
-         CrashReportCategory.m_178950_(crashreportcategory, lightReaderIn, posIn, (BlockState)null);
+         CrashReportCategory.m_178950_(crashreportcategory, lightReaderIn, posIn, null);
          throw new ReportedException(crashreport);
       }
    }
@@ -101,44 +147,73 @@ public class BlockRenderDispatcher implements ResourceManagerReloadListener {
    }
 
    public void m_110912_(BlockState blockStateIn, PoseStack matrixStackIn, MultiBufferSource bufferTypeIn, int combinedLightIn, int combinedOverlayIn) {
-      this.renderSingleBlock(blockStateIn, matrixStackIn, bufferTypeIn, combinedLightIn, combinedOverlayIn, ModelData.EMPTY, (RenderType)null);
+      this.renderSingleBlock(blockStateIn, matrixStackIn, bufferTypeIn, combinedLightIn, combinedOverlayIn, ModelData.EMPTY, null);
    }
 
-   public void renderSingleBlock(BlockState blockStateIn, PoseStack matrixStackIn, MultiBufferSource bufferTypeIn, int combinedLightIn, int combinedOverlayIn, ModelData modelData, RenderType renderType) {
+   public void renderSingleBlock(
+      BlockState blockStateIn,
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferTypeIn,
+      int combinedLightIn,
+      int combinedOverlayIn,
+      ModelData modelData,
+      RenderType renderType
+   ) {
       RenderShape rendershape = blockStateIn.m_60799_();
       if (rendershape != RenderShape.INVISIBLE) {
-         switch (rendershape) {
-            case MODEL:
+         switch (<unrepresentable>.$SwitchMap$net$minecraft$world$level$block$RenderShape[rendershape.ordinal()]) {
+            case 1:
                BakedModel bakedmodel = this.m_110910_(blockStateIn);
-               int i = this.f_110903_.m_92577_(blockStateIn, (BlockAndTintGetter)null, (BlockPos)null, 0);
-               float f = (float)(i >> 16 & 255) / 255.0F;
-               float f1 = (float)(i >> 8 & 255) / 255.0F;
-               float f2 = (float)(i & 255) / 255.0F;
+               int i = this.f_110903_.m_92577_(blockStateIn, null, null, 0);
+               float f = (float)(i >> 16 & 0xFF) / 255.0F;
+               float f1 = (float)(i >> 8 & 0xFF) / 255.0F;
+               float f2 = (float)(i & 0xFF) / 255.0F;
                if (Reflector.ForgeHooksClient.exists()) {
-                  Iterator var17 = bakedmodel.getRenderTypes(blockStateIn, RandomSource.m_216335_(42L), modelData).iterator();
-
-                  while(var17.hasNext()) {
-                     RenderType rt = (RenderType)var17.next();
-                     this.f_110900_.renderModel(matrixStackIn.m_85850_(), bufferTypeIn.m_6299_(renderType != null ? renderType : RenderTypeHelper.getEntityRenderType(rt, false)), blockStateIn, bakedmodel, f, f1, f2, combinedLightIn, combinedOverlayIn, modelData, rt);
+                  for (RenderType rt : bakedmodel.getRenderTypes(blockStateIn, RandomSource.m_216335_(42L), modelData)) {
+                     this.f_110900_
+                        .renderModel(
+                           matrixStackIn.m_85850_(),
+                           bufferTypeIn.m_6299_(renderType != null ? renderType : RenderTypeHelper.getEntityRenderType(rt, false)),
+                           blockStateIn,
+                           bakedmodel,
+                           f,
+                           f1,
+                           f2,
+                           combinedLightIn,
+                           combinedOverlayIn,
+                           modelData,
+                           rt
+                        );
                   }
-
-                  return;
                } else {
-                  this.f_110900_.m_111067_(matrixStackIn.m_85850_(), bufferTypeIn.m_6299_(ItemBlockRenderTypes.m_109284_(blockStateIn, false)), blockStateIn, bakedmodel, f, f1, f2, combinedLightIn, combinedOverlayIn);
-                  break;
+                  this.f_110900_
+                     .m_111067_(
+                        matrixStackIn.m_85850_(),
+                        bufferTypeIn.m_6299_(ItemBlockRenderTypes.m_109284_(blockStateIn, false)),
+                        blockStateIn,
+                        bakedmodel,
+                        f,
+                        f1,
+                        f2,
+                        combinedLightIn,
+                        combinedOverlayIn
+                     );
                }
-            case ENTITYBLOCK_ANIMATED:
+               break;
+            case 2:
                if (Reflector.MinecraftForge.exists()) {
                   ItemStack stack = new ItemStack(blockStateIn.m_60734_());
-                  IClientItemExtensions irp = IClientItemExtensions.of(stack);
+                  IClientItemExtensions irp = IClientItemExtensions.m_253057_(stack);
                   BlockEntityWithoutLevelRenderer teisr = irp.getCustomRenderer();
                   teisr.m_108829_(stack, ItemDisplayContext.NONE, matrixStackIn, bufferTypeIn, combinedLightIn, combinedOverlayIn);
                } else {
-                  this.f_173397_.m_108829_(new ItemStack(blockStateIn.m_60734_()), ItemDisplayContext.NONE, matrixStackIn, bufferTypeIn, combinedLightIn, combinedOverlayIn);
+                  this.f_173397_
+                     .m_108829_(
+                        new ItemStack(blockStateIn.m_60734_()), ItemDisplayContext.NONE, matrixStackIn, bufferTypeIn, combinedLightIn, combinedOverlayIn
+                     );
                }
          }
       }
-
    }
 
    public void m_6213_(ResourceManager resourceManager) {

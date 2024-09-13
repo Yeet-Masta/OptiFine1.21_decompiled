@@ -12,7 +12,6 @@ public class BufferUploader {
          m_231208_();
          VertexBuffer.m_85931_();
       }
-
    }
 
    public static void m_231208_() {
@@ -21,13 +20,10 @@ public class BufferUploader {
 
    public static void m_231202_(MeshData bufferIn) {
       if (!RenderSystem.isOnRenderThreadOrInit()) {
-         RenderSystem.recordRenderCall(() -> {
-            m_231211_(bufferIn);
-         });
+         RenderSystem.recordRenderCall(() -> m_231211_(bufferIn));
       } else {
          m_231211_(bufferIn);
       }
-
    }
 
    private static void m_231211_(MeshData bufferIn) {
@@ -58,6 +54,5 @@ public class BufferUploader {
          bufferIn.m_85921_();
          f_231201_ = bufferIn;
       }
-
    }
 }

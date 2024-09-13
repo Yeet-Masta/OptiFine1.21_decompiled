@@ -13,10 +13,12 @@ public class ModelAdapterCat extends ModelAdapterOcelot {
       super(EntityType.f_20553_, "cat", 0.4F);
    }
 
+   @Override
    public Model makeModel() {
       return new CatModel(bakeModelLayer(ModelLayers.f_171272_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       CatRenderer render = new CatRenderer(renderManager.getContext());

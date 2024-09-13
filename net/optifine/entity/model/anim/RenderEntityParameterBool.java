@@ -47,9 +47,8 @@ public enum RenderEntityParameterBool implements IExpressionBool {
    private String name;
    private boolean blockEntity;
    private EntityRenderDispatcher renderManager;
-   // $FF: renamed from: mc net.minecraft.client.Minecraft
-   private Minecraft field_70;
-   private static final RenderEntityParameterBool[] VALUES = values();
+   private Minecraft f_303183_;
+   private static RenderEntityParameterBool[] VALUES = values();
 
    private RenderEntityParameterBool(String name) {
       this(name, false);
@@ -59,7 +58,7 @@ public enum RenderEntityParameterBool implements IExpressionBool {
       this.name = name;
       this.blockEntity = blockEntity;
       this.renderManager = Minecraft.m_91087_().m_91290_();
-      this.field_70 = Minecraft.m_91087_();
+      this.f_303183_ = Minecraft.m_91087_();
    }
 
    public String getName() {
@@ -70,22 +69,23 @@ public enum RenderEntityParameterBool implements IExpressionBool {
       return this.blockEntity;
    }
 
+   @Override
    public boolean eval() {
-      switch (this.ordinal()) {
-         case 6:
+      switch (this) {
+         case IS_IN_HAND:
             return ItemInHandRenderer.isRenderItemHand() && !LivingEntityRenderer.isRenderItemHead();
-         case 7:
+         case IS_IN_ITEM_FRAME:
             return ItemFrameRenderer.isRenderItemFrame();
-         case 8:
-         case 10:
-         case 11:
-         case 12:
-         case 13:
+         case IS_IN_GROUND:
+         case IS_IN_LAVA:
+         case IS_IN_WATER:
+         case IS_INVISIBLE:
+         case IS_ON_GROUND:
          default:
             BlockEntity blockEntity = BlockEntityRenderDispatcher.tileEntityRendered;
             if (blockEntity != null) {
-               switch (this.ordinal()) {
-                  case 11:
+               switch (this) {
+                  case IS_IN_WATER:
                      return BlockUtils.isPropertyTrue(blockEntity.m_58900_(), BlockStateProperties.f_61362_);
                }
             }
@@ -94,48 +94,43 @@ public enum RenderEntityParameterBool implements IExpressionBool {
             if (entity == null) {
                return false;
             } else {
-               if (entity instanceof LivingEntity) {
-                  LivingEntity livingEntity = (LivingEntity)entity;
-                  switch (this.ordinal()) {
-                     case 3:
+               if (entity instanceof LivingEntity livingEntity) {
+                  switch (this) {
+                     case IS_CHILD:
                         return livingEntity.m_6162_();
-                     case 5:
+                     case IS_HURT:
                         return livingEntity.f_20916_ > 0;
-                     case 15:
-                        return entity == this.field_70.f_91074_.entityShoulderLeft || entity == this.field_70.f_91074_.entityShoulderRight;
+                     case IS_ON_SHOULDER:
+                        return entity == this.f_303183_.f_91074_.entityShoulderLeft || entity == this.f_303183_.f_91074_.entityShoulderRight;
                   }
                }
 
-               if (entity instanceof Mob) {
-                  Mob mob = (Mob)entity;
-                  switch (this.ordinal()) {
-                     case 1:
+               if (entity instanceof Mob mob) {
+                  switch (this) {
+                     case IS_AGGRESSIVE:
                         return mob.m_5912_();
                   }
                }
 
-               if (entity instanceof TamableAnimal) {
-                  TamableAnimal tamable = (TamableAnimal)entity;
-                  switch (this.ordinal()) {
-                     case 18:
+               if (entity instanceof TamableAnimal tamable) {
+                  switch (this) {
+                     case IS_SITTING:
                         return tamable.m_21825_();
-                     case 21:
+                     case IS_TAMED:
                         return tamable.m_21824_();
                   }
                }
 
-               if (entity instanceof Fox) {
-                  Fox fox = (Fox)entity;
-                  switch (this.ordinal()) {
-                     case 18:
+               if (entity instanceof Fox fox) {
+                  switch (this) {
+                     case IS_SITTING:
                         return fox.m_28555_();
                   }
                }
 
-               if (entity instanceof AbstractArrow) {
-                  AbstractArrow arrowEntity = (AbstractArrow)entity;
-                  switch (this.ordinal()) {
-                     case 8:
+               if (entity instanceof AbstractArrow arrowEntity) {
+                  switch (this) {
+                     case IS_IN_GROUND:
                         if (arrowEntity.f_19797_ == 0 && arrowEntity.f_19854_ == 0.0 && arrowEntity.f_19855_ == 0.0 && arrowEntity.f_19856_ == 0.0) {
                            return true;
                         }
@@ -144,58 +139,58 @@ public enum RenderEntityParameterBool implements IExpressionBool {
                   }
                }
 
-               switch (this.ordinal()) {
-                  case 0:
+               switch (this) {
+                  case IS_ALIVE:
                      return entity.m_6084_();
-                  case 1:
-                  case 3:
-                  case 5:
-                  case 6:
-                  case 7:
-                  case 8:
-                  case 9:
-                  case 14:
-                  case 15:
-                  case 18:
-                  case 21:
+                  case IS_AGGRESSIVE:
+                  case IS_CHILD:
+                  case IS_HURT:
+                  case IS_IN_HAND:
+                  case IS_IN_ITEM_FRAME:
+                  case IS_IN_GROUND:
+                  case IS_IN_GUI:
+                  case IS_ON_HEAD:
+                  case IS_ON_SHOULDER:
+                  case IS_SITTING:
+                  case IS_TAMED:
                   default:
                      return false;
-                  case 2:
+                  case IS_BURNING:
                      return entity.m_6060_();
-                  case 4:
+                  case IS_GLOWING:
                      return entity.m_142038_();
-                  case 10:
+                  case IS_IN_LAVA:
                      return entity.m_20077_();
-                  case 11:
+                  case IS_IN_WATER:
                      return entity.m_20069_();
-                  case 12:
+                  case IS_INVISIBLE:
                      return entity.m_20145_();
-                  case 13:
+                  case IS_ON_GROUND:
                      return entity.m_20096_();
-                  case 16:
+                  case IS_RIDDEN:
                      return entity.m_20160_();
-                  case 17:
+                  case IS_RIDING:
                      return entity.m_20159_();
-                  case 19:
+                  case IS_SNEAKING:
                      return entity.m_6047_();
-                  case 20:
+                  case IS_SPRINTING:
                      return entity.m_20142_();
-                  case 22:
+                  case IS_WET:
                      return entity.m_20070_();
                }
             }
-         case 9:
+         case IS_IN_GUI:
             return ItemRenderer.isRenderItemGui();
-         case 14:
+         case IS_ON_HEAD:
             return LivingEntityRenderer.isRenderItemHead();
       }
    }
 
-   public static RenderEntityParameterBool parse(String str) {
+   public static RenderEntityParameterBool m_82160_(String str) {
       if (str == null) {
          return null;
       } else {
-         for(int i = 0; i < VALUES.length; ++i) {
+         for (int i = 0; i < VALUES.length; i++) {
             RenderEntityParameterBool type = VALUES[i];
             if (type.getName().equals(str)) {
                return type;
@@ -204,10 +199,5 @@ public enum RenderEntityParameterBool implements IExpressionBool {
 
          return null;
       }
-   }
-
-   // $FF: synthetic method
-   private static RenderEntityParameterBool[] $values() {
-      return new RenderEntityParameterBool[]{IS_ALIVE, IS_AGGRESSIVE, IS_BURNING, IS_CHILD, IS_GLOWING, IS_HURT, IS_IN_HAND, IS_IN_ITEM_FRAME, IS_IN_GROUND, IS_IN_GUI, IS_IN_LAVA, IS_IN_WATER, IS_INVISIBLE, IS_ON_GROUND, IS_ON_HEAD, IS_ON_SHOULDER, IS_RIDDEN, IS_RIDING, IS_SITTING, IS_SNEAKING, IS_SPRINTING, IS_TAMED, IS_WET};
    }
 }

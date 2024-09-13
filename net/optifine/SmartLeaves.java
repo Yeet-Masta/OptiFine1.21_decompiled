@@ -1,7 +1,6 @@
 package net.optifine;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -34,13 +33,13 @@ public class SmartLeaves {
    private static BakedModel modelLeavesDoubleJungle = null;
    private static BakedModel modelLeavesDoubleOak = null;
    private static BakedModel modelLeavesDoubleSpruce = null;
-   private static final RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
+   private static RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
 
    public static BakedModel getLeavesModel(BakedModel model, BlockState stateIn) {
       if (!Config.isTreesSmart()) {
          return model;
       } else {
-         List generalQuads = model.m_213637_(stateIn, (Direction)null, RANDOM);
+         List generalQuads = model.m_213637_(stateIn, null, RANDOM);
          if (generalQuads == generalQuadsCullAcacia) {
             return modelLeavesDoubleAcacia;
          } else if (generalQuads == generalQuadsCullBirch) {
@@ -90,11 +89,10 @@ public class SmartLeaves {
       if (updatedTypes.size() > 0) {
          Config.dbg("Enable face culling: " + Config.arrayToString(updatedTypes.toArray()));
       }
-
    }
 
    private static List getGeneralQuadsSafe(BakedModel model) {
-      return model == null ? null : model.m_213637_((BlockState)null, (Direction)null, RANDOM);
+      return model == null ? null : model.m_213637_(null, null, RANDOM);
    }
 
    static BakedModel getModelCull(String type, List updatedTypes) {
@@ -113,17 +111,14 @@ public class SmartLeaves {
                ModelResourceLocation mrl = ModelResourceLocation.m_245263_(type + "_leaves", "normal");
                BakedModel model = modelManager.m_119422_(mrl);
                if (model != null && model != modelManager.m_119409_()) {
-                  List listGeneral = model.m_213637_((BlockState)null, (Direction)null, RANDOM);
+                  List listGeneral = model.m_213637_(null, null, RANDOM);
                   if (listGeneral.size() == 0) {
                      return model;
                   } else if (listGeneral.size() != 6) {
                      return null;
                   } else {
-                     Iterator it = listGeneral.iterator();
-
-                     while(it.hasNext()) {
-                        BakedQuad quad = (BakedQuad)it.next();
-                        List listFace = model.m_213637_((BlockState)null, quad.m_111306_(), RANDOM);
+                     for (BakedQuad quad : listGeneral) {
+                        List listFace = model.m_213637_(null, quad.m_111306_(), RANDOM);
                         if (listFace.size() > 0) {
                            return null;
                         }
@@ -146,19 +141,17 @@ public class SmartLeaves {
    private static BakedModel getModelDoubleFace(BakedModel model) {
       if (model == null) {
          return null;
-      } else if (model.m_213637_((BlockState)null, (Direction)null, RANDOM).size() > 0) {
-         int var15 = model.m_213637_((BlockState)null, (Direction)null, RANDOM).size();
-         Config.warn("SmartLeaves: Model is not cube, general quads: " + var15 + ", model: " + String.valueOf(model));
+      } else if (model.m_213637_(null, null, RANDOM).size() > 0) {
+         Config.warn("SmartLeaves: Model is not cube, general quads: " + model.m_213637_(null, null, RANDOM).size() + ", model: " + model);
          return model;
       } else {
          Direction[] faces = Direction.f_122346_;
 
-         for(int i = 0; i < faces.length; ++i) {
+         for (int i = 0; i < faces.length; i++) {
             Direction face = faces[i];
-            List quads = model.m_213637_((BlockState)null, face, RANDOM);
+            List<BakedQuad> quads = model.m_213637_(null, face, RANDOM);
             if (quads.size() != 1) {
-               String var10000 = String.valueOf(face);
-               Config.warn("SmartLeaves: Model is not cube, side: " + var10000 + ", quads: " + quads.size() + ", model: " + String.valueOf(model));
+               Config.warn("SmartLeaves: Model is not cube, side: " + face + ", quads: " + quads.size() + ", model: " + model);
                return model;
             }
          }
@@ -166,9 +159,9 @@ public class SmartLeaves {
          BakedModel model2 = ModelUtils.duplicateModel(model);
          List[] faceQuads = new List[faces.length];
 
-         for(int i = 0; i < faces.length; ++i) {
-            Direction face = faces[i];
-            List quads = model2.m_213637_((BlockState)null, face, RANDOM);
+         for (int ix = 0; ix < faces.length; ix++) {
+            Direction face = faces[ix];
+            List<BakedQuad> quads = model2.m_213637_(null, face, RANDOM);
             BakedQuad quad = (BakedQuad)quads.get(0);
             BakedQuad quad2 = new BakedQuad((int[])quad.m_111303_().clone(), quad.m_111305_(), quad.m_111306_(), quad.m_173410_(), quad.m_111307_());
             int[] vd = quad2.m_111303_();

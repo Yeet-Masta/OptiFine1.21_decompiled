@@ -14,7 +14,7 @@ public class SmartAnimations {
       return active && !Shaders.isShadowPass;
    }
 
-   public static void update() {
+   public static void m_252999_() {
       active = Config.getGameSettings().ofSmartAnimations;
    }
 
@@ -29,7 +29,7 @@ public class SmartAnimations {
 
    public static void spritesRendered(BitSet animationIndexes) {
       if (animationIndexes != null) {
-         spritesRendered.or(animationIndexes);
+         spritesRendered.m_178291_(animationIndexes);
       }
    }
 

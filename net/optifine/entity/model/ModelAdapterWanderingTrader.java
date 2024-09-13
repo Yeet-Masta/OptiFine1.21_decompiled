@@ -12,6 +12,7 @@ public class ModelAdapterWanderingTrader extends ModelAdapterVillager {
       super(EntityType.f_20494_, "wandering_trader", 0.5F);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WanderingTraderRenderer render = new WanderingTraderRenderer(renderManager.getContext());

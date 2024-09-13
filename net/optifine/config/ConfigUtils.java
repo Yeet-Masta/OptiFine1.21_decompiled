@@ -39,8 +39,7 @@ public class ConfigUtils {
          return null;
       } catch (IOException var5) {
          Config.warn("Error parsing: " + fileName);
-         String var10000 = var5.getClass().getName();
-         Config.warn(var10000 + ": " + var5.getMessage());
+         Config.warn(var5.getClass().getName() + ": " + var5.getMessage());
          return null;
       }
    }

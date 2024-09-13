@@ -6,16 +6,16 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.status.ChunkStep;
 
 public class ChunkLevel {
-   private static final int f_287007_ = 33;
-   private static final int f_286976_ = 32;
-   private static final int f_286937_ = 31;
-   private static final ChunkStep f_337362_;
-   public static final int f_337478_;
-   public static final int f_286967_;
+   private static int f_287007_;
+   private static int f_286976_;
+   private static int f_286937_;
+   private static ChunkStep f_337362_ = ChunkPyramid.f_336884_.m_338623_(ChunkStatus.f_315432_);
+   public static int f_337478_ = f_337362_.f_337162_().m_340327_();
+   public static int f_286967_ = 33 + f_337478_ + 32;
 
    @Nullable
    public static ChunkStatus m_287158_(int levelIn) {
-      return m_339814_(levelIn - 33, (ChunkStatus)null);
+      return m_339814_(levelIn - 33, null);
    }
 
    @Nullable
@@ -46,25 +46,13 @@ public class ChunkLevel {
    }
 
    public static int m_287154_(FullChunkStatus statusIn) {
-      int var10000;
-      switch (statusIn) {
-         case INACCESSIBLE:
-            var10000 = f_286967_;
-            break;
-         case FULL:
-            var10000 = 33;
-            break;
-         case BLOCK_TICKING:
-            var10000 = 32;
-            break;
-         case ENTITY_TICKING:
-            var10000 = 31;
-            break;
-         default:
-            throw new MatchException((String)null, (Throwable)null);
-      }
-
-      return var10000;
+      return switch (<unrepresentable>.$SwitchMap$net$minecraft$server$level$FullChunkStatus[statusIn.ordinal()]) {
+         case 1 -> f_286967_;
+         case 2 -> 33;
+         case 3 -> 32;
+         case 4 -> 31;
+         default -> throw new MatchException(null, null);
+      };
    }
 
    public static boolean m_287155_(int levelIn) {
@@ -77,11 +65,5 @@ public class ChunkLevel {
 
    public static boolean m_287217_(int levelIn) {
       return levelIn <= f_286967_;
-   }
-
-   static {
-      f_337362_ = ChunkPyramid.f_336884_.m_338623_(ChunkStatus.f_315432_);
-      f_337478_ = f_337362_.f_337162_().m_340327_();
-      f_286967_ = 33 + f_337478_ + 32;
    }
 }

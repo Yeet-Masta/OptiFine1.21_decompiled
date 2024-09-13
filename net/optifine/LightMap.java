@@ -23,7 +23,7 @@ public class LightMap {
          if (nightvision && height < 64) {
             return false;
          } else {
-            int width = this.lightMapRgb.getWidth();
+            int width = this.lightMapRgb.m_92515_();
             if (width < 16) {
                warn("Invalid lightmap width: " + width);
                this.lightMapRgb = null;
@@ -42,17 +42,16 @@ public class LightMap {
                sun = Config.limitTo1(sun);
                float sunX = sun * (float)(width - 1);
                float torchX = Config.limitTo1(torchFlickerX + 0.5F) * (float)(width - 1);
-               float gamma = Config.limitTo1((float)(Double)Config.getGameSettings().m_231927_().m_231551_());
+               float gamma = Config.limitTo1((float)Config.getGameSettings().m_231927_().m_231551_().doubleValue());
                boolean hasGamma = gamma > 1.0E-4F;
                float[][] colorsRgb = this.lightMapRgb.getColorsRgb();
                this.getLightMapColumn(colorsRgb, sunX, startIndex, width, this.sunRgbs);
                this.getLightMapColumn(colorsRgb, torchX, startIndex + 16 * width, width, this.torchRgbs);
                float[] rgb = new float[3];
 
-               for(int is = 0; is < 16; ++is) {
-                  for(int it = 0; it < 16; ++it) {
-                     int ic;
-                     for(ic = 0; ic < 3; ++ic) {
+               for (int is = 0; is < 16; is++) {
+                  for (int it = 0; it < 16; it++) {
+                     for (int ic = 0; ic < 3; ic++) {
                         float comp = Config.limitTo1(this.sunRgbs[is][ic] + this.torchRgbs[it][ic] - darkLight);
                         if (hasGamma) {
                            float cg = 1.0F - comp;
@@ -63,10 +62,10 @@ public class LightMap {
                         rgb[ic] = comp;
                      }
 
-                     ic = (int)(rgb[0] * 255.0F);
+                     int r = (int)(rgb[0] * 255.0F);
                      int g = (int)(rgb[1] * 255.0F);
                      int b = (int)(rgb[2] * 255.0F);
-                     lmColors[is * 16 + it] = -16777216 | b << 16 | g << 8 | ic;
+                     lmColors[is * 16 + it] = 0xFF000000 | b << 16 | g << 8 | r;
                   }
                }
 
@@ -80,29 +79,27 @@ public class LightMap {
       int xLow = (int)Math.floor((double)x);
       int xHigh = (int)Math.ceil((double)x);
       if (xLow == xHigh) {
-         for(int y = 0; y < 16; ++y) {
+         for (int y = 0; y < 16; y++) {
             float[] rgbLow = origMap[offset + y * width + xLow];
             float[] rgb = colRgb[y];
 
-            for(int i = 0; i < 3; ++i) {
+            for (int i = 0; i < 3; i++) {
                rgb[i] = rgbLow[i];
             }
          }
-
       } else {
          float dLow = 1.0F - (x - (float)xLow);
          float dHigh = 1.0F - ((float)xHigh - x);
 
-         for(int y = 0; y < 16; ++y) {
+         for (int y = 0; y < 16; y++) {
             float[] rgbLow = origMap[offset + y * width + xLow];
             float[] rgbHigh = origMap[offset + y * width + xHigh];
             float[] rgb = colRgb[y];
 
-            for(int i = 0; i < 3; ++i) {
+            for (int i = 0; i < 3; i++) {
                rgb[i] = rgbLow[i] * dLow + rgbHigh[i] * dHigh;
             }
          }
-
       }
    }
 

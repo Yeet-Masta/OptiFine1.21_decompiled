@@ -19,7 +19,7 @@ import net.optifine.util.GpuMemory;
 import org.joml.Matrix4f;
 
 public class VertexBuffer implements AutoCloseable {
-   private final Usage f_285574_;
+   private VertexBuffer.Usage f_285574_;
    private int f_231217_;
    private int f_166860_;
    private int f_166862_;
@@ -35,7 +35,7 @@ public class VertexBuffer implements AutoCloseable {
    private MultiTextureData multiTextureData;
    private static ByteBuffer emptyBuffer = GlUtil.m_166247_(0);
 
-   public VertexBuffer(Usage usageIn) {
+   public VertexBuffer(VertexBuffer.Usage usageIn) {
       this.f_285574_ = usageIn;
       RenderSystem.assertOnRenderThread();
       this.f_231217_ = GlStateManager._glGenBuffers();
@@ -46,10 +46,10 @@ public class VertexBuffer implements AutoCloseable {
    public void m_231221_(MeshData bufferIn) {
       MeshData meshdata = bufferIn;
 
-      label47: {
+      label48: {
          try {
             if (this.m_231230_()) {
-               break label47;
+               break label48;
             }
 
             RenderSystem.assertOnRenderThread();
@@ -96,7 +96,6 @@ public class VertexBuffer implements AutoCloseable {
       if (bufferIn != null) {
          bufferIn.close();
       }
-
    }
 
    public void m_338802_(ByteBufferBuilder.Result resultIn) {
@@ -135,7 +134,6 @@ public class VertexBuffer implements AutoCloseable {
       if (resultIn != null) {
          resultIn.close();
       }
-
    }
 
    private VertexFormat m_231218_(MeshData.DrawState drawStateIn, @Nullable ByteBuffer bufferIn) {
@@ -199,7 +197,6 @@ public class VertexBuffer implements AutoCloseable {
       if (this.f_166862_ >= 0) {
          GlStateManager._glBindVertexArray(this.f_166862_);
       }
-
    }
 
    public static void m_85931_() {
@@ -215,7 +212,6 @@ public class VertexBuffer implements AutoCloseable {
       } else {
          RenderSystem.drawElements(this.f_166864_.f_166946_, this.f_166863_, this.m_231231_().f_166923_);
       }
-
    }
 
    private VertexFormat.IndexType m_231231_() {
@@ -225,13 +221,10 @@ public class VertexBuffer implements AutoCloseable {
 
    public void m_253207_(Matrix4f matrixIn, Matrix4f projectionIn, ShaderInstance shaderIn) {
       if (!RenderSystem.isOnRenderThread()) {
-         RenderSystem.recordRenderCall(() -> {
-            this.m_166876_(new Matrix4f(matrixIn), new Matrix4f(projectionIn), shaderIn);
-         });
+         RenderSystem.recordRenderCall(() -> this.m_166876_(new Matrix4f(matrixIn), new Matrix4f(projectionIn), shaderIn));
       } else {
          this.m_166876_(matrixIn, projectionIn, shaderIn);
       }
-
    }
 
    private void m_166876_(Matrix4f matrixIn, Matrix4f projectionIn, ShaderInstance shaderIn) {
@@ -280,11 +273,7 @@ public class VertexBuffer implements AutoCloseable {
    }
 
    public boolean m_231230_() {
-      if (this.vboRegion != null) {
-         return false;
-      } else {
-         return this.f_166862_ == -1;
-      }
+      return this.vboRegion != null ? false : this.f_166862_ == -1;
    }
 
    public void setVboRegion(VboRegion vboRegion) {
@@ -354,15 +343,10 @@ public class VertexBuffer implements AutoCloseable {
       STATIC(35044),
       DYNAMIC(35048);
 
-      final int f_285654_;
+      int f_285654_;
 
       private Usage(final int idIn) {
          this.f_285654_ = idIn;
-      }
-
-      // $FF: synthetic method
-      private static Usage[] $values() {
-         return new Usage[]{STATIC, DYNAMIC};
       }
    }
 }

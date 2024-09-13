@@ -4,8 +4,8 @@ import java.lang.reflect.Field;
 import net.optifine.Log;
 
 public class FieldLocatorType implements IFieldLocator {
-   private ReflectorClass reflectorClass;
-   private Class targetFieldType;
+   private ReflectorClass reflectorClass = null;
+   private Class targetFieldType = null;
    private int targetFieldIndex;
 
    public FieldLocatorType(ReflectorClass reflectorClass, Class targetFieldType) {
@@ -13,13 +13,12 @@ public class FieldLocatorType implements IFieldLocator {
    }
 
    public FieldLocatorType(ReflectorClass reflectorClass, Class targetFieldType, int targetFieldIndex) {
-      this.reflectorClass = null;
-      this.targetFieldType = null;
       this.reflectorClass = reflectorClass;
       this.targetFieldType = targetFieldType;
       this.targetFieldIndex = targetFieldIndex;
    }
 
+   @Override
    public Field getField() {
       Class cls = this.reflectorClass.getTargetClass();
       if (cls == null) {
@@ -29,7 +28,7 @@ public class FieldLocatorType implements IFieldLocator {
             Field[] fileds = cls.getDeclaredFields();
             int fieldIndex = 0;
 
-            for(int i = 0; i < fileds.length; ++i) {
+            for (int i = 0; i < fileds.length; i++) {
                Field field = fileds[i];
                if (field.getType() == this.targetFieldType) {
                   if (fieldIndex == this.targetFieldIndex) {
@@ -37,12 +36,11 @@ public class FieldLocatorType implements IFieldLocator {
                      return field;
                   }
 
-                  ++fieldIndex;
+                  fieldIndex++;
                }
             }
 
-            String var10000 = cls.getName();
-            Log.log("(Reflector) Field not present: " + var10000 + ".(type: " + String.valueOf(this.targetFieldType) + ", index: " + this.targetFieldIndex + ")");
+            Log.m_260877_("(Reflector) Field not present: " + cls.getName() + ".(type: " + this.targetFieldType + ", index: " + this.targetFieldIndex + ")");
             return null;
          } catch (SecurityException var6) {
             var6.printStackTrace();

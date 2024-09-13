@@ -2,7 +2,6 @@ package net.optifine.shaders;
 
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.util.Mth;
-import org.joml.Matrix4f;
 
 public class ClippingHelperShadow extends Frustum {
    private static ClippingHelperShadow instance = new ClippingHelperShadow();
@@ -14,13 +13,21 @@ public class ClippingHelperShadow extends Frustum {
    float[][] frustum;
 
    public ClippingHelperShadow() {
-      super((Matrix4f)null, (Matrix4f)null);
+      super(null, null);
    }
 
+   @Override
    public boolean m_113006_(double x1, double y1, double z1, double x2, double y2, double z2) {
-      for(int index = 0; index < this.shadowClipPlaneCount; ++index) {
+      for (int index = 0; index < this.shadowClipPlaneCount; index++) {
          float[] plane = this.shadowClipPlanes[index];
-         if (this.dot4(plane, x1, y1, z1) <= 0.0 && this.dot4(plane, x2, y1, z1) <= 0.0 && this.dot4(plane, x1, y2, z1) <= 0.0 && this.dot4(plane, x2, y2, z1) <= 0.0 && this.dot4(plane, x1, y1, z2) <= 0.0 && this.dot4(plane, x2, y1, z2) <= 0.0 && this.dot4(plane, x1, y2, z2) <= 0.0 && this.dot4(plane, x2, y2, z2) <= 0.0) {
+         if (this.dot4(plane, x1, y1, z1) <= 0.0
+            && this.dot4(plane, x2, y1, z1) <= 0.0
+            && this.dot4(plane, x1, y2, z1) <= 0.0
+            && this.dot4(plane, x2, y2, z1) <= 0.0
+            && this.dot4(plane, x1, y1, z2) <= 0.0
+            && this.dot4(plane, x2, y1, z2) <= 0.0
+            && this.dot4(plane, x1, y2, z2) <= 0.0
+            && this.dot4(plane, x2, y2, z2) <= 0.0) {
             return false;
          }
       }
@@ -89,7 +96,7 @@ public class ClippingHelperShadow extends Frustum {
       return (float)Math.sqrt((double)(x * x + y * y + z * z));
    }
 
-   private float distance(float x1, float y1, float z1, float x2, float y2, float z2) {
+   private float m_186809_(float x1, float y1, float z1, float x2, float y2, float z2) {
       return this.length(x1 - x2, y1 - y2, z1 - z2);
    }
 
@@ -99,12 +106,16 @@ public class ClippingHelperShadow extends Frustum {
       this.normalize3(shadowPlane);
       float dotPN = (float)this.dot3(positivePlane, negativePlane);
       float dotSN = (float)this.dot3(shadowPlane, negativePlane);
-      float disSN = this.distance(shadowPlane[0], shadowPlane[1], shadowPlane[2], negativePlane[0] * dotSN, negativePlane[1] * dotSN, negativePlane[2] * dotSN);
-      float disPN = this.distance(positivePlane[0], positivePlane[1], positivePlane[2], negativePlane[0] * dotPN, negativePlane[1] * dotPN, negativePlane[2] * dotPN);
+      float disSN = this.m_186809_(shadowPlane[0], shadowPlane[1], shadowPlane[2], negativePlane[0] * dotSN, negativePlane[1] * dotSN, negativePlane[2] * dotSN);
+      float disPN = this.m_186809_(
+         positivePlane[0], positivePlane[1], positivePlane[2], negativePlane[0] * dotPN, negativePlane[1] * dotPN, negativePlane[2] * dotPN
+      );
       float k1 = disSN / disPN;
       float dotSP = (float)this.dot3(shadowPlane, positivePlane);
-      float disSP = this.distance(shadowPlane[0], shadowPlane[1], shadowPlane[2], positivePlane[0] * dotSP, positivePlane[1] * dotSP, positivePlane[2] * dotSP);
-      float disNP = this.distance(negativePlane[0], negativePlane[1], negativePlane[2], positivePlane[0] * dotPN, positivePlane[1] * dotPN, positivePlane[2] * dotPN);
+      float disSP = this.m_186809_(shadowPlane[0], shadowPlane[1], shadowPlane[2], positivePlane[0] * dotSP, positivePlane[1] * dotSP, positivePlane[2] * dotSP);
+      float disNP = this.m_186809_(
+         negativePlane[0], negativePlane[1], negativePlane[2], positivePlane[0] * dotPN, positivePlane[1] * dotPN, positivePlane[2] * dotPN
+      );
       float k2 = disSP / disNP;
       shadowPlane[3] = positivePlane[3] * k1 + negativePlane[3] * k2;
    }

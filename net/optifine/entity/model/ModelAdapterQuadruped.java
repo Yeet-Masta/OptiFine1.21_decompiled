@@ -11,6 +11,7 @@ public abstract class ModelAdapterQuadruped extends ModelAdapter {
       super(type, name, shadowSize);
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof QuadrupedModel modelQuadruped)) {
          return null;
@@ -29,6 +30,7 @@ public abstract class ModelAdapterQuadruped extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"head", "body", "leg1", "leg2", "leg3", "leg4"};
    }

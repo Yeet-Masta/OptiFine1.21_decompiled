@@ -5,27 +5,82 @@ import net.optifine.reflect.Reflector;
 import net.optifine.shaders.SVertexFormat;
 
 public class DefaultVertexFormat {
-   public static final VertexFormat f_166850_;
-   public static final VertexFormat f_85811_;
-   public static final VertexFormat f_85812_;
-   public static final VertexFormat f_85813_;
-   public static final VertexFormat f_85814_;
-   public static final VertexFormat f_85815_;
-   public static final VertexFormat f_166851_;
-   public static final VertexFormat f_85816_;
-   public static final VertexFormat f_85817_;
-   public static final VertexFormat f_85819_;
-   public static final VertexFormat f_85820_;
-   public static final VertexFormat f_85821_;
-   public static final VertexFormat f_85822_;
-   public static final VertexFormat BLOCK_VANILLA;
-   public static final VertexFormat BLOCK_SHADERS;
-   public static final int BLOCK_VANILLA_SIZE;
-   public static final int BLOCK_SHADERS_SIZE;
-   public static final VertexFormat ENTITY_VANILLA;
-   public static final VertexFormat ENTITY_SHADERS;
-   public static final int ENTITY_VANILLA_SIZE;
-   public static final int ENTITY_SHADERS_SIZE;
+   public static VertexFormat f_166850_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339368_();
+   public static VertexFormat f_85811_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("UV2", VertexFormatElement.f_337050_)
+      .m_339091_("Normal", VertexFormatElement.f_336839_)
+      .m_339010_(1)
+      .m_339368_();
+   public static VertexFormat f_85812_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("UV1", VertexFormatElement.f_337543_)
+      .m_339091_("UV2", VertexFormatElement.f_337050_)
+      .m_339091_("Normal", VertexFormatElement.f_336839_)
+      .m_339010_(1)
+      .m_339368_();
+   public static VertexFormat f_85813_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("UV2", VertexFormatElement.f_337050_)
+      .m_339368_();
+   public static VertexFormat f_85814_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339368_();
+   public static VertexFormat f_85815_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339368_();
+   public static VertexFormat f_166851_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("Normal", VertexFormatElement.f_336839_)
+      .m_339010_(1)
+      .m_339368_();
+   public static VertexFormat f_85816_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("UV2", VertexFormatElement.f_337050_)
+      .m_339368_();
+   public static VertexFormat f_85817_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339368_();
+   public static VertexFormat f_85819_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339368_();
+   public static VertexFormat f_85820_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("UV2", VertexFormatElement.f_337050_)
+      .m_339368_();
+   public static VertexFormat f_85821_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("UV2", VertexFormatElement.f_337050_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339368_();
+   public static VertexFormat f_85822_ = VertexFormat.m_339703_()
+      .m_339091_("Position", VertexFormatElement.f_336661_)
+      .m_339091_("UV0", VertexFormatElement.f_336642_)
+      .m_339091_("Color", VertexFormatElement.f_336914_)
+      .m_339091_("Normal", VertexFormatElement.f_336839_)
+      .m_339010_(1)
+      .m_339368_();
+   public static VertexFormat BLOCK_VANILLA = f_85811_.duplicate();
+   public static VertexFormat BLOCK_SHADERS = SVertexFormat.makeExtendedFormatBlock(BLOCK_VANILLA);
+   public static int BLOCK_VANILLA_SIZE = BLOCK_VANILLA.m_86020_();
+   public static int BLOCK_SHADERS_SIZE = BLOCK_SHADERS.m_86020_();
+   public static VertexFormat ENTITY_VANILLA = f_85812_.duplicate();
+   public static VertexFormat ENTITY_SHADERS = SVertexFormat.makeExtendedFormatEntity(ENTITY_VANILLA);
+   public static int ENTITY_VANILLA_SIZE = ENTITY_VANILLA.m_86020_();
+   public static int ENTITY_SHADERS_SIZE = ENTITY_SHADERS.m_86020_();
 
    public static void updateVertexFormats() {
       if (Config.isShaders()) {
@@ -41,31 +96,9 @@ public class DefaultVertexFormat {
          Reflector.IQuadTransformer_STRIDE.setStaticIntUnsafe(stride);
          Reflector.QuadBakingVertexConsumer_QUAD_DATA_SIZE.setStaticIntUnsafe(stride * 4);
       }
-
    }
 
    static {
-      f_166850_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339368_();
-      f_85811_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("UV2", VertexFormatElement.f_337050_).m_339091_("Normal", VertexFormatElement.f_336839_).m_339010_(1).m_339368_();
-      f_85812_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("UV1", VertexFormatElement.f_337543_).m_339091_("UV2", VertexFormatElement.f_337050_).m_339091_("Normal", VertexFormatElement.f_336839_).m_339010_(1).m_339368_();
-      f_85813_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("UV2", VertexFormatElement.f_337050_).m_339368_();
-      f_85814_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339368_();
-      f_85815_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("Color", VertexFormatElement.f_336914_).m_339368_();
-      f_166851_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("Normal", VertexFormatElement.f_336839_).m_339010_(1).m_339368_();
-      f_85816_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("UV2", VertexFormatElement.f_337050_).m_339368_();
-      f_85817_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339368_();
-      f_85819_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("Color", VertexFormatElement.f_336914_).m_339368_();
-      f_85820_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("UV2", VertexFormatElement.f_337050_).m_339368_();
-      f_85821_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("UV2", VertexFormatElement.f_337050_).m_339091_("Color", VertexFormatElement.f_336914_).m_339368_();
-      f_85822_ = VertexFormat.m_339703_().m_339091_("Position", VertexFormatElement.f_336661_).m_339091_("UV0", VertexFormatElement.f_336642_).m_339091_("Color", VertexFormatElement.f_336914_).m_339091_("Normal", VertexFormatElement.f_336839_).m_339010_(1).m_339368_();
-      BLOCK_VANILLA = f_85811_.duplicate();
-      BLOCK_SHADERS = SVertexFormat.makeExtendedFormatBlock(BLOCK_VANILLA);
-      BLOCK_VANILLA_SIZE = BLOCK_VANILLA.m_86020_();
-      BLOCK_SHADERS_SIZE = BLOCK_SHADERS.m_86020_();
-      ENTITY_VANILLA = f_85812_.duplicate();
-      ENTITY_SHADERS = SVertexFormat.makeExtendedFormatEntity(ENTITY_VANILLA);
-      ENTITY_VANILLA_SIZE = ENTITY_VANILLA.m_86020_();
-      ENTITY_SHADERS_SIZE = ENTITY_SHADERS.m_86020_();
       f_166850_.setName("BLIT_SCREEN");
       f_85811_.setName("BLOCK");
       f_85812_.setName("ENTITY");

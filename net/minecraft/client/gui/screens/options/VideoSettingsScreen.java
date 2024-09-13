@@ -11,8 +11,8 @@ import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.UnsupportedGraphicsWarningScreen.ButtonOption;
 import net.minecraft.client.renderer.GpuWarnlistManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -38,14 +38,14 @@ public class VideoSettingsScreen extends GuiScreenOF {
    private Screen parentGuiScreen;
    private Options guiGameSettings;
    private GpuWarnlistManager gpuWarning;
-   private static final Component TEXT_FABULOUS;
-   private static final Component TEXT_WARNING_MESSAGE;
-   private static final Component TEXT_WARNING_TITLE;
-   private static final Component TEXT_WARNING_ACCEPT;
-   private static final Component TEXT_WARNING_CANCEL;
-   private static final Component NEW_LINE;
+   private static Component TEXT_FABULOUS = Component.m_237115_("options.graphics.fabulous").m_130940_(ChatFormatting.ITALIC);
+   private static Component TEXT_WARNING_MESSAGE = Component.m_237110_("options.graphics.warning.message", new Object[]{TEXT_FABULOUS, TEXT_FABULOUS});
+   private static Component TEXT_WARNING_TITLE = Component.m_237115_("options.graphics.warning.title").m_130940_(ChatFormatting.RED);
+   private static Component TEXT_WARNING_ACCEPT = Component.m_237115_("options.graphics.warning.accept");
+   private static Component TEXT_WARNING_CANCEL = Component.m_237115_("options.graphics.warning.cancel");
+   private static Component NEW_LINE = Component.m_237113_("\n");
    private TooltipManager tooltipManager = new TooltipManager(this, new TooltipProviderOptions());
-   private List buttonList = this.getButtonList();
+   private List<AbstractWidget> buttonList = this.getButtonList();
    private AbstractWidget buttonGuiScale;
    private Minecraft minecraft = Minecraft.m_91087_();
 
@@ -64,44 +64,59 @@ public class VideoSettingsScreen extends GuiScreenOF {
 
    public void m_7856_() {
       this.buttonList.clear();
-      OptionInstance[] videoOptions = new OptionInstance[]{this.settings.GRAPHICS, this.settings.RENDER_DISTANCE, this.settings.field_19, this.settings.SIMULATION_DISTANCE, Option.AO_LEVEL, this.settings.FRAMERATE_LIMIT, this.settings.GUI_SCALE, this.settings.ENTITY_SHADOWS, this.settings.GAMMA, Option.DYNAMIC_FOV, Option.DYNAMIC_LIGHTS, null};
+      OptionInstance[] videoOptions = new OptionInstance[]{
+         this.settings.GRAPHICS,
+         this.settings.RENDER_DISTANCE,
+         this.settings.f_12499_,
+         this.settings.SIMULATION_DISTANCE,
+         Option.AO_LEVEL,
+         this.settings.FRAMERATE_LIMIT,
+         this.settings.GUI_SCALE,
+         this.settings.ENTITY_SHADOWS,
+         this.settings.GAMMA,
+         Option.DYNAMIC_FOV,
+         Option.DYNAMIC_LIGHTS,
+         null
+      };
 
-      int i;
-      for(i = 0; i < videoOptions.length; ++i) {
+      for (int i = 0; i < videoOptions.length; i++) {
          OptionInstance opt = videoOptions[i];
          if (opt != null) {
             int x = this.f_96543_ / 2 - 155 + i % 2 * 160;
             int y = this.f_96544_ / 6 + 21 * (i / 2) - 12;
             AbstractWidget guiElement = (AbstractWidget)this.m_142416_(opt.m_231507_(this.minecraft.f_91066_, x, y, 150));
-            guiElement.m_257544_((Tooltip)null);
+            guiElement.m_257544_(null);
             if (opt == this.settings.GUI_SCALE) {
                this.buttonGuiScale = guiElement;
             }
          }
       }
 
-      this.m_142416_(new GuiButtonOF(220, this.f_96543_ / 2 - 155 + 160, this.f_96544_ / 6 + 105 - 12, 150, 20, I18n.m_118938_("of.options.quickInfo", new Object[0])));
-      i = this.f_96544_ / 6 + 21 * (videoOptions.length / 2) - 12;
-      int x = false;
-      int x = this.f_96543_ / 2 - 155 + 0;
-      this.m_142416_(new GuiScreenButtonOF(231, x, i, Lang.get("of.options.shaders")));
-      x = this.f_96543_ / 2 - 155 + 160;
-      this.m_142416_(new GuiScreenButtonOF(202, x, i, Lang.get("of.options.quality")));
-      i += 21;
+      this.m_142416_(
+         new GuiButtonOF(220, this.f_96543_ / 2 - 155 + 160, this.f_96544_ / 6 + 105 - 12, 150, 20, I18n.m_118938_("of.options.quickInfo", new Object[0]))
+      );
+      int y = this.f_96544_ / 6 + 21 * (videoOptions.length / 2) - 12;
+      int x = 0;
       x = this.f_96543_ / 2 - 155 + 0;
-      this.m_142416_(new GuiScreenButtonOF(201, x, i, Lang.get("of.options.details")));
+      this.m_142416_(new GuiScreenButtonOF(231, x, y, Lang.get("of.options.shaders")));
       x = this.f_96543_ / 2 - 155 + 160;
-      this.m_142416_(new GuiScreenButtonOF(212, x, i, Lang.get("of.options.performance")));
-      i += 21;
+      this.m_142416_(new GuiScreenButtonOF(202, x, y, Lang.get("of.options.quality")));
+      y += 21;
       x = this.f_96543_ / 2 - 155 + 0;
-      this.m_142416_(new GuiScreenButtonOF(211, x, i, Lang.get("of.options.animations")));
+      this.m_142416_(new GuiScreenButtonOF(201, x, y, Lang.get("of.options.details")));
       x = this.f_96543_ / 2 - 155 + 160;
-      this.m_142416_(new GuiScreenButtonOF(222, x, i, Lang.get("of.options.other")));
-      i += 21;
+      this.m_142416_(new GuiScreenButtonOF(212, x, y, Lang.get("of.options.performance")));
+      y += 21;
+      x = this.f_96543_ / 2 - 155 + 0;
+      this.m_142416_(new GuiScreenButtonOF(211, x, y, Lang.get("of.options.animations")));
+      x = this.f_96543_ / 2 - 155 + 160;
+      this.m_142416_(new GuiScreenButtonOF(222, x, y, Lang.get("of.options.other")));
+      y += 21;
       this.m_142416_(new GuiButtonOF(200, this.f_96543_ / 2 - 100, this.f_96544_ / 6 + 168 + 11, I18n.m_118938_("gui.done", new Object[0])));
       this.buttonList = this.getButtonList();
    }
 
+   @Override
    protected void actionPerformed(AbstractWidget button) {
       if (button == this.buttonGuiScale) {
          this.updateGuiScale();
@@ -115,7 +130,7 @@ public class VideoSettingsScreen extends GuiScreenOF {
 
    private void checkFabulousWarning() {
       if (this.gpuWarning.m_109250_()) {
-         List list = Lists.newArrayList(new Component[]{TEXT_WARNING_MESSAGE, NEW_LINE});
+         List<Component> list = Lists.newArrayList(new Component[]{TEXT_WARNING_MESSAGE, NEW_LINE});
          String s = this.gpuWarning.m_109253_();
          if (s != null) {
             list.add(NEW_LINE);
@@ -134,22 +149,23 @@ public class VideoSettingsScreen extends GuiScreenOF {
             list.add(Component.m_237110_("options.graphics.warning.version", new Object[]{s2}).m_130940_(ChatFormatting.GRAY));
          }
 
-         this.minecraft.m_91152_(new UnsupportedGraphicsWarningScreen(TEXT_WARNING_TITLE, list, ImmutableList.of(new UnsupportedGraphicsWarningScreen.ButtonOption(TEXT_WARNING_ACCEPT, (btn) -> {
-            this.guiGameSettings.m_232060_().m_231514_(GraphicsStatus.FABULOUS);
-            Minecraft.m_91087_().f_91060_.m_109818_();
-            this.gpuWarning.m_109248_();
-            this.minecraft.m_91152_(this);
-         }), new UnsupportedGraphicsWarningScreen.ButtonOption(TEXT_WARNING_CANCEL, (btn) -> {
-            this.gpuWarning.m_109249_();
-            this.minecraft.m_91152_(this);
-         }))));
+         this.minecraft
+            .m_91152_(new UnsupportedGraphicsWarningScreen(TEXT_WARNING_TITLE, list, ImmutableList.m_253057_(new ButtonOption(TEXT_WARNING_ACCEPT, btn -> {
+               this.guiGameSettings.m_232060_().m_231514_(GraphicsStatus.FABULOUS);
+               Minecraft.m_91087_().f_91060_.m_109818_();
+               this.gpuWarning.m_109248_();
+               this.minecraft.m_91152_(this);
+            }), new ButtonOption(TEXT_WARNING_CANCEL, btn -> {
+               this.gpuWarning.m_109249_();
+               this.minecraft.m_91152_(this);
+            }))));
       }
-
    }
 
+   @Override
    protected void actionPerformedRightClick(AbstractWidget button) {
       if (button == this.buttonGuiScale) {
-         int newScale = (Integer)this.guiGameSettings.m_231928_().m_231551_() - 1;
+         int newScale = this.guiGameSettings.m_231928_().m_231551_() - 1;
          if (newScale < 0) {
             newScale = Minecraft.m_91087_().m_91268_().m_85385_(0, Minecraft.m_91087_().m_91390_());
          }
@@ -157,13 +173,12 @@ public class VideoSettingsScreen extends GuiScreenOF {
          this.settings.GUI_SCALE.m_231514_(newScale);
          this.updateGuiScale();
       }
-
    }
 
    private void updateGuiScale() {
       this.minecraft.m_5741_();
       Window mw = this.minecraft.m_91268_();
-      int btnWidth = GuiUtils.getWidth(this.buttonGuiScale);
+      int btnWidth = GuiUtils.m_92515_(this.buttonGuiScale);
       int btnHeight = GuiUtils.getHeight(this.buttonGuiScale);
       int x = this.buttonGuiScale.m_252754_() + (btnWidth - btnHeight);
       int y = this.buttonGuiScale.m_252907_() + btnHeight / 2;
@@ -172,48 +187,48 @@ public class VideoSettingsScreen extends GuiScreenOF {
 
    private void actionPerformed(GuiButtonOF button, int val) {
       if (button.f_93623_) {
-         if (button.field_45 == 200) {
+         if (button.f_11893_ == 200) {
             this.minecraft.f_91066_.m_92169_();
             this.minecraft.m_91152_(this.parentGuiScreen);
          }
 
-         if (button.field_45 == 201) {
+         if (button.f_11893_ == 201) {
             this.minecraft.f_91066_.m_92169_();
             GuiDetailSettingsOF scr = new GuiDetailSettingsOF(this, this.guiGameSettings);
             this.minecraft.m_91152_(scr);
          }
 
-         if (button.field_45 == 202) {
+         if (button.f_11893_ == 202) {
             this.minecraft.f_91066_.m_92169_();
             GuiQualitySettingsOF scr = new GuiQualitySettingsOF(this, this.guiGameSettings);
             this.minecraft.m_91152_(scr);
          }
 
-         if (button.field_45 == 211) {
+         if (button.f_11893_ == 211) {
             this.minecraft.f_91066_.m_92169_();
             GuiAnimationSettingsOF scr = new GuiAnimationSettingsOF(this, this.guiGameSettings);
             this.minecraft.m_91152_(scr);
          }
 
-         if (button.field_45 == 212) {
+         if (button.f_11893_ == 212) {
             this.minecraft.f_91066_.m_92169_();
             GuiPerformanceSettingsOF scr = new GuiPerformanceSettingsOF(this, this.guiGameSettings);
             this.minecraft.m_91152_(scr);
          }
 
-         if (button.field_45 == 220) {
+         if (button.f_11893_ == 220) {
             this.minecraft.f_91066_.m_92169_();
             GuiQuickInfoOF scr = new GuiQuickInfoOF(this);
             this.minecraft.m_91152_(scr);
          }
 
-         if (button.field_45 == 222) {
+         if (button.f_11893_ == 222) {
             this.minecraft.f_91066_.m_92169_();
             GuiOtherSettingsOF scr = new GuiOtherSettingsOF(this, this.guiGameSettings);
             this.minecraft.m_91152_(scr);
          }
 
-         if (button.field_45 == 231) {
+         if (button.f_11893_ == 231) {
             if (Config.isAntialiasing() || Config.isAntialiasingConfigured()) {
                Config.showGuiMessage(Lang.get("of.message.shaders.aa1"), Lang.get("of.message.shaders.aa2"));
                return;
@@ -228,7 +243,6 @@ public class VideoSettingsScreen extends GuiScreenOF {
             GuiShaders scr = new GuiShaders(this, this.guiGameSettings);
             this.minecraft.m_91152_(scr);
          }
-
       }
    }
 
@@ -262,7 +276,7 @@ public class VideoSettingsScreen extends GuiScreenOF {
       }
 
       graphicsIn.m_280488_(this.minecraft.f_91062_, ver, 2, this.f_96544_ - 10, 10526880);
-      String verMc = "Minecraft 1.21";
+      String verMc = "Minecraft 1.21.1";
       int lenMc = this.minecraft.f_91062_.m_92895_(verMc);
       graphicsIn.m_280488_(this.minecraft.f_91062_, verMc, this.f_96543_ - lenMc - 2, this.f_96544_ - 10, 10526880);
       graphicsIn.m_280168_().m_85849_();
@@ -273,14 +287,5 @@ public class VideoSettingsScreen extends GuiScreenOF {
       graphicsIn.m_280168_().m_252880_(0.0F, 0.0F, -20.0F);
       super.m_280273_(graphicsIn, mouseX, mouseY, partialTicks);
       graphicsIn.m_280168_().m_85849_();
-   }
-
-   static {
-      TEXT_FABULOUS = Component.m_237115_("options.graphics.fabulous").m_130940_(ChatFormatting.ITALIC);
-      TEXT_WARNING_MESSAGE = Component.m_237110_("options.graphics.warning.message", new Object[]{TEXT_FABULOUS, TEXT_FABULOUS});
-      TEXT_WARNING_TITLE = Component.m_237115_("options.graphics.warning.title").m_130940_(ChatFormatting.RED);
-      TEXT_WARNING_ACCEPT = Component.m_237115_("options.graphics.warning.accept");
-      TEXT_WARNING_CANCEL = Component.m_237115_("options.graphics.warning.cancel");
-      NEW_LINE = Component.m_237113_("\n");
    }
 }

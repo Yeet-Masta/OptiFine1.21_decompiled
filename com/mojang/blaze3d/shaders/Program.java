@@ -12,12 +12,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class Program {
-   private static final int f_166598_ = 32768;
-   private final Type f_85535_;
-   private final String f_85536_;
+   private static int f_166598_;
+   private Program.Type f_85535_;
+   private String f_85536_;
    private int f_85537_;
 
-   protected Program(Type type, int shaderId, String filename) {
+   protected Program(Program.Type type, int shaderId, String filename) {
       this.f_85535_ = type;
       this.f_85537_ = shaderId;
       this.f_85536_ = filename;
@@ -35,14 +35,13 @@ public class Program {
          this.f_85537_ = -1;
          this.f_85535_.m_85570_().remove(this.f_85536_);
       }
-
    }
 
    public String m_85551_() {
       return this.f_85536_;
    }
 
-   public static Program m_166604_(Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn) throws IOException {
+   public static Program m_166604_(Program.Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn) throws IOException {
       RenderSystem.assertOnRenderThread();
       int i = m_166612_(typeIn, nameIn, inputStreamIn, packNameIn, preprocessorIn);
       Program program = new Program(typeIn, i, nameIn);
@@ -50,7 +49,7 @@ public class Program {
       return program;
    }
 
-   protected static int m_166612_(Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn) throws IOException {
+   protected static int m_166612_(Program.Type typeIn, String nameIn, InputStream inputStreamIn, String packNameIn, GlslPreprocessor preprocessorIn) throws IOException {
       String s = IOUtils.toString(inputStreamIn, StandardCharsets.UTF_8);
       if (typeIn == Program.Type.VERTEX) {
          s = s.replace("texelFetch(Sampler2, UV2 / 16, 0)", "texture(Sampler2, (UV2 / 256.0) + (0.5 / 16.0))");
@@ -84,10 +83,10 @@ public class Program {
       VERTEX("vertex", ".vsh", 35633),
       FRAGMENT("fragment", ".fsh", 35632);
 
-      private final String f_85554_;
-      private final String f_85555_;
-      private final int f_85556_;
-      private final Map f_85557_ = Maps.newHashMap();
+      private String f_85554_;
+      private String f_85555_;
+      private int f_85556_;
+      private Map<String, Program> f_85557_ = Maps.newHashMap();
 
       private Type(final String shaderNameIn, final String shaderExtensionIn, final int shaderModeIn) {
          this.f_85554_ = shaderNameIn;
@@ -107,13 +106,8 @@ public class Program {
          return this.f_85556_;
       }
 
-      public Map m_85570_() {
+      public Map<String, Program> m_85570_() {
          return this.f_85557_;
-      }
-
-      // $FF: synthetic method
-      private static Type[] $values() {
-         return new Type[]{VERTEX, FRAGMENT};
       }
    }
 }

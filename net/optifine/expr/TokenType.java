@@ -10,7 +10,7 @@ public enum TokenType {
 
    private String charsFirst;
    private String charsNext;
-   public static final TokenType[] VALUES = values();
+   public static TokenType[] VALUES = values();
 
    private TokenType(String charsFirst) {
       this(charsFirst, "");
@@ -30,7 +30,7 @@ public enum TokenType {
    }
 
    public static TokenType getTypeByFirstChar(char ch) {
-      for(int i = 0; i < VALUES.length; ++i) {
+      for (int i = 0; i < VALUES.length; i++) {
          TokenType type = VALUES[i];
          if (type.getCharsFirst().indexOf(ch) >= 0) {
             return type;
@@ -44,13 +44,8 @@ public enum TokenType {
       return this.charsNext.indexOf(ch) >= 0;
    }
 
-   // $FF: synthetic method
-   private static TokenType[] $values() {
-      return new TokenType[]{IDENTIFIER, NUMBER, OPERATOR, COMMA, BRACKET_OPEN, BRACKET_CLOSE};
-   }
-
    private static class Const {
-      static final String ALPHAS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-      static final String DIGITS = "0123456789";
+      static String ALPHAS;
+      static String DIGITS;
    }
 }

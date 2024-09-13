@@ -2,17 +2,17 @@ package net.optifine.util;
 
 import java.util.Iterator;
 
-public class SingleIterable implements Iterable, Iterator {
-   private Object value;
+public class SingleIterable<T> implements Iterable<T>, Iterator<T> {
+   private T value;
 
    public SingleIterable() {
    }
 
-   public SingleIterable(Object value) {
+   public SingleIterable(T value) {
       this.value = value;
    }
 
-   public Iterator iterator() {
+   public Iterator<T> iterator() {
       return this;
    }
 
@@ -20,13 +20,13 @@ public class SingleIterable implements Iterable, Iterator {
       return this.value != null;
    }
 
-   public Object next() {
-      Object ret = this.value;
+   public T next() {
+      T ret = this.value;
       this.value = null;
       return ret;
    }
 
-   public void setValue(Object value) {
+   public void setValue(T value) {
       this.value = value;
    }
 }

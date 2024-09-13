@@ -1,7 +1,6 @@
 package net.optifine.gui;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -15,23 +14,18 @@ import net.minecraft.util.FormattedCharSequence;
 import net.optifine.util.GuiUtils;
 
 public class GuiScreenOF extends Screen {
-   protected Font fontRenderer;
-   protected boolean mousePressed;
-   protected Options settings;
+   protected Font fontRenderer = Minecraft.m_91087_().f_91062_;
+   protected boolean mousePressed = false;
+   protected Options settings = Minecraft.m_91087_().f_91066_;
 
    public GuiScreenOF(Component title) {
       super(title);
-      this.fontRenderer = Minecraft.m_91087_().f_91062_;
-      this.mousePressed = false;
-      this.settings = Minecraft.m_91087_().f_91066_;
    }
 
-   public List getButtonList() {
-      List buttons = new ArrayList();
-      Iterator var2 = this.m_6702_().iterator();
+   public List<AbstractWidget> getButtonList() {
+      List<AbstractWidget> buttons = new ArrayList();
 
-      while(var2.hasNext()) {
-         GuiEventListener gel = (GuiEventListener)var2.next();
+      for (GuiEventListener gel : this.m_6702_()) {
          if (gel instanceof AbstractWidget) {
             buttons.add((AbstractWidget)gel);
          }
@@ -51,11 +45,8 @@ public class GuiScreenOF extends Screen {
       this.mousePressed = true;
       AbstractWidget btn = getSelectedButton((int)mouseX, (int)mouseY, this.getButtonList());
       if (btn != null && btn.f_93623_) {
-         if (mouseButton == 1 && btn instanceof IOptionControl) {
-            IOptionControl ioc = (IOptionControl)btn;
-            if (ioc.getControlOption() == this.settings.GUI_SCALE) {
-               btn.m_7435_(super.f_96541_.m_91106_());
-            }
+         if (mouseButton == 1 && btn instanceof IOptionControl ioc && ioc.getControlOption() == this.settings.GUI_SCALE) {
+            btn.m_7435_(super.f_96541_.m_91106_());
          }
 
          if (mouseButton == 0) {
@@ -87,7 +78,9 @@ public class GuiScreenOF extends Screen {
       } else {
          this.mousePressed = false;
          this.m_7897_(false);
-         return this.m_7222_() != null && this.m_7222_().m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_) ? true : super.m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_);
+         return this.m_7222_() != null && this.m_7222_().m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_)
+            ? true
+            : super.m_6348_(p_mouseReleased_1_, p_mouseReleased_3_, p_mouseReleased_5_);
       }
    }
 
@@ -95,11 +88,11 @@ public class GuiScreenOF extends Screen {
       return !this.mousePressed ? false : super.m_7979_(p_mouseDragged_1_, p_mouseDragged_3_, p_mouseDragged_5_, p_mouseDragged_6_, p_mouseDragged_8_);
    }
 
-   public static AbstractWidget getSelectedButton(int x, int y, List listButtons) {
-      for(int i = 0; i < listButtons.size(); ++i) {
+   public static AbstractWidget getSelectedButton(int x, int y, List<AbstractWidget> listButtons) {
+      for (int i = 0; i < listButtons.size(); i++) {
          AbstractWidget btn = (AbstractWidget)listButtons.get(i);
          if (btn.f_93624_) {
-            int btnWidth = GuiUtils.getWidth(btn);
+            int btnWidth = GuiUtils.m_92515_(btn);
             int btnHeight = GuiUtils.getHeight(btn);
             if (x >= btn.m_252754_() && y >= btn.m_252907_() && x < btn.m_252754_() + btnWidth && y < btn.m_252907_() + btnHeight) {
                return btn;

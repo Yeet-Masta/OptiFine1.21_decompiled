@@ -12,16 +12,18 @@ import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.world.entity.EntityType;
 
 public class ModelAdapterWarden extends ModelAdapter {
-   private static Map mapParts = makeMapParts();
+   private static Map<String, String> mapParts = makeMapParts();
 
    public ModelAdapterWarden() {
       super(EntityType.f_217015_, "warden", 0.9F);
    }
 
+   @Override
    public Model makeModel() {
       return new WardenModel(bakeModelLayer(ModelLayers.f_233548_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof WardenModel modelWarden)) {
          return null;
@@ -35,13 +37,13 @@ public class ModelAdapterWarden extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
-      String[] names = (String[])mapParts.keySet().toArray(new String[0]);
-      return names;
+      return (String[])mapParts.keySet().toArray(new String[0]);
    }
 
-   private static Map makeMapParts() {
-      Map map = new LinkedHashMap();
+   private static Map<String, String> makeMapParts() {
+      Map<String, String> map = new LinkedHashMap();
       map.put("body", "bone");
       map.put("torso", "body");
       map.put("head", "head");
@@ -57,6 +59,7 @@ public class ModelAdapterWarden extends ModelAdapter {
       return map;
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       WardenRenderer render = new WardenRenderer(renderManager.getContext());

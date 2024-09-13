@@ -13,6 +13,7 @@ public class ModelAdapterSkeletonHorse extends ModelAdapterHorse {
       super(EntityType.f_20525_, "skeleton_horse", 0.75F);
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       UndeadHorseRenderer render = new UndeadHorseRenderer(renderManager.getContext(), ModelLayers.f_171237_);

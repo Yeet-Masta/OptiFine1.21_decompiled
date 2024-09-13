@@ -10,12 +10,11 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public class RendererCache {
-   private Map mapEntityRenderers = new HashMap();
-   private Map mapBlockEntityRenderers = new HashMap();
+   private Map<String, EntityRenderer> mapEntityRenderers = new HashMap();
+   private Map<String, BlockEntityRenderer> mapBlockEntityRenderers = new HashMap();
 
-   public EntityRenderer get(EntityType type, int index, Supplier supplier) {
-      String var10000 = String.valueOf(BuiltInRegistries.f_256780_.m_7981_(type));
-      String key = var10000 + ":" + index;
+   public EntityRenderer get(EntityType type, int index, Supplier<EntityRenderer> supplier) {
+      String key = BuiltInRegistries.f_256780_.m_7981_(type) + ":" + index;
       EntityRenderer renderer = (EntityRenderer)this.mapEntityRenderers.get(key);
       if (renderer == null) {
          renderer = (EntityRenderer)supplier.get();
@@ -25,9 +24,8 @@ public class RendererCache {
       return renderer;
    }
 
-   public BlockEntityRenderer get(BlockEntityType type, int index, Supplier supplier) {
-      String var10000 = String.valueOf(BuiltInRegistries.f_257049_.m_7981_(type));
-      String key = var10000 + ":" + index;
+   public BlockEntityRenderer get(BlockEntityType type, int index, Supplier<BlockEntityRenderer> supplier) {
+      String key = BuiltInRegistries.f_257049_.m_7981_(type) + ":" + index;
       BlockEntityRenderer renderer = (BlockEntityRenderer)this.mapBlockEntityRenderers.get(key);
       if (renderer == null) {
          renderer = (BlockEntityRenderer)supplier.get();
@@ -38,14 +36,12 @@ public class RendererCache {
    }
 
    public void put(EntityType type, int index, EntityRenderer renderer) {
-      String var10000 = String.valueOf(BuiltInRegistries.f_256780_.m_7981_(type));
-      String key = var10000 + ":" + index;
+      String key = BuiltInRegistries.f_256780_.m_7981_(type) + ":" + index;
       this.mapEntityRenderers.put(key, renderer);
    }
 
    public void put(BlockEntityType type, int index, BlockEntityRenderer renderer) {
-      String var10000 = String.valueOf(BuiltInRegistries.f_257049_.m_7981_(type));
-      String key = var10000 + ":" + index;
+      String key = BuiltInRegistries.f_257049_.m_7981_(type) + ":" + index;
       this.mapBlockEntityRenderers.put(key, renderer);
    }
 

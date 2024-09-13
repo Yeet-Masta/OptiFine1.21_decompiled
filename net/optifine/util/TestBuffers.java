@@ -1,14 +1,16 @@
 package net.optifine.util;
 
+import java.nio.ByteBuffer;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.MemoryUtil.MemoryAllocator;
 
 public class TestBuffers {
-   private static MemoryUtil.MemoryAllocator ALLOCATOR = MemoryUtil.getAllocator(true);
+   private static MemoryAllocator ALLOCATOR = MemoryUtil.getAllocator(true);
 
    public static void main(String[] args) throws Exception {
       int count = 1000000;
 
-      for(int i = 0; i < count; ++i) {
+      for (int i = 0; i < count; i++) {
          long ptr = allocate(1000L);
          testBuf(ptr, 1000);
          testBuf(ptr, 1000);
@@ -18,15 +20,13 @@ public class TestBuffers {
          testBuf(ptr, 1000);
          testBuf(ptr, 1000);
          testBuf(ptr, 1000);
-         long var10000 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-         dbg("Mem: " + var10000 / 1048576L);
+         dbg("Mem: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576L);
          free(ptr);
       }
-
    }
 
    private static void testBuf(long ptr, int size) {
-      MemoryUtil.memByteBuffer(ptr, size);
+      ByteBuffer bb = MemoryUtil.memByteBuffer(ptr, size);
    }
 
    private static long allocate(long capacityIn) {

@@ -17,10 +17,12 @@ public class ModelAdapterZombie extends ModelAdapterBiped {
       super(type, name, shadowSize);
    }
 
+   @Override
    public Model makeModel() {
       return new ZombieModel(bakeModelLayer(ModelLayers.f_171223_));
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       ZombieRenderer render = new ZombieRenderer(renderManager.getContext());

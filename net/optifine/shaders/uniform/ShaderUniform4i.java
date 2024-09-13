@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL20;
 
 public class ShaderUniform4i extends ShaderUniformBase {
    private int[][] programValues;
-   private static final int VALUE_UNKNOWN = Integer.MIN_VALUE;
+   private static int VALUE_UNKNOWN;
 
    public ShaderUniform4i(String name) {
       super(name);
@@ -30,10 +30,10 @@ public class ShaderUniform4i extends ShaderUniformBase {
 
    public int[] getValue() {
       int program = this.getProgram();
-      int[] value = this.programValues[program];
-      return value;
+      return this.programValues[program];
    }
 
+   @Override
    protected void onProgramSet(int program) {
       if (program >= this.programValues.length) {
          int[][] valuesOld = this.programValues;
@@ -45,9 +45,9 @@ public class ShaderUniform4i extends ShaderUniformBase {
       if (this.programValues[program] == null) {
          this.programValues[program] = new int[]{Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE};
       }
-
    }
 
+   @Override
    protected void resetValue() {
       this.programValues = new int[][]{{Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE}};
    }

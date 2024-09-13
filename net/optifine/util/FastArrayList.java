@@ -1,19 +1,19 @@
 package net.optifine.util;
 
-public class FastArrayList {
-   private Object[] array;
+public class FastArrayList<E> {
+   private E[] array;
    private int size;
 
    public FastArrayList(int capacity) {
-      this.array = new Object[capacity];
+      this.array = (E[])(new Object[capacity]);
    }
 
-   public void add(Object element) {
+   public void add(E element) {
       this.array[this.size] = element;
-      ++this.size;
+      this.size++;
    }
 
-   public Object get(int index) {
+   public E get(int index) {
       return this.array[index];
    }
 

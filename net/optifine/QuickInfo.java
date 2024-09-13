@@ -18,6 +18,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
@@ -35,12 +36,12 @@ import net.optifine.util.NumUtils;
 public class QuickInfo {
    private static RenderCache renderCache = new RenderCache(100L);
    private static Minecraft minecraft = Config.getMinecraft();
-   private static Font font;
-   private static double gpuLoadSmooth;
-   private static McDebugInfo gpuDebugInfo;
+   private static Font font = minecraft.f_91062_;
+   private static double gpuLoadSmooth = 0.0;
+   private static McDebugInfo gpuDebugInfo = new McDebugInfo();
    private static int gpuPercCached;
 
-   public static void render(GuiGraphics graphicsIn) {
+   public static void m_324219_(GuiGraphics graphicsIn) {
       if (!renderCache.drawCached(graphicsIn)) {
          renderCache.startRender(graphicsIn);
          renderLeft(graphicsIn);
@@ -50,7 +51,7 @@ public class QuickInfo {
    }
 
    private static void renderLeft(GuiGraphics graphicsIn) {
-      List lines = new ArrayList();
+      List<String> lines = new ArrayList();
       StringBuilder sb = new StringBuilder();
       Options opts = Config.getGameSettings();
       boolean fullLabel = !Option.isCompact(opts.ofQuickInfoLabels);
@@ -116,11 +117,11 @@ public class QuickInfo {
       }
 
       newLine(lines, sb);
-      render(graphicsIn, lines, false);
+      m_324219_(graphicsIn, lines, false);
    }
 
    private static void renderRight(GuiGraphics graphicsIn) {
-      List lines = new ArrayList();
+      List<String> lines = new ArrayList();
       StringBuilder sb = new StringBuilder();
       Options opts = Config.getGameSettings();
       boolean fullLabel = !Option.isCompact(opts.ofQuickInfoLabels);
@@ -168,7 +169,7 @@ public class QuickInfo {
       }
 
       newLine(lines, sb);
-      render(graphicsIn, lines, true);
+      m_324219_(graphicsIn, lines, true);
    }
 
    private static StringBuilder next(StringBuilder sb) {
@@ -179,14 +180,14 @@ public class QuickInfo {
       return sb;
    }
 
-   private static void newLine(List lines, StringBuilder sb) {
+   private static void newLine(List<String> lines, StringBuilder sb) {
       if (!sb.isEmpty()) {
          lines.add(sb.toString());
          sb.setLength(0);
       }
    }
 
-   private static void render(GuiGraphics graphicsIn, List linesIn, boolean rightIn) {
+   private static void m_324219_(GuiGraphics graphicsIn, List<String> linesIn, boolean rightIn) {
       if (!linesIn.isEmpty()) {
          Options opts = Config.getGameSettings();
          boolean background = opts.ofQuickInfoBackground;
@@ -197,32 +198,27 @@ public class QuickInfo {
          }
 
          int lineHeight = 9;
-         int lineY;
-         int i;
-         String s;
-         int lineWidth;
-         int x;
          if (background) {
-            lineY = 2;
+            int lineY = 2;
 
-            for(i = 0; i < linesIn.size(); ++i) {
-               s = (String)linesIn.get(i);
+            for (int i = 0; i < linesIn.size(); i++) {
+               String s = (String)linesIn.get(i);
                if (!StringUtil.m_14408_(s)) {
-                  lineWidth = font.m_92895_(s);
-                  x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
+                  int lineWidth = font.m_92895_(s);
+                  int x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
                   graphicsIn.m_280509_(x - 1, lineY - 1, x + lineWidth + 1, lineY + lineHeight - 1, -1873784752);
                   lineY += lineHeight;
                }
             }
          }
 
-         lineY = 2;
+         int lineY = 2;
 
-         for(i = 0; i < linesIn.size(); ++i) {
-            s = (String)linesIn.get(i);
+         for (int ix = 0; ix < linesIn.size(); ix++) {
+            String s = (String)linesIn.get(ix);
             if (!StringUtil.m_14408_(s)) {
-               lineWidth = font.m_92895_(s);
-               x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
+               int lineWidth = font.m_92895_(s);
+               int x = rightIn ? graphicsIn.m_280182_() - 2 - lineWidth : 2;
                graphicsIn.m_280056_(font, s, x, lineY, -2039584, shadow);
                lineY += lineHeight;
             }
@@ -231,7 +227,6 @@ public class QuickInfo {
          if (rightIn) {
             graphicsIn.m_280168_().m_85849_();
          }
-
       }
    }
 
@@ -244,23 +239,21 @@ public class QuickInfo {
    }
 
    private static void addFps(StringBuilder sb, boolean fullLabel, boolean addFpsMin) {
-      int fpsAvg;
-      int fpsMin;
       if (Config.isShowFrameTime()) {
-         fpsAvg = Config.getFpsAverage();
+         int fpsAvg = Config.getFpsAverage();
          appendDouble1(sb, 1000.0 / (double)Config.limit(fpsAvg, 1, Integer.MAX_VALUE));
          if (addFpsMin) {
-            fpsMin = Config.getFpsMin();
+            int fpsMin = Config.getFpsMin();
             sb.append('/');
             appendDouble1(sb, 1000.0 / (double)Config.limit(fpsMin, 1, Integer.MAX_VALUE));
          }
 
          sb.append(" ms");
       } else {
-         fpsAvg = Config.getFpsAverage();
+         int fpsAvg = Config.getFpsAverage();
          sb.append(Integer.toString(fpsAvg));
          if (addFpsMin) {
-            fpsMin = Config.getFpsMin();
+            int fpsMin = Config.getFpsMin();
             sb.append('/');
             sb.append(Integer.toString(fpsMin));
          }
@@ -339,7 +332,6 @@ public class QuickInfo {
          sb.append(Integer.toString(pos.m_123343_() & 15));
          sb.append("]");
       }
-
    }
 
    private static void addFacing(StringBuilder sb, boolean fullLabel, boolean detailedCoords, boolean facingXyz, boolean yawPitch) {
@@ -371,22 +363,21 @@ public class QuickInfo {
             sb.append(')');
          }
       }
-
    }
 
    private static String getXyz(Direction dir) {
-      switch (dir) {
-         case NORTH:
+      switch (<unrepresentable>.$SwitchMap$net$minecraft$core$Direction[dir.ordinal()]) {
+         case 1:
             return "Z-";
-         case SOUTH:
+         case 2:
             return "Z+";
-         case WEST:
+         case 3:
             return "X-";
-         case EAST:
+         case 4:
             return "X+";
-         case field_61:
+         case 5:
             return "Y+";
-         case DOWN:
+         case 6:
             return "Y-";
          default:
             return "?";
@@ -396,14 +387,14 @@ public class QuickInfo {
    private static void addBiome(StringBuilder sb, boolean fullLabel) {
       Entity entity = minecraft.m_91288_();
       BlockPos pos = entity.m_20183_();
-      Holder biome = minecraft.f_91073_.m_204166_(pos);
-      Optional key = biome.m_203543_();
+      Holder<Biome> biome = minecraft.f_91073_.m_204166_(pos);
+      Optional<ResourceKey<Biome>> key = biome.m_203543_();
       String name = getBiomeName(key);
       sb.append(fullLabel ? "Biome: " : "B: ");
       sb.append(name);
    }
 
-   private static String getBiomeName(Optional key) {
+   private static String getBiomeName(Optional<ResourceKey<Biome>> key) {
       if (!key.isPresent()) {
          return "[unregistered]";
       } else {
@@ -430,7 +421,6 @@ public class QuickInfo {
          sb.append("/");
          sb.append(Integer.toString(lightBlock));
       }
-
    }
 
    private static void addMem(StringBuilder sb, boolean fullLabel) {
@@ -445,7 +435,6 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB");
       }
-
    }
 
    private static void addMemAlloc(StringBuilder sb, boolean fullLabel) {
@@ -455,7 +444,6 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB/s");
       }
-
    }
 
    private static void addMemNative(StringBuilder sb, boolean fullLabel) {
@@ -471,7 +459,6 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB");
       }
-
    }
 
    private static void addMemGpu(StringBuilder sb, boolean fullLabel) {
@@ -484,7 +471,6 @@ public class QuickInfo {
       if (fullLabel) {
          sb.append(" MB");
       }
-
    }
 
    private static int bytesToMb(long bytes) {
@@ -510,7 +496,6 @@ public class QuickInfo {
             sb.append(")");
          }
       }
-
    }
 
    private static void addTargetFluid(StringBuilder sb, boolean fullLabel, boolean showPos) {
@@ -539,7 +524,6 @@ public class QuickInfo {
             sb.append(")");
          }
       }
-
    }
 
    private static void addTargetEntity(StringBuilder sb, boolean fullLabel, boolean detailedCoords, boolean showPos) {
@@ -570,7 +554,6 @@ public class QuickInfo {
                   sb.append(")");
                }
             }
-
          }
       }
    }
@@ -590,12 +573,5 @@ public class QuickInfo {
       if (sb.charAt(sb.length() - 3) == '.') {
          sb.append('0');
       }
-
-   }
-
-   static {
-      font = minecraft.f_91062_;
-      gpuLoadSmooth = 0.0;
-      gpuDebugInfo = new McDebugInfo();
    }
 }

@@ -8,6 +8,7 @@ public interface IModelVariableBool extends IExpressionBool, IModelVariable {
 
    void setValue(boolean var1);
 
+   @Override
    default void setValue(IExpression expr) {
       boolean val = ((IExpressionBool)expr).eval();
       this.setValue(val);

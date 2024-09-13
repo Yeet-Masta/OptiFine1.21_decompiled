@@ -53,16 +53,16 @@ public class BetterGrass {
    private static BakedModel modelCubeWarpedNylium = null;
    private static BakedModel modelCubeSnow = null;
    private static boolean modelsLoaded = false;
-   private static final String TEXTURE_GRASS_DEFAULT = "block/grass_block_top";
-   private static final String TEXTURE_GRASS_SIDE_DEFAULT = "block/grass_block_side";
-   private static final String TEXTURE_DIRT_PATH_DEFAULT = "block/dirt_path_top";
-   private static final String TEXTURE_DIRT_PATH_SIDE_DEFAULT = "block/dirt_path_side";
-   private static final String TEXTURE_MYCELIUM_DEFAULT = "block/mycelium_top";
-   private static final String TEXTURE_PODZOL_DEFAULT = "block/podzol_top";
-   private static final String TEXTURE_CRIMSON_NYLIUM = "block/crimson_nylium";
-   private static final String TEXTURE_WARPED_NYLIUM = "block/warped_nylium";
-   private static final String TEXTURE_SNOW_DEFAULT = "block/snow";
-   private static final RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
+   private static String TEXTURE_GRASS_DEFAULT;
+   private static String TEXTURE_GRASS_SIDE_DEFAULT;
+   private static String TEXTURE_DIRT_PATH_DEFAULT;
+   private static String TEXTURE_DIRT_PATH_SIDE_DEFAULT;
+   private static String TEXTURE_MYCELIUM_DEFAULT;
+   private static String TEXTURE_PODZOL_DEFAULT;
+   private static String TEXTURE_CRIMSON_NYLIUM;
+   private static String TEXTURE_WARPED_NYLIUM;
+   private static String TEXTURE_SNOW_DEFAULT;
+   private static RandomSource RANDOM = RandomUtils.makeThreadSafeRandomSource(0);
 
    public static void updateIcons(TextureAtlas textureMap) {
       spritesLoaded = false;
@@ -70,21 +70,21 @@ public class BetterGrass {
       loadProperties(textureMap);
    }
 
-   public static void update() {
+   public static void m_252999_() {
       if (spritesLoaded) {
-         modelCubeGrass = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteGrass, 0);
+         modelCubeGrass = BlockModelUtils.makeModelCube(spriteGrass, 0);
          if (grassMultilayer) {
-            BakedModel modelCubeGrassSide = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteGrassSide, -1);
+            BakedModel modelCubeGrassSide = BlockModelUtils.makeModelCube(spriteGrassSide, -1);
             modelCubeGrass = BlockModelUtils.joinModelsCube(modelCubeGrassSide, modelCubeGrass);
          }
 
          modelDirtPath = BlockModelUtils.makeModel("dirt_path", spriteDirtPathSide, spriteDirtPath);
-         modelCubeDirtPath = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteDirtPath, -1);
-         modelCubeMycelium = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteMycelium, -1);
-         modelCubePodzol = BlockModelUtils.makeModelCube((TextureAtlasSprite)spritePodzol, 0);
-         modelCubeCrimsonNylium = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteCrimsonNylium, -1);
-         modelCubeWarpedNylium = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteWarpedNylium, -1);
-         modelCubeSnow = BlockModelUtils.makeModelCube((TextureAtlasSprite)spriteSnow, -1);
+         modelCubeDirtPath = BlockModelUtils.makeModelCube(spriteDirtPath, -1);
+         modelCubeMycelium = BlockModelUtils.makeModelCube(spriteMycelium, -1);
+         modelCubePodzol = BlockModelUtils.makeModelCube(spritePodzol, 0);
+         modelCubeCrimsonNylium = BlockModelUtils.makeModelCube(spriteCrimsonNylium, -1);
+         modelCubeWarpedNylium = BlockModelUtils.makeModelCube(spriteWarpedNylium, -1);
+         modelCubeSnow = BlockModelUtils.makeModelCube(spriteSnow, -1);
          modelsLoaded = true;
       }
    }
@@ -154,7 +154,6 @@ public class BetterGrass {
       } catch (IOException var6) {
          Config.warn("Error reading: " + name + ", " + var6.getClass().getName() + ": " + var6.getMessage());
       }
-
    }
 
    public static void refreshIcons(TextureAtlas textureMap) {
@@ -172,7 +171,7 @@ public class BetterGrass {
    private static TextureAtlasSprite getSprite(TextureAtlas textureMap, ResourceLocation loc) {
       TextureAtlasSprite sprite = textureMap.m_118316_(loc);
       if (sprite == null || MissingTextureAtlasSprite.isMisingSprite(sprite)) {
-         Config.warn("Missing BetterGrass sprite: " + String.valueOf(loc));
+         Config.warn("Missing BetterGrass sprite: " + loc);
       }
 
       return sprite;
@@ -186,39 +185,36 @@ public class BetterGrass {
 
       ResourceLocation locPng = new ResourceLocation("textures/" + texture + ".png");
       if (!Config.hasResource(locPng)) {
-         Config.warn("BetterGrass texture not found: " + String.valueOf(locPng));
+         Config.warn("BetterGrass texture not found: " + locPng);
          texture = textureDefault;
       }
 
       ResourceLocation locSprite = new ResourceLocation(texture);
-      TextureAtlasSprite sprite = textureMap.registerSprite(locSprite);
-      return sprite;
+      return textureMap.registerSprite(locSprite);
    }
 
    public static List getFaceQuads(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
-      if (facing != Direction.field_61 && facing != Direction.DOWN) {
-         if (!modelsLoaded) {
-            return quads;
-         } else {
-            Block block = blockState.m_60734_();
-            if (block instanceof MyceliumBlock) {
-               return getFaceQuadsMycelium(blockAccess, blockState, blockPos, facing, quads);
-            } else if (block instanceof DirtPathBlock) {
-               return getFaceQuadsDirtPath(blockAccess, blockState, blockPos, facing, quads);
-            } else if (block == Blocks.f_50599_) {
-               return getFaceQuadsPodzol(blockAccess, blockState, blockPos, facing, quads);
-            } else if (block == Blocks.f_50699_) {
-               return getFaceQuadsCrimsonNylium(blockAccess, blockState, blockPos, facing, quads);
-            } else if (block == Blocks.f_50690_) {
-               return getFaceQuadsWarpedNylium(blockAccess, blockState, blockPos, facing, quads);
-            } else if (block == Blocks.f_50493_) {
-               return getFaceQuadsDirt(blockAccess, blockState, blockPos, facing, quads);
-            } else {
-               return block instanceof GrassBlock ? getFaceQuadsGrass(blockAccess, blockState, blockPos, facing, quads) : quads;
-            }
-         }
-      } else {
+      if (facing == Direction.UP || facing == Direction.DOWN) {
          return quads;
+      } else if (!modelsLoaded) {
+         return quads;
+      } else {
+         Block block = blockState.m_60734_();
+         if (block instanceof MyceliumBlock) {
+            return getFaceQuadsMycelium(blockAccess, blockState, blockPos, facing, quads);
+         } else if (block instanceof DirtPathBlock) {
+            return getFaceQuadsDirtPath(blockAccess, blockState, blockPos, facing, quads);
+         } else if (block == Blocks.f_50599_) {
+            return getFaceQuadsPodzol(blockAccess, blockState, blockPos, facing, quads);
+         } else if (block == Blocks.f_50699_) {
+            return getFaceQuadsCrimsonNylium(blockAccess, blockState, blockPos, facing, quads);
+         } else if (block == Blocks.f_50690_) {
+            return getFaceQuadsWarpedNylium(blockAccess, blockState, blockPos, facing, quads);
+         } else if (block == Blocks.f_50493_) {
+            return getFaceQuadsDirt(blockAccess, blockState, blockPos, facing, quads);
+         } else {
+            return block instanceof GrassBlock ? getFaceQuadsGrass(blockAccess, blockState, blockPos, facing, quads) : quads;
+         }
       }
    }
 
@@ -255,7 +251,7 @@ public class BetterGrass {
    }
 
    private static List getFaceQuadsPodzol(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
-      Block blockTop = getBlockAt(blockPos, Direction.field_61, blockAccess);
+      Block blockTop = getBlockAt(blockPos, Direction.UP, blockAccess);
       boolean snowy = blockTop == Blocks.f_50127_ || blockTop == Blocks.f_50125_;
       if (Config.isBetterGrassFancy()) {
          if (snowy) {
@@ -301,8 +297,10 @@ public class BetterGrass {
    }
 
    private static List getFaceQuadsDirt(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
-      Block blockTop = getBlockAt(blockPos, Direction.field_61, blockAccess);
-      return blockTop == Blocks.f_152481_ && betterDirtPath && getBlockAt(blockPos, facing, blockAccess) == Blocks.f_152481_ ? modelCubeDirtPath.m_213637_(blockState, facing, RANDOM) : quads;
+      Block blockTop = getBlockAt(blockPos, Direction.UP, blockAccess);
+      return blockTop == Blocks.f_152481_ && betterDirtPath && getBlockAt(blockPos, facing, blockAccess) == Blocks.f_152481_
+         ? modelCubeDirtPath.m_213637_(blockState, facing, RANDOM)
+         : quads;
    }
 
    private static List getFaceQuadsGrass(BlockGetter blockAccess, BlockState blockState, BlockPos blockPos, Direction facing, List quads) {
@@ -329,8 +327,7 @@ public class BetterGrass {
 
    private static Block getBlockAt(BlockPos blockPos, Direction facing, BlockGetter blockAccess) {
       BlockPos pos = blockPos.m_121945_(facing);
-      Block block = blockAccess.m_8055_(pos).m_60734_();
-      return block;
+      return blockAccess.m_8055_(pos).m_60734_();
    }
 
    private static boolean getBoolean(Properties props, String key, boolean def) {

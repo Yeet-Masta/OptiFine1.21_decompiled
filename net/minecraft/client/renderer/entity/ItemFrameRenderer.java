@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.ModelManager;
@@ -21,7 +22,6 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
@@ -29,31 +29,30 @@ import net.optifine.Config;
 import net.optifine.reflect.Reflector;
 import net.optifine.shaders.Shaders;
 
-public class ItemFrameRenderer extends EntityRenderer {
-   private static final ModelResourceLocation f_115044_ = ModelResourceLocation.m_245263_("item_frame", "map=false");
-   private static final ModelResourceLocation f_115045_ = ModelResourceLocation.m_245263_("item_frame", "map=true");
-   private static final ModelResourceLocation f_174201_ = ModelResourceLocation.m_245263_("glow_item_frame", "map=false");
-   private static final ModelResourceLocation f_174202_ = ModelResourceLocation.m_245263_("glow_item_frame", "map=true");
-   public static final int f_174199_ = 5;
-   public static final int f_174200_ = 30;
-   private final ItemRenderer f_115047_;
-   private final BlockRenderDispatcher f_234645_;
+public class ItemFrameRenderer<T extends ItemFrame> extends EntityRenderer<T> {
+   private static ModelResourceLocation f_115044_ = ModelResourceLocation.m_245263_("item_frame", "map=false");
+   private static ModelResourceLocation f_115045_ = ModelResourceLocation.m_245263_("item_frame", "map=true");
+   private static ModelResourceLocation f_174201_ = ModelResourceLocation.m_245263_("glow_item_frame", "map=false");
+   private static ModelResourceLocation f_174202_ = ModelResourceLocation.m_245263_("glow_item_frame", "map=true");
+   public static int f_174199_;
+   public static int f_174200_;
+   private ItemRenderer f_115047_;
+   private BlockRenderDispatcher f_234645_;
    private static double itemRenderDistanceSq = 4096.0;
    private static boolean renderItemFrame = false;
-   // $FF: renamed from: mc net.minecraft.client.Minecraft
-   private static Minecraft field_32 = Minecraft.m_91087_();
+   private static Minecraft f_303183_ = Minecraft.m_91087_();
 
-   public ItemFrameRenderer(EntityRendererProvider.Context contextIn) {
+   public ItemFrameRenderer(Context contextIn) {
       super(contextIn);
       this.f_115047_ = contextIn.m_174025_();
       this.f_234645_ = contextIn.m_234597_();
    }
 
-   protected int m_6086_(ItemFrame entityIn, BlockPos partialTicks) {
+   protected int m_6086_(T entityIn, BlockPos partialTicks) {
       return entityIn.m_6095_() == EntityType.f_147033_ ? Math.max(5, super.m_6086_(entityIn, partialTicks)) : super.m_6086_(entityIn, partialTicks);
    }
 
-   public void m_7392_(ItemFrame entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
+   public void m_7392_(T entityIn, float entityYaw, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
       super.m_7392_(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
       matrixStackIn.m_85836_();
       Direction direction = entityIn.m_6350_();
@@ -70,7 +69,19 @@ public class ItemFrameRenderer extends EntityRenderer {
          ModelResourceLocation modelresourcelocation = this.m_174212_(entityIn, itemstack);
          matrixStackIn.m_85836_();
          matrixStackIn.m_252880_(-0.5F, -0.5F, -0.5F);
-         this.f_234645_.m_110937_().m_111067_(matrixStackIn.m_85850_(), bufferIn.m_6299_(Sheets.m_110789_()), (BlockState)null, modelmanager.m_119422_(modelresourcelocation), 1.0F, 1.0F, 1.0F, packedLightIn, OverlayTexture.f_118083_);
+         this.f_234645_
+            .m_110937_()
+            .m_111067_(
+               matrixStackIn.m_85850_(),
+               bufferIn.m_6299_(Sheets.m_110789_()),
+               null,
+               modelmanager.m_119422_(modelresourcelocation),
+               1.0F,
+               1.0F,
+               1.0F,
+               packedLightIn,
+               OverlayTexture.f_118083_
+            );
          matrixStackIn.m_85849_();
       }
 
@@ -101,7 +112,10 @@ public class ItemFrameRenderer extends EntityRenderer {
                matrixStackIn.m_85841_(0.5F, 0.5F, 0.5F);
                renderItemFrame = true;
                if (this.isRenderItem(entityIn)) {
-                  this.f_115047_.m_269128_(itemstack, ItemDisplayContext.FIXED, k, OverlayTexture.f_118083_, matrixStackIn, bufferIn, entityIn.m_9236_(), entityIn.m_19879_());
+                  this.f_115047_
+                     .m_269128_(
+                        itemstack, ItemDisplayContext.FIXED, k, OverlayTexture.f_118083_, matrixStackIn, bufferIn, entityIn.m_9236_(), entityIn.m_19879_()
+                     );
                }
 
                renderItemFrame = false;
@@ -112,11 +126,11 @@ public class ItemFrameRenderer extends EntityRenderer {
       matrixStackIn.m_85849_();
    }
 
-   private int m_174208_(ItemFrame itemFrameIn, int lightGlowIn, int lightIn) {
+   private int m_174208_(T itemFrameIn, int lightGlowIn, int lightIn) {
       return itemFrameIn.m_6095_() == EntityType.f_147033_ ? lightGlowIn : lightIn;
    }
 
-   private ModelResourceLocation m_174212_(ItemFrame itemFrameIn, ItemStack itemStackIn) {
+   private ModelResourceLocation m_174212_(T itemFrameIn, ItemStack itemStackIn) {
       boolean flag = itemFrameIn.m_6095_() == EntityType.f_147033_;
       if (itemStackIn.m_41720_() instanceof MapItem) {
          return flag ? f_174202_ : f_115045_;
@@ -125,15 +139,15 @@ public class ItemFrameRenderer extends EntityRenderer {
       }
    }
 
-   public Vec3 m_7860_(ItemFrame entityIn, float partialTicks) {
+   public Vec3 m_7860_(T entityIn, float partialTicks) {
       return new Vec3((double)((float)entityIn.m_6350_().m_122429_() * 0.3F), -0.25, (double)((float)entityIn.m_6350_().m_122431_() * 0.3F));
    }
 
-   public ResourceLocation m_5478_(ItemFrame entity) {
+   public ResourceLocation m_5478_(T entity) {
       return TextureAtlas.f_118259_;
    }
 
-   protected boolean m_6512_(ItemFrame entity) {
+   protected boolean m_6512_(T entity) {
       if (Minecraft.m_91404_() && !entity.m_31822_().m_41619_() && entity.m_31822_().m_319951_(DataComponents.f_316016_) && this.f_114476_.f_114359_ == entity) {
          double d0 = this.f_114476_.m_114471_(entity);
          float f = entity.m_20163_() ? 32.0F : 64.0F;
@@ -143,7 +157,7 @@ public class ItemFrameRenderer extends EntityRenderer {
       }
    }
 
-   protected void m_7649_(ItemFrame entityIn, Component displayNameIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, float partialTicks) {
+   protected void m_7649_(T entityIn, Component displayNameIn, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, float partialTicks) {
       super.m_7649_(entityIn, entityIn.m_31822_().m_41786_(), matrixStackIn, bufferIn, packedLightIn, partialTicks);
    }
 
@@ -152,7 +166,7 @@ public class ItemFrameRenderer extends EntityRenderer {
          return false;
       } else {
          if (!Config.zoomMode) {
-            Entity viewEntity = field_32.m_91288_();
+            Entity viewEntity = f_303183_.m_91288_();
             double distSq = itemFrame.m_20275_(viewEntity.m_20185_(), viewEntity.m_20186_(), viewEntity.m_20189_());
             if (distSq > itemRenderDistanceSq) {
                return false;
@@ -165,7 +179,7 @@ public class ItemFrameRenderer extends EntityRenderer {
 
    public static void updateItemRenderDistance() {
       Minecraft mc = Minecraft.m_91087_();
-      double fov = (double)Config.limit((Integer)mc.f_91066_.m_231837_().m_231551_(), 1, 120);
+      double fov = (double)Config.limit(mc.f_91066_.m_231837_().m_231551_(), 1, 120);
       double itemRenderDistance = Math.max(6.0 * (double)mc.m_91268_().m_85444_() / fov, 16.0);
       itemRenderDistanceSq = itemRenderDistance * itemRenderDistance;
    }

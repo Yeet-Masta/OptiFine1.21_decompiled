@@ -16,10 +16,12 @@ public class ModelAdapterMagmaCube extends ModelAdapter {
       super(EntityType.f_20468_, "magma_cube", 0.5F);
    }
 
+   @Override
    public Model makeModel() {
       return new LavaSlimeModel(bakeModelLayer(ModelLayers.f_171197_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof LavaSlimeModel modelMagmaCube)) {
          return null;
@@ -38,10 +40,12 @@ public class ModelAdapterMagmaCube extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"core", "segment1", "segment2", "segment3", "segment4", "segment5", "segment6", "segment7", "segment8", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       MagmaCubeRenderer render = new MagmaCubeRenderer(renderManager.getContext());

@@ -14,16 +14,26 @@ import net.optifine.Config;
 import net.optifine.CustomColors;
 import net.optifine.entity.model.ModelAdapter;
 
-public class WolfCollarLayer extends RenderLayer {
-   private static final ResourceLocation f_117704_ = ResourceLocation.m_340282_("textures/entity/wolf/wolf_collar.png");
-   public WolfModel model;
+public class WolfCollarLayer extends RenderLayer<Wolf, WolfModel<Wolf>> {
+   private static ResourceLocation f_117704_ = ResourceLocation.m_340282_("textures/entity/wolf/wolf_collar.png");
+   public WolfModel<Wolf> model = new WolfModel(ModelAdapter.bakeModelLayer(ModelLayers.f_171221_));
 
-   public WolfCollarLayer(RenderLayerParent rendererIn) {
+   public WolfCollarLayer(RenderLayerParent<Wolf, WolfModel<Wolf>> rendererIn) {
       super(rendererIn);
-      this.model = new WolfModel(ModelAdapter.bakeModelLayer(ModelLayers.f_171221_));
    }
 
-   public void m_6494_(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, Wolf entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+   public void m_6494_(
+      PoseStack matrixStackIn,
+      MultiBufferSource bufferIn,
+      int packedLightIn,
+      Wolf entitylivingbaseIn,
+      float limbSwing,
+      float limbSwingAmount,
+      float partialTicks,
+      float ageInTicks,
+      float netHeadYaw,
+      float headPitch
+   ) {
       if (entitylivingbaseIn.m_21824_() && !entitylivingbaseIn.m_20145_()) {
          int i = entitylivingbaseIn.m_30428_().m_340318_();
          if (Config.isCustomColors()) {
@@ -31,8 +41,7 @@ public class WolfCollarLayer extends RenderLayer {
          }
 
          VertexConsumer vertexconsumer = bufferIn.m_6299_(RenderType.m_110458_(f_117704_));
-         ((WolfModel)this.m_117386_()).m_7695_(matrixStackIn, vertexconsumer, packedLightIn, OverlayTexture.f_118083_, i);
+         this.m_117386_().m_7695_(matrixStackIn, vertexconsumer, packedLightIn, OverlayTexture.f_118083_, i);
       }
-
    }
 }

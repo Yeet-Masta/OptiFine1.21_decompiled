@@ -15,7 +15,7 @@ public class ItemOverrideProperty {
    public ItemOverrideProperty(ResourceLocation location, float[] values) {
       this.location = location;
       this.values = (float[])values.clone();
-      Arrays.sort(this.values);
+      Arrays.m_277065_(this.values);
    }
 
    public Integer getValueIndex(ItemStack stack, ClientLevel world, LivingEntity entity) {
@@ -38,7 +38,6 @@ public class ItemOverrideProperty {
    }
 
    public String toString() {
-      String var10000 = String.valueOf(this.location);
-      return "location: " + var10000 + ", values: [" + Config.arrayToString(this.values) + "]";
+      return "location: " + this.location + ", values: [" + Config.arrayToString(this.values) + "]";
    }
 }

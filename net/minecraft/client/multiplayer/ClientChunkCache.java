@@ -13,6 +13,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData.BlockEntityTagOutput;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
@@ -27,17 +28,19 @@ import net.optifine.reflect.Reflector;
 import org.slf4j.Logger;
 
 public class ClientChunkCache extends ChunkSource {
-   static final Logger f_104407_ = LogUtils.getLogger();
-   private final LevelChunk f_104408_;
-   private final LevelLightEngine f_104409_;
-   volatile Storage f_104410_;
-   final ClientLevel f_104411_;
+   static Logger f_104407_ = LogUtils.getLogger();
+   private LevelChunk f_104408_;
+   private LevelLightEngine f_104409_;
+   volatile ClientChunkCache.Storage f_104410_;
+   ClientLevel f_104411_;
 
    public ClientChunkCache(ClientLevel clientWorldIn, int viewDistance) {
       this.f_104411_ = clientWorldIn;
-      this.f_104408_ = new EmptyLevelChunk(clientWorldIn, new ChunkPos(0, 0), clientWorldIn.m_9598_().m_175515_(Registries.f_256952_).m_246971_(Biomes.f_48202_));
+      this.f_104408_ = new EmptyLevelChunk(
+         clientWorldIn, new ChunkPos(0, 0), clientWorldIn.m_9598_().m_175515_(Registries.f_256952_).m_246971_(Biomes.f_48202_)
+      );
       this.f_104409_ = new LevelLightEngine(this, true, clientWorldIn.m_6042_().f_223549_());
-      this.f_104410_ = new Storage(m_104448_(viewDistance));
+      this.f_104410_ = new ClientChunkCache.Storage(m_104448_(viewDistance));
    }
 
    public LevelLightEngine m_7827_() {
@@ -63,10 +66,9 @@ public class ClientChunkCache extends ChunkSource {
             }
 
             levelchunk.m_62913_(false);
-            this.f_104410_.m_104487_(i, levelchunk, (LevelChunk)null);
+            this.f_104410_.m_104487_(i, levelchunk, null);
          }
       }
-
    }
 
    @Nullable
@@ -97,11 +99,10 @@ public class ClientChunkCache extends ChunkSource {
             levelchunk.m_274381_(bufIn);
          }
       }
-
    }
 
    @Nullable
-   public LevelChunk m_194116_(int xIn, int zIn, FriendlyByteBuf bufIn, CompoundTag tagIn, Consumer consumerIn) {
+   public LevelChunk m_194116_(int xIn, int zIn, FriendlyByteBuf bufIn, CompoundTag tagIn, Consumer<BlockEntityTagOutput> consumerIn) {
       if (!this.f_104410_.m_104500_(xIn, zIn)) {
          f_104407_.warn("Ignoring chunk since it's not in the view range: {}, {}", xIn, zIn);
          return null;
@@ -109,16 +110,16 @@ public class ClientChunkCache extends ChunkSource {
          int i = this.f_104410_.m_104481_(xIn, zIn);
          LevelChunk levelchunk = (LevelChunk)this.f_104410_.f_104466_.get(i);
          ChunkPos chunkpos = new ChunkPos(xIn, zIn);
-         if (!m_104438_((LevelChunk)levelchunk, xIn, zIn)) {
+         if (!m_104438_(levelchunk, xIn, zIn)) {
             if (levelchunk != null) {
-               ((LevelChunk)levelchunk).m_62913_(false);
+               levelchunk.m_62913_(false);
             }
 
             levelchunk = new ChunkOF(this.f_104411_, chunkpos);
-            ((LevelChunk)levelchunk).m_187971_(bufIn, tagIn, consumerIn);
-            this.f_104410_.m_104484_(i, (LevelChunk)levelchunk);
+            levelchunk.m_187971_(bufIn, tagIn, consumerIn);
+            this.f_104410_.m_104484_(i, levelchunk);
          } else {
-            ((LevelChunk)levelchunk).m_187971_(bufIn, tagIn, consumerIn);
+            levelchunk.m_187971_(bufIn, tagIn, consumerIn);
          }
 
          this.f_104411_.m_171649_(chunkpos);
@@ -126,8 +127,8 @@ public class ClientChunkCache extends ChunkSource {
             Reflector.postForgeBusEvent(Reflector.ChunkEvent_Load_Constructor, levelchunk, false);
          }
 
-         ((LevelChunk)levelchunk).m_62913_(true);
-         return (LevelChunk)levelchunk;
+         levelchunk.m_62913_(true);
+         return levelchunk;
       }
    }
 
@@ -143,11 +144,11 @@ public class ClientChunkCache extends ChunkSource {
       int i = this.f_104410_.f_104467_;
       int j = m_104448_(viewDistance);
       if (i != j) {
-         Storage clientchunkcache$storage = new Storage(j);
+         ClientChunkCache.Storage clientchunkcache$storage = new ClientChunkCache.Storage(j);
          clientchunkcache$storage.f_104469_ = this.f_104410_.f_104469_;
          clientchunkcache$storage.f_104470_ = this.f_104410_.f_104470_;
 
-         for(int k = 0; k < this.f_104410_.f_104466_.length(); ++k) {
+         for (int k = 0; k < this.f_104410_.f_104466_.length(); k++) {
             LevelChunk levelchunk = (LevelChunk)this.f_104410_.f_104466_.get(k);
             if (levelchunk != null) {
                ChunkPos chunkpos = levelchunk.m_7697_();
@@ -159,7 +160,6 @@ public class ClientChunkCache extends ChunkSource {
 
          this.f_104410_ = clientchunkcache$storage;
       }
-
    }
 
    private static int m_104448_(int distanceIn) {
@@ -167,8 +167,7 @@ public class ClientChunkCache extends ChunkSource {
    }
 
    public String m_6754_() {
-      int var10000 = this.f_104410_.f_104466_.length();
-      return "" + var10000 + ", " + this.m_8482_();
+      return this.f_104410_.f_104466_.length() + ", " + this.m_8482_();
    }
 
    public int m_8482_() {
@@ -179,10 +178,10 @@ public class ClientChunkCache extends ChunkSource {
       Minecraft.m_91087_().f_91060_.m_109770_(pos.m_123170_(), pos.m_123206_(), pos.m_123222_());
    }
 
-   final class Storage {
-      final AtomicReferenceArray f_104466_;
-      final int f_104467_;
-      private final int f_104468_;
+   class Storage {
+      AtomicReferenceArray<LevelChunk> f_104466_;
+      int f_104467_;
+      private int f_104468_;
       volatile int f_104469_;
       volatile int f_104470_;
       int f_104471_;
@@ -200,19 +199,18 @@ public class ClientChunkCache extends ChunkSource {
       protected void m_104484_(int chunkIndex, @Nullable LevelChunk chunkIn) {
          LevelChunk levelchunk = (LevelChunk)this.f_104466_.getAndSet(chunkIndex, chunkIn);
          if (levelchunk != null) {
-            --this.f_104471_;
+            this.f_104471_--;
             ClientChunkCache.this.f_104411_.m_104665_(levelchunk);
          }
 
          if (chunkIn != null) {
-            ++this.f_104471_;
+            this.f_104471_++;
          }
-
       }
 
       protected LevelChunk m_104487_(int chunkIndex, LevelChunk chunkIn, @Nullable LevelChunk replaceWith) {
          if (this.f_104466_.compareAndSet(chunkIndex, chunkIn, replaceWith) && replaceWith == null) {
-            --this.f_104471_;
+            this.f_104471_--;
          }
 
          ClientChunkCache.this.f_104411_.m_104665_(chunkIn);
@@ -235,12 +233,14 @@ public class ClientChunkCache extends ChunkSource {
             try {
                int i = ClientChunkCache.this.f_104410_.f_104467_;
 
-               for(int j = this.f_104470_ - i; j <= this.f_104470_ + i; ++j) {
-                  for(int k = this.f_104469_ - i; k <= this.f_104469_ + i; ++k) {
+               for (int j = this.f_104470_ - i; j <= this.f_104470_ + i; j++) {
+                  for (int k = this.f_104469_ - i; k <= this.f_104469_ + i; k++) {
                      LevelChunk levelchunk = (LevelChunk)ClientChunkCache.this.f_104410_.f_104466_.get(ClientChunkCache.this.f_104410_.m_104481_(k, j));
                      if (levelchunk != null) {
                         ChunkPos chunkpos = levelchunk.m_7697_();
-                        fileoutputstream.write((chunkpos.f_45578_ + "\t" + chunkpos.f_45579_ + "\t" + levelchunk.m_6430_() + "\n").getBytes(StandardCharsets.UTF_8));
+                        fileoutputstream.write(
+                           (chunkpos.f_45578_ + "\t" + chunkpos.f_45579_ + "\t" + levelchunk.m_6430_() + "\n").getBytes(StandardCharsets.UTF_8)
+                        );
                      }
                   }
                }
@@ -258,7 +258,6 @@ public class ClientChunkCache extends ChunkSource {
          } catch (IOException var10) {
             ClientChunkCache.f_104407_.error("Failed to dump chunks to file {}", fileNameIn, var10);
          }
-
       }
    }
 }

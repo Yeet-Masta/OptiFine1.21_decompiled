@@ -14,10 +14,12 @@ public class ModelAdapterSalmon extends ModelAdapter {
       super(EntityType.f_20519_, "salmon", 0.3F);
    }
 
+   @Override
    public Model makeModel() {
       return new SalmonModel(bakeModelLayer(ModelLayers.f_171176_));
    }
 
+   @Override
    public ModelPart getModelRenderer(Model model, String modelPart) {
       if (!(model instanceof SalmonModel modelSalmon)) {
          return null;
@@ -42,10 +44,12 @@ public class ModelAdapterSalmon extends ModelAdapter {
       }
    }
 
+   @Override
    public String[] getModelRendererNames() {
       return new String[]{"body_front", "body_back", "head", "fin_back_1", "fin_back_2", "tail", "fin_right", "fin_left", "root"};
    }
 
+   @Override
    public IEntityRenderer makeEntityRender(Model modelBase, float shadowSize, RendererCache rendererCache, int index) {
       EntityRenderDispatcher renderManager = Minecraft.m_91087_().m_91290_();
       SalmonRenderer render = new SalmonRenderer(renderManager.getContext());
